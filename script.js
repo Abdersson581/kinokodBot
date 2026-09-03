@@ -1,7 +1,7 @@
 // Telegram Web App
 const tg = window.Telegram.WebApp;
 tg.ready();
-tg.MainButton.show();
+tg.expand();
 
 // Загрузка фильмов
 async function loadMovies() {
@@ -11,7 +11,8 @@ async function loadMovies() {
     renderMovies(movies);
   } catch (e) {
     console.error('Ошибка загрузки:', e);
-    document.getElementById('movies-container').innerHTML = '<p>Загрузка...</p>';
+    document.getElementById('movies-container').innerHTML =
+      '<p class="error">Не удалось загрузить афишу 😔</p>';
   }
 }
 
@@ -20,21 +21,22 @@ function renderMovies(movies) {
   const container = document.getElementById('movies-container');
   container.innerHTML = movies.map(movie => `
     <div class="movie-card" onclick="openMovie('${movie.code}')">
-      <img src="${movie.poster_url || 'placeholder.jpg'}" alt="${movie.title}" />
+      <div class="poster-wrap">
+        <img src="${movie.poster || ''}" alt="${movie.title}" loading="lazy"
+             onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>
+        <span class="code-badge">🔑 ${movie.code}</span>
+      </div>
       <div class="movie-info">
         <h3>${movie.title}</h3>
-        <span class="year">${movie.year || ''}</span>
-        <span class="rating">⭐ ${movie.rating || '-'}</span>
-        <div class="genres">${(movie.genres || []).slice(0, 2).join(', ')}</div>
-        <div class="code">Код: ${movie.code}</div>
+        <span class="rating">⭐ ${movie.rating || '—'} КП</span>
       </div>
     </div>
   `).join('');
 }
 
-// Открытие фильма через deep link
+// Открытие фильма: показываем код, юзер отправляет его боту
 function openMovie(code) {
-  tg.openLink(`https://t.me/kapitan_kino_bot/kinokodapp?startapp=movie_${code}`);
+  tg.showAlert(`🔑 Код этого фильма: ${code}\n\nОтправь его боту @kapitan_kino_bot — и открой фильм!`);
 }
 
 // Инициализация

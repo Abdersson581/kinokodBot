@@ -1,26 +1,410 @@
 [
-  {
-    "code": "1001",
-    "title": "Назад в будущее",
-    "year": 1985,
-    "rating": 8.7,
-    "genres": ["приключения", "комедия", "фантастика"],
-    "poster_url": "https://st.kp.li/director/LayerFoto.aspx?file=947946.jpg"
-  },
-  {
-    "code": "1002",
-    "title": "Криминальное чтиво",
-    "year": 1994,
-    "rating": 8.9,
-    "genres": ["криминал", "драма"],
-    "poster_url": "https://st.kp.li/director/LayerFoto.aspx?file=123456.jpg"
-  },
-  {
-    "code": "1003",
-    "title": "Брат",
-    "year": 1997,
-    "rating": 8.2,
-    "genres": ["драма", "криминал"],
-    "poster_url": "https://st.kp.li/director/LayerFoto.aspx?file=789012.jpg"
-  }
+ {
+  "code": "408",
+  "title": "«История рыцаря» (A Knight's Tale, 2001)",
+  "rating": "7.8",
+  "poster": ""
+ },
+ {
+  "code": "409",
+  "title": "«На грани» (Man on a Ledge, 2012)",
+  "rating": "7.1",
+  "poster": ""
+ },
+ {
+  "code": "410",
+  "title": "«Непрощённая» (The Unforgivable, 2021)",
+  "rating": "7.3",
+  "poster": "AgACAgIAAxkBAAPoam3gH4wWuCL89Z_JFuVZC97Rj2kAAqkbaxtsLXBLgiLhIXbuBKoBAAMCAAN5AAM9BA"
+ },
+ {
+  "code": "411",
+  "title": "«Счастливое число Слевина» (Lucky Number Slevin, 2006)",
+  "rating": "8.2",
+  "poster": "AgACAgIAAxkBAAIBE2puQd5eUfhS4mozYVj20r80cB7gAAKLHWsbbC1wSwUWE2FcnQg5AQADAgADeAADPQQ"
+ },
+ {
+  "code": "405",
+  "title": "«Также известный» (AKA, 2023)",
+  "rating": "6.6",
+  "poster": ""
+ },
+ {
+  "code": "407",
+  "title": "«Шестое чувство» (The Sixth Sense, 1999)",
+  "rating": "8.2",
+  "poster": ""
+ },
+ {
+  "code": "470",
+  "title": "Ангел-А",
+  "rating": "7.8",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/160929.jpg"
+ },
+ {
+  "code": "464",
+  "title": "Артур, ты король",
+  "rating": "8.3",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/1402937.jpg"
+ },
+ {
+  "code": "472",
+  "title": "Бандит",
+  "rating": "7.3",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/1448499.jpg"
+ },
+ {
+  "code": "445",
+  "title": "Бездна",
+  "rating": "7.8",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/2342.jpg"
+ },
+ {
+  "code": "446",
+  "title": "Богемская рапсодия",
+  "rating": "8.0",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/568289.jpg"
+ },
+ {
+  "code": "451",
+  "title": "Борьба со льдом",
+  "rating": "6.7",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/4368657.jpg"
+ },
+ {
+  "code": "443",
+  "title": "В конце туннеля",
+  "rating": "6.8",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/940122.jpg"
+ },
+ {
+  "code": "414",
+  "title": "Ветреная река",
+  "rating": "7.7",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/958442.jpg"
+ },
+ {
+  "code": "433",
+  "title": "Водный мир",
+  "rating": "7.6",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/8165.jpg"
+ },
+ {
+  "code": "466",
+  "title": "Враг государства",
+  "rating": "7.8",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/3954.jpg"
+ },
+ {
+  "code": "435",
+  "title": "Всевидящее око",
+  "rating": "6.4",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/4474320.jpg"
+ },
+ {
+  "code": "459",
+  "title": "Гран Торино",
+  "rating": "8.1",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/408410.jpg"
+ },
+ {
+  "code": "452",
+  "title": "Грань будущего",
+  "rating": "7.9",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/505851.jpg"
+ },
+ {
+  "code": "471",
+  "title": "Давление",
+  "rating": "7.1",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/6606844.jpg"
+ },
+ {
+  "code": "423",
+  "title": "Девушка и море",
+  "rating": "7.8",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/2000853.jpg"
+ },
+ {
+  "code": "436",
+  "title": "Дело храбрых",
+  "rating": "8.3",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/965754.jpg"
+ },
+ {
+  "code": "439",
+  "title": "Дом у озера",
+  "rating": "7.9",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/102130.jpg"
+ },
+ {
+  "code": "417",
+  "title": "За пивом",
+  "rating": "7.4",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/1389553.jpg"
+ },
+ {
+  "code": "426",
+  "title": "Звук свободы",
+  "rating": "8.1",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/1134493.jpg"
+ },
+ {
+  "code": "406",
+  "title": "Зеленая миля",
+  "rating": "9.1",
+  "poster": ""
+ },
+ {
+  "code": "429",
+  "title": "Игры разума",
+  "rating": "8.5",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/530.jpg"
+ },
+ {
+  "code": "455",
+  "title": "Иллюзионист",
+  "rating": "8.0",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/102198.jpg"
+ },
+ {
+  "code": "421",
+  "title": "Истина и измена",
+  "rating": "7.2",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/317262.jpg"
+ },
+ {
+  "code": "447",
+  "title": "Исходный код",
+  "rating": "7.8",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/409295.jpg"
+ },
+ {
+  "code": "449",
+  "title": "Киллер: Девчонка должна умереть",
+  "rating": "7.3",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/4880777.jpg"
+ },
+ {
+  "code": "419",
+  "title": "Константин: Повелитель тьмы",
+  "rating": "7.9",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/3793.jpg"
+ },
+ {
+  "code": "422",
+  "title": "Костюм",
+  "rating": "6.9",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/4396717.jpg"
+ },
+ {
+  "code": "442",
+  "title": "Крушение",
+  "rating": "7.2",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/1338502.jpg"
+ },
+ {
+  "code": "432",
+  "title": "Легенда Багера Ванса",
+  "rating": "7.5",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/736.jpg"
+ },
+ {
+  "code": "444",
+  "title": "Люди в черном",
+  "rating": "8.0",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/1091.jpg"
+ },
+ {
+  "code": "425",
+  "title": "Между нами горы",
+  "rating": "6.8",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/667687.jpg"
+ },
+ {
+  "code": "456",
+  "title": "Меняющие реальность",
+  "rating": "7.4",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/450765.jpg"
+ },
+ {
+  "code": "440",
+  "title": "Меч короля",
+  "rating": "7.7",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/4991138.jpg"
+ },
+ {
+  "code": "450",
+  "title": "Миссия Сиренити",
+  "rating": "7.2",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/61455.jpg"
+ },
+ {
+  "code": "412",
+  "title": "На гребне волны» (Point Break, 1991)",
+  "rating": "7.9",
+  "poster": "AgACAgIAAxkBAAIBUGpvBN-ItzAoHGGNaKzyeu9fdkkaAAINGWsbbC14S9OLnICaXPX9AQADAgADeQADPQQ"
+ },
+ {
+  "code": "434",
+  "title": "Напоминание о нём",
+  "rating": "7.0",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/9823847.jpg"
+ },
+ {
+  "code": "467",
+  "title": "Начало",
+  "rating": "8.7",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/447301.jpg"
+ },
+ {
+  "code": "413",
+  "title": "Не говори никому",
+  "rating": "7.4",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/22936.jpg"
+ },
+ {
+  "code": "441",
+  "title": "Ночная смена",
+  "rating": "7.2",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/7331891.jpg"
+ },
+ {
+  "code": "416",
+  "title": "О чем говорят незнакомцы",
+  "rating": "7.6",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/4747499.jpg"
+ },
+ {
+  "code": "437",
+  "title": "Опасная игра Слоун",
+  "rating": "8.0",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/933307.jpg"
+ },
+ {
+  "code": "438",
+  "title": "Освобождение",
+  "rating": "6.6",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/4503141.jpg"
+ },
+ {
+  "code": "468",
+  "title": "Пароль \"Рыба-меч\"",
+  "rating": "7.2",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/849.jpg"
+ },
+ {
+  "code": "428",
+  "title": "Первый день моей жизни",
+  "rating": "7.8",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/1138971.jpg"
+ },
+ {
+  "code": "457",
+  "title": "По соображениям совести",
+  "rating": "8.3",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/649917.jpg"
+ },
+ {
+  "code": "461",
+  "title": "Побег из Шоушенка",
+  "rating": "9.1",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/326.jpg"
+ },
+ {
+  "code": "458",
+  "title": "Последний самурай",
+  "rating": "8.1",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/6764.jpg"
+ },
+ {
+  "code": "424",
+  "title": "Послезавтра",
+  "rating": "7.7",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/2053.jpg"
+ },
+ {
+  "code": "463",
+  "title": "Проклятый путь",
+  "rating": "7.6",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/548.jpg"
+ },
+ {
+  "code": "418",
+  "title": "Расплата",
+  "rating": "7.4",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/662359.jpg"
+ },
+ {
+  "code": "469",
+  "title": "Скрытые фигуры",
+  "rating": "8.0",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/966036.jpg"
+ },
+ {
+  "code": "420",
+  "title": "Спасти рядового Райана",
+  "rating": "8.2",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/371.jpg"
+ },
+ {
+  "code": "431",
+  "title": "Старый Генри",
+  "rating": "7.1",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/4293245.jpg"
+ },
+ {
+  "code": "454",
+  "title": "Страсти Христовы",
+  "rating": "8.0",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/3707.jpg"
+ },
+ {
+  "code": "427",
+  "title": "Суррогаты",
+  "rating": "6.9",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/397671.jpg"
+ },
+ {
+  "code": "448",
+  "title": "Тетрис",
+  "rating": "7.1",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/1396300.jpg"
+ },
+ {
+  "code": "415",
+  "title": "Того",
+  "rating": "8.0",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/1173444.jpg"
+ },
+ {
+  "code": "465",
+  "title": "Уличный кот по кличке Боб",
+  "rating": "7.8",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/930442.jpg"
+ },
+ {
+  "code": "462",
+  "title": "Хатико: Самый верный друг",
+  "rating": "8.4",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/387556.jpg"
+ },
+ {
+  "code": "460",
+  "title": "Хитмен. Последнее дело",
+  "rating": "7.7",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/5094888.jpg"
+ },
+ {
+  "code": "430",
+  "title": "Человек божий",
+  "rating": "7.7",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/1003448.jpg"
+ },
+ {
+  "code": "453",
+  "title": "Эдди \"Орёл\"",
+  "rating": "7.7",
+  "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp/394619.jpg"
+ }
 ]
