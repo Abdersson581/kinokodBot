@@ -3,6 +3,26 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
+// ---------- доступ: мягкие ворота подписки ----------
+const ACCESS_KEY = 'kinoafisha_access';
+const CHANNEL_URL = 'https://t.me/capitanKino1';
+
+function showGate() {
+  document.getElementById('gate').classList.remove('hidden');
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('btn-gate-channel').onclick = () => tg.openTelegramLink(CHANNEL_URL);
+  document.getElementById('btn-gate-check').onclick = () =>
+    tg.sendData(JSON.stringify({ action: 'access_check' }));
+  document.getElementById('btn-gate-skip').onclick = enterApp;
+}
+function enterApp() {
+  localStorage.setItem(ACCESS_KEY, '1');
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  loadMovies();
+}
+if (localStorage.getItem(ACCESS_KEY)) enterApp(); else showGate();
+
 // ---------- тема из Telegram ----------
 function applyTheme() {
   const scheme = tg.colorScheme || 'dark';
@@ -32,6 +52,10 @@ const ratingBadge = (m) => {
   return r >= 9 ? '<span class="badge-top">🔥 ⭐ ' + r + ' КП</span>' : '⭐ ' + m.rating + ' КП';
 };
 
+// «Новинка» — фильм добавлен в базу в последние 30 дней
+const isNew = (m) =>
+  !!m.added_at && (Date.now() - new Date(m.added_at).getTime()) < 30 * 24 * 3600 * 1000;
+
 function posterHtml(m) {
   return `<div class="poster-wrap">
     ${m.poster
@@ -39,6 +63,7 @@ function posterHtml(m) {
            onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
       : `<div class="poster-placeholder"><span>🎬</span><em>${esc(m.title)}</em></div>`}
     <span class="code-badge">🔑 ${esc(m.code)}</span>
+    ${isNew(m) ? '<span class="new-badge">🔥 Новинка</span>' : ''}
     ${getFavs().includes(m.code) ? '<span class="fav-badge">❤️</span>' : ''}
   </div>`;
 }
@@ -60,12 +85,23 @@ function renderGrid() {
   const q = (document.getElementById('search').value || '').trim().toLowerCase();
   const sort = document.getElementById('sort').value;
   let list = view === 'fav' ? ALL.filter(m => getFavs().includes(m.code)) : [...ALL];
-  if (q) list = list.filter(m => (m.title || '').toLowerCase().includes(q));
-  list.sort((a, b) =>
-    sort === 'rating' ? (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0) :
-    sort === 'code' ? (+a.code || 0) - (+b.code || 0) :
-    (a.title || '').localeCompare(b.title || '', 'ru')
-  );
+  if (q) {
+    const digits = q.replace(/\D/g, '');
+    list = list.filter(m =>
+      (m.title || '').toLowerCase().includes(q) ||
+      (digits && String(m.code || '').includes(digits))
+    );
+  }
+  list.sort((a, b) => {
+    if (sort === 'rating') return (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0);
+    if (sort === 'code') return (+a.code || 0) - (+b.code || 0);
+    if (sort === 'new') {
+      const da = new Date(a.added_at || 0).getTime();
+      const db = new Date(b.added_at || 0).getTime();
+      return db - da;
+    }
+    return (a.title || '').localeCompare(b.title || '', 'ru');
+  });
   const c = document.getElementById('movies-container');
   if (!list.length) {
     c.innerHTML = `<p class="error">${view === 'fav' ? 'Список пуст — добавляйте фильмы сердечком ❤️' : 'Ничего не нашлось 🤷'}</p>`;
@@ -79,6 +115,10 @@ function renderGrid() {
         <span class="rating">${ratingBadge(m)}</span>
       </div>
     </div>`).join('');
+  // каскадное появление карточек
+  Array.from(c.children).forEach((el, i) => {
+    el.style.animationDelay = (Math.min(i, 24) * 0.03) + 's';
+  });
   c.querySelectorAll('.movie-card').forEach(el =>
     el.addEventListener('click', () => openDetail(el.dataset.code)));
 }
@@ -100,6 +140,8 @@ function openDetail(code) {
         <div class="detail-actions">
           <button class="btn-primary" id="btn-open">🔓 Открыть код</button>
           <button class="btn-fav ${fav ? 'active' : ''}" id="btn-fav">${fav ? '❤️ В «Моём»' : '🤍 Хочу посмотреть'}</button>
+          <button class="btn-secondary" id="btn-copy">📎 Скопировать код</button>
+          <button class="btn-secondary" id="btn-remind">🔔 Напомнить через час</button>
           <button class="btn-secondary" id="btn-share">📤 Поделиться с другом</button>
         </div>
       </div>
@@ -108,6 +150,21 @@ function openDetail(code) {
   document.getElementById('btn-open').onclick =
     () => tg.sendData(JSON.stringify({ action: 'open_movie', code }));
   document.getElementById('btn-fav').onclick = () => { toggleFav(code); openDetail(code); };
+  document.getElementById('btn-copy').onclick = () => {
+    const done = () => {
+      try { tg.HapticFeedback.impactOccurred('light'); } catch (e) {}
+      tg.showPopup({
+        type: 'ok',
+        title: 'Код скопирован',
+        message: `Код ${code} отправь боту @kapitan_kino_bot — и фильм откроется!`
+      });
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(done).catch(done);
+    } else done();
+  };
+  document.getElementById('btn-remind').onclick = () =>
+    tg.sendData(JSON.stringify({ action: 'remind_movie', code }));
   document.getElementById('btn-share').onclick = () => {
     const text = `🎬 «${m.title}» — рейтинг ${m.rating || '—'} на КП! Угадай фильм по коду в боте «Капитан Кино» 🎲`;
     tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/kapitan_kino_bot')}&text=${encodeURIComponent(text)}`);
@@ -202,6 +259,3 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
 
 document.getElementById('search').addEventListener('input', renderGrid);
 document.getElementById('sort').addEventListener('change', renderGrid);
-
-// ---------- старт ----------
-loadMovies();
