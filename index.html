@@ -13,9 +13,32 @@
       <h1>🎬 Киноафиша</h1>
       <p class="subtitle">Фильмы, которые можно посмотреть</p>
     </header>
-    <main id="movies-container" class="movies-grid">
-      <!-- Динамически заполняется -->
-    </main>
+
+    <nav class="tabs">
+      <button class="tab active" data-view="grid">🎬 Афиша</button>
+      <button class="tab" data-view="fav">❤️ Моё</button>
+      <button class="tab" data-view="game">🏋 Тренажёр</button>
+    </nav>
+
+    <!-- Афиша + Моё -->
+    <div id="view-catalog">
+      <div class="toolbar" id="toolbar">
+        <input type="text" id="search" placeholder="🔍 Поиск фильма…" />
+        <select id="sort">
+          <option value="title">По названию</option>
+          <option value="rating">По рейтингу</option>
+          <option value="code">По коду</option>
+        </select>
+      </div>
+      <main id="movies-container" class="movies-grid"></main>
+    </div>
+
+    <!-- Карточка фильма -->
+    <div id="view-detail" class="hidden"></div>
+
+    <!-- Тренажёр -->
+    <div id="view-game" class="hidden"></div>
+
     <footer class="footer">
       <p>Разгадай код — открой фильм 🎁</p>
     </footer>
