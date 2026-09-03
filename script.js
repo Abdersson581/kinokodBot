@@ -33,7 +33,8 @@ tg.onEvent('themeChanged', applyTheme);
 
 // ---------- состояние ----------
 let ALL = [];                       // все фильмы
-let view = 'grid';                  // grid | fav | detail | game
+let COLLS = [];                     // подборки
+let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game
 const FAV_KEY = 'kinoafisha_favs';
 const getFavs = () => JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
 const setFavs = (a) => localStorage.setItem(FAV_KEY, JSON.stringify([...a]));
@@ -71,13 +72,72 @@ function posterHtml(m) {
 // ---------- загрузка ----------
 async function loadMovies() {
   try {
-    const r = await fetch('./data/movies.json');
+    const [r, rc] = await Promise.all([
+      fetch('./data/movies.json'),
+      fetch('./data/collections.json').catch(() => null)
+    ]);
     ALL = await r.json();
+    COLLS = rc ? await rc.json() : [];
     renderGrid();
   } catch (e) {
     document.getElementById('movies-container').innerHTML =
       '<p class="error">Не удалось загрузить афишу 😔</p>';
   }
+}
+
+// ---------- подборки ----------
+function renderCols() {
+  const c = document.getElementById('cols-container');
+  if (!COLLS.length) {
+    c.innerHTML = `<p class="error">Подборки появятся скоро 📚</p>`;
+    return;
+  }
+  c.innerHTML = COLLS.map(col => `
+    <div class="col-card" data-col="${esc(col.code)}">
+      <span class="col-emoji">${esc(col.emoji || '📚')}</span>
+      <div class="col-body">
+        <h3>${esc(col.title)}</h3>
+        <p>${col.codes.length} фильм(ов)</p>
+      </div>
+    </div>`).join('');
+  c.querySelectorAll('.col-card').forEach(el =>
+    el.addEventListener('click', () => {
+      const col = COLLS.find(x => x.code === el.dataset.col);
+      if (!col) return;
+      view = 'cols-detail';
+      showView('cols');
+      const list = ALL.filter(m => col.codes.includes(m.code));
+      c.innerHTML = `
+        <button class="btn-back" id="btn-cols-back">◀️ Все подборки</button>
+        <div class="movies-grid">${list.map(m => `
+          <div class="movie-card" data-code="${esc(m.code)}">
+            ${posterHtml(m)}
+            <div class="movie-info">
+              <h3>${esc(m.title)}</h3>
+              <span class="rating">${ratingBadge(m)}</span>
+            </div>
+          </div>`).join('')}
+        </div>`;
+      document.getElementById('btn-cols-back').onclick = () => { view = 'cols'; renderCols(); };
+      c.querySelectorAll('.movie-card').forEach(elc =>
+        elc.addEventListener('click', () => openDetail(elc.dataset.code)));
+    }));
+}
+
+// ---------- бэкап «Моё» через бота ----------
+function backupFavsNotice() {
+  const favs = getFavs();
+  if (favs.length < 2) return ''; // маленький список ни к чему не гонять
+  return `
+    <div class="cols-list">
+      <div class="col-card backup-card">
+        <div class="col-body">
+          <h3>${favs.length > 0 ? `💾 «Моё» хранится локально (${favs.length})` : ''}</h3>
+          <p>Сохрани список в боте — не потеряется при переустановке.</p>
+        </div>
+        <button class="btn-secondary" id="btn-backup">💾 Сохранить в боте</button>
+      </div>
+    </div>`;
 }
 
 // ---------- сетка (афиша + моё) ----------
@@ -107,7 +167,8 @@ function renderGrid() {
     c.innerHTML = `<p class="error">${view === 'fav' ? 'Список пуст — добавляйте фильмы сердечком ❤️' : 'Ничего не нашлось 🤷'}</p>`;
     return;
   }
-  c.innerHTML = list.map(m => `
+  const backup = view === 'fav' ? backupFavsNotice() : '';
+  c.innerHTML = backup + list.map(m => `
     <div class="movie-card" data-code="${esc(m.code)}">
       ${posterHtml(m)}
       <div class="movie-info">
@@ -115,6 +176,8 @@ function renderGrid() {
         <span class="rating">${ratingBadge(m)}</span>
       </div>
     </div>`).join('');
+  const b = document.getElementById('btn-backup');
+  if (b) b.onclick = () => tg.sendData(JSON.stringify({ action: 'save_favs', codes: getFavs() }));
   // каскадное появление карточек
   Array.from(c.children).forEach((el, i) => {
     el.style.animationDelay = (Math.min(i, 24) * 0.03) + 's';
@@ -244,6 +307,7 @@ function renderGameEnd() {
 // ---------- вкладки и показ ----------
 function showView(name) {
   document.getElementById('view-catalog').classList.toggle('hidden', name !== 'catalog');
+  document.getElementById('view-cols').classList.toggle('hidden', name !== 'cols');
   document.getElementById('view-detail').classList.toggle('hidden', name !== 'detail');
   document.getElementById('view-game').classList.toggle('hidden', name !== 'game');
   document.getElementById('toolbar').classList.toggle('hidden', name !== 'catalog');
@@ -254,6 +318,7 @@ function showView(name) {
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
   view = t.dataset.view;
   if (view === 'game') { showView('game'); startGame(); }
+  else if (view === 'cols') { showView('cols'); renderCols(); }
   else { showView('catalog'); renderGrid(); }
 }));
 

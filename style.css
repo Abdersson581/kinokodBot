@@ -306,6 +306,30 @@ body.light .poster-wrap,
 body.light .game-poster { background: linear-gradient(135deg, #dfe3f2 0%, #c9cee6 100%); }
 body.light .code-badge { background: rgba(255,255,255,.9); }
 body.light .game-reveal { background: rgba(255,255,255,.92); color: var(--text); }
+/* Подборки */
+.cols-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.col-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border-radius: 14px;
+  padding: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.col-card:active { transform: scale(0.98); }
+.col-emoji { font-size: 30px; }
+.col-body { flex: 1; }
+.col-body h3 { margin: 0 0 2px; font-size: 15px; }
+.col-body p { margin: 0; color: var(--muted); font-size: 12px; }
+.backup-card { cursor: default; align-items: flex-start; }
+.backup-card .btn-secondary { flex-shrink: 0; }
 /* Бейдж топ-рейтинга */
 .badge-top {
   background: linear-gradient(90deg, #ffd166, #ff9f43);
