@@ -404,3 +404,8 @@ document.getElementById('btn-lucky').addEventListener('click', () => {
   const m = ALL[Math.floor(Math.random() * ALL.length)];
   openDetail(m.code);
 });
+
+// 🎬 «Мой Киногод» — диплинк в бота (бот покажет карточку)
+document.getElementById('btn-kinogod').addEventListener('click', () => {
+  tg.openTelegramLink('https://t.me/kapitan_kino_bot?start=kinogod');
+});
