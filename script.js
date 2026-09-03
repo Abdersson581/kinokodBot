@@ -3,6 +3,14 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
+// ---------- тема из Telegram ----------
+function applyTheme() {
+  const scheme = tg.colorScheme || 'dark';
+  document.body.classList.toggle('light', scheme === 'light');
+}
+applyTheme();
+tg.onEvent('themeChanged', applyTheme);
+
 // ---------- состояние ----------
 let ALL = [];                       // все фильмы
 let view = 'grid';                  // grid | fav | detail | game
@@ -17,6 +25,12 @@ const toggleFav = (code) => {
 
 // ---------- утилиты ----------
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const ratingBadge = (m) => {
+  const r = parseFloat(m.rating);
+  if (!r) return '⭐ —';
+  return r >= 9 ? '<span class="badge-top">🔥 ⭐ ' + r + ' КП</span>' : '⭐ ' + m.rating + ' КП';
+};
 
 function posterHtml(m) {
   return `<div class="poster-wrap">
@@ -62,7 +76,7 @@ function renderGrid() {
       ${posterHtml(m)}
       <div class="movie-info">
         <h3>${esc(m.title)}</h3>
-        <span class="rating">⭐ ${esc(m.rating || '—')} КП</span>
+        <span class="rating">${ratingBadge(m)}</span>
       </div>
     </div>`).join('');
   c.querySelectorAll('.movie-card').forEach(el =>
@@ -81,11 +95,12 @@ function openDetail(code) {
       ${posterHtml(m)}
       <div class="detail-info">
         <h2>${esc(m.title)}</h2>
-        <span class="rating">⭐ ${esc(m.rating || '—')} КП</span>
+        <span class="rating">${ratingBadge(m)}</span>
         <p class="desc">${esc(m.description || 'Описание скоро появится.')}</p>
         <div class="detail-actions">
           <button class="btn-primary" id="btn-open">🔓 Открыть код</button>
           <button class="btn-fav ${fav ? 'active' : ''}" id="btn-fav">${fav ? '❤️ В «Моём»' : '🤍 Хочу посмотреть'}</button>
+          <button class="btn-secondary" id="btn-share">📤 Поделиться с другом</button>
         </div>
       </div>
     </div>`;
@@ -93,6 +108,10 @@ function openDetail(code) {
   document.getElementById('btn-open').onclick =
     () => tg.sendData(JSON.stringify({ action: 'open_movie', code }));
   document.getElementById('btn-fav').onclick = () => { toggleFav(code); openDetail(code); };
+  document.getElementById('btn-share').onclick = () => {
+    const text = `🎬 «${m.title}» — рейтинг ${m.rating || '—'} на КП! Угадай фильм по коду в боте «Капитан Кино» 🎲`;
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/kapitan_kino_bot')}&text=${encodeURIComponent(text)}`);
+  };
 }
 
 // ---------- тренажёр ----------

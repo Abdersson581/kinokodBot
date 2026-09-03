@@ -261,3 +261,27 @@ body {
 .game-score { color: var(--muted); margin-bottom: 18px; }
 .game-end button { width: 100%; margin-top: 8px; }
 .hidden { display: none !important; }
+/* Светлая тема (авто из Telegram) */
+body.light {
+  --bg: #f2f4fa;
+  --card: #ffffff;
+  --accent: #e0355a;
+  --gold: #b07d10;
+  --text: #1a1c2c;
+  --muted: #6b7089;
+}
+body.light .toolbar input,
+body.light .toolbar select,
+body.light .btn-option { border-color: #d8dcea; }
+body.light .poster-wrap,
+body.light .game-poster { background: linear-gradient(135deg, #dfe3f2 0%, #c9cee6 100%); }
+body.light .code-badge { background: rgba(255,255,255,.9); }
+body.light .game-reveal { background: rgba(255,255,255,.92); color: var(--text); }
+/* Бейдж топ-рейтинга */
+.badge-top {
+  background: linear-gradient(90deg, #ffd166, #ff9f43);
+  color: #3a2c00;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
