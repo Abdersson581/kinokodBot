@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Киноафиша | Капитан Кино</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="style.css?v=8" />
+  <link rel="stylesheet" href="style.css?v=9" />
 </head>
 <body>
   <div id="gate" class="hidden">
@@ -41,7 +41,9 @@
           <option value="code">По коду</option>
           <option value="new">🔥 По новизне</option>
         </select>
+        <button class="btn-lucky" id="btn-lucky">🎲</button>
       </div>
+      <div id="code-day-banner" class="code-day hidden"></div>
       <main id="movies-container" class="movies-grid"></main>
     </div>
 
@@ -60,6 +62,6 @@
       <p>Разгадай код — открой фильм 🎁</p>
     </footer>
   </div>
-  <script src="script.js?v=8"></script>
+  <script src="script.js?v=9"></script>
 </body>
 </html>

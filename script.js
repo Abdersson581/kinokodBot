@@ -72,17 +72,36 @@ function posterHtml(m) {
 // ---------- загрузка ----------
 async function loadMovies() {
   try {
-    const [r, rc] = await Promise.all([
+    const [r, rc, rm] = await Promise.all([
       fetch('./data/movies.json'),
-      fetch('./data/collections.json').catch(() => null)
+      fetch('./data/collections.json').catch(() => null),
+      fetch('./data/meta.json').catch(() => null)
     ]);
     ALL = await r.json();
     COLLS = rc ? await rc.json() : [];
+    const meta = rm ? await rm.json() : {};
+    showCodeDay(meta);
     renderGrid();
   } catch (e) {
     document.getElementById('movies-container').innerHTML =
       '<p class="error">Не удалось загрузить афишу 😔</p>';
   }
+}
+
+function showCodeDay(meta) {
+  const code = (meta && meta.code_of_day) || '';
+  const banner = document.getElementById('code-day-banner');
+  if (!code || !banner) return;
+  const m = ALL.find(x => x.code === code);
+  banner.innerHTML = `
+    <div class="code-day-inner">
+      <span class="code-day-label">🎁 Код дня</span>
+      <span class="code-day-code">🔑 ${esc(code)}</span>
+      ${m ? `<span class="code-day-title"> • ${esc(m.title)}</span>` : ''}
+      <button class="btn-lucky" id="btn-cod-open" style="margin-left:auto">Открыть</button>
+    </div>`;
+  banner.classList.remove('hidden');
+  document.getElementById('btn-cod-open').onclick = () => openDetail(code);
 }
 
 // ---------- подборки ----------
@@ -99,9 +118,11 @@ function renderCols() {
         <h3>${esc(col.title)}</h3>
         <p>${col.codes.length} фильм(ов)</p>
       </div>
+      <button class="btn-share-sm" data-share="${esc(col.code)}" title="Поделиться">📤</button>
     </div>`).join('');
   c.querySelectorAll('.col-card').forEach(el =>
-    el.addEventListener('click', () => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-share-sm')) return;
       const col = COLLS.find(x => x.code === el.dataset.col);
       if (!col) return;
       view = 'cols-detail';
@@ -121,6 +142,13 @@ function renderCols() {
       document.getElementById('btn-cols-back').onclick = () => { view = 'cols'; renderCols(); };
       c.querySelectorAll('.movie-card').forEach(elc =>
         elc.addEventListener('click', () => openDetail(elc.dataset.code)));
+    }));
+  c.querySelectorAll('.btn-share-sm').forEach(b =>
+    b.addEventListener('click', () => {
+      const col = COLLS.find(x => x.code === b.dataset.share);
+      if (!col) return;
+      const text = `У меня в «Киноафише» подборка ${col.emoji || '📚'} «${col.title}» — ${col.codes.length} фильмов! Угадай их по кодам в боте «Капитан Кино» 🎬`;
+      tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/kapitan_kino_bot')}&text=${encodeURIComponent(text)}`);
     }));
 }
 
@@ -324,3 +352,10 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
 
 document.getElementById('search').addEventListener('input', renderGrid);
 document.getElementById('sort').addEventListener('change', renderGrid);
+
+// 🎲 «Мне повезёт» — случайный фильм
+document.getElementById('btn-lucky').addEventListener('click', () => {
+  if (!ALL.length) return;
+  const m = ALL[Math.floor(Math.random() * ALL.length)];
+  openDetail(m.code);
+});

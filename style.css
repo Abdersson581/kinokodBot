@@ -306,6 +306,48 @@ body.light .poster-wrap,
 body.light .game-poster { background: linear-gradient(135deg, #dfe3f2 0%, #c9cee6 100%); }
 body.light .code-badge { background: rgba(255,255,255,.9); }
 body.light .game-reveal { background: rgba(255,255,255,.92); color: var(--text); }
+/* Кнопка «Мне повезёт» */
+.toolbar .btn-lucky {
+  flex-shrink: 0;
+  background: var(--card);
+  border: 1px solid #2a3050;
+  color: var(--gold);
+  font-size: 18px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+/* Плитка «Код дня» */
+.code-day {
+  margin-top: 10px;
+}
+.code-day-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg, rgba(255, 209, 102, 0.15), rgba(255, 68, 102, 0.12));
+  border: 1px solid rgba(255, 209, 102, 0.4);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.code-day-label { font-weight: 800; color: var(--gold); font-size: 13px; white-space: nowrap; }
+.code-day-code { font-weight: 800; color: var(--text); font-size: 15px; }
+.code-day-title { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.code-day .btn-lucky { font-size: 13px; color: var(--text); }
+/* Поделиться подборкой */
+.btn-share-sm {
+  flex-shrink: 0;
+  background: var(--card);
+  border: 1px solid #2a3050;
+  color: var(--gold);
+  font-size: 16px;
+  border-radius: 10px;
+  padding: 6px 9px;
+  cursor: pointer;
+}
+body.light .toolbar .btn-lucky,
+body.light .btn-share-sm { border-color: #d8dcea; }
+
 /* Подборки */
 .cols-list {
   margin-top: 12px;
