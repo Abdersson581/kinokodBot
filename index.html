@@ -8,9 +8,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=11" />
+  <link rel="stylesheet" href="style.css?v=12" />
 </head>
 <body>
+  <button id="btn-top" class="btn-top hidden" title="Наверх">⬆️</button>
+
   <div id="gate" class="hidden">
     <div class="gate">
       <div class="gate-icon">🔒</div>
@@ -27,8 +29,9 @@
         <span class="brand-mark">🎬</span>
         <div class="brand-text">
           <h1>Кино<span class="brand-gold">афиша</span></h1>
-          <p class="subtitle">Капитан Кино · 68 фильмов</p>
+          <p class="subtitle" id="subtitle">Капитан Кино</p>
         </div>
+        <button class="btn-lucky" id="btn-info" title="О боте">ℹ️</button>
         <button class="btn-lucky" id="btn-lucky" title="Мне повезёт">🎲</button>
       </div>
     </header>
@@ -51,6 +54,7 @@
           <option value="new">🔥 По новизне</option>
         </select>
       </div>
+      <div id="genre-chips" class="genre-chips hidden"></div>
       <div id="code-day-banner" class="code-day hidden"></div>
       <div id="hero-shelf" class="hero-shelf hidden">
         <h2 class="shelf-title">🔥 Сейчас в тренде</h2>
@@ -82,6 +86,21 @@
       <p>Разгадай код — открой фильм 🎁</p>
     </footer>
   </div>
-  <script src="script.js?v=11"></script>
+
+  <!-- Экран «О боте» -->
+  <div id="about" class="modal hidden">
+    <div class="modal-card">
+      <button class="modal-close" id="btn-about-close">✕</button>
+      <h2>🎬 Киноафиша</h2>
+      <p>Витрина всех фильмов канала <b>«Капитан Кино»</b>. У каждого фильма — свой <b>код</b>: следи за постами канала, угадывай фильм и отправляй код боту — карточка откроется!</p>
+      <p>🏋 В <b>Тренажёре</b> угадывай фильмы по размытым постерам и получай баллы.<br/>
+      ❤️ В <b>«Моём»</b> собирай список «хочу посмотреть».<br/>
+      📚 В <b>Подборках</b> — готовые коллекции на любой вечер.</p>
+      <p class="modal-muted">Всё бесплатно. Подписка на канал — ключ к фильмам.</p>
+      <button class="btn-primary" id="btn-about-channel">📢 Открыть канал</button>
+    </div>
+  </div>
+
+  <script src="script.js?v=12"></script>
 </body>
 </html>

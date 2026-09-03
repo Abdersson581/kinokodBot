@@ -35,6 +35,7 @@ tg.onEvent('themeChanged', applyTheme);
 let ALL = [];                       // все фильмы
 let COLLS = [];                     // подборки
 let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game
+let activeGenre = '';               // выбранный жанр-фильтр ('' = все)
 const FAV_KEY = 'kinoafisha_favs';
 const getFavs = () => JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
 const setFavs = (a) => localStorage.setItem(FAV_KEY, JSON.stringify([...a]));
@@ -42,10 +43,19 @@ const toggleFav = (code) => {
   const f = new Set(getFavs());
   f.has(code) ? f.delete(code) : f.add(code);
   setFavs(f);
+  haptic(f.has(code) ? 'ok' : 'light');
 };
 
 // ---------- утилиты ----------
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// Haptic-отклик: вибрация на действиях (нет поддержки — тихо пропускаем)
+function haptic(kind = 'light') {
+  try {
+    if (kind === 'ok' || kind === 'error') tg.HapticFeedback?.notificationOccurred(kind);
+    else tg.HapticFeedback?.impactOccurred(kind);
+  } catch (e) { /* пусто */ }
+}
 
 const ratingBadge = (m) => {
   const r = parseFloat(m.rating);
@@ -82,6 +92,8 @@ async function loadMovies() {
     ALL = await r.json();
     COLLS = rc ? await rc.json() : [];
     const meta = rm ? await rm.json() : {};
+    updateSubtitle();
+    renderGenreChips();
     showCodeDay(meta);
     renderHero();
     renderGrid();
@@ -101,6 +113,36 @@ function renderSkeletons() {
 renderSkeletons();
 
 // ---------- hero-полка «Сейчас в тренде» ----------
+// Живая строка статистики в шапке
+function updateSubtitle() {
+  const el = document.getElementById('subtitle');
+  if (!el) return;
+  const parts = [`Капитан Кино · ${ALL.length} фильм(ов)`];
+  if (COLLS.length) parts.push(`${COLLS.length} подборок`);
+  el.textContent = parts.join(' · ');
+}
+
+// Чипы жанров: собираются из витрины, тап — фильтр сетки
+function renderGenreChips() {
+  const wrap = document.getElementById('genre-chips');
+  if (!wrap) return;
+  const counter = new Map();
+  ALL.forEach(m => (m.genres || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1)));
+  const top = [...counter.entries()].filter(([, n]) => n >= 3)
+    .sort((a, b) => b[1] - a[1]).slice(0, 10);
+  if (!top.length) return;
+  wrap.innerHTML = `<button class="chip${activeGenre === '' ? ' active' : ''}" data-g="">Все</button>` +
+    top.map(([g, n]) =>
+      `<button class="chip${activeGenre === g ? ' active' : ''}" data-g="${esc(g)}">${esc(g)} <em>${n}</em></button>`
+    ).join('');
+  wrap.classList.remove('hidden');
+  wrap.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+    activeGenre = ch.dataset.g;
+    haptic('light');
+    renderGenreChips();
+    renderGrid();
+  }));
+}
 function renderHero() {
   const top = [...ALL]
     .filter(m => m.poster && parseFloat(m.rating))
@@ -214,10 +256,24 @@ function backupFavsNotice() {
 }
 
 // ---------- сетка (афиша + моё) ----------
+// Подсветка совпадения поиска в названии (esc обеих частей!)
+function hlTitle(title, q) {
+  const t = String(title || '');
+  if (!q) return esc(t);
+  try {
+    const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+    return t.split(re).map(part =>
+      part.toLowerCase() === q.toLowerCase() ? `<mark class="hl">${esc(part)}</mark>` : esc(part)
+    ).join('');
+  } catch (e) { return esc(t); }
+}
+
 function renderGrid() {
-  const q = (document.getElementById('search').value || '').trim().toLowerCase();
+  const qRaw = (document.getElementById('search').value || '').trim();
+  const q = qRaw.toLowerCase();
   const sort = document.getElementById('sort').value;
   let list = view === 'fav' ? ALL.filter(m => getFavs().includes(m.code)) : [...ALL];
+  if (activeGenre) list = list.filter(m => (m.genres || []).includes(activeGenre));
   if (q) {
     const digits = q.replace(/\D/g, '');
     list = list.filter(m =>
@@ -245,7 +301,7 @@ function renderGrid() {
     <div class="movie-card" data-code="${esc(m.code)}">
       ${posterHtml(m)}
       <div class="movie-info">
-        <h3>${esc(m.title)}</h3>
+        <h3>${hlTitle(m.title, q)}</h3>
         <span class="rating">${ratingBadge(m)}</span>
       </div>
     </div>`).join('');
@@ -350,6 +406,7 @@ function renderRound() {
 function answerRound(btn, movie) {
   const right = btn.dataset.t === movie.title;
   if (right) game.correct++;
+  haptic(right ? 'ok' : 'error');
   btn.classList.add(right ? 'correct' : 'wrong');
   document.querySelectorAll('.btn-option').forEach(b => b.disabled = true);
   const img = document.querySelector('#game-poster img');
@@ -395,12 +452,41 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   else { showView('catalog'); renderGrid(); }
 }));
 
-document.getElementById('search').addEventListener('input', renderGrid);
+// ---------- поиск с debounce (не рендерим на каждый символ) ----------
+let _searchTimer = null;
+document.getElementById('search').addEventListener('input', () => {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(renderGrid, 180);
+});
 document.getElementById('sort').addEventListener('change', renderGrid);
+
+// ---------- кнопка «наверх» ----------
+const btnTop = document.getElementById('btn-top');
+window.addEventListener('scroll', () => {
+  btnTop.classList.toggle('hidden', window.scrollY < 700);
+}, { passive: true });
+btnTop.addEventListener('click', () => {
+  haptic('light');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ---------- «О боте» ----------
+document.getElementById('btn-info').addEventListener('click', () => {
+  haptic('light');
+  document.getElementById('about').classList.remove('hidden');
+});
+document.getElementById('btn-about-close').addEventListener('click', () =>
+  document.getElementById('about').classList.add('hidden'));
+document.getElementById('about').addEventListener('click', (e) => {
+  if (e.target.id === 'about') document.getElementById('about').classList.add('hidden');
+});
+document.getElementById('btn-about-channel').addEventListener('click', () =>
+  tg.openTelegramLink(CHANNEL_URL));
 
 // 🎲 «Мне повезёт» — случайный фильм
 document.getElementById('btn-lucky').addEventListener('click', () => {
   if (!ALL.length) return;
+  haptic('light');
   const m = ALL[Math.floor(Math.random() * ALL.length)];
   openDetail(m.code);
 });
