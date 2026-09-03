@@ -12,7 +12,7 @@ function showGate() {
   document.getElementById('app').classList.add('hidden');
   document.getElementById('btn-gate-channel').onclick = () => tg.openTelegramLink(CHANNEL_URL);
   document.getElementById('btn-gate-check').onclick = () =>
-    tg.sendData(JSON.stringify({ action: 'access_check' }));
+    sendOrDeepLink({ action: 'access_check' });
   document.getElementById('btn-gate-skip').onclick = enterApp;
 }
 function enterApp() {
@@ -55,6 +55,26 @@ function haptic(kind = 'light') {
     if (kind === 'ok' || kind === 'error') tg.HapticFeedback?.notificationOccurred(kind);
     else tg.HapticFeedback?.impactOccurred(kind);
   } catch (e) { /* пусто */ }
+}
+
+// ---------- отправка действий боту ----------
+// Главный способ — tg.sendData (мини-апп закрывается, данные уходят в чат).
+// Но он работает ТОЛЬКО когда приложение открыто кнопкой внутри Telegram.
+// Если приложение открыли по прямой ссылке / вне Telegram — sendData молчит.
+// Тогда используем диплинк на бота (t.me/bot?start=...) — те же действия.
+function sendOrDeepLink(data) {
+  try {
+    if (window.Telegram && window.Telegram.WebApp && tg.sendData) {
+      tg.sendData(JSON.stringify(data));
+      return;
+    }
+  } catch (e) { /* идём в фолбэк */ }
+  let start = 'afisha';
+  if (data.action === 'open_movie') start = 'movie_' + data.code;
+  else if (data.action === 'remind_movie') start = 'remind_' + data.code;
+  else if (data.action === 'subscribe_code_day') start = 'code_day_on';
+  else if (data.action === 'save_favs') start = 'save_favs';
+  window.open('https://t.me/kapitan_kino_bot?start=' + start, '_blank');
 }
 
 const ratingBadge = (m) => {
@@ -182,7 +202,7 @@ function showCodeDay(meta) {
   const bell = document.getElementById('btn-cod-bell');
   if (bell) bell.onclick = () => {
     haptic('ok');
-    tg.sendData(JSON.stringify({ action: 'subscribe_code_day' }));
+    sendOrDeepLink({ action: 'subscribe_code_day' });
   };
 }
 
@@ -312,7 +332,7 @@ function renderGrid() {
       </div>
     </div>`).join('');
   const b = document.getElementById('btn-backup');
-  if (b) b.onclick = () => tg.sendData(JSON.stringify({ action: 'save_favs', codes: getFavs() }));
+  if (b) b.onclick = () => sendOrDeepLink({ action: 'save_favs', codes: getFavs() });
   // каскадное появление карточек
   Array.from(c.children).forEach((el, i) => {
     el.style.animationDelay = (Math.min(i, 24) * 0.03) + 's';
@@ -346,7 +366,7 @@ function openDetail(code) {
     </div>`;
   document.getElementById('btn-back').onclick = () => { view = 'grid'; showView('catalog'); renderGrid(); };
   document.getElementById('btn-open').onclick =
-    () => tg.sendData(JSON.stringify({ action: 'open_movie', code }));
+    () => sendOrDeepLink({ action: 'open_movie', code });
   document.getElementById('btn-fav').onclick = () => { toggleFav(code); openDetail(code); };
   document.getElementById('btn-copy').onclick = () => {
     const done = () => {
@@ -362,7 +382,7 @@ function openDetail(code) {
     } else done();
   };
   document.getElementById('btn-remind').onclick = () =>
-    tg.sendData(JSON.stringify({ action: 'remind_movie', code }));
+    sendOrDeepLink({ action: 'remind_movie', code });
   document.getElementById('btn-share').onclick = () => {
     const text = `🎬 «${m.title}» — рейтинг ${m.rating || '—'} на КП! Угадай фильм по коду в боте «Капитан Кино» 🎲`;
     tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/kapitan_kino_bot')}&text=${encodeURIComponent(text)}`);
