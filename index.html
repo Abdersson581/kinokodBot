@@ -11,7 +11,9 @@
   <link rel="stylesheet" href="style.css?v=14" />
 </head>
 <body>
-  <button id="btn-top" class="btn-top hidden" title="Наверх">⬆️</button>
+  <button id="btn-top" class="btn-top hidden" title="Наверх" aria-label="Наверх">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l8-8 8 8"/></svg>
+  </button>
 
   <div id="gate" class="hidden">
     <div class="gate">
@@ -71,7 +73,8 @@
     <!-- Карточка фильма -->
     <div id="view-detail" class="hidden"></div>
 
-    <!-- Тренажёр -->
+    <!-- Тренажёр + эмодзи-загадки -->
+    <div id="view-emoji" class="hidden"></div>
     <div id="view-game" class="hidden"></div>
 
     <footer class="footer">
@@ -104,3 +107,4 @@
   <script src="script.js?v=14"></script>
 </body>
 </html>
+

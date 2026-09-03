@@ -628,3 +628,38 @@ mark.hl { background: #d4a01733; color: inherit; border-radius: 3px; padding: 0 
 .btn-bell { flex: 0 0 auto; border: none; border-radius: 8px; background: rgba(255,255,255,.10); font-size: 15px; padding: 6px 9px; cursor: pointer; }
 .light .btn-bell { background: rgba(0,0,0,.06); }
 
+
+/* ===== v16: кнопка наверх (glass), эмодзи-игра, кубик жанра ===== */
+.btn-top {
+  position: fixed; right: 14px; bottom: 20px; z-index: 60;
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(22, 22, 28, 0.55);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(212, 160, 23, 0.45);
+  color: #f0c75e; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,.35);
+  opacity: .92; transition: opacity .25s, transform .2s;
+}
+.btn-top:active { transform: scale(.92); }
+.btn-top.hidden { opacity: 0; pointer-events: none; }
+.light .btn-top { background: rgba(255,255,255,.65); color: #a8800f; }
+
+.chip-rnd { font-size: 15px; padding: 7px 11px; }
+
+.emoji-game {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px; padding: 16px; margin: 12px 14px 6px;
+  text-align: center;
+}
+.emoji-title { margin: 0 0 10px; font-size: 17px; color: #f0c75e; }
+.emoji-q {
+  font-size: 44px; letter-spacing: 6px; margin: 8px 0 16px;
+  text-shadow: 0 2px 12px rgba(240,199,94,.25);
+}
+.emoji-game .btn-option { width: 100%; margin: 6px 0; text-align: left; }
+.emoji-game .btn-option.correct { border-color: #22c55e; background: rgba(34,197,94,.15); }
+.emoji-game .btn-option.wrong { border-color: #ef4444; background: rgba(239,68,68,.12); }
+.light .emoji-game { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.08); }
+.light .emoji-title { color: #a8800f; }

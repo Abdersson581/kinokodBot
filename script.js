@@ -72,6 +72,8 @@ function sendOrDeepLink(data) {
   else if (data.action === 'save_favs') start = 'save_favs';
   else if (data.action === 'access_check') start = 'check_sub';
   else if (data.action === 'quiz_result') start = 'quiz_' + data.correct + '_' + data.total;
+  else if (data.action === 'rate_movie') start = 'rate_' + data.code;
+  else if (data.action === 'review_movie') start = 'review_' + data.code;
   haptic('light');
   try {
     tg.openTelegramLink('https://t.me/kapitan_kino_bot?start=' + start);
@@ -116,6 +118,7 @@ async function loadMovies() {
     ALL = await r.json();
     COLLS = rc ? await rc.json() : [];
     const meta = rm ? await rm.json() : {};
+    EMOJI_RIDDLES = Array.isArray(meta.emoji_riddles) ? meta.emoji_riddles : [];
     updateSubtitle();
     renderGenreChips();
     showCodeDay(meta);
@@ -147,6 +150,7 @@ function updateSubtitle() {
 }
 
 // Чипы жанров: собираются из витрины, тап — фильтр сетки
+let LAST_TOP_GENRES = [];
 function renderGenreChips() {
   const wrap = document.getElementById('genre-chips');
   if (!wrap) return;
@@ -154,15 +158,23 @@ function renderGenreChips() {
   ALL.forEach(m => (m.genres || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1)));
   const top = [...counter.entries()].filter(([, n]) => n >= 3)
     .sort((a, b) => b[1] - a[1]).slice(0, 10);
+  LAST_TOP_GENRES = top.map(([g]) => g);
   if (!top.length) return;
-  wrap.innerHTML = `<button class="chip${activeGenre === '' ? ' active' : ''}" data-g="">Все</button>` +
+  wrap.innerHTML = `<button class="chip chip-rnd" data-g="__rnd__" title="Случайный жанр">🎲</button>` +
+    `<button class="chip${activeGenre === '' ? ' active' : ''}" data-g="">Все</button>` +
     top.map(([g, n]) =>
       `<button class="chip${activeGenre === g ? ' active' : ''}" data-g="${esc(g)}">${esc(g)} <em>${n}</em></button>`
     ).join('');
   wrap.classList.remove('hidden');
   wrap.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
-    activeGenre = ch.dataset.g;
     haptic('light');
+    if (ch.dataset.g === '__rnd__') {
+      const pool = LAST_TOP_GENRES.filter(g => g !== activeGenre);
+      if (!pool.length) return;
+      activeGenre = pool[Math.floor(Math.random() * pool.length)];
+    } else {
+      activeGenre = ch.dataset.g;
+    }
     renderGenreChips();
     renderGrid();
   }));
@@ -363,6 +375,8 @@ function openDetail(code) {
           <button class="btn-primary" id="btn-open">🔓 Открыть код</button>
           <button class="btn-fav ${fav ? 'active' : ''}" id="btn-fav">${fav ? '❤️ В «Моём»' : '🤍 Хочу посмотреть'}</button>
           <button class="btn-secondary" id="btn-copy">📎 Скопировать код</button>
+          <button class="btn-secondary" id="btn-rate">🌟 Оценить</button>
+          <button class="btn-secondary" id="btn-review">✍️ Отзыв</button>
           <button class="btn-secondary" id="btn-remind">🔔 Напомнить через час</button>
           <button class="btn-secondary" id="btn-share">📤 Поделиться с другом</button>
         </div>
@@ -387,6 +401,10 @@ function openDetail(code) {
   };
   document.getElementById('btn-remind').onclick = () =>
     sendOrDeepLink({ action: 'remind_movie', code });
+  document.getElementById('btn-rate').onclick = () =>
+    sendOrDeepLink({ action: 'rate_movie', code });
+  document.getElementById('btn-review').onclick = () =>
+    sendOrDeepLink({ action: 'review_movie', code });
   document.getElementById('btn-share').onclick = () => {
     const text = `🎬 «${m.title}» — рейтинг ${m.rating || '—'} на КП! Угадай фильм по коду в боте «Капитан Кино» 🎲`;
     tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/kapitan_kino_bot')}&text=${encodeURIComponent(text)}`);
@@ -470,14 +488,54 @@ function showView(name) {
   document.getElementById('view-cols').classList.toggle('hidden', name !== 'cols');
   document.getElementById('view-detail').classList.toggle('hidden', name !== 'detail');
   document.getElementById('view-game').classList.toggle('hidden', name !== 'game');
+  document.getElementById('view-emoji').classList.toggle('hidden', name !== 'game');
   document.getElementById('toolbar').classList.toggle('hidden', name !== 'catalog');
   document.querySelectorAll('.tab').forEach(t =>
     t.classList.toggle('active', t.dataset.view === name || (name === 'catalog' && t.dataset.view === view)));
 }
 
+// ---------- мини-игра «😀 Угадай по эмодзи» ----------
+let EMOJI_RIDDLES = [];
+function renderEmojiGame() {
+  const box = document.getElementById('view-emoji');
+  if (!box) return;
+  if (!EMOJI_RIDDLES.length) { box.innerHTML = ''; return; }
+  const r = EMOJI_RIDDLES[Math.floor(Math.random() * EMOJI_RIDDLES.length)];
+  box.innerHTML = `
+    <div class="emoji-game">
+      <h2 class="emoji-title">😀 Угадай по эмодзи</h2>
+      <div class="emoji-q">${esc(r.emoji)}</div>
+      <div class="game-options">
+        ${r.options.map(t => `<button class="btn-option" data-t="${esc(t)}" data-a="${esc(r.answer)}">${esc(t)}</button>`).join('')}
+      </div>
+      <button class="btn-back" id="emoji-next">🎲 Другая загадка</button>
+    </div>`;
+  box.querySelectorAll('.btn-option').forEach(b => b.addEventListener('click', () => {
+    if (box.dataset.locked === '1') return;
+    box.dataset.locked = '1';
+    const right = b.dataset.t === b.dataset.a;
+    haptic(right ? 'ok' : 'error');
+    b.classList.add(right ? 'correct' : 'wrong');
+    box.querySelectorAll('.btn-option').forEach(x => {
+      if (x.dataset.t === x.dataset.a) x.classList.add('correct');
+      x.disabled = true;
+    });
+    const code = (ALL.find(m => m.title === r.answer) || {}).code;
+    if (code) {
+      const open = document.createElement('button');
+      open.className = 'btn-primary';
+      open.style.marginTop = '10px';
+      open.textContent = `🔓 Открыть код «${r.answer}»`;
+      open.onclick = () => sendOrDeepLink({ action: 'open_movie', code });
+      box.querySelector('.emoji-game').appendChild(open);
+    }
+  }));
+  document.getElementById('emoji-next').onclick = () => { haptic('light'); box.dataset.locked = '0'; renderEmojiGame(); };
+}
+
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
   view = t.dataset.view;
-  if (view === 'game') { showView('game'); startGame(); }
+  if (view === 'game') { showView('game'); renderEmojiGame(); startGame(); }
   else if (view === 'cols') { showView('cols'); renderCols(); }
   else { showView('catalog'); renderGrid(); }
 }));
@@ -490,7 +548,7 @@ document.getElementById('search').addEventListener('input', () => {
 });
 document.getElementById('sort').addEventListener('change', renderGrid);
 
-// ---------- кнопка «наверх» ----------
+// ---------- кнопка «наверх» (glass-дизайн) ----------
 const btnTop = document.getElementById('btn-top');
 window.addEventListener('scroll', () => {
   btnTop.classList.toggle('hidden', window.scrollY < 700);
