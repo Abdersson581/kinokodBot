@@ -34,9 +34,10 @@ function renderMovies(movies) {
   `).join('');
 }
 
-// Открытие фильма: показываем код, юзер отправляет его боту
+// Открытие фильма: код автоматически уходит боту,
+// бот сам пришлёт карточку фильма (с проверкой подписки, как обычно)
 function openMovie(code) {
-  tg.showAlert(`🔑 Код этого фильма: ${code}\n\nОтправь его боту @kapitan_kino_bot — и открой фильм!`);
+  tg.sendData(JSON.stringify({ action: "open_movie", code: code }));
 }
 
 // Инициализация
