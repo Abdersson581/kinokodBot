@@ -175,9 +175,15 @@ function showCodeDay(meta) {
       <span class="code-day-code">🔑 ${esc(code)}</span>
       ${m ? `<span class="code-day-title"> • ${esc(m.title)}</span>` : ''}
       <button class="btn-lucky" id="btn-cod-open" style="margin-left:auto">Открыть</button>
+      <button class="btn-bell" id="btn-cod-bell" title="Напоминать каждый день">🔔</button>
     </div>`;
   banner.classList.remove('hidden');
   document.getElementById('btn-cod-open').onclick = () => openDetail(code);
+  const bell = document.getElementById('btn-cod-bell');
+  if (bell) bell.onclick = () => {
+    haptic('ok');
+    tg.sendData(JSON.stringify({ action: 'subscribe_code_day' }));
+  };
 }
 
 // ---------- подборки ----------
