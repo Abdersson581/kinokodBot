@@ -1,0 +1,26 @@
+[
+  {
+    "code": "1001",
+    "title": "Назад в будущее",
+    "year": 1985,
+    "rating": 8.7,
+    "genres": ["приключения", "комедия", "фантастика"],
+    "poster_url": "https://st.kp.li/director/LayerFoto.aspx?file=947946.jpg"
+  },
+  {
+    "code": "1002",
+    "title": "Криминальное чтиво",
+    "year": 1994,
+    "rating": 8.9,
+    "genres": ["криминал", "драма"],
+    "poster_url": "https://st.kp.li/director/LayerFoto.aspx?file=123456.jpg"
+  },
+  {
+    "code": "1003",
+    "title": "Брат",
+    "year": 1997,
+    "rating": 8.2,
+    "genres": ["драма", "криминал"],
+    "poster_url": "https://st.kp.li/director/LayerFoto.aspx?file=789012.jpg"
+  }
+]
