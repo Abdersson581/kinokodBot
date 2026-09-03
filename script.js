@@ -23,7 +23,7 @@ function posterHtml(m) {
     ${m.poster
       ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy"
            onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
-      : ''}
+      : `<div class="poster-placeholder"><span>🎬</span><em>${esc(m.title)}</em></div>`}
     <span class="code-badge">🔑 ${esc(m.code)}</span>
     ${getFavs().includes(m.code) ? '<span class="fav-badge">❤️</span>' : ''}
   </div>`;
