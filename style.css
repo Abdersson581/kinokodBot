@@ -13,22 +13,42 @@ body {
   padding: 12px;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Manrope', -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
-.header {
-  text-align: center;
-  padding: 10px 0 6px;
+/* Компактная шапка-брендинг */
+.header { padding: 6px 0 2px; }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
+.brand-mark {
+  font-size: 26px;
+  background: linear-gradient(135deg, rgba(255, 68, 102, .25), rgba(255, 209, 102, .18));
+  border: 1px solid rgba(255, 68, 102, .35);
+  border-radius: 14px;
+  padding: 7px 9px;
+  line-height: 1;
+}
+.brand-text { flex: 1; min-width: 0; }
 .header h1 {
   margin: 0;
-  font-size: 24px;
-  color: var(--accent);
-  letter-spacing: 0.5px;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: var(--text);
+  line-height: 1.15;
+}
+.brand-gold {
+  background: linear-gradient(90deg, var(--gold), #ff9f43);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .subtitle {
-  margin: 4px 0 0;
+  margin: 1px 0 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
 }
 .movies-grid {
   display: grid;
@@ -306,8 +326,8 @@ body.light .poster-wrap,
 body.light .game-poster { background: linear-gradient(135deg, #dfe3f2 0%, #c9cee6 100%); }
 body.light .code-badge { background: rgba(255,255,255,.9); }
 body.light .game-reveal { background: rgba(255,255,255,.92); color: var(--text); }
-/* Кнопка «Мне повезёт» */
-.toolbar .btn-lucky {
+/* Кнопка «Мне повезёт» (в шапке и плитке кода дня) */
+.btn-lucky {
   flex-shrink: 0;
   background: var(--card);
   border: 1px solid #2a3050;
@@ -316,6 +336,12 @@ body.light .game-reveal { background: rgba(255,255,255,.92); color: var(--text);
   padding: 8px 12px;
   border-radius: 10px;
   cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.btn-lucky:active { transform: scale(0.92) rotate(-8deg); }
+.brand .btn-lucky {
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  background: rgba(255, 209, 102, 0.08);
 }
 /* Плитка «Код дня» */
 .code-day {
@@ -347,6 +373,11 @@ body.light .game-reveal { background: rgba(255,255,255,.92); color: var(--text);
 }
 body.light .toolbar .btn-lucky,
 body.light .btn-share-sm { border-color: #d8dcea; }
+/* Светлые скелетоны */
+body.light .skel {
+  background: linear-gradient(90deg, #e4e8f4 25%, #f0f2fa 50%, #e4e8f4 75%);
+  background-size: 200% 100%;
+}
 
 /* Подборки */
 .cols-list {
@@ -380,3 +411,139 @@ body.light .btn-share-sm { border-color: #d8dcea; }
   padding: 2px 8px;
   border-radius: 8px;
 }
+/* Цветные чипы рейтинга */
+.rating-chip {
+  font-weight: 700;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+.rating-chip.good {
+  color: #2e8b57;
+  background: rgba(46, 139, 87, 0.15);
+}
+.rating-chip.neutral {
+  color: var(--muted);
+  background: rgba(139, 144, 167, 0.12);
+}
+body.light .rating-chip.good { background: rgba(46, 139, 87, 0.12); color: #1d6e42; }
+body.light .rating-chip.neutral { background: rgba(107, 112, 137, 0.12); }
+
+/* Стекло (glassmorphism) */
+.glass {
+  background: rgba(26, 31, 54, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+body.light .glass {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(0, 0, 0, 0.05);
+}
+.backup-card.glass, .code-day-inner.glass { border: none; }
+
+/* Скелетоны загрузки */
+.skeleton-card { pointer-events: none; }
+.skel {
+  background: linear-gradient(90deg, #1c2138 25%, #262c49 50%, #1c2138 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s infinite;
+  border-radius: 8px;
+}
+.skel.poster { width: 100%; aspect-ratio: 2/3; border-radius: 0; }
+.skel.line { height: 11px; margin: 9px 10px 0; }
+.skel.line.short { width: 55%; margin-bottom: 12px; }
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Hero-полка «Сейчас в тренде» */
+.hero-shelf { margin-top: 14px; }
+.shelf-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+.hero-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.hero-row::-webkit-scrollbar { display: none; }
+.hero-card {
+  position: relative;
+  flex: 0 0 150px;
+  aspect-ratio: 2/3;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  scroll-snap-align: start;
+  background: linear-gradient(135deg, #232948 0%, #141830 100%);
+}
+.hero-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+@media (hover: hover) {
+  .hero-card:hover img { transform: scale(1.05); }
+}
+.hero-rank {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(15, 18, 32, 0.8);
+  color: var(--gold);
+  font-weight: 800;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+}
+.hero-overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(180deg, transparent, rgba(10, 12, 24, 0.92) 65%);
+  padding: 26px 9px 9px;
+}
+.hero-overlay h3 {
+  margin: 0 0 4px;
+  font-size: 12.5px;
+  line-height: 1.25;
+  color: #fff;
+}
+/* Пульс плитки кода дня */
+.code-day-inner { animation: dayGlow 2.6s ease-in-out infinite; }
+@keyframes dayGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.0); }
+  50% { box-shadow: 0 0 18px 2px rgba(255, 209, 102, 0.18); }
+}
+
+/* Веер постеров в карточках подборок */
+.col-fan {
+  position: relative;
+  width: 78px;
+  height: 62px;
+  flex-shrink: 0;
+}
+.col-fan img {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 44px;
+  height: 62px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-left: -22px;
+  border: 2px solid var(--bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.col-emoji { font-size: 30px; }

@@ -49,8 +49,10 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&l
 
 const ratingBadge = (m) => {
   const r = parseFloat(m.rating);
-  if (!r) return '⭐ —';
-  return r >= 9 ? '<span class="badge-top">🔥 ⭐ ' + r + ' КП</span>' : '⭐ ' + m.rating + ' КП';
+  if (!r) return '<span class="rating-chip neutral">⭐ —</span>';
+  if (r >= 9) return '<span class="badge-top">🔥 ⭐ ' + r + '</span>';
+  if (r >= 8) return '<span class="rating-chip good">⭐ ' + r + '</span>';
+  return '<span class="rating-chip neutral">⭐ ' + r + '</span>';
 };
 
 // «Новинка» — фильм добавлен в базу в последние 30 дней
@@ -81,11 +83,43 @@ async function loadMovies() {
     COLLS = rc ? await rc.json() : [];
     const meta = rm ? await rm.json() : {};
     showCodeDay(meta);
+    renderHero();
     renderGrid();
   } catch (e) {
     document.getElementById('movies-container').innerHTML =
       '<p class="error">Не удалось загрузить афишу 😔</p>';
   }
+}
+
+// ---------- скелетоны (заглушки до загрузки данных) ----------
+function renderSkeletons() {
+  const c = document.getElementById('movies-container');
+  c.innerHTML = Array.from({ length: 8 }, () =>
+    '<div class="movie-card skeleton-card"><div class="skel poster"></div><div class="skel line"></div><div class="skel line short"></div></div>'
+  ).join('');
+}
+renderSkeletons();
+
+// ---------- hero-полка «Сейчас в тренде» ----------
+function renderHero() {
+  const top = [...ALL]
+    .filter(m => m.poster && parseFloat(m.rating))
+    .sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0))
+    .slice(0, 5);
+  const shelf = document.getElementById('hero-shelf');
+  if (top.length < 3 || !shelf) return;
+  document.getElementById('hero-row').innerHTML = top.map((m, i) => `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      <img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy"/>
+      <span class="hero-rank">#${i + 1}</span>
+      <div class="hero-overlay">
+        <h3>${esc(m.title)}</h3>
+        ${ratingBadge(m)}
+      </div>
+    </div>`).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.code)));
 }
 
 function showCodeDay(meta) {
@@ -111,15 +145,26 @@ function renderCols() {
     c.innerHTML = `<p class="error">Подборки появятся скоро 📚</p>`;
     return;
   }
-  c.innerHTML = COLLS.map(col => `
+  c.innerHTML = COLLS.map(col => {
+    const posters = col.codes
+      .map(cd => ALL.find(m => m.code === cd))
+      .filter(m => m && m.poster)
+      .slice(0, 3);
+    const fan = posters.length
+      ? `<div class="col-fan">${posters.map((p, i) =>
+          `<img src="${esc(p.poster)}" alt="" style="z-index:${3 - i};transform:rotate(${(i - 1) * 6}deg) translateX(${(i - 1) * 8}px)" loading="lazy"/>`
+        ).join('')}</div>`
+      : `<span class="col-emoji">${esc(col.emoji || '📚')}</span>`;
+    return `
     <div class="col-card" data-col="${esc(col.code)}">
-      <span class="col-emoji">${esc(col.emoji || '📚')}</span>
+      ${fan}
       <div class="col-body">
-        <h3>${esc(col.title)}</h3>
+        <h3>${esc(col.emoji || '📚')} ${esc(col.title)}</h3>
         <p>${col.codes.length} фильм(ов)</p>
       </div>
       <button class="btn-share-sm" data-share="${esc(col.code)}" title="Поделиться">📤</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   c.querySelectorAll('.col-card').forEach(el =>
     el.addEventListener('click', (e) => {
       if (e.target.closest('.btn-share-sm')) return;

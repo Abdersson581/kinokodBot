@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Киноафиша | Капитан Кино</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="style.css?v=9" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=10" />
 </head>
 <body>
   <div id="gate" class="hidden">
@@ -20,8 +23,14 @@
   </div>
   <div id="app" class="hidden">
     <header class="header">
-      <h1>🎬 Киноафиша</h1>
-      <p class="subtitle">Фильмы, которые можно посмотреть</p>
+      <div class="brand">
+        <span class="brand-mark">🎬</span>
+        <div class="brand-text">
+          <h1>Кино<span class="brand-gold">афиша</span></h1>
+          <p class="subtitle">Капитан Кино · 68 фильмов</p>
+        </div>
+        <button class="btn-lucky" id="btn-lucky" title="Мне повезёт">🎲</button>
+      </div>
     </header>
 
     <nav class="tabs">
@@ -33,17 +42,20 @@
 
     <!-- Афиша + Моё -->
     <div id="view-catalog">
-      <div class="toolbar" id="toolbar">
-        <input type="text" id="search" placeholder="🔍 Поиск фильма…" />
+      <div class="toolbar glass" id="toolbar">
+        <input type="text" id="search" placeholder="🔍 Поиск или код…" />
         <select id="sort">
           <option value="title">По названию</option>
           <option value="rating">По рейтингу</option>
           <option value="code">По коду</option>
           <option value="new">🔥 По новизне</option>
         </select>
-        <button class="btn-lucky" id="btn-lucky">🎲</button>
       </div>
       <div id="code-day-banner" class="code-day hidden"></div>
+      <div id="hero-shelf" class="hero-shelf hidden">
+        <h2 class="shelf-title">🔥 Сейчас в тренде</h2>
+        <div class="hero-row" id="hero-row"></div>
+      </div>
       <main id="movies-container" class="movies-grid"></main>
     </div>
 
@@ -62,6 +74,6 @@
       <p>Разгадай код — открой фильм 🎁</p>
     </footer>
   </div>
-  <script src="script.js?v=9"></script>
+  <script src="script.js?v=10"></script>
 </body>
 </html>
