@@ -58,23 +58,27 @@ function haptic(kind = 'light') {
 }
 
 // ---------- отправка действий боту ----------
-// Главный способ — tg.sendData (мини-апп закрывается, данные уходят в чат).
-// Но он работает ТОЛЬКО когда приложение открыто кнопкой внутри Telegram.
-// Если приложение открыли по прямой ссылке / вне Telegram — sendData молчит.
-// Тогда используем диплинк на бота (t.me/bot?start=...) — те же действия.
+// ВАЖНО: tg.sendData() работает ТОЛЬКО когда мини-апп запущен через
+// reply-кнопку клавиатуры. При запуске через menu button, inline кнопку
+// или диплинк он МОЛЧА ничего не делает (даже не бросает исключений) —
+// из-за этого кнопки «не работают». Поэтому все действия уводим через
+// ДИПЛИНК: tg.openTelegramLink открывает чат с ботом и отправляет
+// /start с параметром — это работает при любом способе запуска.
 function sendOrDeepLink(data) {
-  try {
-    if (window.Telegram && window.Telegram.WebApp && tg.sendData) {
-      tg.sendData(JSON.stringify(data));
-      return;
-    }
-  } catch (e) { /* идём в фолбэк */ }
   let start = 'afisha';
   if (data.action === 'open_movie') start = 'movie_' + data.code;
   else if (data.action === 'remind_movie') start = 'remind_' + data.code;
   else if (data.action === 'subscribe_code_day') start = 'code_day_on';
   else if (data.action === 'save_favs') start = 'save_favs';
-  window.open('https://t.me/kapitan_kino_bot?start=' + start, '_blank');
+  else if (data.action === 'access_check') start = 'check_sub';
+  else if (data.action === 'quiz_result') start = 'quiz_' + data.correct + '_' + data.total;
+  haptic('light');
+  try {
+    tg.openTelegramLink('https://t.me/kapitan_kino_bot?start=' + start);
+  } catch (e) {
+    // даже openTelegramLink недоступен (открыто вне Telegram) — обычная ссылка
+    window.open('https://t.me/kapitan_kino_bot?start=' + start, '_blank');
+  }
 }
 
 const ratingBadge = (m) => {
@@ -455,7 +459,7 @@ function renderGameEnd() {
       </div>
     </div>`;
   document.getElementById('btn-send-score').onclick = () =>
-    tg.sendData(JSON.stringify({ action: 'quiz_result', correct, total: rounds.length }));
+    sendOrDeepLink({ action: 'quiz_result', correct, total: rounds.length });
   document.getElementById('btn-again').onclick = startGame;
   document.getElementById('btn-game-back2').onclick = () => { view = 'grid'; showView('catalog'); renderGrid(); };
 }
