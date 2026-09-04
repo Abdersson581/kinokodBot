@@ -461,8 +461,7 @@ function openDetail(code) {
   document.getElementById('btn-remind').onclick = () =>
     sendOrDeepLink({ action: 'remind_movie', code });
   const trailerBtn = document.getElementById('btn-trailer');
-  if (trailerBtn) trailerBtn.onclick =
-    () => sendOrDeepLink({ action: 'trailer_movie', code });
+  if (trailerBtn) trailerBtn.onclick = () => openTrailer(m);
   document.getElementById('btn-rate').onclick = () =>
     sendOrDeepLink({ action: 'rate_movie', code });
   document.getElementById('btn-review').onclick = () =>
@@ -646,6 +645,38 @@ document.getElementById('btn-lucky').addEventListener('click', () => {
 document.getElementById('btn-kinogod').addEventListener('click', () => {
   sendOrDeepLink({ action: 'kinogod' });
 });
+// ---------- Трейлер: YouTube embed прямо в приложении ----------
+function openTrailer(m) {
+  if (!m) return;
+  if (!m.trailer_yt) {
+    // Нет YouTube-трейлера — уводим в бота (виджет Кинопоиска как запасной)
+    sendOrDeepLink({ action: 'trailer_movie', code: m.code });
+    return;
+  }
+  haptic('light');
+  const modal = document.getElementById('trailer-modal');
+  const frame = document.getElementById('trailer-frame');
+  if (!modal || !frame) return;
+  frame.src = 'https://www.youtube.com/embed/' + m.trailer_yt +
+              '?autoplay=1&rel=0&playsinline=1';
+  modal.classList.remove('hidden');
+}
+
+function closeTrailer() {
+  const modal = document.getElementById('trailer-modal');
+  const frame = document.getElementById('trailer-frame');
+  if (frame) frame.src = 'about:blank'; // останавливаем воспроизведение
+  if (modal) modal.classList.add('hidden');
+}
+
+// Глобальные обработчики модалки (один раз, а не на каждый openDetail)
+(function initTrailerModal() {
+  const bg = document.getElementById('trailer-modal');
+  if (bg) bg.addEventListener('click', (e) => { if (e.target === bg) closeTrailer(); });
+  const closeBtn = document.getElementById('btn-trailer-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeTrailer);
+})();
+
 // ---------- видимый отчёт об ошибках (чтобы вместо «белого экрана» было видно, что сломалось) ----------
 window.addEventListener('error', (e) => {
   try {

@@ -626,6 +626,12 @@ mark.hl { background: #d4a01733; color: inherit; border-radius: 3px; padding: 0 
 .light .modal-card { background: #fff; color: #222; }
 .light .modal-card p { color: #444; }
 
+/* ===== v25: плеер трейлера (YouTube embed) ===== */
+.trailer-card { max-width: 560px; padding: 14px; background: #000 !important; border: none; }
+.trailer-frame-wrap { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; }
+.trailer-frame-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+#btn-trailer-close { z-index: 2; background: rgba(0,0,0,.45); border-radius: 50%; width: 30px; height: 30px; line-height: 26px; text-align: center; color: #fff; }
+
 .btn-bell { flex: 0 0 auto; border: none; border-radius: 8px; background: rgba(255,255,255,.10); font-size: 15px; padding: 6px 9px; cursor: pointer; }
 .light .btn-bell { background: rgba(0,0,0,.06); }
 
