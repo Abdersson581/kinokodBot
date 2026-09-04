@@ -664,30 +664,45 @@ mark.hl { background: #d4a01733; color: inherit; border-radius: 3px; padding: 0 
 .light .emoji-game { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.08); }
 .light .emoji-title { color: #a8800f; }
 
-/* ===== v17: «🙈 Скрыть разгаданные» + синхронизация с ботом ===== */
+/* ===== v17/v19: «🙈 Разгаданные» (пилюля) + синхронизация с ботом ===== */
+.toolbar { flex-wrap: wrap; }
+.toolbar input { min-width: 130px; }
 .toolbar-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   margin-top: 8px;
+  width: 100%;
 }
-.hide-toggle {
-  display: flex;
+.hide-toggle { position: relative; cursor: pointer; user-select: none; }
+.hide-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.hide-toggle-pill {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
+  padding: 7px 13px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.14);
   font-size: 13px;
   color: #9aa1b5;
-  cursor: pointer;
-  user-select: none;
+  white-space: nowrap;
+  transition: background .15s, border-color .15s, color .15s;
 }
-.hide-toggle input {
-  accent-color: #ffd166;
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
+.hide-toggle.on .hide-toggle-pill {
+  background: rgba(255,209,102,.16);
+  border-color: #ffd166;
+  color: #ffd166;
+}
+.hide-toggle:active .hide-toggle-pill { transform: scale(.96); }
+.light .hide-toggle-pill { border-color: rgba(20,20,40,.18); color: #5a5f70; }
+.light .hide-toggle.on .hide-toggle-pill {
+  background: rgba(255,193,7,.18);
+  border-color: #c9a227;
+  color: #a8800f;
 }
 .btn-sync {
+  flex-shrink: 0;
   background: none;
   border: 1px solid rgba(255,255,255,.14);
   border-radius: 20px;

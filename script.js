@@ -75,9 +75,13 @@ function parseUnlockedHash() {
 function initHideToggle() {
   const box = document.getElementById('hide-unlocked');
   if (!box) return;
+  const wrap = document.getElementById('hide-toggle-wrap');
+  const syncCls = () => { if (wrap) wrap.classList.toggle('on', box.checked); };
   box.checked = localStorage.getItem(HIDE_KEY) === '1';
+  syncCls();
   box.addEventListener('change', () => {
     localStorage.setItem(HIDE_KEY, box.checked ? '1' : '');
+    syncCls();
     haptic('light');
     renderGrid();
   });
