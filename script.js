@@ -122,6 +122,7 @@ function sendOrDeepLink(data) {
   else if (data.action === 'review_movie') start = 'review_' + data.code;
   else if (data.action === 'trailer_movie') start = 'trailer_' + data.code;
   else if (data.action === 'sync_unlocked') start = 'sync_unlocked';
+  else if (data.action === 'kinogod') start = 'kinogod';
   haptic('light');
   try {
     tg.openTelegramLink('https://t.me/kapitan_kino_bot?start=' + start);
@@ -639,9 +640,10 @@ document.getElementById('btn-lucky').addEventListener('click', () => {
   openDetail(m.code);
 });
 
-// 🎬 «Мой Киногод» — диплинк в бота (бот покажет карточку)
+// 🎬 «Мой Киногод» — диплинк в бота через sendOrDeepLink: приложение
+// сворачивается (tg.close), и в чате с ботом сразу видна карточка «Киногод».
 document.getElementById('btn-kinogod').addEventListener('click', () => {
-  tg.openTelegramLink('https://t.me/kapitan_kino_bot?start=kinogod');
+  sendOrDeepLink({ action: 'kinogod' });
 });
 // ---------- видимый отчёт об ошибках (чтобы вместо «белого экрана» было видно, что сломалось) ----------
 window.addEventListener('error', (e) => {
