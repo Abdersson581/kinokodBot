@@ -129,6 +129,10 @@ function sendOrDeepLink(data) {
     // даже openTelegramLink недоступен (открыто вне Telegram) — обычная ссылка
     window.open('https://t.me/kapitan_kino_bot?start=' + start, '_blank');
   }
+  // Сворачиваем мини-апп: пользователь сразу видит чат с ботом, куда придёт
+  // трейлер/сообщение (иначе webview висит поверх и ответ бота не виден).
+  // Небольшая задержка — дать openTelegramLink успеть начать переход.
+  setTimeout(() => { try { tg.close(); } catch (e) { /* пусто */ } }, 300);
 }
 
 const ratingBadge = (m) => {
