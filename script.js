@@ -645,7 +645,23 @@ document.getElementById('btn-lucky').addEventListener('click', () => {
 document.getElementById('btn-kinogod').addEventListener('click', () => {
   sendOrDeepLink({ action: 'kinogod' });
 });
-// ---------- Трейлер: YouTube embed прямо в приложении ----------
+// ---------- Трейлер: YouTube embed на весь экран ----------
+function _requestFs(el) {
+  try {
+    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.msRequestFullscreen) el.msRequestFullscreen();
+  } catch (e) { /* пусто */ }
+}
+
+function _exitFs() {
+  try {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else if (document.webkitFullscreenElement) document.webkitExitFullscreen();
+    else if (document.msExitFullscreen) document.msExitFullscreen();
+  } catch (e) { /* пусто */ }
+}
+
 function openTrailer(m) {
   if (!m) return;
   if (!m.trailer_yt) {
@@ -658,11 +674,15 @@ function openTrailer(m) {
   const frame = document.getElementById('trailer-frame');
   if (!modal || !frame) return;
   frame.src = 'https://www.youtube.com/embed/' + m.trailer_yt +
-              '?autoplay=1&rel=0&playsinline=1';
+              '?autoplay=1&rel=0&playsinline=1&fs=1';
   modal.classList.remove('hidden');
+  // Разворачиваем на весь экран сразу (на Android YouTube сам уйдёт в
+  // полноэкранный плеер; на iOS/WebView хотя бы заполним весь экран приложения)
+  _requestFs(modal);
 }
 
 function closeTrailer() {
+  _exitFs();
   const modal = document.getElementById('trailer-modal');
   const frame = document.getElementById('trailer-frame');
   if (frame) frame.src = 'about:blank'; // останавливаем воспроизведение

@@ -626,11 +626,25 @@ mark.hl { background: #d4a01733; color: inherit; border-radius: 3px; padding: 0 
 .light .modal-card { background: #fff; color: #222; }
 .light .modal-card p { color: #444; }
 
-/* ===== v25: плеер трейлера (YouTube embed) ===== */
-.trailer-card { max-width: 560px; padding: 14px; background: #000 !important; border: none; }
-.trailer-frame-wrap { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; }
+/* ===== v25/v26: полноэкранный плеер трейлера (YouTube embed) ===== */
+#trailer-modal { padding: 0; }
+.trailer-card {
+  max-width: none; width: 100vw; height: 100dvh;
+  padding: 0; background: #000 !important; border: none;
+  border-radius: 0; overflow: hidden;
+}
+.trailer-frame-wrap {
+  position: relative; width: 100%; height: 100%;
+  aspect-ratio: auto; border-radius: 0; overflow: hidden; background: #000;
+}
 .trailer-frame-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-#btn-trailer-close { z-index: 2; background: rgba(0,0,0,.45); border-radius: 50%; width: 30px; height: 30px; line-height: 26px; text-align: center; color: #fff; }
+#btn-trailer-close {
+  z-index: 2;
+  position: fixed; top: 14px; right: 14px;
+  background: rgba(0,0,0,.55); border-radius: 50%;
+  width: 38px; height: 38px; line-height: 34px; text-align: center;
+  color: #fff; font-size: 20px;
+}
 
 .btn-bell { flex: 0 0 auto; border: none; border-radius: 8px; background: rgba(255,255,255,.10); font-size: 15px; padding: 6px 9px; cursor: pointer; }
 .light .btn-bell { background: rgba(0,0,0,.06); }
