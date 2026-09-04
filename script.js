@@ -717,33 +717,26 @@ function _exitFs() {
 
 function openTrailer(m) {
   if (!m) return;
-  if (!m.trailer_yt && !m.trailer_mp4) {
-    // Нет трейлера вовсе — просто ничего не делаем (кнопка не показывается)
+  if (!m.trailer_yt && !m.trailer_file_id) {
     return;
   }
   haptic('light');
+  if (m.trailer_file_id) {
+    // Трейлер хранится в Telegram — открываем в боте (приложение само свернётся)
+    sendOrDeepLink({ action: 'trailer', code: m.code });
+    return;
+  }
+  // Fallback: YouTube embed на весь экран
   const modal = document.getElementById('trailer-modal');
   const frame = document.getElementById('trailer-frame');
   const video = document.getElementById('trailer-video');
   if (!modal || !frame || !video) return;
-  if (m.trailer_mp4) {
-    // Свой mp4 с нашего CDN — показываем <video> (не светим чужой канал)
-    frame.classList.add('hidden');
-    video.classList.remove('hidden');
-    frame.src = 'about:blank';
-    video.src = m.trailer_mp4;
-    video.play().catch(() => {}); // автоплей после клика по кнопке — ок
-  } else if (m.trailer_yt) {
-    // Fallback: YouTube embed
-    video.classList.add('hidden');
-    video.removeAttribute('src');
-    frame.classList.remove('hidden');
-    frame.src = 'https://www.youtube.com/embed/' + m.trailer_yt +
-                '?autoplay=1&rel=0&playsinline=1&fs=1';
-  }
+  video.classList.add('hidden');
+  video.removeAttribute('src');
+  frame.classList.remove('hidden');
+  frame.src = 'https://www.youtube.com/embed/' + m.trailer_yt +
+              '?autoplay=1&rel=0&playsinline=1&fs=1';
   modal.classList.remove('hidden');
-  // Разворачиваем на весь экран сразу (на Android YouTube сам уйдёт в
-  // полноэкранный плеер; на iOS/WebView хотя бы заполним весь экран приложения)
   _requestFs(modal);
 }
 
