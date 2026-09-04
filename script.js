@@ -120,6 +120,7 @@ function sendOrDeepLink(data) {
   else if (data.action === 'quiz_result') start = 'quiz_' + data.correct + '_' + data.total;
   else if (data.action === 'rate_movie') start = 'rate_' + data.code;
   else if (data.action === 'review_movie') start = 'review_' + data.code;
+  else if (data.action === 'trailer_movie') start = 'trailer_' + data.code;
   else if (data.action === 'sync_unlocked') start = 'sync_unlocked';
   haptic('light');
   try {
@@ -425,6 +426,7 @@ function openDetail(code) {
         <p class="desc">${esc(m.description || 'Описание скоро появится.')}</p>
         <div class="detail-actions">
           <button class="btn-primary" id="btn-open">🔓 Открыть код</button>
+          <button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>
           <button class="btn-fav ${fav ? 'active' : ''}" id="btn-fav">${fav ? '❤️ В «Моём»' : '🤍 Хочу посмотреть'}</button>
           <button class="btn-secondary" id="btn-copy">📎 Скопировать код</button>
           <button class="btn-secondary" id="btn-rate">🌟 Оценить</button>
@@ -453,6 +455,8 @@ function openDetail(code) {
   };
   document.getElementById('btn-remind').onclick = () =>
     sendOrDeepLink({ action: 'remind_movie', code });
+  document.getElementById('btn-trailer').onclick = () =>
+    sendOrDeepLink({ action: 'trailer_movie', code });
   document.getElementById('btn-rate').onclick = () =>
     sendOrDeepLink({ action: 'rate_movie', code });
   document.getElementById('btn-review').onclick = () =>
