@@ -23,7 +23,9 @@ function enterApp() {
   initHideToggle();
   loadMovies();
 }
-if (localStorage.getItem(ACCESS_KEY)) enterApp(); else showGate();
+// ВНИМАНИЕ: запуск (enterApp/showGate) перенесён в САМЫЙ КОНЕЦ файла —
+// раньше он выполнялся здесь, до объявления ALL/COLLS/обработчиков, и любое
+// падение верхнеуровневого кода оставляло приложение пустым (TDZ-гонка с fetch).
 
 // ---------- тема из Telegram ----------
 function applyTheme() {
@@ -629,3 +631,22 @@ document.getElementById('btn-lucky').addEventListener('click', () => {
 document.getElementById('btn-kinogod').addEventListener('click', () => {
   tg.openTelegramLink('https://t.me/kapitan_kino_bot?start=kinogod');
 });
+// ---------- видимый отчёт об ошибках (чтобы вместо «белого экрана» было видно, что сломалось) ----------
+window.addEventListener('error', (e) => {
+  try {
+    const el = document.getElementById('err-banner');
+    if (el) {
+      el.textContent = '⚠️ Ошибка приложения: ' + (e.message || 'неизвестная');
+      el.classList.remove('hidden');
+    }
+  } catch (_) {}
+});
+
+// ---------- ЗАПУСК (в самом конце файла: все объявления и обработчики готовы) ----------
+// Раньше enterApp() вызывался в начале файла, до объявления ALL/COLLS — из-за TDZ
+// гонки с fetch приложение открывалось пустым. Теперь запускаем, когда всё готово.
+if (localStorage.getItem(ACCESS_KEY) === '1') {
+  enterApp();
+} else {
+  showGate();
+}

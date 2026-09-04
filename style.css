@@ -698,3 +698,16 @@ mark.hl { background: #d4a01733; color: inherit; border-radius: 3px; padding: 0 
 }
 .btn-sync:active { transform: scale(.94); }
 .light .btn-sync { border-color: rgba(20,20,40,.18); color: #1c1f2b; }
+
+/* ===== v18: плашка ошибок ===== */
+#err-banner {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 999;
+  background: #b91c1c;
+  color: #fff;
+  font-size: 12px;
+  padding: 8px 12px;
+  text-align: center;
+}
+body.light #err-banner { background: #dc2626; }
