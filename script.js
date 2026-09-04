@@ -431,7 +431,7 @@ function openDetail(code) {
         <p class="desc">${esc(m.description || 'Описание скоро появится.')}</p>
         <div class="detail-actions">
           <button class="btn-primary" id="btn-open">🔓 Открыть код</button>
-          ${m.trailer ? '<button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>' : ''}
+          ${m.trailer_mp4 || m.trailer_yt ? '<button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>' : ''}
           <button class="btn-fav ${fav ? 'active' : ''}" id="btn-fav">${fav ? '❤️ В «Моём»' : '🤍 Хочу посмотреть'}</button>
           <button class="btn-secondary" id="btn-copy">📎 Скопировать код</button>
           <button class="btn-secondary" id="btn-rate">🌟 Оценить</button>
@@ -664,17 +664,30 @@ function _exitFs() {
 
 function openTrailer(m) {
   if (!m) return;
-  if (!m.trailer_yt) {
-    // Нет YouTube-трейлера — уводим в бота (виджет Кинопоиска как запасной)
-    sendOrDeepLink({ action: 'trailer_movie', code: m.code });
+  if (!m.trailer_yt && !m.trailer_mp4) {
+    // Нет трейлера вовсе — просто ничего не делаем (кнопка не показывается)
     return;
   }
   haptic('light');
   const modal = document.getElementById('trailer-modal');
   const frame = document.getElementById('trailer-frame');
-  if (!modal || !frame) return;
-  frame.src = 'https://www.youtube.com/embed/' + m.trailer_yt +
-              '?autoplay=1&rel=0&playsinline=1&fs=1';
+  const video = document.getElementById('trailer-video');
+  if (!modal || !frame || !video) return;
+  if (m.trailer_mp4) {
+    // Свой mp4 с нашего CDN — показываем <video> (не светим чужой канал)
+    frame.classList.add('hidden');
+    video.classList.remove('hidden');
+    frame.src = 'about:blank';
+    video.src = m.trailer_mp4;
+    video.play().catch(() => {}); // автоплей после клика по кнопке — ок
+  } else if (m.trailer_yt) {
+    // Fallback: YouTube embed
+    video.classList.add('hidden');
+    video.removeAttribute('src');
+    frame.classList.remove('hidden');
+    frame.src = 'https://www.youtube.com/embed/' + m.trailer_yt +
+                '?autoplay=1&rel=0&playsinline=1&fs=1';
+  }
   modal.classList.remove('hidden');
   // Разворачиваем на весь экран сразу (на Android YouTube сам уйдёт в
   // полноэкранный плеер; на iOS/WebView хотя бы заполним весь экран приложения)
@@ -685,7 +698,9 @@ function closeTrailer() {
   _exitFs();
   const modal = document.getElementById('trailer-modal');
   const frame = document.getElementById('trailer-frame');
+  const video = document.getElementById('trailer-video');
   if (frame) frame.src = 'about:blank'; // останавливаем воспроизведение
+  if (video) { video.pause(); video.removeAttribute('src'); }
   if (modal) modal.classList.add('hidden');
 }
 

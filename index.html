@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=26" />
+  <link rel="stylesheet" href="style.css?v=27" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -112,11 +112,12 @@
     </div>
   </div>
 
-  <!-- Модалка с трейлером (YouTube embed прямо в приложении) -->
+  <!-- Модалка с трейлером (свой mp4 или YouTube embed) -->
   <div id="trailer-modal" class="modal hidden">
     <div class="modal-card trailer-card">
       <button class="modal-close" id="btn-trailer-close">✕</button>
       <div class="trailer-frame-wrap">
+        <video id="trailer-video" controls playsinline preload="metadata"></video>
         <iframe id="trailer-frame"
                 src=""
                 allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
@@ -125,7 +126,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=26"></script>
+  <script src="script.js?v=27"></script>
 </body>
 </html>
 
