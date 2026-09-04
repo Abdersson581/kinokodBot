@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=14" />
+  <link rel="stylesheet" href="style.css?v=17" />
 </head>
 <body>
   <button id="btn-top" class="btn-top hidden" title="Наверх" aria-label="Наверх">
@@ -55,6 +55,13 @@
           <option value="code">По коду</option>
           <option value="new">🔥 По новизне</option>
         </select>
+        <div class="toolbar-row" id="toolbar-row">
+          <label class="hide-toggle" id="hide-toggle-wrap">
+            <input type="checkbox" id="hide-unlocked" />
+            <span>🙈 Скрыть разгаданные</span>
+          </label>
+          <button class="btn-sync" id="btn-sync" title="Синхронизировать с ботом">🔁</button>
+        </div>
       </div>
       <div id="genre-chips" class="genre-chips hidden"></div>
       <div id="code-day-banner" class="code-day hidden"></div>
@@ -104,7 +111,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=14"></script>
+  <script src="script.js?v=17"></script>
 </body>
 </html>
 

@@ -19,6 +19,8 @@ function enterApp() {
   localStorage.setItem(ACCESS_KEY, '1');
   document.getElementById('gate').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
+  parseUnlockedHash();
+  initHideToggle();
   loadMovies();
 }
 if (localStorage.getItem(ACCESS_KEY)) enterApp(); else showGate();
@@ -45,6 +47,44 @@ const toggleFav = (code) => {
   setFavs(f);
   haptic(f.has(code) ? 'ok' : 'light');
 };
+
+// ---------- разгаданные коды (для «🙈 Скрыть разгаданные») ----------
+// Синхронизируются с ботом кнопкой 🔁: бот присылает сообщение с web_app
+// кнопкой, у которой в URL хэш `#unlocked=код,код,…`. Здесь мы читаем этот
+// хэш, сохраняем в localStorage и по чекбоксу прячем разгаданные карточки.
+const UNLOCKED_KEY = 'kinoafisha_unlocked';
+const HIDE_KEY = 'kinoafisha_hide_unlocked';
+const getUnlocked = () => JSON.parse(localStorage.getItem(UNLOCKED_KEY) || '[]');
+
+function parseUnlockedHash() {
+  try {
+    const params = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const raw = params.get('unlocked');
+    if (!raw) return;
+    const codes = raw.split(',').map(s => s.trim()).filter(Boolean);
+    if (codes.length) {
+      localStorage.setItem(UNLOCKED_KEY, JSON.stringify([...new Set(codes)]));
+      // очищаем хэш, чтобы повторные открытия не переписывали старым списком
+      history.replaceState(null, '', location.pathname);
+    }
+  } catch (e) { /* пусто */ }
+}
+
+function initHideToggle() {
+  const box = document.getElementById('hide-unlocked');
+  if (!box) return;
+  box.checked = localStorage.getItem(HIDE_KEY) === '1';
+  box.addEventListener('change', () => {
+    localStorage.setItem(HIDE_KEY, box.checked ? '1' : '');
+    haptic('light');
+    renderGrid();
+  });
+  const btn = document.getElementById('btn-sync');
+  if (btn) btn.addEventListener('click', () => {
+    haptic('light');
+    sendOrDeepLink({ action: 'sync_unlocked' });
+  });
+}
 
 // ---------- утилиты ----------
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -74,6 +114,7 @@ function sendOrDeepLink(data) {
   else if (data.action === 'quiz_result') start = 'quiz_' + data.correct + '_' + data.total;
   else if (data.action === 'rate_movie') start = 'rate_' + data.code;
   else if (data.action === 'review_movie') start = 'review_' + data.code;
+  else if (data.action === 'sync_unlocked') start = 'sync_unlocked';
   haptic('light');
   try {
     tg.openTelegramLink('https://t.me/kapitan_kino_bot?start=' + start);
@@ -316,6 +357,11 @@ function renderGrid() {
   const sort = document.getElementById('sort').value;
   let list = view === 'fav' ? ALL.filter(m => getFavs().includes(m.code)) : [...ALL];
   if (activeGenre) list = list.filter(m => (m.genres || []).includes(activeGenre));
+  // 🙈 «Скрыть разгаданные»: прячем карточки, код которых есть в localStorage
+  if (localStorage.getItem(HIDE_KEY) === '1' && view !== 'fav') {
+    const unlockedSet = new Set(getUnlocked());
+    if (unlockedSet.size) list = list.filter(m => !unlockedSet.has(String(m.code)));
+  }
   if (q) {
     const digits = q.replace(/\D/g, '');
     list = list.filter(m =>

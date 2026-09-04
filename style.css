@@ -663,3 +663,38 @@ mark.hl { background: #d4a01733; color: inherit; border-radius: 3px; padding: 0 
 .emoji-game .btn-option.wrong { border-color: #ef4444; background: rgba(239,68,68,.12); }
 .light .emoji-game { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.08); }
 .light .emoji-title { color: #a8800f; }
+
+/* ===== v17: «🙈 Скрыть разгаданные» + синхронизация с ботом ===== */
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+.hide-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #9aa1b5;
+  cursor: pointer;
+  user-select: none;
+}
+.hide-toggle input {
+  accent-color: #ffd166;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.btn-sync {
+  background: none;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #f0f4fa;
+}
+.btn-sync:active { transform: scale(.94); }
+.light .btn-sync { border-color: rgba(20,20,40,.18); color: #1c1f2b; }
