@@ -431,7 +431,7 @@ function openDetail(code) {
         <p class="desc">${esc(m.description || 'Описание скоро появится.')}</p>
         <div class="detail-actions">
           <button class="btn-primary" id="btn-open">🔓 Открыть код</button>
-          <button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>
+          ${m.trailer ? '<button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>' : ''}
           <button class="btn-fav ${fav ? 'active' : ''}" id="btn-fav">${fav ? '❤️ В «Моём»' : '🤍 Хочу посмотреть'}</button>
           <button class="btn-secondary" id="btn-copy">📎 Скопировать код</button>
           <button class="btn-secondary" id="btn-rate">🌟 Оценить</button>
@@ -460,8 +460,9 @@ function openDetail(code) {
   };
   document.getElementById('btn-remind').onclick = () =>
     sendOrDeepLink({ action: 'remind_movie', code });
-  document.getElementById('btn-trailer').onclick = () =>
-    sendOrDeepLink({ action: 'trailer_movie', code });
+  const trailerBtn = document.getElementById('btn-trailer');
+  if (trailerBtn) trailerBtn.onclick =
+    () => sendOrDeepLink({ action: 'trailer_movie', code });
   document.getElementById('btn-rate').onclick = () =>
     sendOrDeepLink({ action: 'rate_movie', code });
   document.getElementById('btn-review').onclick = () =>
