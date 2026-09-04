@@ -38,7 +38,8 @@ tg.onEvent('themeChanged', applyTheme);
 // ---------- состояние ----------
 let ALL = [];                       // все фильмы
 let COLLS = [];                     // подборки
-let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game
+let NEWS = [];                      // последние новости кино
+let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game | news
 let activeGenre = '';               // выбранный жанр-фильтр ('' = все)
 const FAV_KEY = 'kinoafisha_favs';
 const getFavs = () => JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
@@ -172,6 +173,7 @@ async function loadMovies() {
     COLLS = rc ? await rc.json() : [];
     const meta = rm ? await rm.json() : {};
     EMOJI_RIDDLES = Array.isArray(meta.emoji_riddles) ? meta.emoji_riddles : [];
+    NEWS = Array.isArray(meta.recent_news) ? meta.recent_news : [];
     updateSubtitle();
     renderGenreChips();
     showCodeDay(meta);
@@ -332,6 +334,55 @@ function renderCols() {
       const text = `У меня в «Киноафише» подборка ${col.emoji || '📚'} «${col.title}» — ${col.codes.length} фильмов! Угадай их по кодам в боте «Капитан Кино» 🎬`;
       tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/kapitan_kino_bot')}&text=${encodeURIComponent(text)}`);
     }));
+}
+
+// ---------- лента «📰 Новости кино» ----------
+function renderNews() {
+  const c = document.getElementById('news-container');
+  if (!c) return;
+  if (!NEWS.length) {
+    c.innerHTML = '<p class="error">Пока нет новостей — загляните позже 📰</p>';
+    return;
+  }
+  // Новости приходят от новых к старшим — показываем сначала свежие
+  const items = [...NEWS].reverse();
+  c.innerHTML = items.map(n => {
+    const img = n.image
+      ? `<img src="${esc(n.image)}" alt="" loading="lazy" onerror="this.style.display='none'"/>`
+      : `<div class="news-thumb news-thumb-ph"><span>📰</span></div>`;
+    const when = _newsWhen(n.ts);
+    const source = n.source ? `<span class="news-source">${esc(n.source)}</span>` : '';
+    const url = n.link || '';
+    return `
+      <div class="news-card" data-link="${esc(url)}">
+        <div class="news-thumb-wrap">${img}</div>
+        <div class="news-body">
+          <h3>${esc(n.title || 'Новость')}</h3>
+          <div class="news-meta">${source}${source ? ' · ' : ''}${when}</div>
+        </div>
+      </div>`;
+  }).join('');
+  c.querySelectorAll('.news-card').forEach(el => {
+    el.addEventListener('click', () => {
+      const url = el.dataset.link;
+      if (!url) return;
+      haptic('light');
+      try { tg.openLink(url, { try_instant_view: false }); } catch (_) { window.open(url, '_blank'); }
+    });
+  });
+}
+
+function _newsWhen(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts * 1000;
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return 'только что';
+  if (min < 60) return min + ' мин назад';
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return hr + ' ч назад';
+  const d = Math.floor(hr / 24);
+  if (d < 7) return d + ' дн назад';
+  return new Date(ts * 1000).toLocaleDateString('ru-RU');
 }
 
 // ---------- бэкап «Моё» через бота ----------
@@ -547,6 +598,7 @@ function renderGameEnd() {
 function showView(name) {
   document.getElementById('view-catalog').classList.toggle('hidden', name !== 'catalog');
   document.getElementById('view-cols').classList.toggle('hidden', name !== 'cols');
+  document.getElementById('view-news').classList.toggle('hidden', name !== 'news');
   document.getElementById('view-detail').classList.toggle('hidden', name !== 'detail');
   document.getElementById('view-game').classList.toggle('hidden', name !== 'game');
   document.getElementById('view-emoji').classList.toggle('hidden', name !== 'game');
@@ -598,6 +650,7 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   view = t.dataset.view;
   if (view === 'game') { showView('game'); renderEmojiGame(); startGame(); }
   else if (view === 'cols') { showView('cols'); renderCols(); }
+  else if (view === 'news') { showView('news'); renderNews(); }
   else { showView('catalog'); renderGrid(); }
 }));
 

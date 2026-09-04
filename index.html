@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=27" />
+  <link rel="stylesheet" href="style.css?v=28" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -41,6 +41,7 @@
 
     <nav class="tabs">
       <button class="tab active" data-view="grid">🎬 Афиша</button>
+      <button class="tab" data-view="news">📰 Новости</button>
       <button class="tab" data-view="cols">📚 Подборки</button>
       <button class="tab" data-view="fav">❤️ Моё</button>
       <button class="tab" data-view="game">🏋 Тренажёр</button>
@@ -76,6 +77,11 @@
     <!-- Подборки -->
     <div id="view-cols" class="hidden">
       <main id="cols-container" class="cols-list"></main>
+    </div>
+
+    <!-- Новости кино -->
+    <div id="view-news" class="hidden">
+      <main id="news-container" class="news-feed"></main>
     </div>
 
     <!-- Карточка фильма -->
