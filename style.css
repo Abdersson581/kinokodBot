@@ -1033,3 +1033,46 @@ body.light #err-banner { background: #dc2626; }
 .light .similar-title { color: #1c1f2b; }
 .light .similar-poster { background: rgba(20,20,40,.04); }
 .light .similar-name { color: #1c1f2b; }
+
+/* ===== v33: профиль игрока ===== */
+.profile-feed { display: flex; flex-direction: column; gap: 10px; }
+.profile-card {
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 18px;
+  text-align: center;
+}
+.pf-ava { font-size: 42px; line-height: 1; margin-bottom: 8px; }
+.profile-card h2 { margin: 0 0 6px; font-size: 20px; }
+.pf-hint { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 4px 0 12px; }
+.pf-progress {
+  height: 8px; border-radius: 4px; background: rgba(255,255,255,.10);
+  margin: 12px auto 4px; max-width: 320px; overflow: hidden;
+}
+.pf-progress i {
+  display: block; height: 100%; border-radius: 4px;
+  background: linear-gradient(135deg, #d4a017, #f0c75e);
+}
+.pf-note { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.pf-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+.pf-stat {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px; padding: 10px;
+}
+.pf-stat b { display: block; font-size: 18px; margin-bottom: 2px; }
+.pf-stat span { font-size: 12px; color: var(--muted); }
+.pf-actions { display: flex; gap: 8px; margin-top: 14px; }
+.pf-actions .btn-primary, .pf-actions .btn-secondary { flex: 1; }
+.detail-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; justify-content: center; }
+.chip-dim { cursor: default; opacity: .8; font-size: 12px; padding: 6px 10px; }
+.chip-genre { font-size: 12px; padding: 6px 10px; }
+.chip-genre.active {
+  background: linear-gradient(135deg, #d4a017, #f0c75e);
+  border-color: transparent; color: #1c1f2b;
+}
+.light .profile-card { border-color: rgba(20,20,40,.10); }
+.light .pf-stat { background: rgba(20,20,40,.04); border-color: rgba(20,20,40,.08); }
+.light .pf-progress { background: rgba(20,20,40,.08); }
+.light .detail-chips .chip { border-color: rgba(20,20,40,.12); background: rgba(20,20,40,.04); }

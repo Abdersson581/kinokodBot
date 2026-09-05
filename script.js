@@ -19,6 +19,7 @@ function enterApp() {
   localStorage.setItem(ACCESS_KEY, '1');
   document.getElementById('gate').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
+  parseProfileHash();  // до parseUnlockedHash: тот очищает location.hash
   parseUnlockedHash();
   initHideToggle();
   loadMovies();
@@ -40,7 +41,8 @@ let ALL = [];                       // все фильмы
 let COLLS = [];                     // подборки
 let NEWS = [];                      // последние новости кино
 let LEADERBOARD = [];               // топ игроков сезона
-let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game | news | top
+let LEADERBOARD_KIND = 'week';      // week | total — по чему ранжируем
+let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game | news | top | profile
 let activeGenre = '';               // выбранный жанр-фильтр ('' = все)
 const FAV_KEY = 'kinoafisha_favs';
 const getFavs = () => JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
@@ -59,6 +61,31 @@ const toggleFav = (code) => {
 const UNLOCKED_KEY = 'kinoafisha_unlocked';
 const HIDE_KEY = 'kinoafisha_hide_unlocked';
 const getUnlocked = () => JSON.parse(localStorage.getItem(UNLOCKED_KEY) || '[]');
+
+// ---------- профиль игрока (уровень/баллы/стрик) ----------
+// Приезжает тем же хэшем от кнопки 🔁: `&profile=<urlencoded json>` — снимок
+// из бота (storage.build_tma_profile): уровень, прогресс, баллы, стрик,
+// разгадано кодов, место в топе. Храним в localStorage, показываем на вкладке
+// «👤 Профиль».
+const PROFILE_KEY = 'kinoafisha_profile';
+let PROFILE = null;
+
+function parseProfileHash() {
+  // ВАЖНО: вызывается ДО parseUnlockedHash() — тот очищает location.hash.
+  try {
+    const params = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const raw = params.get('profile');
+    if (raw) {
+      PROFILE = JSON.parse(raw);
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(PROFILE));
+    }
+  } catch (e) { /* битый json — оставляем старый профиль */ }
+  if (!PROFILE) {
+    try { PROFILE = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null'); }
+    catch (e) { PROFILE = null; }
+  }
+  if (PROFILE && view === 'profile') renderProfile();
+}
 
 function parseUnlockedHash() {
   try {
@@ -176,6 +203,7 @@ async function loadMovies() {
     EMOJI_RIDDLES = Array.isArray(meta.emoji_riddles) ? meta.emoji_riddles : [];
     NEWS = Array.isArray(meta.recent_news) ? meta.recent_news : [];
     LEADERBOARD = Array.isArray(meta.leaderboard) ? meta.leaderboard : [];
+    LEADERBOARD_KIND = meta.leaderboard_kind === 'total' ? 'total' : 'week';
     updateSubtitle();
     renderGenreChips();
     showCodeDay(meta);
@@ -387,7 +415,7 @@ function _newsWhen(ts) {
   return new Date(ts * 1000).toLocaleDateString('ru-RU');
 }
 
-// ---------- лидерборд «🏆 Топ недели» ----------
+// ---------- лидерборд «🏆 Топ» ----------
 function renderLeaderboard() {
   const c = document.getElementById('top-container');
   if (!c) return;
@@ -396,10 +424,16 @@ function renderLeaderboard() {
     return;
   }
   const medals = ['🥇', '🥈', '🥉'];
+  const weekly = LEADERBOARD_KIND === 'week';
+  const countLabel = (p) => weekly
+    ? `${p.unlocks} за 7 дней${p.total ? ` · всего ${p.total}` : ''}`
+    : `${p.unlocks} кодов`;
   c.innerHTML = `
     <div class="top-header">
-      <h2>🏆 Топ недели</h2>
-      <p class="top-subtitle">Кто угадал больше всех — тот и лидер!</p>
+      <h2>${weekly ? '🏆 Топ недели' : '🏆 Топ игроков'}</h2>
+      <p class="top-subtitle">${weekly
+        ? 'Кто угадал больше всех за последние 7 дней'
+        : 'Кто угадал больше всех — тот и лидер!'}</p>
     </div>
     <div class="top-list">
       ${LEADERBOARD.map((p, i) => `
@@ -407,11 +441,72 @@ function renderLeaderboard() {
           <div class="top-rank">${medals[i] || (i + 1)}</div>
           <div class="top-player">
             <span class="top-name">Игрок №${p.rank}</span>
-            <span class="top-count">${p.unlocks} кодов</span>
+            <span class="top-count">${esc(countLabel(p))}</span>
           </div>
           ${i === 0 ? '<span class="top-crown">👑</span>' : ''}
         </div>`).join('')}
     </div>`;
+}
+
+// ---------- профиль «👤» (уровень/баллы/стрик) ----------
+// Данные приезжают от кнопки 🔁 (хэш &profile=…) — см. parseProfileHash().
+function levelEmoji(lvl) {
+  const first = [...String(lvl || '')][0] || '🎬';
+  return /\p{Extended_Pictographic}/u.test(first) ? first : '🎬';
+}
+
+function fmtDuration(mins) {
+  const m = parseInt(mins, 10);
+  if (!m || m < 1) return '';
+  const h = Math.floor(m / 60);
+  return (h ? h + ' ч' : '') + (m % 60 ? (h ? ' ' : '') + (m % 60) + ' мин' : '');
+}
+
+function renderProfile() {
+  const c = document.getElementById('profile-container');
+  if (!c) return;
+  if (!PROFILE) {
+    c.innerHTML = `
+      <div class="profile-card">
+        <div class="pf-ava">👤</div>
+        <h2>Мой профиль</h2>
+        <p class="pf-hint">Уровень, кинобаллы и стрик хранятся в боте.<br/>
+        Синхронизируй — и они появятся здесь.</p>
+        <button class="btn-primary" id="pf-sync">🔁 Синхронизировать с ботом</button>
+      </div>`;
+    document.getElementById('pf-sync').onclick = () => sendOrDeepLink({ action: 'sync_unlocked' });
+    return;
+  }
+  const p = PROFILE;
+  const unl = parseInt(p.unl, 10) || 0;
+  const pct = Math.max(0, Math.min(100, parseInt(p.pct, 10) || 0));
+  const nextNote = (p.lvl_next == null)
+    ? '👑 Максимальный уровень!'
+    : `Ещё ${p.lvl_next} код(ов) до следующего уровня`;
+  const rank = parseInt(p.rank, 10) || 0;
+  c.innerHTML = `
+    <div class="profile-card">
+      <div class="pf-ava">${esc(levelEmoji(p.lvl))}</div>
+      <h2>${esc(String(p.lvl || 'Игрок'))}</h2>
+      <div class="pf-progress"><i style="width:${pct}%"></i></div>
+      <p class="pf-note">${esc(nextNote)}</p>
+      <div class="pf-stats">
+        <div class="pf-stat"><b>💰 ${esc(String(p.pts ?? 0))}</b><span>кинобаллов</span></div>
+        <div class="pf-stat"><b>🔥 ${esc(String(p.str ?? 0))}</b><span>стрик · рекорд ${esc(String(p.bst ?? 0))}</span></div>
+        <div class="pf-stat"><b>🔓 ${esc(String(unl))}</b><span>из ${esc(String(p.tot ?? ALL.length))} фильмов</span></div>
+        <div class="pf-stat"><b>${rank ? '🏆 №' + rank : '🏆 —'}</b><span>${rank ? 'в общем топе' : 'ещё не в топе'}</span></div>
+      </div>
+      <div class="pf-actions">
+        <button class="btn-secondary" id="pf-sync2">🔁 Обновить</button>
+        <button class="btn-secondary" id="pf-bot">🏅 Профиль в боте</button>
+      </div>
+    </div>`;
+  document.getElementById('pf-sync2').onclick = () => sendOrDeepLink({ action: 'sync_unlocked' });
+  document.getElementById('pf-bot').onclick = () => {
+    haptic('light');
+    try { tg.openTelegramLink('https://t.me/kapitan_kino_bot'); }
+    catch (e) { window.open('https://t.me/kapitan_kino_bot', '_blank'); }
+  };
 }
 
 // ---------- бэкап «Моё» через бота ----------
@@ -502,6 +597,15 @@ function openDetail(code) {
   showView('detail');
   const fav = getFavs().includes(code);
   const similar = findSimilar(m);
+  // Чипы метаданных (год/длительность/страны) + кликабельные жанры:
+  // тап по жанру-чипу фильтрует афишу этим жанром.
+  const chips = [
+    m.year ? `<span class="chip chip-dim">📅 ${esc(m.year)}</span>` : '',
+    m.duration ? `<span class="chip chip-dim">⏱ ${esc(fmtDuration(m.duration))}</span>` : '',
+    ...(m.countries || []).slice(0, 2).map(ct => `<span class="chip chip-dim">🌍 ${esc(ct)}</span>`),
+    ...(m.genres || []).map(g =>
+      `<button class="chip chip-genre${activeGenre === g ? ' active' : ''}" data-g="${esc(g)}" title="Фильмы этого жанра">${esc(g)}</button>`),
+  ].filter(Boolean).join('');
   document.getElementById('view-detail').innerHTML = `
     <button class="btn-back" id="btn-back">◀️ Назад</button>
     <div class="detail">
@@ -509,6 +613,7 @@ function openDetail(code) {
       <div class="detail-info">
         <h2>${esc(m.title)}</h2>
         <span class="rating">${ratingBadge(m)}</span>
+        ${chips ? `<div class="detail-chips">${chips}</div>` : ''}
         <p class="desc">${esc(m.description || 'Описание скоро появится.')}</p>
         <div class="detail-actions">
           <button class="btn-primary" id="btn-open">🔓 Открыть код</button>
@@ -571,6 +676,18 @@ function openDetail(code) {
     el.addEventListener('click', () => {
       haptic('light');
       openDetail(el.dataset.code);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+  // Тап по жанровому чипу → афиша, отфильтрованная этим жанром
+  document.querySelectorAll('#view-detail .chip-genre').forEach(ch => {
+    ch.addEventListener('click', () => {
+      haptic('light');
+      activeGenre = ch.dataset.g || '';
+      view = 'grid';
+      showView('catalog');
+      renderGenreChips();
+      renderGrid();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   });
@@ -669,6 +786,7 @@ function showView(name) {
   document.getElementById('view-cols').classList.toggle('hidden', name !== 'cols');
   document.getElementById('view-news').classList.toggle('hidden', name !== 'news');
   document.getElementById('view-top').classList.toggle('hidden', name !== 'top');
+  document.getElementById('view-profile').classList.toggle('hidden', name !== 'profile');
   document.getElementById('view-detail').classList.toggle('hidden', name !== 'detail');
   document.getElementById('view-game').classList.toggle('hidden', name !== 'game');
   document.getElementById('view-emoji').classList.toggle('hidden', name !== 'game');
@@ -722,6 +840,7 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   else if (view === 'cols') { showView('cols'); renderCols(); }
   else if (view === 'news') { showView('news'); renderNews(); }
   else if (view === 'top') { showView('top'); renderLeaderboard(); }
+  else if (view === 'profile') { showView('profile'); renderProfile(); }
   else { showView('catalog'); renderGrid(); }
 }));
 

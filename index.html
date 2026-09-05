@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=30" />
+  <link rel="stylesheet" href="style.css?v=33" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -44,6 +44,7 @@
       <button class="tab" data-view="news">📰 Новости</button>
       <button class="tab" data-view="cols">📚 Подборки</button>
       <button class="tab" data-view="top">🏆 Топ</button>
+      <button class="tab" data-view="profile">👤 Профиль</button>
       <button class="tab" data-view="fav">❤️ Моё</button>
       <button class="tab" data-view="game">🏋 Тренажёр</button>
     </nav>
@@ -88,6 +89,11 @@
     <!-- Лидерборд -->
     <div id="view-top" class="hidden">
       <main id="top-container" class="top-feed"></main>
+    </div>
+
+    <!-- Профиль игрока (уровень/баллы/стрик) -->
+    <div id="view-profile" class="hidden">
+      <main id="profile-container" class="profile-feed"></main>
     </div>
 
     <!-- Карточка фильма -->
@@ -176,7 +182,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=31"></script>
+  <script src="script.js?v=33"></script>
 </body>
 </html>
 
