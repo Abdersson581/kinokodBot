@@ -694,8 +694,8 @@ function renderTrailers() {
 // ---------- достижения «🎖» ----------
 const ACHIEVEMENTS_LIST = [
   { id: 'first_code', emoji: '🔓', name: 'Первый код', desc: 'Разгадай первый код' },
-  { id: 'streak3', emoji: '🔥', name: 'Стррик 3', desc: 'Разгадай 3 кода подряд без пропуска' },
-  { id: 'streak7', emoji: '⚡', name: 'Стррик 7', desc: 'Разгадай 7 кодов подряд без пропуска' },
+  { id: 'streak3', emoji: '🔥', name: 'Стрик 3', desc: 'Разгадай 3 кода подряд без ошибок' },
+  { id: 'streak7', emoji: '⚡', name: 'Стрик 7', desc: 'Разгадай 7 кодов подряд без ошибок' },
   { id: 'codes10', emoji: '🎯', name: '10 кодов', desc: 'Разгадай 10 кодов' },
   { id: 'codes25', emoji: '🏅', name: '25 кодов', desc: 'Разгадай 25 кодов' },
   { id: 'codes50', emoji: '🏆', name: '50 кодов', desc: 'Разгадай 50 кодов' },
@@ -720,15 +720,23 @@ function renderAchievements() {
   const favGenre = favouriteGenre();
   const total = ACHIEVEMENTS_LIST.length;
   let opened = 0;
+
+  // Данные из профиля бота (если синхронизирован)
+  const p = PROFILE || {};
+  const pts = parseInt(p.pts, 10) || 0;
+  const strk = parseInt(p.str, 10) || 0;
+  const unlCount = unlocked.length;
+
   const achCards = ACHIEVEMENTS_LIST.map(a => {
     let done = false;
     let progress = '';
-    const unl = unlocked.length;
     switch (a.id) {
-      case 'first_code': done = unl >= 1; break;
-      case 'codes10': done = unl >= 10; progress = `${Math.min(unl, 10)}/10`; break;
-      case 'codes25': done = unl >= 25; progress = `${Math.min(unl, 25)}/25`; break;
-      case 'codes50': done = unl >= 50; progress = `${Math.min(unl, 50)}/50`; break;
+      case 'first_code': done = unlCount >= 1; break;
+      case 'streak3': done = strk >= 3; progress = `${Math.min(strk, 3)}/3`; break;
+      case 'streak7': done = strk >= 7; progress = `${Math.min(strk, 7)}/7`; break;
+      case 'codes10': done = unlCount >= 10; progress = `${Math.min(unlCount, 10)}/10`; break;
+      case 'codes25': done = unlCount >= 25; progress = `${Math.min(unlCount, 25)}/25`; break;
+      case 'codes50': done = unlCount >= 50; progress = `${Math.min(unlCount, 50)}/50`; break;
       case 'favorite': done = favs.length >= 1; progress = `${favs.length}/1`; break;
       case 'genres3': {
         const genres = new Set();
@@ -742,6 +750,30 @@ function renderAchievements() {
         done = genres.size >= 5; progress = `${genres.size}/5`;
         break;
       }
+      case 'reaction':
+        done = (p.reactions || 0) >= 1; progress = `${p.reactions || 0}/1`;
+        break;
+      case 'reaction3':
+        done = (p.reactions || 0) >= 3; progress = `${p.reactions || 0}/3`;
+        break;
+      case 'points20':
+        done = pts >= 20; progress = `${Math.min(pts, 20)}/20`;
+        break;
+      case 'points50':
+        done = pts >= 50; progress = `${Math.min(pts, 50)}/50`;
+        break;
+      case 'secret':
+        done = !!p.has_secret;
+        break;
+      case 'bingo_line':
+        done = !!p.bingo_line; progress = p.bingo_line ? '1/1' : '0/1';
+        break;
+      case 'bingo_full':
+        done = !!p.bingo_full; progress = p.bingo_full ? '1/1' : '0/1';
+        break;
+      case 'referral3':
+        done = (p.referrals || 0) >= 3; progress = `${p.referrals || 0}/3`;
+        break;
       default: break;
     }
     if (done) opened++;
