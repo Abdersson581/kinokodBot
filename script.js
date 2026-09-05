@@ -1089,8 +1089,14 @@ function showView(name) {
   toggle('view-game', name === 'game');
   toggle('view-emoji', name === 'game');
   toggle('toolbar', name === 'catalog' || name === 'trailers');
-  document.querySelectorAll('.tab').forEach(t =>
-    t.classList.toggle('active', t.dataset.view === name || (name === 'catalog' && t.dataset.view === view)));
+  const cur = name === 'catalog' ? view : name;
+  document.querySelectorAll('.tab[data-view]').forEach(t =>
+    t.classList.toggle('active', t.dataset.view === cur));
+  const moreTab = document.getElementById('tab-more');
+  if (moreTab) moreTab.classList.toggle('active',
+    ['achievements', 'profile', 'fav', 'game'].includes(cur));
+  document.querySelectorAll('.more-item').forEach(b =>
+    b.classList.toggle('active', b.dataset.view === cur));
 }
 
 // ---------- мини-игра «😀 Угадай по эмодзи» ----------
@@ -1132,7 +1138,7 @@ function renderEmojiGame() {
   document.getElementById('emoji-next').onclick = () => { haptic('light'); box.dataset.locked = '0'; renderEmojiGame(); };
 }
 
-document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+document.querySelectorAll('.tab[data-view]').forEach(t => t.addEventListener('click', () => {
   view = t.dataset.view;
   if (view === 'game') { showView('game'); renderEmojiGame(); startGame(); }
   else if (view === 'cols') { showView('cols'); renderCols(); }
@@ -1143,6 +1149,36 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   else if (view === 'achievements') { showView('achievements'); renderAchievements(); }
   else { showView('catalog'); renderGrid(); }
 }));
+
+// ---------- раскрывающееся подменю «Ещё» ----------
+const moreTab = document.getElementById('tab-more');
+const moreMenu = document.getElementById('more-menu');
+function closeMoreMenu() {
+  if (moreMenu) moreMenu.classList.add('hidden');
+  if (moreTab) moreTab.setAttribute('aria-expanded', 'false');
+}
+if (moreTab && moreMenu) {
+  moreTab.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const nowHidden = moreMenu.classList.toggle('hidden');
+    moreTab.setAttribute('aria-expanded', String(!nowHidden));
+    haptic('light');
+  });
+  // клик вне меню — закрываем
+  document.addEventListener('click', (e) => {
+    if (moreMenu.classList.contains('hidden')) return;
+    if (!moreMenu.contains(e.target) && !moreTab.contains(e.target)) closeMoreMenu();
+  });
+  document.querySelectorAll('.more-item').forEach(b => b.addEventListener('click', () => {
+    closeMoreMenu();
+    const v = b.dataset.view;
+    view = v;
+    if (v === 'game') { showView('game'); renderEmojiGame(); startGame(); }
+    else if (v === 'profile') { showView('profile'); renderProfile(); }
+    else if (v === 'achievements') { showView('achievements'); renderAchievements(); }
+    else { showView('catalog'); renderGrid(); }  // ❤️ Моё
+  }));
+}
 
 // ---------- поиск с debounce (не рендерим на каждый символ) ----------
 let _searchTimer = null;

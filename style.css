@@ -184,6 +184,41 @@ body {
   background: var(--accent);
   color: #fff;
 }
+/* ===== v41: раскрывающееся подменю «Ещё» ===== */
+.tab-more { flex: 0 1 auto; padding: 9px 14px; }
+.more-arrow {
+  display: inline-block;
+  font-size: 11px;
+  transition: transform .2s ease;
+}
+.tab-more[aria-expanded="true"] .more-arrow { transform: rotate(180deg); }
+.more-menu {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px;
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  animation: fadeUp .25s ease;
+}
+.more-item {
+  font-family: inherit;
+  background: rgba(255,255,255,.05);
+  color: var(--text);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+.more-item:active { transform: scale(.97); }
+.more-item.active { background: var(--accent); color: #fff; }
+.light .more-menu { background: #fff; border-color: rgba(20,20,40,.10); }
+.light .more-item { background: rgba(20,20,40,.05); }
 /* Поиск и сортировка */
 .toolbar {
   display: flex;
