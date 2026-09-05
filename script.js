@@ -56,6 +56,27 @@ tg.onEvent('themeChanged', () => {
   if (!localStorage.getItem(THEME_KEY)) applyTheme();
 });
 
+// ---------- акцент-пресеты (классика / неон / золото) ----------
+// Три набора цвета оформления; подробрен в style.css через body.accent-*.
+const ACCENT_KEY = 'kinoafisha_accent';
+const ACCENTS = ['classic', 'neon', 'gold'];
+function applyAccent() {
+  const cur = localStorage.getItem(ACCENT_KEY) || 'classic';
+  document.body.classList.remove('accent-neon', 'accent-gold');
+  if (cur !== 'classic') document.body.classList.add('accent-' + cur);
+  const btn = document.getElementById('btn-accent');
+  if (btn) btn.textContent = cur === 'neon' ? '💠' : cur === 'gold' ? '✨' : '🎨';
+}
+function cycleAccent() {
+  const cur = localStorage.getItem(ACCENT_KEY) || 'classic';
+  const next = ACCENTS[(ACCENTS.indexOf(cur) + 1) % ACCENTS.length];
+  localStorage.setItem(ACCENT_KEY, next);
+  applyAccent();
+  haptic('light');
+}
+applyAccent();
+document.getElementById('btn-accent').addEventListener('click', cycleAccent);
+
 // ---------- состояние ----------
 let ALL = [];                       // все фильмы
 let COLLS = [];                     // подборки
@@ -75,6 +96,25 @@ const toggleFav = (code) => {
   setFavs(f);
   haptic(f.has(code) ? 'ok' : 'light');
 };
+
+// ---------- история просмотров (для «🕘 Недавно смотрели») ----------
+// Локальная история последних открытых карточек (макс 12). Используется
+// в полке на главной — без сервера, как «Моё».
+const RECENT_KEY = 'kinoafisha_recent';
+const MAX_RECENT = 12;
+const getRecent = () => JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+const addRecent = (code) => {
+  const r = getRecent().filter(c => c !== code);
+  r.unshift(code);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(r.slice(0, MAX_RECENT)));
+};
+
+// ---------- рекомендации («💫 Советуем вам») ----------
+// Локально: на основе жанров из «Моё» и разгаданных выбираем похожие фильмы,
+// которые пользователь ещё не смотрел и не сохранял.
+const RECO_KEY = 'kinoafisha_reco';
+const getRecoHide = () => JSON.parse(localStorage.getItem(RECO_KEY) || '[]');
+const setRecoHide = (a) => localStorage.setItem(RECO_KEY, JSON.stringify([...a]));
 
 // ---------- разгаданные коды (для «🙈 Скрыть разгаданные») ----------
 // Синхронизируются с ботом кнопкой 🔁: бот присылает сообщение с web_app
@@ -230,6 +270,9 @@ function applyData(data) {
   renderGenreChips();
   showCodeDay(meta);
   renderHero();
+  renderTodayShelf(meta);
+  renderRecentShelf();
+  renderRecoShelf();
   renderPremieres(meta);
   renderGrid();
   updateHeaderProgress();
@@ -379,6 +422,98 @@ function renderHero() {
 }
 
 // Полка «🍿 Скоро в кино» — премьеры текущего месяца от бота/КП
+// «⭐ Сегодня и завтра в кино» — премьеры с датой сегодня/завтра
+function renderTodayShelf(meta) {
+  const shelf = document.getElementById('today-shelf');
+  if (!shelf) return;
+  const items = (meta && Array.isArray(meta.premieres)) ? meta.premieres : [];
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+  const soon = items.filter(p => {
+    const d = p.ru_date ? new Date(String(p.ru_date).slice(0, 10) + 'T00:00:00') : null;
+    return d && (d.getTime() === now.getTime() || d.getTime() === tomorrow.getTime());
+  });
+  if (soon.length === 0) { shelf.classList.add('hidden'); return; }
+  const row = document.getElementById('today-row');
+  row.innerHTML = soon.map(p => `
+    <div class="hero-card" data-title="${esc(p.title || '')}">
+      ${p.poster
+        ? `<img src="${esc(p.poster)}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+        : `<div class="poster-placeholder"><span>⭐</span></div>`}
+      <span class="hero-rank">⭐</span>
+      <div class="hero-overlay">
+        <h3>${esc(p.title || '')}</h3>
+        <span class="rating">📅 ${String(p.ru_date || '').slice(0, 10)}</span>
+      </div>
+    </div>`).join('');
+  shelf.classList.remove('hidden');
+  row.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => {
+    const title = (el.dataset.title || '').toLowerCase().replace(/ё/g, 'е');
+    const m = ALL.find(x => (x.title || '').toLowerCase().replace(/ё/g, 'е') === title);
+    if (m) openDetail(m.code);
+    else tg.showPopup({ type: 'ok', title: '⭐ Сегодня в кино', message: 'В кинотеатрах уже идёт! Увидимся на сеансе 🎟' });
+  }));
+}
+
+// «🕘 Недавно смотрели» — история из localStorage, показываем на главной
+function renderRecentShelf() {
+  const shelf = document.getElementById('recent-shelf');
+  if (!shelf) return;
+  const codes = getRecent().filter(c => ALL.some(x => x.code === c));
+  if (codes.length < 2) { shelf.classList.add('hidden'); return; }
+  const items = codes.slice(0, 10).map(code => ALL.find(x => x.code === code));
+  shelf.querySelector('#recent-row').innerHTML = items.map(m => `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      ${m.poster
+        ? `<img src="${esc(m.poster)}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+        : `<div class="poster-placeholder"><span>🎬</span></div>`}
+      <div class="hero-overlay">
+        <h3>${esc(m.title)}</h3>
+        <span class="rating">${ratingBadge(m)}</span>
+      </div>
+    </div>`).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => openDetail(el.dataset.code)));
+}
+
+// «💫 Советуем вам» — локальные рекомендации по жанрам из «Моё»/разгаданных
+function renderRecoShelf() {
+  const shelf = document.getElementById('reco-shelf');
+  if (!shelf) return;
+  if (view === 'profile' || view === 'game') return;
+  const favs = getFavs();
+  const unlocked = getUnlocked();
+  const seen = new Set([...favs, ...unlocked, ...getRecent().slice(0, 4)]);
+  const genreCount = new Map();
+  [...favs, ...unlocked].forEach(code => {
+    const m = ALL.find(x => x.code === code);
+    (m && Array.isArray(m.genres) ? m.genres : []).forEach(g => genreCount.set(g, (genreCount.get(g) || 0) + 1));
+  });
+  const topGenres = [...genreCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([g]) => g);
+  if (topGenres.length === 0) { shelf.classList.add('hidden'); return; }
+  const cands = ALL.filter(m =>
+    !seen.has(m.code) &&
+    (Array.isArray(m.genres) ? m.genres.some(g => topGenres.includes(g)) : false)
+  );
+  // скрытые пользователем рекомендации
+  const hidden = new Set(getRecoHide());
+  const picks = cands.filter(m => !hidden.has(m.code)).sort(() => Math.random() - 0.5).slice(0, 6);
+  if (picks.length < 2) { shelf.classList.add('hidden'); return; }
+  shelf.querySelector('#reco-row').innerHTML = picks.map(m => `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      ${m.poster
+        ? `<img src="${esc(m.poster)}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+        : `<div class="poster-placeholder"><span>💫</span></div>`}
+      ${m.genres && m.genres.length ? `<span class="hero-rank reco-chip">${esc(m.genres[0])}</span>` : ''}
+      <div class="hero-overlay">
+        <h3>${esc(m.title)}</h3>
+        <span class="rating">${ratingBadge(m)}</span>
+      </div>
+    </div>`).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => openDetail(el.dataset.code)));
+}
+
 function renderPremieres(meta) {
   const shelf = document.getElementById('premieres-shelf');
   if (!shelf) return;
@@ -1129,6 +1264,7 @@ let detailOrigin = 'grid';  // откуда открыт фильм — для �
 function openDetail(code) {
   const m = ALL.find(x => x.code === code);
   if (!m) return;
+  addRecent(m.code);
   if (view && view !== 'detail') detailOrigin = view;
   view = 'detail';
   showView('detail');
@@ -1522,10 +1658,74 @@ document.getElementById('btn-lucky').addEventListener('click', () => {
   });
 })();
 
-// 🎬 «Мой Киногод» — диплинк в бота через sendOrDeepLink: приложение
-// сворачивается (tg.close), и в чате с ботом сразу видна карточка «Киногод».
+// 🎬 «Мой Киногод» — карточка-итог прямо в приложении (без сворачивания);
+// данные берём из синхронизированного профиля (PROFILE). Если не синхронизирован —
+// предлагаем нажать 🔁, а самому можно зайти в бота кнопкой ниже.
+function openKinogod() {
+  const modal = document.getElementById('kinogod-modal');
+  const body = document.getElementById('kinogod-body');
+  const p = PROFILE || {};
+  const unlocked = getUnlocked();
+  const favs = getFavs();
+  const pts = p.pts || 0;
+  const streak = p.str || 0;
+  const level = p.tit || 'Зритель';
+  const rank = p.rank;   // может быть undefined
+  const topText = (typeof rank === 'number')
+    ? `<div class="kg-row"><span>📍 Место в топе</span><b>${rank}</b></div>`
+    : '';
+  // любимый жанр — локально по избранному/разгаданным
+  const genreCount = new Map();
+  [...favs, ...unlocked].forEach(code => {
+    const m = ALL.find(x => x.code === code);
+    (m && Array.isArray(m.genres) ? m.genres : []).forEach(g => genreCount.set(g, (genreCount.get(g) || 0) + 1));
+  });
+  const topGenre = [...genreCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+  body.innerHTML = `
+    <div class="kg-head">
+      <div class="kg-emoji">🎬</div>
+      <h2>Мой Киногод</h2>
+      <p class="modal-muted">Твой год в кино — как ты угадываешь фильмы</p>
+    </div>
+    <div class="kg-stats">
+      ${p.uid ? '' : '<p class="kg-hint">🔁 Синхронизируйся с ботом, чтобы сюда добавились уровень и баллы.</p>'}
+      <div class="kg-row"><span>🏅 Уровень</span><b>${esc(level)}</b></div>
+      <div class="kg-row"><span>💰 Кинобаллы</span><b>${pts}</b></div>
+      <div class="kg-row"><span>🔥 Стрик</span><b>${streak} ${streak % 10 === 1 && streak % 100 !== 11 ? 'день' : 'дней'}</b></div>
+      <div class="kg-row"><span>🔓 Разгадано кодов</span><b>${unlocked.length}</b></div>
+      <div class="kg-row"><span>❤️ В «Моём»</span><b>${favs.length}</b></div>
+      ${topText}
+      ${topGenre ? `<div class="kg-row"><span>🎯 Любимый жанр</span><b>${esc(topGenre)}</b></div>` : ''}
+    </div>
+    <div class="kg-actions">
+      <button class="btn-primary" id="kg-bot">🤖 Открыть бота</button>
+    </div>`;
+  modal.classList.remove('hidden');
+  document.getElementById('kg-bot')?.addEventListener('click', () => {
+    tg.openTelegramLink('https://t.me/kapitan_kino_bot');
+  });
+}
 document.getElementById('btn-kinogod').addEventListener('click', () => {
-  sendOrDeepLink({ action: 'kinogod' });
+  haptic('light');
+  openKinogod();
+});
+document.getElementById('btn-kinogod-close').addEventListener('click', () => {
+  document.getElementById('kinogod-modal').classList.add('hidden');
+});
+document.getElementById('kinogod-modal')?.addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) document.getElementById('kinogod-modal').classList.add('hidden');
+});
+
+// ❓ «Как играть» — короткая справка по кодам и боту
+document.getElementById('btn-howto').addEventListener('click', () => {
+  haptic('light');
+  document.getElementById('howto-modal').classList.remove('hidden');
+});
+document.getElementById('btn-howto-close').addEventListener('click', () => {
+  document.getElementById('howto-modal').classList.add('hidden');
+});
+document.getElementById('howto-modal')?.addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) document.getElementById('howto-modal').classList.add('hidden');
 });
 
 // 🎲 «Фильм на вечер» — модалка подбора по вкусу

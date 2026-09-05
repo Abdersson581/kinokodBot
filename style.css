@@ -1540,3 +1540,99 @@ body.light #err-banner { background: #dc2626; }
 .light .pick-card { background: #fff; border-color: rgba(20,20,40,.10); }
 .light .pick-row select { background: #fff; border-color: #d8dcea; }
 .hero-card.no-poster { display: flex; align-items: center; justify-content: center; }
+
+/* ---------- v50: «Недавно смотрели», «Советуем», Мой Киногод, Как играть ---------- */
+.reco-chip {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(15, 18, 32, .85);
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+.light .reco-chip { background: rgba(255,255,255,.85); }
+
+/* Мой Киногод */
+.kinogod-card { max-width: 400px; }
+.kg-head { text-align: center; margin-bottom: 14px; }
+.kg-emoji { font-size: 40px; margin-bottom: 6px; }
+.kg-head h2 { margin: 0 0 4px; }
+.kg-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0;
+}
+.kg-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+.kg-row span { color: var(--muted); }
+.kg-row b { font-weight: 800; }
+.kg-hint {
+  font-size: 12px;
+  color: var(--gold);
+  margin: 0 0 4px;
+  text-align: center;
+}
+.kg-actions { margin-top: 6px; }
+.light .kg-row { background: #f5f6fa; border-color: rgba(20,20,40,.08); }
+
+/* Как играть */
+.howto-steps { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+.howto-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.howto-step span {
+  flex-shrink: 0;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #ff8a3d);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.howto-step p { margin: 0; }
+.howto-step b { color: var(--gold); }
+.light .howto-step b { color: #c47f06; }
+
+/* ---------- акцент-пресеты ---------- */
+/* Переопределяем основную переменную --accent и мягко связанные цвета градиентов.
+   Выбранный пресет хранится в localStorage и вешается классом на <body>. */
+body.accent-neon {
+  --accent: #00e5ff;
+  --gold: #ffe600;
+}
+body.accent-gold {
+  --accent: #ffb300;
+  --gold: #ffe082;
+}
+body.accent-neon .brand-mark {
+  background: linear-gradient(135deg, rgba(0, 229, 255, .25), rgba(255, 230, 0, .18));
+  border-color: rgba(0, 229, 255, .4);
+}
+body.accent-gold .brand-mark {
+  background: linear-gradient(135deg, rgba(255, 179, 0, .28), rgba(255, 224, 130, .2));
+  border-color: rgba(255, 179, 0, .45);
+}
+body.accent-neon .new-badge,
+body.accent-gold .new-badge { background: linear-gradient(90deg, var(--gold), var(--accent)); }
+body.accent-neon .howto-step span,
+body.accent-gold .howto-step span { background: linear-gradient(135deg, var(--accent), var(--gold)); }
