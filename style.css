@@ -8,6 +8,7 @@
   --muted: #8b90a7;
 }
 * { box-sizing: border-box; }
+html, body { overflow-x: hidden; } /* страница не должна скроллиться вбок */
 body {
   margin: 0;
   padding: 12px;
@@ -164,6 +165,7 @@ body {
 /* Вкладки */
 .tabs {
   display: flex;
+  flex-wrap: wrap; /* 9 вкладок: не влезают в один ряд — переносим на второй */
   gap: 6px;
   margin-top: 10px;
 }
