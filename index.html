@@ -132,7 +132,45 @@
     </div>
   </div>
 
-  <script src="script.js?v=30"></script>
+  <!-- Онбординг (показывается только при первом запуске) -->
+  <div id="onboarding" class="modal hidden">
+    <div class="onboarding-card">
+      <div class="onboarding-slides">
+        <div class="ob-slide active" data-slide="0">
+          <div class="ob-emoji">🎬</div>
+          <h2>Добро пожаловать!</h2>
+          <p>Это «Киноафиша» канала <b>«Капитан Кино»</b>. У каждого фильма — свой <b>код</b>: следи за постами канала, угадывай фильм и отправляй код боту!</p>
+        </div>
+        <div class="ob-slide" data-slide="1">
+          <div class="ob-emoji">🎥</div>
+          <h2>Смотри трейлеры</h2>
+          <p>Нажми на карточку фильма — увидишь постер, описание и кнопку <b>«▶️ Трейлер»</b>. Никакого выхода из приложения — всё под рукой!</p>
+        </div>
+        <div class="ob-slide" data-slide="2">
+          <div class="ob-emoji">🔍</div>
+          <h2>Ищи и фильтруй</h2>
+          <p>Ищи по названию, коду или жанру. А фильтр <b>«🙈 Разгаданные»</b> скроет уже открытые фильмы.</p>
+        </div>
+        <div class="ob-slide" data-slide="3">
+          <div class="ob-emoji">❤️</div>
+          <h2>Собирай «Моё»</h2>
+          <p>Нажимай ❤️ на постере — фильм попадёт в список «Хочу посмотреть». Список хранится прямо здесь!</p>
+        </div>
+      </div>
+      <div class="onboarding-dots">
+        <span class="ob-dot active"></span>
+        <span class="ob-dot"></span>
+        <span class="ob-dot"></span>
+        <span class="ob-dot"></span>
+      </div>
+      <div class="onboarding-actions">
+        <button class="btn-secondary" id="ob-skip">Пропустить</button>
+        <button class="btn-primary" id="ob-next">Далее</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js?v=31"></script>
 </body>
 </html>
 

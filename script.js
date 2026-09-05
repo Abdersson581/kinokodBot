@@ -812,8 +812,45 @@ window.addEventListener('error', (e) => {
 // ---------- ЗАПУСК (в самом конце файла: все объявления и обработчики готовы) ----------
 // Раньше enterApp() вызывался в начале файла, до объявления ALL/COLLS — из-за TDZ
 // гонки с fetch приложение открывалось пустым. Теперь запускаем, когда всё готово.
+// ---------- онбординг (показывается один раз) ----------
+const OB_KEY = 'kinoafisha_onboarded';
+function showOnboarding() {
+  if (localStorage.getItem(OB_KEY)) return;
+  const modal = document.getElementById('onboarding');
+  if (!modal) return;
+  let slide = 0;
+  const total = 4;
+  const slides = modal.querySelectorAll('.ob-slide');
+  const dots = modal.querySelectorAll('.ob-dot');
+  const nextBtn = document.getElementById('ob-next');
+  const skipBtn = document.getElementById('ob-skip');
+  const render = () => {
+    slides.forEach((s, i) => s.classList.toggle('active', i === slide));
+    dots.forEach((d, i) => d.classList.toggle('active', i === slide));
+    nextBtn.textContent = slide === total - 1 ? 'Начать!' : 'Далее';
+  };
+  const close = () => {
+    localStorage.setItem(OB_KEY, '1');
+    modal.classList.add('hidden');
+    haptic('light');
+  };
+  nextBtn.onclick = () => {
+    if (slide < total - 1) {
+      slide++;
+      render();
+      haptic('light');
+    } else {
+      close();
+    }
+  };
+  skipBtn.onclick = close;
+  render();
+  modal.classList.remove('hidden');
+}
+
 if (localStorage.getItem(ACCESS_KEY) === '1') {
   enterApp();
+  showOnboarding();
 } else {
   showGate();
 }
