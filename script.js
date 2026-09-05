@@ -782,15 +782,21 @@ function renderGameEnd() {
 
 // ---------- вкладки и показ ----------
 function showView(name) {
-  document.getElementById('view-catalog').classList.toggle('hidden', name !== 'catalog');
-  document.getElementById('view-cols').classList.toggle('hidden', name !== 'cols');
-  document.getElementById('view-news').classList.toggle('hidden', name !== 'news');
-  document.getElementById('view-top').classList.toggle('hidden', name !== 'top');
-  document.getElementById('view-profile').classList.toggle('hidden', name !== 'profile');
-  document.getElementById('view-detail').classList.toggle('hidden', name !== 'detail');
-  document.getElementById('view-game').classList.toggle('hidden', name !== 'game');
-  document.getElementById('view-emoji').classList.toggle('hidden', name !== 'game');
-  document.getElementById('toolbar').classList.toggle('hidden', name !== 'catalog');
+  // Null-safe: если webview отдал старый закэшированный index.html без новой
+  // вьюхи (кэш-микс), отсутствие элемента не должно ронять весь интерфейс.
+  const toggle = (id, on) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', !on);
+  };
+  toggle('view-catalog', name === 'catalog');
+  toggle('view-cols', name === 'cols');
+  toggle('view-news', name === 'news');
+  toggle('view-top', name === 'top');
+  toggle('view-profile', name === 'profile');
+  toggle('view-detail', name === 'detail');
+  toggle('view-game', name === 'game');
+  toggle('view-emoji', name === 'game');
+  toggle('toolbar', name === 'catalog');
   document.querySelectorAll('.tab').forEach(t =>
     t.classList.toggle('active', t.dataset.view === name || (name === 'catalog' && t.dataset.view === view)));
 }
@@ -848,6 +854,13 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
 let _searchTimer = null;
 document.getElementById('search').addEventListener('input', () => {
   clearTimeout(_searchTimer);
+  // Поиск — всегда по ВСЕЙ афише: если был активен жанровый фильтр (например,
+  // после тапа по чипу жанра в карточке фильма), сбрасываем его — иначе поиск
+  // ищет только внутри одного жанра и выглядит «сломанным».
+  if (activeGenre) {
+    activeGenre = '';
+    renderGenreChips();
+  }
   _searchTimer = setTimeout(renderGrid, 180);
 });
 document.getElementById('sort').addEventListener('change', renderGrid);
