@@ -243,15 +243,47 @@ const isNew = (m) =>
   !!m.added_at && (Date.now() - new Date(m.added_at).getTime()) < 30 * 24 * 3600 * 1000;
 
 function posterHtml(m) {
+  const fav = getFavs().includes(m.code);
   return `<div class="poster-wrap">
     ${m.poster
       ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" decoding="async"
            onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
       : `<div class="poster-placeholder"><span>🎬</span><em>${esc(m.title)}</em></div>`}
-    <span class="code-badge">🔑 ${esc(m.code)}</span>
+    <span class="code-badge">🔑 ${esc(String(m.code))}</span>
     ${isNew(m) ? '<span class="new-badge">🔥 Новинка</span>' : ''}
-    ${getFavs().includes(m.code) ? '<span class="fav-badge">❤️</span>' : ''}
+    ${fav ? '<span class="fav-badge">❤️</span>' : ''}
   </div>`;
+}
+
+// Быстрая кнопка «❤️/🤍» на карточке фильма (в сетке и полках) — без открытия
+function posterHtmlQuick(m) {
+  const fav = getFavs().includes(m.code);
+  return `<div class="poster-wrap">
+    ${m.poster
+      ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" decoding="async"
+           onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+      : `<div class="poster-placeholder"><span>🎬</span><em>${esc(m.title)}</em></div>`}
+    <span class="code-badge">🔑 ${esc(String(m.code))}</span>
+    ${isNew(m) ? '<span class="new-badge">🔥 Новинка</span>' : ''}
+    <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '❤️' : '🤍'}</button>
+  </div>`;
+}
+function wireFavQuick(container) {
+  if (!container) return;
+  container.querySelectorAll('.fav-quick').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFav(btn.dataset.code);
+      const fav = getFavs().includes(btn.dataset.code);
+      btn.textContent = fav ? '❤️' : '🤍';
+      btn.classList.toggle('active', fav);
+      // В «Моё» (режим «хочу посмотреть») карточка должна пропасть из списка
+      if (view === 'fav' && localStorage.getItem(FAV_MODE_KEY) !== 'done') {
+        renderGrid();
+        haptic('ok');
+      }
+    });
+  });
 }
 
 // ---------- загрузка ----------
@@ -409,7 +441,7 @@ function renderHero() {
   if (top.length < 3 || !shelf) return;
   document.getElementById('hero-row').innerHTML = top.map((m, i) => `
     <div class="hero-card" data-code="${esc(m.code)}">
-      <img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy"/>
+      ${posterHtmlQuick(m)}
       <span class="hero-rank">#${i + 1}</span>
       <div class="hero-overlay">
         <h3>${esc(m.title)}</h3>
@@ -419,6 +451,7 @@ function renderHero() {
   shelf.classList.remove('hidden');
   shelf.querySelectorAll('.hero-card').forEach(el =>
     el.addEventListener('click', () => openDetail(el.dataset.code)));
+  wireFavQuick(shelf);
 }
 
 // Полка «🍿 Скоро в кино» — премьеры текущего месяца от бота/КП
@@ -464,9 +497,7 @@ function renderRecentShelf() {
   const items = codes.slice(0, 10).map(code => ALL.find(x => x.code === code));
   shelf.querySelector('#recent-row').innerHTML = items.map(m => `
     <div class="hero-card" data-code="${esc(m.code)}">
-      ${m.poster
-        ? `<img src="${esc(m.poster)}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
-        : `<div class="poster-placeholder"><span>🎬</span></div>`}
+      ${posterHtmlQuick(m)}
       <div class="hero-overlay">
         <h3>${esc(m.title)}</h3>
         <span class="rating">${ratingBadge(m)}</span>
@@ -474,6 +505,7 @@ function renderRecentShelf() {
     </div>`).join('');
   shelf.classList.remove('hidden');
   shelf.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => openDetail(el.dataset.code)));
+  wireFavQuick(shelf);
 }
 
 // «💫 Советуем вам» — локальные рекомендации по жанрам из «Моё»/разгаданных
@@ -501,10 +533,9 @@ function renderRecoShelf() {
   if (picks.length < 2) { shelf.classList.add('hidden'); return; }
   shelf.querySelector('#reco-row').innerHTML = picks.map(m => `
     <div class="hero-card" data-code="${esc(m.code)}">
-      ${m.poster
-        ? `<img src="${esc(m.poster)}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
-        : `<div class="poster-placeholder"><span>💫</span></div>`}
+      ${posterHtmlQuick(m)}
       ${m.genres && m.genres.length ? `<span class="hero-rank reco-chip">${esc(m.genres[0])}</span>` : ''}
+      <button class="reco-hide" data-code="${esc(m.code)}" aria-label="Не рекомендовать" title="Скрыть">✕</button>
       <div class="hero-overlay">
         <h3>${esc(m.title)}</h3>
         <span class="rating">${ratingBadge(m)}</span>
@@ -512,6 +543,17 @@ function renderRecoShelf() {
     </div>`).join('');
   shelf.classList.remove('hidden');
   shelf.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => openDetail(el.dataset.code)));
+  wireFavQuick(shelf);
+  shelf.querySelectorAll('.reco-hide').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      haptic('light');
+      const h = new Set(getRecoHide());
+      h.add(btn.dataset.code);
+      setRecoHide([...h]);
+      renderRecoShelf();
+    });
+  });
 }
 
 function renderPremieres(meta) {
@@ -1241,7 +1283,7 @@ function renderGrid() {
   const backup = (view === 'fav' && favMode === 'fav') ? backupFavsNotice() : '';
   c.innerHTML = head + backup + list.map(m => `
     <div class="movie-card" data-code="${esc(m.code)}">
-      ${posterHtml(m)}
+      ${posterHtmlQuick(m)}
       <div class="movie-info">
         <h3>${hlTitle(m.title, q)}</h3>
         <span class="rating">${ratingBadge(m)}</span>
@@ -1258,6 +1300,7 @@ function renderGrid() {
   });
   c.querySelectorAll('.movie-card').forEach(el =>
     el.addEventListener('click', () => openDetail(el.dataset.code)));
+  wireFavQuick(c);
 }
 // ---------- карточка фильма ----------
 let detailOrigin = 'grid';  // откуда открыт фильм — для кнопки «◀️ Назад»
@@ -1913,3 +1956,52 @@ if (localStorage.getItem(ACCESS_KEY) === '1') {
 } else {
   showGate();
 }
+
+// ---------- свайп вниз для закрытия модалок ----------
+// Универсальный жест: потянул модалку вниз — закрывается (кроме полноэкранного
+// трейлера и онбординга — там свой UX). Жест работает от области «шапки» модалки,
+// чтобы случайные свайпы по контенту не срабатывали.
+document.querySelectorAll('.modal:not(#trailer-modal):not(#onboarding)').forEach((modal, idx) => {
+  let startY = 0;
+  modal.addEventListener('touchstart', (e) => {
+    if (modal.classList.contains('hidden')) return;
+    const card = modal.querySelector('.modal-card, .onboarding-card, .kinogod-card');
+    if (!card) return;
+    const r = card.getBoundingClientRect();
+    // срабатываем только если жест начат в верхних 30% карточки
+    if (e.touches[0].clientY - r.top > r.height * 0.3) return;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  modal.addEventListener('touchmove', (e) => {
+    if (!startY || modal.classList.contains('hidden')) return;
+    const card = modal.querySelector('.modal-card, .onboarding-card, .kinogod-card');
+    if (!card) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 12) {
+      card.style.transition = 'transform .18s ease';
+      card.style.transform = `translateY(${Math.min(dy, 90)}px)`;
+      card.style.opacity = String(Math.max(0, 1 - dy / 220));
+    }
+  }, { passive: true });
+  modal.addEventListener('touchend', (e) => {
+    if (!startY || modal.classList.contains('hidden')) return;
+    const card = modal.querySelector('.modal-card, .onboarding-card, .kinogod-card');
+    const dy = card ? e.changedTouches[0].clientY - startY : 0;
+    startY = 0;
+    if (card) {
+      card.style.transition = 'transform .18s ease, opacity .18s ease';
+      if (dy > 70) {
+        card.style.transform = 'translateY(120%)';
+        card.style.opacity = '0';
+        setTimeout(() => {
+          modal.classList.add('hidden');
+          card.style.transform = '';
+          card.style.opacity = '';
+        }, 150);
+      } else {
+        card.style.transform = '';
+        card.style.opacity = '';
+      }
+    }
+  }, { passive: true });
+});
