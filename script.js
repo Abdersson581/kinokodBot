@@ -708,8 +708,11 @@ function renderTrailers() {
   c.innerHTML = `<div class="trailers-grid">${list.map(m => `
     <div class="trailer-card" data-code="${esc(m.code)}">
       <div class="trailer-thumb">
-        ${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" onerror="this.style.display='none'"/>`
-          : `<div class="trailer-thumb-ph">🎬</div>`}
+        ${m.trailer_yt
+          ? `<img src="https://i.ytimg.com/vi/${encodeURIComponent(m.trailer_yt)}/hqdefault.jpg" alt="" loading="lazy"
+               onerror="if(!this.dataset.f){this.dataset.f=1;this.src='${esc(m.poster || '')}'}else{this.style.display='none'}"/>`
+          : (m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" onerror="this.style.display='none'"/>`
+                      : `<div class="trailer-thumb-ph">🎬</div>`)}
         <span class="trailer-play">▶️</span>
         ${m.trailer_file_id ? '<span class="trailer-local">📥</span>' : ''}
       </div>
