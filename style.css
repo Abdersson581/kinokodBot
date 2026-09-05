@@ -282,11 +282,31 @@ body {
   line-height: 1.5;
 }
 .detail-actions {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-top: 14px;
 }
+/* Главные действия на всю ширину, второстепенные — по 2 в ряд */
+.detail-actions .btn-primary,
+.detail-actions .btn-fav { grid-column: 1 / -1; }
+.detail-actions .btn-secondary {
+  font-size: 13px;
+  padding: 11px 8px;
+  white-space: normal;
+  line-height: 1.25;
+}
+/* Ошибка загрузки / пустые состояния */
+.error-box { grid-column: 1 / -1; text-align: center; padding: 40px 12px; }
+.error-box .btn-secondary { margin-top: 14px; }
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 12px;
+  color: var(--muted);
+}
+.empty-emoji { font-size: 44px; margin-bottom: 10px; }
+.empty-state p { margin: 0 0 14px; font-size: 14px; }
 .btn-primary, .btn-secondary, .btn-fav {
   border: none;
   border-radius: 12px;

@@ -216,9 +216,9 @@ function posterHtml(m) {
 async function loadMovies() {
   try {
     const [r, rc, rm] = await Promise.all([
-      fetch('./data/movies.json'),
-      fetch('./data/collections.json').catch(() => null),
-      fetch('./data/meta.json').catch(() => null)
+      fetch('./data/movies.json', { cache: 'no-cache' }),
+      fetch('./data/collections.json', { cache: 'no-cache' }).catch(() => null),
+      fetch('./data/meta.json', { cache: 'no-cache' }).catch(() => null)
     ]);
     ALL = await r.json();
     COLLS = rc ? await rc.json() : [];
@@ -240,7 +240,14 @@ async function loadMovies() {
     if (saved && saved !== 'grid') openView(saved);
   } catch (e) {
     document.getElementById('movies-container').innerHTML =
-      '<p class="error">Не удалось загрузить афишу 😔</p>';
+      '<div class="error-box"><p class="error">Не удалось загрузить афишу 😔</p>' +
+      '<button class="btn-secondary" id="btn-retry">🔁 Повторить</button></div>';
+    const rb = document.getElementById('btn-retry');
+    if (rb) rb.onclick = () => {
+      rb.disabled = true;
+      rb.textContent = '⏳ Загружаю…';
+      loadMovies();
+    };
   }
 }
 
@@ -883,7 +890,20 @@ function renderGrid() {
   });
   const c = document.getElementById('movies-container');
   if (!list.length) {
-    c.innerHTML = `<p class="error">${view === 'fav' ? 'Список пуст — добавляйте фильмы сердечком ❤️' : 'Ничего не нашлось 🤷'}</p>`;
+    c.innerHTML = `<div class="empty-state">
+      <div class="empty-emoji">${view === 'fav' ? '🤍' : '🔍'}</div>
+      <p>${view === 'fav'
+        ? 'В «Моём» пока пусто — жми сердечко ❤️ на любом фильме'
+        : 'Ничего не нашлось 🤷 Попробуй другой запрос'}</p>
+      <button class="btn-secondary" id="btn-empty-lucky">🎲 Мне повезёт</button>
+    </div>`;
+    const el = document.getElementById('btn-empty-lucky');
+    if (el) el.onclick = () => {
+      if (!ALL.length) return;
+      haptic('light');
+      const m = ALL[Math.floor(Math.random() * ALL.length)];
+      openDetail(m.code);
+    };
     return;
   }
   const backup = view === 'fav' ? backupFavsNotice() : '';
