@@ -714,7 +714,7 @@ function renderTrailers() {
           : (m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" onerror="this.style.display='none'"/>`
                       : `<div class="trailer-thumb-ph">🎬</div>`)}
         <span class="trailer-play">▶️</span>
-        ${m.trailer_file_id ? '<span class="trailer-local">📥</span>' : ''}
+        ${(!m.trailer_yt && m.trailer_file_id) ? '<span class="trailer-local">📥</span>' : ''}
       </div>
       <div class="trailer-info">
         <h3>${esc(m.title)}</h3>
@@ -1415,26 +1415,29 @@ function openTrailer(m) {
     return;
   }
   haptic('light');
+  // Приоритет — YouTube: играем прямо в приложении на весь экран,
+  // ничего не сворачивая. Локальный файл в Telegram — только фолбэк,
+  // если у фильма нет YouTube-версии (тогда бот пришлёт видео в чат).
+  if (m.trailer_yt) {
+    const modal = document.getElementById('trailer-modal');
+    const frame = document.getElementById('trailer-frame');
+    const video = document.getElementById('trailer-video');
+    if (!modal || !frame || !video) return;
+    video.classList.add('hidden');
+    video.removeAttribute('src');
+    frame.classList.remove('hidden');
+    frame.src = 'https://www.youtube.com/embed/' + m.trailer_yt +
+                '?autoplay=1&rel=0&playsinline=1&fs=1';
+    modal.classList.remove('hidden');
+    _requestFs(modal);
+    return;
+  }
   if (m.trailer_file_id) {
-    // Трейлер хранится в Telegram — открываем в боте (приложение само свернётся).
     // Действие называется 'trailer_movie' — ровно как в маппинге sendOrDeepLink
     // (раньше тут было 'trailer', маппинг не совпадал, и вместо видео уходил
     // фолбэк ?start=afisha — трейлер «не открывался»).
     sendOrDeepLink({ action: 'trailer_movie', code: m.code });
-    return;
   }
-  // Fallback: YouTube embed на весь экран
-  const modal = document.getElementById('trailer-modal');
-  const frame = document.getElementById('trailer-frame');
-  const video = document.getElementById('trailer-video');
-  if (!modal || !frame || !video) return;
-  video.classList.add('hidden');
-  video.removeAttribute('src');
-  frame.classList.remove('hidden');
-  frame.src = 'https://www.youtube.com/embed/' + m.trailer_yt +
-              '?autoplay=1&rel=0&playsinline=1&fs=1';
-  modal.classList.remove('hidden');
-  _requestFs(modal);
 }
 
 function closeTrailer() {
