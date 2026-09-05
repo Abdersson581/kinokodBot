@@ -1407,3 +1407,38 @@ body.light #err-banner { background: #dc2626; }
 }
 .light .ach-summary, .light .ach-card { background: #fff; border-color: rgba(20,20,40,.10); }
 .light .ach-card.ach-done { background: linear-gradient(135deg, #fff, rgba(255,209,102,.12)); }
+
+/* ===== v44: pull-to-refresh, «Вы — №N», приглашение ===== */
+.ptr {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translate(-50%, -90px);
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,.12);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 20px;
+  opacity: 0;
+  transition: opacity .2s ease, transform .2s ease;
+  pointer-events: none;
+  z-index: 50;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
+}
+.light .ptr { background: #fff; border-color: rgba(20,20,40,.12); }
+.top-you {
+  background: linear-gradient(135deg, rgba(255,209,102,.15), rgba(255,68,102,.12));
+  border: 1px solid rgba(255,209,102,.35);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.light .top-you { border-color: rgba(255,159,67,.45); }
+.pf-invite { display: block; width: 100%; margin-top: 8px; }

@@ -203,7 +203,7 @@ const isNew = (m) =>
 function posterHtml(m) {
   return `<div class="poster-wrap">
     ${m.poster
-      ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy"
+      ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" decoding="async"
            onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
       : `<div class="poster-placeholder"><span>🎬</span><em>${esc(m.title)}</em></div>`}
     <span class="code-badge">🔑 ${esc(m.code)}</span>
@@ -436,6 +436,9 @@ function renderNews() {
       try { tg.openLink(url, { try_instant_view: false }); } catch (_) { window.open(url, '_blank'); }
     });
   });
+  // Пользователь видел новости — фиксируем и обновляем бейдж на «Ещё»
+  try { localStorage.setItem(NEWS_SEEN_KEY, String(newsMaxTs())); } catch (e) {}
+  updateMoreBadge();
 }
 
 function _newsWhen(ts) {
@@ -461,6 +464,9 @@ function renderLeaderboard() {
   }
   const medals = ['🥇', '🥈', '🥉'];
   const weekly = LEADERBOARD_KIND === 'week';
+  // Место пользователя в общем топе приезжает из профиля бота (PROFILE.rank)
+  const myRank = PROFILE ? (parseInt(PROFILE.rank, 10) || 0) : 0;
+  const myUnl = PROFILE ? (parseInt(PROFILE.unl, 10) || 0) : 0;
   const countLabel = (p) => weekly
     ? `${p.unlocks} за 7 дней${p.total ? ` · всего ${p.total}` : ''}`
     : `${p.unlocks} кодов`;
@@ -471,6 +477,7 @@ function renderLeaderboard() {
         ? 'Кто угадал больше всех за последние 7 дней'
         : 'Кто угадал больше всех — тот и лидер!'}</p>
     </div>
+    ${myRank > 0 ? `<div class="top-you">📍 Вы — №${myRank} в общем топе · разгадано ${myUnl}</div>` : ''}
     <div class="top-list">
       ${LEADERBOARD.map((p, i) => `
         <div class="top-row ${i < 3 ? 'top-row-gold' : ''}">
@@ -486,6 +493,14 @@ function renderLeaderboard() {
 
 // ---------- профиль «👤» (уровень/баллы/стрик) ----------
 // Данные приезжают от кнопки 🔁 (хэш &profile=…) — см. parseProfileHash().
+
+// 📣 Пригласить друга — шеринг ссылки на бота (профиль, обе ветки)
+function _inviteFriend() {
+  haptic('light');
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') +
+    '&text=' + encodeURIComponent('🎬 Угадывай фильмы по кодам у «Капитана Кино» — афиша, тренажёр и достижения!');
+  try { tg.openTelegramLink(url); } catch (e) {}
+}
 
 function favouriteGenre() {
   // Любимый жанр: берём из разгаданных кодов + избранного
@@ -529,8 +544,11 @@ function renderProfile() {
         <p class="pf-hint">Уровень, кинобаллы и стрик хранятся в боте.<br/>
         Синхронизируй — и они появятся здесь.</p>
         <button class="btn-primary" id="pf-sync">🔁 Синхронизировать с ботом</button>
+        <button class="btn-secondary pf-invite" id="pf-invite">📣 Пригласить друга</button>
       </div>`;
     document.getElementById('pf-sync').onclick = () => sendOrDeepLink({ action: 'sync_unlocked' });
+    const inv0 = document.getElementById('pf-invite');
+    if (inv0) inv0.onclick = _inviteFriend;
     return;
   }
   const p = PROFILE;
@@ -611,8 +629,11 @@ function renderProfile() {
         <button class="btn-secondary" id="pf-sync2">🔁 Обновить</button>
         <button class="btn-secondary" id="pf-bot">🏅 Профиль в боте</button>
       </div>
+      <button class="btn-secondary pf-invite" id="pf-invite">📣 Пригласить друга</button>
     </div>`;
   document.getElementById('pf-sync2').onclick = () => sendOrDeepLink({ action: 'sync_unlocked' });
+  const inv = document.getElementById('pf-invite');
+  if (inv) inv.onclick = _inviteFriend;
   document.getElementById('pf-bot').onclick = () => {
     haptic('light');
     try { tg.openTelegramLink('https://t.me/kapitan_kino_bot'); }
@@ -790,13 +811,22 @@ function computeAchCards() {
 // Бейдж на «Ещё»: точка, когда появились достижения, которых пользователь
 // ещё не видел (открыто больше, чем зафиксировано при последнем просмотре).
 const ACH_SEEN_KEY = 'kinoafisha_ach_seen';
+const NEWS_SEEN_KEY = 'kinoafisha_news_seen_ts';
+function newsMaxTs() {
+  return NEWS.reduce((mx, n) => (n.ts && n.ts > mx ? n.ts : mx), 0);
+}
 function updateMoreBadge() {
   const moreTab = document.getElementById('tab-more');
   if (!moreTab) return;
-  let done = 0;
-  try { done = computeAchCards().filter(a => a.done).length; } catch (e) { return; }
-  const seen = parseInt(localStorage.getItem(ACH_SEEN_KEY), 10) || 0;
-  moreTab.classList.toggle('has-badge', done > seen);
+  let fresh = false;
+  try {
+    const done = computeAchCards().filter(a => a.done).length;
+    const seenAch = parseInt(localStorage.getItem(ACH_SEEN_KEY), 10) || 0;
+    const seenNews = parseFloat(localStorage.getItem(NEWS_SEEN_KEY)) || 0;
+    // Точка на «Ещё»: новые достижения ИЛИ свежие новости
+    fresh = done > seenAch || newsMaxTs() > seenNews;
+  } catch (e) { return; }
+  moreTab.classList.toggle('has-badge', fresh);
 }
 
 function renderAchievements() {
@@ -925,9 +955,11 @@ function renderGrid() {
     el.addEventListener('click', () => openDetail(el.dataset.code)));
 }
 // ---------- карточка фильма ----------
+let detailOrigin = 'grid';  // откуда открыт фильм — для кнопки «◀️ Назад»
 function openDetail(code) {
   const m = ALL.find(x => x.code === code);
   if (!m) return;
+  if (view && view !== 'detail') detailOrigin = view;
   view = 'detail';
   showView('detail');
   const fav = getFavs().includes(code);
@@ -977,7 +1009,7 @@ function openDetail(code) {
           </div>`).join('')}
       </div>
     </div>` : ''}`;
-  document.getElementById('btn-back').onclick = () => { view = 'grid'; showView('catalog'); renderGrid(); };
+  document.getElementById('btn-back').onclick = () => openView(detailOrigin || 'grid');
   document.getElementById('btn-open').onclick =
     () => sendOrDeepLink({ action: 'open_movie', code });
   document.getElementById('btn-fav').onclick = () => { toggleFav(code); openDetail(code); };
@@ -1281,6 +1313,44 @@ document.getElementById('btn-lucky').addEventListener('click', () => {
   const m = ALL[Math.floor(Math.random() * ALL.length)];
   openDetail(m.code);
 });
+
+// 👇 Pull-to-refresh: на верху страницы тянешь список вниз — данные обновляются
+(function () {
+  const ind = document.getElementById('ptr');
+  if (!ind) return;
+  let startY = 0, pulling = false, dist = 0;
+  const modalOpen = () => !!document.querySelector('.modal:not(.hidden)');
+  document.addEventListener('touchstart', (e) => {
+    if (window.scrollY > 0 || modalOpen()) { pulling = false; return; }
+    startY = e.touches[0].clientY;
+    dist = 0;
+    pulling = true;
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (!pulling) return;
+    dist = e.touches[0].clientY - startY;
+    if (dist <= 0) { ind.style.opacity = '0'; return; }
+    const d = Math.min(dist, 120);
+    ind.textContent = dist > 90 ? '🔄 Отпусти — обновлю' : '↓ Тяни вниз';
+    ind.style.transform = 'translate(-50%, ' + Math.round(40 + d * 0.4) + 'px)';
+    ind.style.opacity = String(Math.min(d / 80, 1));
+  }, { passive: true });
+  document.addEventListener('touchend', () => {
+    if (!pulling) return;
+    pulling = false;
+    if (dist > 90) {
+      ind.textContent = '⏳ Обновляю…';
+      loadMovies().then(() => {
+        if (view === 'trailers') { renderTrailerGenreChips(); renderTrailers(); }
+        if (view === 'news') renderNews();
+        setTimeout(() => { ind.style.opacity = '0'; ind.style.transform = ''; }, 700);
+      });
+    } else {
+      ind.style.opacity = '0';
+      ind.style.transform = '';
+    }
+  });
+})();
 
 // 🎬 «Мой Киногод» — диплинк в бота через sendOrDeepLink: приложение
 // сворачивается (tg.close), и в чате с ботом сразу видна карточка «Киногод».
