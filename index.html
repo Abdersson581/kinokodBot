@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=41" />
+  <link rel="stylesheet" href="style.css?v=42" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -44,11 +44,11 @@
       <button class="tab active" data-view="grid">🎬 Афиша</button>
       <button class="tab" data-view="trailers">🎥 Трейлеры</button>
       <button class="tab" data-view="news">📰 Новости</button>
-      <button class="tab" data-view="cols">📚 Подборки</button>
-      <button class="tab" data-view="top">🏆 Топ</button>
-      <button class="tab tab-more" id="tab-more" aria-expanded="false" aria-controls="more-menu">Ещё <span class="more-arrow">▾</span></button>
+      <button class="tab tab-more" id="tab-more" aria-expanded="false" aria-controls="more-menu">Ещё <span class="more-badge"></span><span class="more-arrow">▾</span></button>
     </nav>
     <div id="more-menu" class="more-menu hidden">
+      <button class="more-item" data-view="cols">📚 Подборки</button>
+      <button class="more-item" data-view="top">🏆 Топ</button>
       <button class="more-item" data-view="achievements">🎖 Достижения</button>
       <button class="more-item" data-view="profile">👤 Профиль</button>
       <button class="more-item" data-view="fav">❤️ Моё</button>
@@ -207,7 +207,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=41"></script>
+  <script src="script.js?v=42"></script>
 </body>
 </html>
 

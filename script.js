@@ -232,6 +232,12 @@ async function loadMovies() {
     showCodeDay(meta);
     renderHero();
     renderGrid();
+    // Бейдж новых достижений на кнопке «Ещё» + восстановление последнего
+    // открытого раздела (пусто/«grid» — обычная афиша).
+    updateMoreBadge();
+    let saved = null;
+    try { saved = localStorage.getItem(LAST_VIEW_KEY); } catch (e) {}
+    if (saved && saved !== 'grid') openView(saved);
   } catch (e) {
     document.getElementById('movies-container').innerHTML =
       '<p class="error">Не удалось загрузить афишу 😔</p>';
@@ -712,22 +718,16 @@ const ACHIEVEMENTS_LIST = [
   { id: 'referral3', emoji: '🤝', name: '3 друга', desc: 'Пригласи 3 друзей' },
 ];
 
-function renderAchievements() {
-  const c = document.getElementById('achievements-container');
-  if (!c) return;
+function computeAchCards() {
   const favs = getFavs();
   const unlocked = getUnlocked();
-  const favGenre = favouriteGenre();
-  const total = ACHIEVEMENTS_LIST.length;
-  let opened = 0;
-
   // Данные из профиля бота (если синхронизирован)
   const p = PROFILE || {};
   const pts = parseInt(p.pts, 10) || 0;
   const strk = parseInt(p.str, 10) || 0;
   const unlCount = unlocked.length;
 
-  const achCards = ACHIEVEMENTS_LIST.map(a => {
+  return ACHIEVEMENTS_LIST.map(a => {
     let done = false;
     let progress = '';
     switch (a.id) {
@@ -776,9 +776,29 @@ function renderAchievements() {
         break;
       default: break;
     }
-    if (done) opened++;
     return { ...a, done, progress };
   });
+}
+
+// Бейдж на «Ещё»: точка, когда появились достижения, которых пользователь
+// ещё не видел (открыто больше, чем зафиксировано при последнем просмотре).
+const ACH_SEEN_KEY = 'kinoafisha_ach_seen';
+function updateMoreBadge() {
+  const moreTab = document.getElementById('tab-more');
+  if (!moreTab) return;
+  let done = 0;
+  try { done = computeAchCards().filter(a => a.done).length; } catch (e) { return; }
+  const seen = parseInt(localStorage.getItem(ACH_SEEN_KEY), 10) || 0;
+  moreTab.classList.toggle('has-badge', done > seen);
+}
+
+function renderAchievements() {
+  const c = document.getElementById('achievements-container');
+  if (!c) return;
+  const favGenre = favouriteGenre();
+  const total = ACHIEVEMENTS_LIST.length;
+  const achCards = computeAchCards();
+  const opened = achCards.filter(a => a.done).length;
   const pct = total ? Math.round(100 * opened / total) : 0;
   c.innerHTML = `
     <div class="ach-summary">
@@ -797,6 +817,11 @@ function renderAchievements() {
         <div class="ach-desc">${esc(a.desc)}</div>
         ${a.progress ? `<div class="ach-progress">${esc(a.progress)}</div>` : ''}
       </div>`).join('')}</div>`;
+  // Пользователь открыл раздел — фиксируем, сколько достижений он видел,
+  // и прячем бейдж на «Ещё».
+  try { localStorage.setItem(ACH_SEEN_KEY, String(opened)); } catch (e) {}
+  const moreTab = document.getElementById('tab-more');
+  if (moreTab) moreTab.classList.remove('has-badge');
 }
 
 // ---------- бэкап «Моё» через бота ----------
@@ -1094,7 +1119,7 @@ function showView(name) {
     t.classList.toggle('active', t.dataset.view === cur));
   const moreTab = document.getElementById('tab-more');
   if (moreTab) moreTab.classList.toggle('active',
-    ['achievements', 'profile', 'fav', 'game'].includes(cur));
+    ['cols', 'top', 'achievements', 'profile', 'fav', 'game'].includes(cur));
   document.querySelectorAll('.more-item').forEach(b =>
     b.classList.toggle('active', b.dataset.view === cur));
 }
@@ -1138,17 +1163,22 @@ function renderEmojiGame() {
   document.getElementById('emoji-next').onclick = () => { haptic('light'); box.dataset.locked = '0'; renderEmojiGame(); };
 }
 
-document.querySelectorAll('.tab[data-view]').forEach(t => t.addEventListener('click', () => {
-  view = t.dataset.view;
-  if (view === 'game') { showView('game'); renderEmojiGame(); startGame(); }
-  else if (view === 'cols') { showView('cols'); renderCols(); }
-  else if (view === 'news') { showView('news'); renderNews(); }
-  else if (view === 'top') { showView('top'); renderLeaderboard(); }
-  else if (view === 'profile') { showView('profile'); renderProfile(); }
-  else if (view === 'trailers') { showView('trailers'); renderTrailerGenreChips(); renderTrailers(); }
-  else if (view === 'achievements') { showView('achievements'); renderAchievements(); }
-  else { showView('catalog'); renderGrid(); }
-}));
+const LAST_VIEW_KEY = 'kinoafisha_last_view';
+// Единая точка открытия разделов: вкладки, подменю «Ещё» и восстановление
+// последнего раздела при запуске — всё через openView.
+function openView(v) {
+  view = v;
+  try { localStorage.setItem(LAST_VIEW_KEY, v); } catch (e) {}
+  if (v === 'game') { showView('game'); renderEmojiGame(); startGame(); }
+  else if (v === 'cols') { showView('cols'); renderCols(); }
+  else if (v === 'news') { showView('news'); renderNews(); }
+  else if (v === 'top') { showView('top'); renderLeaderboard(); }
+  else if (v === 'profile') { showView('profile'); renderProfile(); }
+  else if (v === 'trailers') { showView('trailers'); renderTrailerGenreChips(); renderTrailers(); }
+  else if (v === 'achievements') { showView('achievements'); renderAchievements(); }
+  else { showView('catalog'); renderGrid(); }  // grid | fav
+}
+document.querySelectorAll('.tab[data-view]').forEach(t => t.addEventListener('click', () => openView(t.dataset.view)));
 
 // ---------- раскрывающееся подменю «Ещё» ----------
 const moreTab = document.getElementById('tab-more');
@@ -1171,12 +1201,7 @@ if (moreTab && moreMenu) {
   });
   document.querySelectorAll('.more-item').forEach(b => b.addEventListener('click', () => {
     closeMoreMenu();
-    const v = b.dataset.view;
-    view = v;
-    if (v === 'game') { showView('game'); renderEmojiGame(); startGame(); }
-    else if (v === 'profile') { showView('profile'); renderProfile(); }
-    else if (v === 'achievements') { showView('achievements'); renderAchievements(); }
-    else { showView('catalog'); renderGrid(); }  // ❤️ Моё
+    openView(b.dataset.view);
   }));
 }
 
