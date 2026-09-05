@@ -472,6 +472,7 @@ function openDetail(code) {
   view = 'detail';
   showView('detail');
   const fav = getFavs().includes(code);
+  const similar = findSimilar(m);
   document.getElementById('view-detail').innerHTML = `
     <button class="btn-back" id="btn-back">◀️ Назад</button>
     <div class="detail">
@@ -482,7 +483,7 @@ function openDetail(code) {
         <p class="desc">${esc(m.description || 'Описание скоро появится.')}</p>
         <div class="detail-actions">
           <button class="btn-primary" id="btn-open">🔓 Открыть код</button>
-          ${m.trailer_mp4 || m.trailer_yt ? '<button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>' : ''}
+          ${m.trailer_mp4 || m.trailer_yt || m.trailer_file_id ? '<button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>' : ''}
           <button class="btn-fav ${fav ? 'active' : ''}" id="btn-fav">${fav ? '❤️ В «Моём»' : '🤍 Хочу посмотреть'}</button>
           <button class="btn-secondary" id="btn-copy">📎 Скопировать код</button>
           <button class="btn-secondary" id="btn-rate">🌟 Оценить</button>
@@ -491,7 +492,22 @@ function openDetail(code) {
           <button class="btn-secondary" id="btn-share">📤 Поделиться с другом</button>
         </div>
       </div>
-    </div>`;
+    </div>
+    ${similar.length ? `
+    <div class="similar-section">
+      <h3 class="similar-title">🎬 Похожие фильмы</h3>
+      <div class="similar-row">
+        ${similar.map(s => `
+          <div class="similar-card" data-code="${esc(s.code)}">
+            <div class="similar-poster">
+              ${s.poster
+                ? `<img src="${esc(s.poster)}" alt="${esc(s.title)}" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+                : `<div class="poster-placeholder similar-ph"><span>🎬</span></div>`}
+            </div>
+            <div class="similar-name">${esc(s.title)}</div>
+          </div>`).join('')}
+      </div>
+    </div>` : ''}`;
   document.getElementById('btn-back').onclick = () => { view = 'grid'; showView('catalog'); renderGrid(); };
   document.getElementById('btn-open').onclick =
     () => sendOrDeepLink({ action: 'open_movie', code });
@@ -521,6 +537,30 @@ function openDetail(code) {
     const text = `🎬 «${m.title}» — рейтинг ${m.rating || '—'} на КП! Угадай фильм по коду в боте «Капитан Кино» 🎲`;
     tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/kapitan_kino_bot')}&text=${encodeURIComponent(text)}`);
   };
+  // Тап по похожему фильму → открываем его карточку
+  document.querySelectorAll('#view-detail .similar-card').forEach(el => {
+    el.addEventListener('click', () => {
+      haptic('light');
+      openDetail(el.dataset.code);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+}
+
+function findSimilar(m) {
+  // Похожие фильмы: совпадение жанров > года > рейтинга. Максимум 6 карточек.
+  const mGenres = new Set(m.genres || []);
+  const scored = ALL.filter(x => x.code !== m.code).map(x => {
+    const xGenres = new Set(x.genres || []);
+    let score = 0;
+    mGenres.forEach(g => { if (xGenres.has(g)) score += 3; });
+    if (x.year && m.year && Math.abs(x.year - m.year) <= 3) score += 2;
+    if (x.year && m.year && x.year === m.year) score += 1;
+    score += Math.min(parseFloat(x.rating) || 0, 10) / 5;
+    return { movie: x, score };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 6).map(x => x.movie);
 }
 
 // ---------- тренажёр ----------
