@@ -149,7 +149,7 @@ function sendOrDeepLink(data) {
   else if (data.action === 'quiz_result') start = 'quiz_' + data.correct + '_' + data.total;
   else if (data.action === 'rate_movie') start = 'rate_' + data.code;
   else if (data.action === 'review_movie') start = 'review_' + data.code;
-  else if (data.action === 'trailer_movie') start = 'trailer_' + data.code;
+  else if (data.action === 'trailer_movie' || data.action === 'trailer') start = 'trailer_' + data.code;
   else if (data.action === 'sync_unlocked') start = 'sync_unlocked';
   else if (data.action === 'kinogod') start = 'kinogod';
   haptic('light');
@@ -912,8 +912,11 @@ function openTrailer(m) {
   }
   haptic('light');
   if (m.trailer_file_id) {
-    // Трейлер хранится в Telegram — открываем в боте (приложение само свернётся)
-    sendOrDeepLink({ action: 'trailer', code: m.code });
+    // Трейлер хранится в Telegram — открываем в боте (приложение само свернётся).
+    // Действие называется 'trailer_movie' — ровно как в маппинге sendOrDeepLink
+    // (раньше тут было 'trailer', маппинг не совпадал, и вместо видео уходил
+    // фолбэк ?start=afisha — трейлер «не открывался»).
+    sendOrDeepLink({ action: 'trailer_movie', code: m.code });
     return;
   }
   // Fallback: YouTube embed на весь экран
