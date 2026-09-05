@@ -1076,3 +1076,93 @@ body.light #err-banner { background: #dc2626; }
 .light .pf-stat { background: rgba(20,20,40,.04); border-color: rgba(20,20,40,.08); }
 .light .pf-progress { background: rgba(20,20,40,.08); }
 .light .detail-chips .chip { border-color: rgba(20,20,40,.12); background: rgba(20,20,40,.04); }
+
+/* ===== v36: расширенный профиль: VIP, титул, ачивки, недельная цель, opt-in ===== */
+.pf-vip {
+  display: inline-block;
+  background: linear-gradient(135deg, #ffd166, #ff9f43);
+  color: #3a2c00;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+.pf-title {
+  font-size: 13px;
+  color: var(--gold);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.pf-ach, .pf-wg {
+  margin-top: 14px;
+  text-align: left;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  padding: 12px;
+}
+.pf-ach-head, .pf-wg-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.pf-ach-head b, .pf-wg-head b {
+  color: var(--gold);
+  font-size: 14px;
+}
+.pf-progress-sm {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,.10);
+  overflow: hidden;
+  margin: 6px 0;
+  max-width: none;
+}
+.pf-progress-sm i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #2e8b57, #5ad49a);
+}
+.pf-ach-hint, .pf-wg-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 4px 0 0;
+  line-height: 1.4;
+}
+.pf-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.pf-opt input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+.pf-opt-pill {
+  flex: 1;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+.pf-opt input:checked + .pf-opt-pill {
+  background: rgba(46, 139, 87, 0.15);
+  border-color: rgba(46, 139, 87, 0.4);
+}
+.light .pf-ach, .light .pf-wg { background: rgba(20,20,40,.04); border-color: rgba(20,20,40,.08); }
+.light .pf-progress-sm { background: rgba(20,20,40,.08); }
+.light .pf-opt-pill { background: rgba(20,20,40,.04); border-color: rgba(20,20,40,.10); }
+.light .pf-opt input:checked + .pf-opt-pill { background: rgba(46, 139, 87, 0.10); }

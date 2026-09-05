@@ -28,13 +28,33 @@ function enterApp() {
 // раньше он выполнялся здесь, до объявления ALL/COLLS/обработчиков, и любое
 // падение верхнеуровневого кода оставляло приложение пустым (TDZ-гонка с fetch).
 
-// ---------- тема из Telegram ----------
+// ---------- тема: авто из Telegram + ручной переключатель ----------
+const THEME_KEY = 'kinoafisha_theme';
 function applyTheme() {
-  const scheme = tg.colorScheme || 'dark';
+  // Ручной переключатель имеет приоритет над авто-темой из Telegram
+  const saved = localStorage.getItem(THEME_KEY);
+  const scheme = saved || (tg.colorScheme || 'dark');
   document.body.classList.toggle('light', scheme === 'light');
 }
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
+  haptic('light');
+}
+function manualTheme() {
+  // При ручном переключении сохраняем выбор и отключаем авто-подхват
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved) {
+    localStorage.removeItem(THEME_KEY);  // возвращаем авто-тему из Telegram
+  }
+  applyTheme();
+  haptic('light');
+}
 applyTheme();
-tg.onEvent('themeChanged', applyTheme);
+tg.onEvent('themeChanged', () => {
+  // Авто-тема меняет только если пользователь не выбрал вручную
+  if (!localStorage.getItem(THEME_KEY)) applyTheme();
+});
 
 // ---------- состояние ----------
 let ALL = [];                       // все фильмы
@@ -152,6 +172,8 @@ function sendOrDeepLink(data) {
   else if (data.action === 'trailer_movie' || data.action === 'trailer') start = 'trailer_' + data.code;
   else if (data.action === 'sync_unlocked') start = 'sync_unlocked';
   else if (data.action === 'kinogod') start = 'kinogod';
+  else if (data.action === 'toggle_optin') start = data.on ? 'optin_on' : 'optin_off';
+  else if (data.action === 'set_theme') start = 'theme_' + data.theme;
   haptic('light');
   try {
     tg.openTelegramLink('https://t.me/kapitan_kino_bot?start=' + start);
@@ -484,10 +506,61 @@ function renderProfile() {
     ? '👑 Максимальный уровень!'
     : `Ещё ${p.lvl_next} код(ов) до следующего уровня`;
   const rank = parseInt(p.rank, 10) || 0;
+
+  // VIP-бейдж
+  const vipBadge = p.vip
+    ? '<span class="pf-vip">⭐ VIP</span>' : '';
+
+  // Активный титул
+  const titleLine = p.tit
+    ? `<div class="pf-title">🏷 ${esc(String(p.tit))}</div>` : '';
+
+  // Достижения (ачивки)
+  const achDone = parseInt(p.ach && p.ach[0], 10) || 0;
+  const achTotal = parseInt(p.ach && p.ach[1], 10) || 0;
+  const achPct = achTotal ? Math.round(100 * achDone / achTotal) : 0;
+  const achBlock = `
+    <div class="pf-ach">
+      <div class="pf-ach-head">
+        <span>🏆 Достижения</span>
+        <b>${achDone}/${achTotal}</b>
+      </div>
+      <div class="pf-progress pf-progress-sm"><i style="width:${achPct}%"></i></div>
+      <p class="pf-ach-hint">${achTotal - achDone > 0 ? 'Осталось ' + (achTotal - achDone) + ' — угадывай фильмы, ставь оценки, приглашай друзей!' : 'Все достижения открыты! 🎉'}</p>
+    </div>`;
+
+  // Недельная цель
+  let wgBlock = '';
+  if (p.wg && p.wg.target) {
+    const wgDone = Math.min(parseInt(p.wg.done, 10) || 0, parseInt(p.wg.target, 10));
+    const wgTarget = parseInt(p.wg.target, 10);
+    const wgPct = wgTarget ? Math.round(100 * wgDone / wgTarget) : 0;
+    const wgGenre = p.wg.genre ? ` жанра «${esc(p.wg.genre)}»` : '';
+    wgBlock = `
+      <div class="pf-wg">
+        <div class="pf-wg-head">
+          <span>🎯 Цель недели</span>
+          <b>${wgDone}/${wgTarget}</b>
+        </div>
+        <div class="pf-progress pf-progress-sm"><i style="width:${wgPct}%"></i></div>
+        <p class="pf-wg-hint">Разгадай ${wgTarget} код(ов)${wgGenre} за неделю — получишь +15 💰</p>
+      </div>`;
+  }
+
+  // Opt-in на публичный топ
+  const optChecked = p.opt ? 'checked' : '';
+  const optBlock = `
+    <label class="pf-opt">
+      <input type="checkbox" id="pf-opt-in" ${optChecked}/>
+      <span class="pf-opt-pill">🏆 Показывать меня в общем топе</span>
+    </label>`;
+
   c.innerHTML = `
     <div class="profile-card">
       <div class="pf-ava">${esc(levelEmoji(p.lvl))}</div>
+      ${vipBadge}
       <h2>${esc(String(p.lvl || 'Игрок'))}</h2>
+      ${titleLine}
       <div class="pf-progress"><i style="width:${pct}%"></i></div>
       <p class="pf-note">${esc(nextNote)}</p>
       <div class="pf-stats">
@@ -496,6 +569,9 @@ function renderProfile() {
         <div class="pf-stat"><b>🔓 ${esc(String(unl))}</b><span>из ${esc(String(p.tot ?? ALL.length))} фильмов</span></div>
         <div class="pf-stat"><b>${rank ? '🏆 №' + rank : '🏆 —'}</b><span>${rank ? 'в общем топе' : 'ещё не в топе'}</span></div>
       </div>
+      ${achBlock}
+      ${wgBlock}
+      ${optBlock}
       <div class="pf-actions">
         <button class="btn-secondary" id="pf-sync2">🔁 Обновить</button>
         <button class="btn-secondary" id="pf-bot">🏅 Профиль в боте</button>
@@ -507,6 +583,13 @@ function renderProfile() {
     try { tg.openTelegramLink('https://t.me/kapitan_kino_bot'); }
     catch (e) { window.open('https://t.me/kapitan_kino_bot', '_blank'); }
   };
+  const optIn = document.getElementById('pf-opt-in');
+  if (optIn) {
+    optIn.addEventListener('change', () => {
+      haptic('light');
+      sendOrDeepLink({ action: 'toggle_optin', on: optIn.checked });
+    });
+  }
 }
 
 // ---------- бэкап «Моё» через бота ----------
@@ -874,6 +957,9 @@ btnTop.addEventListener('click', () => {
   haptic('light');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
+
+// ---------- переключатель темы ----------
+document.getElementById('btn-theme').addEventListener('click', toggleTheme);
 
 // ---------- «О боте» ----------
 document.getElementById('btn-info').addEventListener('click', () => {
