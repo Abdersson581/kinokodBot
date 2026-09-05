@@ -39,7 +39,8 @@ tg.onEvent('themeChanged', applyTheme);
 let ALL = [];                       // все фильмы
 let COLLS = [];                     // подборки
 let NEWS = [];                      // последние новости кино
-let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game | news
+let LEADERBOARD = [];               // топ игроков сезона
+let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game | news | top
 let activeGenre = '';               // выбранный жанр-фильтр ('' = все)
 const FAV_KEY = 'kinoafisha_favs';
 const getFavs = () => JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
@@ -174,6 +175,7 @@ async function loadMovies() {
     const meta = rm ? await rm.json() : {};
     EMOJI_RIDDLES = Array.isArray(meta.emoji_riddles) ? meta.emoji_riddles : [];
     NEWS = Array.isArray(meta.recent_news) ? meta.recent_news : [];
+    LEADERBOARD = Array.isArray(meta.leaderboard) ? meta.leaderboard : [];
     updateSubtitle();
     renderGenreChips();
     showCodeDay(meta);
@@ -383,6 +385,33 @@ function _newsWhen(ts) {
   const d = Math.floor(hr / 24);
   if (d < 7) return d + ' дн назад';
   return new Date(ts * 1000).toLocaleDateString('ru-RU');
+}
+
+// ---------- лидерборд «🏆 Топ недели» ----------
+function renderLeaderboard() {
+  const c = document.getElementById('top-container');
+  if (!c) return;
+  if (!LEADERBOARD.length) {
+    c.innerHTML = '<p class="error">Пока нет данных — угадывай фильмы и поднимайся в рейтинге! 🏆</p>';
+    return;
+  }
+  const medals = ['🥇', '🥈', '🥉'];
+  c.innerHTML = `
+    <div class="top-header">
+      <h2>🏆 Топ недели</h2>
+      <p class="top-subtitle">Кто угадал больше всех — тот и лидер!</p>
+    </div>
+    <div class="top-list">
+      ${LEADERBOARD.map((p, i) => `
+        <div class="top-row ${i < 3 ? 'top-row-gold' : ''}">
+          <div class="top-rank">${medals[i] || (i + 1)}</div>
+          <div class="top-player">
+            <span class="top-name">Игрок №${p.rank}</span>
+            <span class="top-count">${p.unlocks} кодов</span>
+          </div>
+          ${i === 0 ? '<span class="top-crown">👑</span>' : ''}
+        </div>`).join('')}
+    </div>`;
 }
 
 // ---------- бэкап «Моё» через бота ----------
@@ -639,6 +668,7 @@ function showView(name) {
   document.getElementById('view-catalog').classList.toggle('hidden', name !== 'catalog');
   document.getElementById('view-cols').classList.toggle('hidden', name !== 'cols');
   document.getElementById('view-news').classList.toggle('hidden', name !== 'news');
+  document.getElementById('view-top').classList.toggle('hidden', name !== 'top');
   document.getElementById('view-detail').classList.toggle('hidden', name !== 'detail');
   document.getElementById('view-game').classList.toggle('hidden', name !== 'game');
   document.getElementById('view-emoji').classList.toggle('hidden', name !== 'game');
@@ -691,6 +721,7 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   if (view === 'game') { showView('game'); renderEmojiGame(); startGame(); }
   else if (view === 'cols') { showView('cols'); renderCols(); }
   else if (view === 'news') { showView('news'); renderNews(); }
+  else if (view === 'top') { showView('top'); renderLeaderboard(); }
   else { showView('catalog'); renderGrid(); }
 }));
 
