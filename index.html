@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=45" />
+  <link rel="stylesheet" href="style.css?v=48" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -39,6 +39,7 @@
         <div class="brand-text">
           <h1>Кино<span class="brand-gold">афиша</span></h1>
           <p class="subtitle" id="subtitle">Капитан Кино</p>
+          <div id="header-progress" class="header-progress hidden"></div>
         </div>
         <button class="btn-lucky" id="btn-theme" title="Сменить тему">🌓</button>
         <button class="btn-lucky" id="btn-info" title="О боте">ℹ️</button>
@@ -84,6 +85,10 @@
       <div id="hero-shelf" class="hero-shelf hidden">
         <h2 class="shelf-title">🔥 Сейчас в тренде</h2>
         <div class="hero-row" id="hero-row"></div>
+      </div>
+      <div id="premieres-shelf" class="hero-shelf hidden">
+        <h2 class="shelf-title">🍿 Скоро в кино</h2>
+        <div class="hero-row" id="premieres-row"></div>
       </div>
       <main id="movies-container" class="movies-grid"></main>
     </div>
@@ -135,6 +140,14 @@
     <div id="view-game" class="hidden"></div>
 
     <footer class="footer">
+      <button class="kinogod-tile" id="btn-pick">
+        <span class="kt-emoji">🎲</span>
+        <span class="kt-body">
+          <b>Фильм на вечер</b>
+          <em>Подобрать по вкусу — жанр, длина, рейтинг</em>
+        </span>
+        <span class="kt-arrow">→</span>
+      </button>
       <button class="kinogod-tile" id="btn-kinogod">
         <span class="kt-emoji">🎬</span>
         <span class="kt-body">
@@ -172,6 +185,34 @@
                 allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 allowfullscreen></iframe>
       </div>
+    </div>
+  </div>
+
+  <!-- Подбор «Фильм на вечер» -->
+  <div id="pick-modal" class="modal hidden">
+    <div class="modal-card">
+      <button class="modal-close" id="btn-pick-close">✕</button>
+      <h2>🎲 Фильм на вечер</h2>
+      <p class="modal-muted">Выбери настроение — покажу три варианта</p>
+      <div class="pick-row">
+        <select id="pick-genre"><option value="">Любой жанр</option></select>
+      </div>
+      <div class="pick-row">
+        <select id="pick-dur">
+          <option value="">Любая длина</option>
+          <option value="short">До 1,5 часов</option>
+          <option value="mid">1,5–2 часа</option>
+          <option value="long">Больше 2 часов</option>
+        </select>
+        <select id="pick-rate">
+          <option value="0">Любой рейтинг</option>
+          <option value="7">7+ на КП</option>
+          <option value="7.5">7.5+ на КП</option>
+          <option value="8">8+ на КП</option>
+        </select>
+      </div>
+      <button class="btn-primary" id="btn-pick-run">🎲 Подобрать</button>
+      <div id="pick-results" class="pick-results"></div>
     </div>
   </div>
 
@@ -213,7 +254,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=47"></script>
+  <script src="script.js?v=48"></script>
 </body>
 </html>
 

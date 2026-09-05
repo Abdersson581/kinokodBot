@@ -1,22 +1,22 @@
 {
  "code_of_day": "430",
  "code_of_day_date": "2026-09-05",
- "updated_at": "2026-09-05",
+ "updated_at": "2026-09-06",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 16,
+   "unlocks": 14,
    "total": 56
   },
   {
    "rank": 2,
-   "unlocks": 13,
-   "total": 121
+   "unlocks": 14,
+   "total": 14
   },
   {
    "rank": 3,
-   "unlocks": 4,
-   "total": 5
+   "unlocks": 12,
+   "total": 121
   },
   {
    "rank": 4,
@@ -31,7 +31,7 @@
   {
    "rank": 6,
    "unlocks": 3,
-   "total": 3
+   "total": 5
   },
   {
    "rank": 7,
@@ -40,13 +40,13 @@
   },
   {
    "rank": 8,
-   "unlocks": 2,
-   "total": 12
+   "unlocks": 3,
+   "total": 3
   },
   {
    "rank": 9,
    "unlocks": 2,
-   "total": 2
+   "total": 12
   },
   {
    "rank": 10,
@@ -57,43 +57,43 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐕🚉⏳💔",
-   "answer": "Хатико: Самый верный друг",
+   "emoji": "🌀🍰⏰🧠",
+   "answer": "Начало",
    "options": [
-    "Крушение",
-    "Суррогаты",
-    "Охотники за головами",
-    "Хатико: Самый верный друг"
+    "Не говори никому",
+    "Звук свободы",
+    "Начало",
+    "Человек божий"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "answer": "Побег из Шоушенка",
    "options": [
-    "Человек божий",
-    "Дело храбрых",
+    "Ветреная река",
+    "Константин: Повелитель тьмы",
     "Побег из Шоушенка",
-    "Исходный код"
+    "За пивом"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "answer": "Хатико: Самый верный друг",
+   "options": [
+    "Хатико: Самый верный друг",
+    "Два ствола",
+    "Девушка и море",
+    "Дом у озера"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "answer": "Зеленая миля",
    "options": [
+    "По соображениям совести",
+    "Ангел-А",
     "Зеленая миля",
-    "Бандит",
-    "Уличный кот по кличке Боб",
-    "Богемская рапсодия"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "answer": "Начало",
-   "options": [
-    "Два ствола",
-    "Начало",
-    "Последний самурай",
-    "Расплата"
+    "Дело храбрых"
    ]
   }
  ],
@@ -111,6 +111,68 @@
    "image": "https://www.kinonews.ru/insimgs/2026/artimg/big/artimg142984.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1788628824.4386275
+  }
+ ],
+ "premieres": [
+  {
+   "title": "TheatreHD: Григорий Соколов. Концерт в Экс-ан-Провансе",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13729544.jpg",
+   "ru_date": "2026-09-09"
+  },
+  {
+   "title": "Затмение",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/59123.jpg",
+   "ru_date": "2026-09-10"
+  },
+  {
+   "title": "Космос как предчувствие",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/103737.jpg",
+   "ru_date": "2026-09-10"
+  },
+  {
+   "title": "Надежда",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5230825.jpg",
+   "ru_date": "2026-09-10"
+  },
+  {
+   "title": "Хитрый койот",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/572477.jpg",
+   "ru_date": "2026-09-10"
+  },
+  {
+   "title": "Восставший",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8005532.jpg",
+   "ru_date": "2026-09-10"
+  },
+  {
+   "title": "Охота на императора",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5364876.jpg",
+   "ru_date": "2026-09-10"
+  },
+  {
+   "title": "Между нами, девочками",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9251086.jpg",
+   "ru_date": "2026-09-10"
+  },
+  {
+   "title": "Край чудес",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5366078.jpg",
+   "ru_date": "2026-09-10"
+  },
+  {
+   "title": "Соавторы",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6037947.jpg",
+   "ru_date": "2026-09-10"
+  },
+  {
+   "title": "Чужой звонок",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8721540.jpg",
+   "ru_date": "2026-09-10"
+  },
+  {
+   "title": "Позывной «Аскет»",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10193558.jpg",
+   "ru_date": "2026-09-10"
   }
  ]
 }

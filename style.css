@@ -1471,3 +1471,72 @@ body.light #err-banner { background: #dc2626; }
   margin: 0 0 8px;
 }
 .light .fav-mode-btn { background: #fff; }
+
+/* ===== v48: прогресс в шапке, «Скоро в кино», «Фильм на вечер», fuzzy ===== */
+.header-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 12px;
+}
+.hp-streak { font-weight: 800; color: var(--accent); }
+.hp-level { color: var(--muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hp-bar {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255,255,255,.10);
+  overflow: hidden;
+  min-width: 40px;
+}
+.hp-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), #ff9f43);
+  border-radius: 3px;
+}
+.light .hp-bar { background: rgba(20,20,40,.10); }
+
+.pick-row { margin-bottom: 10px; }
+.pick-row select {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid #2a3050;
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.pick-row:last-of-type { display: flex; gap: 8px; }
+.pick-row:last-of-type select { margin-bottom: 0; }
+.pick-results { margin-top: 14px; }
+.pick-card {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+.pick-card:active { transform: scale(.98); }
+.pick-thumb {
+  width: 56px;
+  height: 84px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #232948, #141830);
+}
+.pick-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.pick-info { min-width: 0; }
+.pick-info b { display: block; font-size: 14px; margin-bottom: 2px; }
+.pick-info p { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
+.light .pick-card { background: #fff; border-color: rgba(20,20,40,.10); }
+.light .pick-row select { background: #fff; border-color: #d8dcea; }
+.hero-card.no-poster { display: flex; align-items: center; justify-content: center; }

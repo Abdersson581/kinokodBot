@@ -107,6 +107,7 @@ function parseProfileHash() {
     catch (e) { PROFILE = null; }
   }
   if (PROFILE && view === 'profile') renderProfile();
+  updateHeaderProgress();
 }
 
 function parseUnlockedHash() {
@@ -214,25 +215,45 @@ function posterHtml(m) {
 }
 
 // ---------- загрузка ----------
+const DATA_CACHE_KEY = 'kinoafisha_data_cache';
+
+// Применяем порцию данных (из кэша или сети) ко всему интерфейсу
+function applyData(data) {
+  ALL = data.all || [];
+  COLLS = data.cols || [];
+  const meta = data.meta || {};
+  EMOJI_RIDDLES = Array.isArray(meta.emoji_riddles) ? meta.emoji_riddles : [];
+  NEWS = Array.isArray(meta.recent_news) ? meta.recent_news : [];
+  LEADERBOARD = Array.isArray(meta.leaderboard) ? meta.leaderboard : [];
+  LEADERBOARD_KIND = meta.leaderboard_kind === 'total' ? 'total' : 'week';
+  updateSubtitle();
+  renderGenreChips();
+  showCodeDay(meta);
+  renderHero();
+  renderPremieres(meta);
+  renderGrid();
+  updateHeaderProgress();
+}
+
 async function loadMovies() {
+  // Мгновенный старт: сразу рисуем закэшированные данные, свежак тянем фоном
+  try {
+    const cached = JSON.parse(localStorage.getItem(DATA_CACHE_KEY) || 'null');
+    if (cached && Array.isArray(cached.all) && cached.all.length) applyData(cached);
+  } catch (e) {}
   try {
     const [r, rc, rm] = await Promise.all([
       fetch('./data/movies.json', { cache: 'no-cache' }),
       fetch('./data/collections.json', { cache: 'no-cache' }).catch(() => null),
       fetch('./data/meta.json', { cache: 'no-cache' }).catch(() => null)
     ]);
-    ALL = await r.json();
-    COLLS = rc ? await rc.json() : [];
-    const meta = rm ? await rm.json() : {};
-    EMOJI_RIDDLES = Array.isArray(meta.emoji_riddles) ? meta.emoji_riddles : [];
-    NEWS = Array.isArray(meta.recent_news) ? meta.recent_news : [];
-    LEADERBOARD = Array.isArray(meta.leaderboard) ? meta.leaderboard : [];
-    LEADERBOARD_KIND = meta.leaderboard_kind === 'total' ? 'total' : 'week';
-    updateSubtitle();
-    renderGenreChips();
-    showCodeDay(meta);
-    renderHero();
-    renderGrid();
+    const data = {
+      all: await r.json(),
+      cols: rc ? await rc.json() : [],
+      meta: rm ? await rm.json() : {},
+    };
+    try { localStorage.setItem(DATA_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+    applyData(data);
     // Бейдж новых достижений на кнопке «Ещё» + восстановление последнего
     // открытого раздела (пусто/«grid» — обычная афиша).
     updateMoreBadge();
@@ -240,6 +261,7 @@ async function loadMovies() {
     try { saved = localStorage.getItem(LAST_VIEW_KEY); } catch (e) {}
     if (saved && saved !== 'grid') openView(saved);
   } catch (e) {
+    if (ALL.length) return; // уже показан кэш — не пугаем ошибкой
     document.getElementById('movies-container').innerHTML =
       '<div class="error-box"><p class="error">Не удалось загрузить афишу 😔</p>' +
       '<button class="btn-secondary" id="btn-retry">🔁 Повторить</button></div>';
@@ -252,6 +274,20 @@ async function loadMovies() {
   }
 }
 
+// Полоска «🔥 стрик · уровень · прогресс» в шапке — после синхронизации с ботом
+function updateHeaderProgress() {
+  const el = document.getElementById('header-progress');
+  if (!el) return;
+  if (!PROFILE || !PROFILE.lvl) { el.classList.add('hidden'); return; }
+  const strk = parseInt(PROFILE.str, 10) || 0;
+  const pct = Math.max(0, Math.min(100, parseInt(PROFILE.pct, 10) || 0));
+  const next = parseInt(PROFILE.lvl_next, 10) || 0;
+  el.classList.remove('hidden');
+  el.innerHTML = `<span class="hp-streak">🔥 ${strk}</span>` +
+    `<span class="hp-level">${esc(PROFILE.lvl)}${next ? ` · −${next} 🔑` : ''}</span>` +
+    `<span class="hp-bar"><i style="width:${pct}%"></i></span>`;
+}
+
 // ---------- скелетоны (заглушки до загрузки данных) ----------
 function renderSkeletons() {
   const c = document.getElementById('movies-container');
@@ -260,6 +296,26 @@ function renderSkeletons() {
   ).join('');
 }
 renderSkeletons();
+
+// Расстояние Левенштейна — для нечёткого поиска по названиям
+function _levDist(a, b) {
+  a = String(a); b = String(b);
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  const prev = new Array(b.length + 1);
+  const cur = new Array(b.length + 1);
+  for (let j = 0; j <= b.length; j++) prev[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    cur[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+    }
+    for (let j = 0; j <= b.length; j++) prev[j] = cur[j];
+  }
+  return prev[b.length];
+}
 
 // ---------- hero-полка «Сейчас в тренде» ----------
 // Живая строка статистики в шапке
@@ -320,6 +376,42 @@ function renderHero() {
   shelf.classList.remove('hidden');
   shelf.querySelectorAll('.hero-card').forEach(el =>
     el.addEventListener('click', () => openDetail(el.dataset.code)));
+}
+
+// Полка «🍿 Скоро в кино» — премьеры текущего месяца от бота/КП
+function renderPremieres(meta) {
+  const shelf = document.getElementById('premieres-shelf');
+  if (!shelf) return;
+  const items = (meta && Array.isArray(meta.premieres)) ? meta.premieres : [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const pending = items.filter(p => {
+    const d = p.ru_date ? new Date(String(p.ru_date).slice(0, 10) + 'T00:00:00') : null;
+    return !d || d >= today;
+  }).slice(0, 10);
+  if (pending.length < 2) { shelf.classList.add('hidden'); return; }
+  document.getElementById('premieres-row').innerHTML = pending.map(p => {
+    const title = p.title || '';
+    const dateText = p.ru_date ? String(p.ru_date).slice(0, 10) : (p.date || '');
+    return `
+    <div class="hero-card" data-title="${esc(title)}">
+      ${p.poster
+        ? `<img src="${esc(p.poster)}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+        : `<div class="poster-placeholder"><span>🍿</span></div>`}
+      <span class="hero-rank">🍿</span>
+      <div class="hero-overlay">
+        <h3>${esc(title)}</h3>
+        <span class="rating">${esc(dateText ? '📅 ' + dateText : '')}</span>
+      </div>
+    </div>`;
+  }).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => {
+    const title = (el.dataset.title || '').toLowerCase().replace(/ё/g, 'е');
+    const m = ALL.find(x => (x.title || '').toLowerCase().replace(/ё/g, 'е') === title);
+    if (m) openDetail(m.code);
+    else { haptic('light'); tg.showPopup({ type: 'ok', title: '🍿 Скоро в кино', message: 'Фильм ещё не в афише — следи за постами канала!' }); }
+  }));
 }
 
 function showCodeDay(meta) {
@@ -504,6 +596,20 @@ function _inviteFriend() {
   const url = 'https://t.me/share/url?url=' + encodeURIComponent(botUrl) +
     '&text=' + encodeURIComponent('🎬 Угадывай фильмы по кодам у «Капитана Кино» — афиша, тренажёр и достижения!');
   try { tg.openTelegramLink(url); } catch (e) {}
+}
+
+// 📋 «Скопировать список» из «Моё» — коды+названия в буфер обмена
+function copyFavsList() {
+  haptic('light');
+  const lines = (window._favTitlesCache || []).map(l => `🔑 ${l}`).join('\n');
+  const text = `🎬 Мои фильмы (${getFavs().length}):\n${lines}\n\nУгадывай фильмы по кодам у «Капитана Кино»!`;
+  const done = () => {
+    try { tg.HapticFeedback.impactOccurred('light'); } catch (e) {}
+    tg.showPopup({ type: 'ok', title: '📋 Список скопирован', message: 'Отправь его другу — пусть тоже угадывает фильмы!' });
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(done);
+  } else done();
 }
 
 function favouriteGenre() {
@@ -871,7 +977,13 @@ function renderAchievements() {
 // ---------- бэкап «Моё» через бота ----------
 function backupFavsNotice() {
   const favs = getFavs();
+  const favTitles = favs.map(code => {
+    const m = ALL.find(x => String(x.code) === String(code));
+    return m ? `${m.code} — ${m.title}` : `${code}`;
+  });
   if (favs.length < 2) return ''; // маленький список ни к чему не гонять
+  // Переменная используется кнопкой «📋 Скопировать список» (см. copyFavsList)
+  window._favTitlesCache = favTitles;
   return `
     <div class="cols-list">
       <div class="col-card backup-card">
@@ -879,6 +991,7 @@ function backupFavsNotice() {
           <h3>${favs.length > 0 ? `💾 «Моё» хранится локально (${favs.length})` : ''}</h3>
           <p>Сохрани список в боте — не потеряется при переустановке.</p>
         </div>
+        <button class="btn-secondary" id="btn-copy-list">📋 Скопировать список</button>
         <button class="btn-secondary" id="btn-backup">💾 Сохранить в боте</button>
       </div>
     </div>`;
@@ -916,10 +1029,28 @@ function renderGrid() {
   }
   if (q) {
     const digits = q.replace(/\D/g, '');
-    list = list.filter(m =>
-      (m.title || '').toLowerCase().includes(q) ||
-      (digits && String(m.code || '').includes(digits))
-    );
+    // Сначала точные совпадения (подстрока/код), затем — нечёткие по
+    // расстоянию Левенштейна: «интерстелар» найдёт «Интерстеллар».
+    const norm = (t) => (t || '').toLowerCase().replace(/ё/g, 'е');
+    let matches = [];
+    list.forEach(m => {
+      const t = norm(m.title);
+      if (t.includes(q) || (digits && String(m.code || '').includes(digits))) {
+        matches.push({ m, score: 0 });
+      }
+    });
+    if (!matches.length) {
+      const limit = q.length <= 6 ? 2 : (q.length <= 12 ? 3 : 4);
+      list.forEach(m => {
+        const t = norm(m.title);
+        const d = _levDist(q, t);
+        if (d <= limit && d <= Math.max(2, Math.floor(t.length * 0.3))) {
+          matches.push({ m, score: d });
+        }
+      });
+      matches.sort((a, b) => a.score - b.score);
+    }
+    list = matches.map(x => x.m);
   }
   list.sort((a, b) => {
     if (sort === 'rating') return (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0);
@@ -981,6 +1112,8 @@ function renderGrid() {
     </div>`).join('');
   const b = document.getElementById('btn-backup');
   if (b) b.onclick = () => sendOrDeepLink({ action: 'save_favs', codes: getFavs() });
+  const bc = document.getElementById('btn-copy-list');
+  if (bc) bc.onclick = copyFavsList;
   wireFavMode();
   // каскадное появление карточек
   Array.from(c.children).forEach((el, i) => {
@@ -1391,6 +1524,70 @@ document.getElementById('btn-lucky').addEventListener('click', () => {
 // сворачивается (tg.close), и в чате с ботом сразу видна карточка «Киногод».
 document.getElementById('btn-kinogod').addEventListener('click', () => {
   sendOrDeepLink({ action: 'kinogod' });
+});
+
+// 🎲 «Фильм на вечер» — модалка подбора по вкусу
+const pickModal = document.getElementById('pick-modal');
+const pickResults = document.getElementById('pick-results');
+function fillPickGenres() {
+  const sel = document.getElementById('pick-genre');
+  if (!sel || sel.options.length > 1) return;
+  const genres = new Set();
+  ALL.forEach(m => (m.genres || []).forEach(g => { if (g) genres.add(g); }));
+  [...genres].sort((a, b) => a.localeCompare(b, 'ru')).forEach(g => {
+    const o = document.createElement('option');
+    o.value = g; o.textContent = g;
+    sel.appendChild(o);
+  });
+}
+function runPick() {
+  const genre = document.getElementById('pick-genre').value;
+  const dur = document.getElementById('pick-dur').value;
+  const minRate = parseFloat(document.getElementById('pick-rate').value) || 0;
+  if (!pickResults) return;
+  let pool = [...ALL];
+  if (genre) pool = pool.filter(m => (m.genres || []).includes(genre));
+  if (dur === 'short') pool = pool.filter(m => (parseInt(m.duration, 10) || 0) > 0 && (parseInt(m.duration, 10) || 0) <= 90);
+  else if (dur === 'mid') pool = pool.filter(m => { const d = parseInt(m.duration, 10) || 0; return d > 90 && d <= 120; });
+  else if (dur === 'long') pool = pool.filter(m => (parseInt(m.duration, 10) || 0) > 120);
+  if (minRate) pool = pool.filter(m => parseFloat(m.rating) >= minRate);
+  if (!pool.length) {
+    pickResults.innerHTML = '<p class="error">Ничего не нашлось под такие вкусы 😔 Попробуй ослабить фильтры.</p>';
+    return;
+  }
+  const picks = [];
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  for (const m of shuffled) {
+    if (picks.length >= 3) break;
+    picks.push(m);
+  }
+  pickResults.innerHTML = picks.map(m => `
+    <div class="pick-card" data-code="${esc(m.code)}">
+      <div class="pick-thumb">
+        ${m.poster
+          ? `<img src="${esc(m.poster)}" alt="" loading="lazy" onerror="this.style.display='none'"/>`
+          : `<div class="trailer-thumb-ph">🎬</div>`}
+      </div>
+      <div class="pick-info">
+        <b>${esc(m.title)}</b>
+        <span class="rating">${ratingBadge(m)}${m.duration ? ' · ⏱ ' + esc(fmtDuration(m.duration)) : ''}</span>
+        ${m.description ? `<p>${esc((m.description || '').slice(0, 120))}…</p>` : ''}
+      </div>
+    </div>`).join('');
+  pickResults.querySelectorAll('.pick-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.code)));
+}
+document.getElementById('btn-pick').addEventListener('click', () => {
+  if (!pickModal) return;
+  fillPickGenres();
+  pickModal.classList.remove('hidden');
+});
+const btnPickClose = document.getElementById('btn-pick-close');
+if (btnPickClose) btnPickClose.onclick = () => pickModal.classList.add('hidden');
+const btnPickRun = document.getElementById('btn-pick-run');
+if (btnPickRun) btnPickRun.onclick = () => { haptic('light'); runPick(); };
+pickModal.addEventListener('click', (e) => {
+  if (e.target === pickModal) pickModal.classList.add('hidden');
 });
 // ---------- Трейлер: YouTube embed на весь экран ----------
 function _requestFs(el) {
