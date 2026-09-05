@@ -66,6 +66,7 @@ let view = 'grid';                  // grid | cols | cols-detail | fav | detail 
 let activeGenre = '';               // выбранный жанр-фильтр ('' = все)
 let trailerGenre = '';              // жанр-фильтр для трейлеров
 const FAV_KEY = 'kinoafisha_favs';
+const FAV_MODE_KEY = 'kinoafisha_fav_mode';  // «Моё»: fav = хочу посмотреть | done = разгаданные
 const getFavs = () => JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
 const setFavs = (a) => localStorage.setItem(FAV_KEY, JSON.stringify([...a]));
 const toggleFav = (code) => {
@@ -494,10 +495,13 @@ function renderLeaderboard() {
 // ---------- профиль «👤» (уровень/баллы/стрик) ----------
 // Данные приезжают от кнопки 🔁 (хэш &profile=…) — см. parseProfileHash().
 
-// 📣 Пригласить друга — шеринг ссылки на бота (профиль, обе ветки)
+// 📣 Пригласить друга — шеринг персональной реф-ссылки на бота:
+// переход друга по ?start=ref_<id> засчитывается в реферальные достижения.
 function _inviteFriend() {
   haptic('light');
-  const url = 'https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') +
+  const ref = (PROFILE && PROFILE.uid) ? ('?start=ref_' + PROFILE.uid) : '';
+  const botUrl = 'https://t.me/kapitan_kino_bot' + ref;
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(botUrl) +
     '&text=' + encodeURIComponent('🎬 Угадывай фильмы по кодам у «Капитана Кино» — афиша, тренажёр и достижения!');
   try { tg.openTelegramLink(url); } catch (e) {}
 }
@@ -894,7 +898,13 @@ function renderGrid() {
   const qRaw = (document.getElementById('search').value || '').trim();
   const q = qRaw.toLowerCase();
   const sort = document.getElementById('sort').value;
-  let list = view === 'fav' ? ALL.filter(m => getFavs().includes(m.code)) : [...ALL];
+  const favMode = localStorage.getItem(FAV_MODE_KEY) === 'done' ? 'done' : 'fav';
+  const unlockedAll = getUnlocked();
+  let list = view === 'fav'
+    ? (favMode === 'done'
+        ? ALL.filter(m => unlockedAll.includes(String(m.code)))
+        : ALL.filter(m => getFavs().includes(m.code)))
+    : [...ALL];
   if (activeGenre) list = list.filter(m => (m.genres || []).includes(activeGenre));
   // 🙈 «Скрыть разгаданные»: прячем карточки, код которых есть в localStorage
   if (localStorage.getItem(HIDE_KEY) === '1' && view !== 'fav') {
@@ -919,14 +929,35 @@ function renderGrid() {
     return (a.title || '').localeCompare(b.title || '', 'ru');
   });
   const c = document.getElementById('movies-container');
+  // Переключатель «Моё»: ❤️ хочу посмотреть / ✅ разгаданные + прогресс
+  const modeSwitch = view === 'fav' ? `<div class="fav-mode">
+      <button class="fav-mode-btn ${favMode === 'fav' ? 'active' : ''}" data-mode="fav">❤️ Хочу посмотреть</button>
+      <button class="fav-mode-btn ${favMode === 'done' ? 'active' : ''}" data-mode="done">✅ Разгаданные</button>
+    </div>` : '';
+  const progressLine = (view === 'fav' && favMode === 'done')
+    ? `<div class="fav-progress">Разгадано ${unlockedAll.length} из ${ALL.length} (${ALL.length ? Math.round(100 * unlockedAll.length / ALL.length) : 0}%)</div>`
+    : '';
+  const head = modeSwitch + progressLine;
+  const wireFavMode = () => {
+    c.querySelectorAll('.fav-mode-btn').forEach(b => b.addEventListener('click', () => {
+      try { localStorage.setItem(FAV_MODE_KEY, b.dataset.mode); } catch (e) {}
+      haptic('light');
+      renderGrid();
+    }));
+  };
   if (!list.length) {
-    c.innerHTML = `<div class="empty-state">
-      <div class="empty-emoji">${view === 'fav' ? '🤍' : '🔍'}</div>
-      <p>${view === 'fav'
-        ? 'В «Моём» пока пусто — жми сердечко ❤️ на любом фильме'
-        : 'Ничего не нашлось 🤷 Попробуй другой запрос'}</p>
+    const emptyEmoji = view === 'fav' ? (favMode === 'done' ? '🔒' : '🤍') : '🔍';
+    const emptyText = view === 'fav'
+      ? (favMode === 'done'
+          ? 'Пока ничего не разгадано — лови коды в канале! 🔑'
+          : 'В «Моём» пока пусто — жми сердечко ❤️ на любом фильме')
+      : 'Ничего не нашлось 🤷 Попробуй другой запрос';
+    c.innerHTML = head + `<div class="empty-state">
+      <div class="empty-emoji">${emptyEmoji}</div>
+      <p>${emptyText}</p>
       <button class="btn-secondary" id="btn-empty-lucky">🎲 Мне повезёт</button>
     </div>`;
+    wireFavMode();
     const el = document.getElementById('btn-empty-lucky');
     if (el) el.onclick = () => {
       if (!ALL.length) return;
@@ -936,8 +967,8 @@ function renderGrid() {
     };
     return;
   }
-  const backup = view === 'fav' ? backupFavsNotice() : '';
-  c.innerHTML = backup + list.map(m => `
+  const backup = (view === 'fav' && favMode === 'fav') ? backupFavsNotice() : '';
+  c.innerHTML = head + backup + list.map(m => `
     <div class="movie-card" data-code="${esc(m.code)}">
       ${posterHtml(m)}
       <div class="movie-info">
@@ -947,6 +978,7 @@ function renderGrid() {
     </div>`).join('');
   const b = document.getElementById('btn-backup');
   if (b) b.onclick = () => sendOrDeepLink({ action: 'save_favs', codes: getFavs() });
+  wireFavMode();
   // каскадное появление карточек
   Array.from(c.children).forEach((el, i) => {
     el.style.animationDelay = (Math.min(i, 24) * 0.03) + 's';

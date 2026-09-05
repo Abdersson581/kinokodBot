@@ -1442,3 +1442,32 @@ body.light #err-banner { background: #dc2626; }
 }
 .light .top-you { border-color: rgba(255,159,67,.45); }
 .pf-invite { display: block; width: 100%; margin-top: 8px; }
+
+/* ===== v45: переключатель «Моё» (хочу посмотреть / разгаданные) ===== */
+.fav-mode {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.fav-mode-btn {
+  flex: 1;
+  font-family: inherit;
+  background: var(--card);
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 10px 6px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.fav-mode-btn.active { background: var(--accent); color: #fff; }
+.fav-progress {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+.light .fav-mode-btn { background: #fff; }
