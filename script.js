@@ -880,6 +880,10 @@ function renderGrid() {
     el.addEventListener('click', () => openDetail(el.dataset.code)));
 }
 // ---------- карточка фильма ----------
+function closeMoreMenu() {
+  const m = document.getElementById('more-menu');
+  if (m) m.classList.remove('open');
+}
 function openDetail(code) {
   const m = ALL.find(x => x.code === code);
   if (!m) return;
@@ -909,11 +913,16 @@ function openDetail(code) {
           <button class="btn-primary" id="btn-open">🔓 Открыть код</button>
           ${m.trailer_mp4 || m.trailer_yt || m.trailer_file_id ? '<button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>' : ''}
           <button class="btn-fav ${fav ? 'active' : ''}" id="btn-fav">${fav ? '❤️ В «Моём»' : '🤍 Хочу посмотреть'}</button>
-          <button class="btn-secondary" id="btn-copy">📎 Скопировать код</button>
-          <button class="btn-secondary" id="btn-rate">🌟 Оценить</button>
-          <button class="btn-secondary" id="btn-review">✍️ Отзыв</button>
-          <button class="btn-secondary" id="btn-remind">🔔 Напомнить через час</button>
-          <button class="btn-secondary" id="btn-share">📤 Поделиться с другом</button>
+          <div class="more-wrap">
+            <button class="more-btn" id="btn-more" aria-label="Ещё">⋮</button>
+            <div class="more-menu" id="more-menu">
+              <button id="btn-copy">📎 Скопировать код</button>
+              <button id="btn-rate">🌟 Оценить</button>
+              <button id="btn-review">✍️ Отзыв</button>
+              <button id="btn-remind">🔔 Напомнить через час</button>
+              <button id="btn-share">📤 Поделиться с другом</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -937,6 +946,7 @@ function openDetail(code) {
     () => sendOrDeepLink({ action: 'open_movie', code });
   document.getElementById('btn-fav').onclick = () => { toggleFav(code); openDetail(code); };
   document.getElementById('btn-copy').onclick = () => {
+    closeMoreMenu();
     const done = () => {
       try { tg.HapticFeedback.impactOccurred('light'); } catch (e) {}
       tg.showPopup({
@@ -949,18 +959,35 @@ function openDetail(code) {
       navigator.clipboard.writeText(code).then(done).catch(done);
     } else done();
   };
-  document.getElementById('btn-remind').onclick = () =>
+  document.getElementById('btn-remind').onclick = () => {
+    closeMoreMenu();
     sendOrDeepLink({ action: 'remind_movie', code });
+  };
   const trailerBtn = document.getElementById('btn-trailer');
   if (trailerBtn) trailerBtn.onclick = () => openTrailer(m);
-  document.getElementById('btn-rate').onclick = () =>
+  document.getElementById('btn-rate').onclick = () => {
+    closeMoreMenu();
     sendOrDeepLink({ action: 'rate_movie', code });
-  document.getElementById('btn-review').onclick = () =>
+  };
+  document.getElementById('btn-review').onclick = () => {
+    closeMoreMenu();
     sendOrDeepLink({ action: 'review_movie', code });
+  };
   document.getElementById('btn-share').onclick = () => {
+    closeMoreMenu();
     const text = `🎬 «${m.title}» — рейтинг ${m.rating || '—'} на КП! Угадай фильм по коду в боте «Капитан Кино» 🎲`;
     tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/kapitan_kino_bot')}&text=${encodeURIComponent(text)}`);
   };
+  // Подменю "⋮"
+  const moreBtn = document.getElementById('btn-more');
+  const moreMenu = document.getElementById('more-menu');
+  if (moreBtn && moreMenu) {
+    moreBtn.onclick = (e) => {
+      e.stopPropagation();
+      moreMenu.classList.toggle('open');
+      haptic('light');
+    };
+  }
   // Тап по похожему фильму → открываем его карточку
   document.querySelectorAll('#view-detail .similar-card').forEach(el => {
     el.addEventListener('click', () => {
@@ -1142,7 +1169,14 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   else if (view === 'trailers') { showView('trailers'); renderTrailerGenreChips(); renderTrailers(); }
   else if (view === 'achievements') { showView('achievements'); renderAchievements(); }
   else { showView('catalog'); renderGrid(); }
+  closeMoreMenu();
 }));
+
+// Закрытие подменю при клике вне его
+document.addEventListener('click', (e) => {
+  const wrap = e.target.closest('.more-wrap');
+  if (!wrap) closeMoreMenu();
+});
 
 // ---------- поиск с debounce (не рендерим на каждый символ) ----------
 let _searchTimer = null;
