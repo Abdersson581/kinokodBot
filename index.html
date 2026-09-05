@@ -42,9 +42,11 @@
 
     <nav class="tabs">
       <button class="tab active" data-view="grid">🎬 Афиша</button>
+      <button class="tab" data-view="trailers">🎥 Трейлеры</button>
       <button class="tab" data-view="news">📰 Новости</button>
       <button class="tab" data-view="cols">📚 Подборки</button>
       <button class="tab" data-view="top">🏆 Топ</button>
+      <button class="tab" data-view="achievements">🎖 Достижения</button>
       <button class="tab" data-view="profile">👤 Профиль</button>
       <button class="tab" data-view="fav">❤️ Моё</button>
       <button class="tab" data-view="game">🏋 Тренажёр</button>
@@ -95,6 +97,25 @@
     <!-- Профиль игрока (уровень/баллы/стрик) -->
     <div id="view-profile" class="hidden">
       <main id="profile-container" class="profile-feed"></main>
+    </div>
+
+    <!-- Трейлеры (все в одном месте) -->
+    <div id="view-trailers" class="hidden">
+      <div class="toolbar glass">
+        <input type="text" id="trailer-search" placeholder="🔍 Поиск трейлера…" />
+        <select id="trailer-sort">
+          <option value="new">🔥 По новизне</option>
+          <option value="rating">⭐ По рейтингу</option>
+          <option value="title">По названию</option>
+        </select>
+      </div>
+      <div id="trailer-genre-chips" class="genre-chips hidden"></div>
+      <main id="trailers-container" class="trailers-feed"></main>
+    </div>
+
+    <!-- Достижения (прогресс по ачивкам) -->
+    <div id="view-achievements" class="hidden">
+      <main id="achievements-container" class="achievements-feed"></main>
     </div>
 
     <!-- Карточка фильма -->
@@ -183,7 +204,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=36"></script>
+  <script src="script.js?v=37"></script>
 </body>
 </html>
 

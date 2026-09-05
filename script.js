@@ -62,8 +62,9 @@ let COLLS = [];                     // подборки
 let NEWS = [];                      // последние новости кино
 let LEADERBOARD = [];               // топ игроков сезона
 let LEADERBOARD_KIND = 'week';      // week | total — по чему ранжируем
-let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game | news | top | profile
+let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game | news | top | profile | trailers | achievements
 let activeGenre = '';               // выбранный жанр-фильтр ('' = все)
+let trailerGenre = '';              // жанр-фильтр для трейлеров
 const FAV_KEY = 'kinoafisha_favs';
 const getFavs = () => JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
 const setFavs = (a) => localStorage.setItem(FAV_KEY, JSON.stringify([...a]));
@@ -472,6 +473,26 @@ function renderLeaderboard() {
 
 // ---------- профиль «👤» (уровень/баллы/стрик) ----------
 // Данные приезжают от кнопки 🔁 (хэш &profile=…) — см. parseProfileHash().
+
+function favouriteGenre() {
+  // Любимый жанр: берём из разгаданных кодов + избранного
+  const favs = getFavs();
+  const counter = new Map();
+  ALL.forEach(m => {
+    const codes = [...(favs.includes(m.code) ? [m.code] : [])];
+    if (codes.length) (m.genres || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1));
+  });
+  // Из профиля можем взять историю разгадок через unlocked
+  const unlocked = getUnlocked();
+  ALL.forEach(m => {
+    if (unlocked.includes(String(m.code))) {
+      (m.genres || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1));
+    }
+  });
+  let best = '', bestN = 0;
+  counter.forEach((n, g) => { if (n > bestN) { bestN = n; best = g; } });
+  return bestN >= 2 ? best : '';
+}
 function levelEmoji(lvl) {
   const first = [...String(lvl || '')][0] || '🎬';
   return /\p{Extended_Pictographic}/u.test(first) ? first : '🎬';
@@ -570,6 +591,7 @@ function renderProfile() {
         <div class="pf-stat"><b>${rank ? '🏆 №' + rank : '🏆 —'}</b><span>${rank ? 'в общем топе' : 'ещё не в топе'}</span></div>
       </div>
       ${achBlock}
+      ${favouriteGenre() ? `<div class="pf-favgenre">🌟 Любимый жанр: <b>${esc(favouriteGenre())}</b></div>` : ''}
       ${wgBlock}
       ${optBlock}
       <div class="pf-actions">
@@ -590,6 +612,159 @@ function renderProfile() {
       sendOrDeepLink({ action: 'toggle_optin', on: optIn.checked });
     });
   }
+}
+
+// ---------- трейлеры «🎥» ----------
+// Все трейлеры в одном месте — с поиском, сортировкой и фильтром по жанру.
+let _trailerSearchTimer = null;
+
+function renderTrailerGenreChips() {
+  const wrap = document.getElementById('trailer-genre-chips');
+  if (!wrap) return;
+  const withTrailers = ALL.filter(m => m.trailer_yt || m.trailer_file_id);
+  const counter = new Map();
+  withTrailers.forEach(m => (m.genres || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1)));
+  const top = [...counter.entries()].filter(([, n]) => n >= 2)
+    .sort((a, b) => b[1] - a[1]).slice(0, 8);
+  if (!top.length) { wrap.classList.add('hidden'); return; }
+  wrap.innerHTML = `<button class="chip${trailerGenre === '' ? ' active' : ''}" data-g="">Все</button>` +
+    top.map(([g, n]) =>
+      `<button class="chip${trailerGenre === g ? ' active' : ''}" data-g="${esc(g)}">${esc(g)} <em>${n}</em></button>`
+    ).join('');
+  wrap.classList.remove('hidden');
+  wrap.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+    haptic('light');
+    trailerGenre = ch.dataset.g || '';
+    renderTrailerGenreChips();
+    renderTrailers();
+  }));
+}
+
+function renderTrailers() {
+  const c = document.getElementById('trailers-container');
+  if (!c) return;
+  const qRaw = (document.getElementById('trailer-search').value || '').trim().toLowerCase();
+  const sort = document.getElementById('trailer-sort').value;
+  let list = ALL.filter(m => m.trailer_yt || m.trailer_file_id);
+  if (trailerGenre) list = list.filter(m => (m.genres || []).includes(trailerGenre));
+  if (qRaw) {
+    const digits = qRaw.replace(/\D/g, '');
+    list = list.filter(m =>
+      (m.title || '').toLowerCase().includes(qRaw) ||
+      (digits && String(m.code || '').includes(digits))
+    );
+  }
+  list.sort((a, b) => {
+    if (sort === 'rating') return (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0);
+    if (sort === 'new') {
+      const da = new Date(a.added_at || 0).getTime();
+      const db = new Date(b.added_at || 0).getTime();
+      return db - da;
+    }
+    return (a.title || '').localeCompare(b.title || '', 'ru');
+  });
+  if (!list.length) {
+    c.innerHTML = '<p class="error">Нет трейлеров по запросу 🎬</p>';
+    return;
+  }
+  c.innerHTML = `<div class="trailers-grid">${list.map(m => `
+    <div class="trailer-card" data-code="${esc(m.code)}">
+      <div class="trailer-thumb">
+        ${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" onerror="this.style.display='none'"/>`
+          : `<div class="trailer-thumb-ph">🎬</div>`}
+        <span class="trailer-play">▶️</span>
+        ${m.trailer_file_id ? '<span class="trailer-local">📥</span>' : ''}
+      </div>
+      <div class="trailer-info">
+        <h3>${esc(m.title)}</h3>
+        <div class="trailer-meta">
+          ${m.year ? `<span>📅 ${esc(String(m.year))}</span>` : ''}
+          ${m.rating ? `<span>⭐ ${esc(String(m.rating))}</span>` : ''}
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+  c.querySelectorAll('.trailer-card').forEach(el => {
+    el.addEventListener('click', () => {
+      const m = ALL.find(x => x.code === el.dataset.code);
+      if (m) openTrailer(m);
+    });
+  });
+}
+
+// ---------- достижения «🎖» ----------
+const ACHIEVEMENTS_LIST = [
+  { id: 'first_code', emoji: '🔓', name: 'Первый код', desc: 'Разгадай первый код' },
+  { id: 'streak3', emoji: '🔥', name: 'Стррик 3', desc: 'Разгадай 3 кода подряд без пропуска' },
+  { id: 'streak7', emoji: '⚡', name: 'Стррик 7', desc: 'Разгадай 7 кодов подряд без пропуска' },
+  { id: 'codes10', emoji: '🎯', name: '10 кодов', desc: 'Разгадай 10 кодов' },
+  { id: 'codes25', emoji: '🏅', name: '25 кодов', desc: 'Разгадай 25 кодов' },
+  { id: 'codes50', emoji: '🏆', name: '50 кодов', desc: 'Разгадай 50 кодов' },
+  { id: 'genres3', emoji: '🎭', name: '3 жанра', desc: 'Разгадай коды из 3 разных жанров' },
+  { id: 'genres5', emoji: '🌈', name: '5 жанров', desc: 'Разгадай коды из 5 разных жанров' },
+  { id: 'reaction', emoji: '👍', name: 'Оценка', desc: 'Поставь оценку фильму' },
+  { id: 'reaction3', emoji: '💬', name: '3 оценки', desc: 'Поставь 3 оценки' },
+  { id: 'favorite', emoji: '❤️', name: 'Избранное', desc: 'Добавь фильм в избранное' },
+  { id: 'points20', emoji: '💰', name: '20 баллов', desc: 'Заработай 20 кинобаллов' },
+  { id: 'points50', emoji: '💎', name: '50 баллов', desc: 'Заработай 50 кинобаллов' },
+  { id: 'secret', emoji: '🕵️', name: 'Секрет', desc: 'Найди секретный код' },
+  { id: 'bingo_line', emoji: '🎰', name: 'Линия', desc: 'Закрой линию в кино-бинго' },
+  { id: 'bingo_full', emoji: '👑', name: 'Бинго!', desc: 'Закрой всю карточку кино-бинго' },
+  { id: 'referral3', emoji: '🤝', name: '3 друга', desc: 'Пригласи 3 друзей' },
+];
+
+function renderAchievements() {
+  const c = document.getElementById('achievements-container');
+  if (!c) return;
+  const favs = getFavs();
+  const unlocked = getUnlocked();
+  const favGenre = favouriteGenre();
+  const total = ACHIEVEMENTS_LIST.length;
+  let opened = 0;
+  const achCards = ACHIEVEMENTS_LIST.map(a => {
+    let done = false;
+    let progress = '';
+    const unl = unlocked.length;
+    switch (a.id) {
+      case 'first_code': done = unl >= 1; break;
+      case 'codes10': done = unl >= 10; progress = `${Math.min(unl, 10)}/10`; break;
+      case 'codes25': done = unl >= 25; progress = `${Math.min(unl, 25)}/25`; break;
+      case 'codes50': done = unl >= 50; progress = `${Math.min(unl, 50)}/50`; break;
+      case 'favorite': done = favs.length >= 1; progress = `${favs.length}/1`; break;
+      case 'genres3': {
+        const genres = new Set();
+        ALL.forEach(m => { if (unlocked.includes(String(m.code))) (m.genres || []).forEach(g => genres.add(g)); });
+        done = genres.size >= 3; progress = `${genres.size}/3`;
+        break;
+      }
+      case 'genres5': {
+        const genres = new Set();
+        ALL.forEach(m => { if (unlocked.includes(String(m.code))) (m.genres || []).forEach(g => genres.add(g)); });
+        done = genres.size >= 5; progress = `${genres.size}/5`;
+        break;
+      }
+      default: break;
+    }
+    if (done) opened++;
+    return { ...a, done, progress };
+  });
+  const pct = total ? Math.round(100 * opened / total) : 0;
+  c.innerHTML = `
+    <div class="ach-summary">
+      <div class="ach-summary-head">
+        <h2>🎖 Достижения</h2>
+        <b>${opened}/${total}</b>
+      </div>
+      <div class="pf-progress"><i style="width:${pct}%"></i></div>
+      <p class="ach-hint">${opened === total ? 'Все достижения открыты! 🎉' : `Осталось ${total - opened} — угадывай фильмы, ставь оценки, приглашай друзей!`}</p>
+      ${favGenre ? `<p class="ach-favgenre">🌟 Любимый жанр: <b>${esc(favGenre)}</b></p>` : ''}
+    </div>
+    <div class="ach-grid">${achCards.map(a => `
+      <div class="ach-card ${a.done ? 'ach-done' : ''}">
+        <div class="ach-emoji">${a.done ? a.emoji : '🔒'}</div>
+        <div class="ach-name">${esc(a.name)}</div>
+        <div class="ach-desc">${esc(a.desc)}</div>
+        ${a.progress ? `<div class="ach-progress">${esc(a.progress)}</div>` : ''}
+      </div>`).join('')}</div>`;
 }
 
 // ---------- бэкап «Моё» через бота ----------
@@ -876,10 +1051,12 @@ function showView(name) {
   toggle('view-news', name === 'news');
   toggle('view-top', name === 'top');
   toggle('view-profile', name === 'profile');
+  toggle('view-trailers', name === 'trailers');
+  toggle('view-achievements', name === 'achievements');
   toggle('view-detail', name === 'detail');
   toggle('view-game', name === 'game');
   toggle('view-emoji', name === 'game');
-  toggle('toolbar', name === 'catalog');
+  toggle('toolbar', name === 'catalog' || name === 'trailers');
   document.querySelectorAll('.tab').forEach(t =>
     t.classList.toggle('active', t.dataset.view === name || (name === 'catalog' && t.dataset.view === view)));
 }
@@ -930,6 +1107,8 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   else if (view === 'news') { showView('news'); renderNews(); }
   else if (view === 'top') { showView('top'); renderLeaderboard(); }
   else if (view === 'profile') { showView('profile'); renderProfile(); }
+  else if (view === 'trailers') { showView('trailers'); renderTrailerGenreChips(); renderTrailers(); }
+  else if (view === 'achievements') { showView('achievements'); renderAchievements(); }
   else { showView('catalog'); renderGrid(); }
 }));
 
@@ -947,6 +1126,14 @@ document.getElementById('search').addEventListener('input', () => {
   _searchTimer = setTimeout(renderGrid, 180);
 });
 document.getElementById('sort').addEventListener('change', renderGrid);
+
+// ---------- поиск/сортировка трейлеров ----------
+document.getElementById('trailer-search').addEventListener('input', () => {
+  clearTimeout(_trailerSearchTimer);
+  if (trailerGenre) { trailerGenre = ''; renderTrailerGenreChips(); }
+  _trailerSearchTimer = setTimeout(renderTrailers, 180);
+});
+document.getElementById('trailer-sort').addEventListener('change', renderTrailers);
 
 // ---------- кнопка «наверх» (glass-дизайн) ----------
 const btnTop = document.getElementById('btn-top');
