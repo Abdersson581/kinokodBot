@@ -2435,8 +2435,10 @@ function renderGrid() {
     ? `<div class="smart-hint">🧠 ${esc((smart.parts || []).join(' · '))} · найдено: ${list.length}<button class="smart-clear" title="Сбросить" onclick="document.getElementById('search').value='';renderGrid()">✕</button></div>`
     : '';
   const head = modeSwitch + progressLine + smartHint
-    + (view === 'grid' && !searching && ALL.length
-      ? `<div class="seen-bar"><span>👁 ${watchedAll.length} из ${ALL.length} просмотрено</span><span class="seen-track"><i style="width:${Math.round(100 * watchedAll.length / ALL.length)}%"></i></span></div>`
+    // v75: полоску «просмотрено» показываем только когда есть хоть одна отметка —
+    // «0 из 71» выглядело как баг и занимало место
+    + (view === 'grid' && !searching && ALL.length && watchedAll.length > 0
+      ? `<div class="seen-bar"><span>👁 Отмечено просмотренными: ${watchedAll.length} из ${ALL.length}</span><span class="seen-track"><i style="width:${Math.round(100 * watchedAll.length / ALL.length)}%"></i></span></div>`
       : '');
   const wireFavMode = () => {
     c.querySelectorAll('.fav-mode-btn').forEach(b => b.addEventListener('click', () => {
