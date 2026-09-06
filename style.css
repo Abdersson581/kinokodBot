@@ -84,6 +84,9 @@ body.light .header.scrolled { box-shadow: 0 8px 26px rgba(30, 40, 80, .14); }
   gap: 12px;
   margin-top: 12px;
 }
+/* v79: служебные строки (полоска «просмотрено», подсказка 🧠, режимы «Моё»)
+   должны занимать всю ширину сетки, а не одну ячейку рядом с карточкой */
+.movies-grid > :not(.movie-card) { grid-column: 1 / -1; }
 .movie-card {
   background: var(--card);
   border-radius: 12px;
