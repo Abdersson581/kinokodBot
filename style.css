@@ -2159,5 +2159,97 @@ body.accent-gold .howto-step span { background: linear-gradient(135deg, var(--ac
 }
 .chain-genre em { font-size: 11px; color: var(--muted); }
 .light .chain-genre { background: rgba(20, 20, 40, .06); border-color: rgba(20, 20, 40, .18); }
+
+/* ===== v64: ежедневная серия — полоска на главной ===== */
+.streak-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(232, 93, 48, .16), rgba(232, 93, 48, .05));
+  border: 1px solid rgba(232, 93, 48, .3);
+  border-radius: 14px;
+  padding: 9px 14px;
+  margin: 10px 0;
+  font-size: 13.5px;
+}
+.streak-flame { font-size: 20px; }
+.streak-num { font-size: 19px; font-weight: 800; color: #ff9558; }
+.streak-label { color: var(--muted); font-size: 12.5px; }
+.streak-next { margin-left: auto; font-size: 12px; color: var(--muted); }
+.streak-best { font-size: 13px; font-weight: 700; color: var(--text); }
+.light .streak-strip { border-color: rgba(232, 93, 48, .35); }
+
+/* ===== v64: оценка звёздами прямо в карточке фильма ===== */
+.rate-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 209, 102, .08);
+  border: 1px solid rgba(255, 209, 102, .18);
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-top: 10px;
+}
+.rate-label { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.rate-stars { display: flex; gap: 2px; }
+.star-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: rgba(255, 255, 255, .18);
+  cursor: pointer;
+  padding: 0 1px;
+  transition: transform .12s ease, color .12s ease;
+}
+.star-btn.on { color: #ffd166; text-shadow: 0 0 10px rgba(255, 209, 102, .5); }
+.star-btn:active { transform: scale(1.25); }
+.rate-clear {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+.light .rate-strip { background: rgba(255, 209, 102, .12); }
+.light .star-btn { color: rgba(20, 20, 40, .18); }
+.my-stars { margin-left: 6px; color: #ffd166; font-size: 13px; letter-spacing: 1px; }
+
+/* v64: серия в «Моей неделе» */
+.wk-streak {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+  border-top: 1px dashed rgba(255, 255, 255, .1);
+  padding-top: 8px;
+}
+.wk-streak b { color: #ff9558; }
+.light .wk-streak { border-color: rgba(20, 20, 40, .1); }
+
+/* ===== v64: «🎭 Загадай другу» — модалка с подсказками ===== */
+.riddle-card .riddle-hints {
+  font-size: 42px;
+  letter-spacing: 8px;
+  text-align: center;
+  padding: 18px 0;
+  margin: 8px 0 14px;
+  background: rgba(255, 255, 255, .04);
+  border-radius: 14px;
+}
+.riddle-reveal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, .05);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.riddle-reveal img { width: 64px; border-radius: 8px; }
+.riddle-answer { display: flex; flex-direction: column; gap: 4px; font-size: 15px; }
+.riddle-answer span { font-size: 13px; color: var(--muted); }
+.riddle-card .btn-back { margin-top: 10px; }
+.light .riddle-card .riddle-hints { background: rgba(20, 20, 40, .05); }
 .light .chain-film { background: rgba(20, 20, 40, .05); }
 .light .chain-ph { background: rgba(20, 20, 40, .08); }

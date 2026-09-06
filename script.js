@@ -21,6 +21,7 @@ function enterApp() {
   document.getElementById('app').classList.remove('hidden');
   parseProfileHash();  // до parseUnlockedHash: тот очищает location.hash
   parseUnlockedHash();
+  bumpDaily();         // v64: ежедневная серия заходит
   initHideToggle();
   applyGridCols();
   initSearchHist();
@@ -223,6 +224,79 @@ function week7() {
 const RECO_KEY = 'kinoafisha_reco';
 const getRecoHide = () => JSON.parse(localStorage.getItem(RECO_KEY) || '[]');
 const setRecoHide = (a) => localStorage.setItem(RECO_KEY, JSON.stringify([...a]));
+
+// ---------- v64: мои оценки — прямо в приложении, без выброса в бота ----------
+const RATINGS_KEY = 'kinoafisha_ratings';
+const getRatings = () => {
+  try { return JSON.parse(localStorage.getItem(RATINGS_KEY) || '{}') || {}; }
+  catch (e) { return {}; }
+};
+const myRating = (code) => getRatings()[String(code)] || 0;
+function setRating(code, r) {
+  const all = getRatings();
+  const k = String(code);
+  if (r && all[k] === r) delete all[k];   // повторный тап по той же звезде — снять
+  else if (r) all[k] = r;
+  else delete all[k];
+  localStorage.setItem(RATINGS_KEY, JSON.stringify(all));
+  haptic(r ? 'ok' : 'light');
+  if (r) bumpWeekStat('rated');
+}
+function removeRating(code) {
+  const all = getRatings();
+  delete all[String(code)];
+  localStorage.setItem(RATINGS_KEY, JSON.stringify(all));
+  haptic('light');
+}
+// «вес» фильма во вкусе пользователя: чем выше оценка — тем сильнее сигнал
+const ratingWeight = (r) => 1 + (parseInt(r, 10) || 0) * 1.2;
+
+// ---------- v64: ежедневная серия («🔥 заходим каждый день») ----------
+const DAILY_KEY = 'kinoafisha_daily';
+const DAILY_MILESTONES = [3, 7, 14, 30, 60, 100];
+const _daysWord = (n) => (n % 10 === 1 && n % 100 !== 11) ? 'день'
+  : ([2, 3, 4].includes(n % 10) && (n % 100 < 10 || n % 100 >= 20)) ? 'дня' : 'дней';
+function dailyState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(DAILY_KEY) || 'null') || {};
+    return { last: s.last || '', series: s.series || 0, best: s.best || 0, done: s.done || [] };
+  } catch (e) { return { last: '', series: 0, best: 0, done: [] }; }
+}
+function bumpDaily() {
+  const s = dailyState();
+  const today = _wdayKey();
+  if (s.last === today) return s;                 // сегодня уже засчитали
+  const yest = new Date(); yest.setDate(yest.getDate() - 1);
+  s.series = (s.last === _wdayKey(yest)) ? s.series + 1 : 1;   // вчера был — серия живёт
+  s.best = Math.max(s.best || 0, s.series);
+  s.last = today;
+  const reached = DAILY_MILESTONES.find(x => s.series >= x && !s.done.includes(x));
+  if (reached) {
+    s.done.push(reached);
+    setTimeout(() => {
+      haptic('ok');
+      try {
+        tg.showPopup({ type: 'ok', title: `🔥 Серия ${reached} ${_daysWord(reached)}!`,
+          message: `Ты заходишь в «Киноафишу» ${reached} ${_daysWord(reached)} подряд — так держать! Заходи завтра, чтобы не потерять серию.` });
+      } catch (e) {}
+    }, 900);
+  }
+  localStorage.setItem(DAILY_KEY, JSON.stringify(s));
+  return s;
+}
+function renderStreakStrip() {
+  const el = document.getElementById('streak-strip');
+  if (!el) return;
+  const s = dailyState();
+  if (!s.series) { el.classList.add('hidden'); return; }
+  const next = DAILY_MILESTONES.find(x => x > s.series);
+  el.classList.remove('hidden');
+  el.innerHTML = `<span class="streak-flame">🔥</span>` +
+    `<span class="streak-num">${s.series}</span>` +
+    `<span class="streak-label">${_daysWord(s.series)} подряд</span>` +
+    (next ? `<span class="streak-next">до ${next} 🔥 — ещё ${next - s.series}</span>` : `<span class="streak-next">легенда афиши 🏆</span>`) +
+    `<span class="streak-best" title="Твой рекорд">🏅 ${s.best}</span>`;
+}
 
 // ---------- разгаданные коды (для «🙈 Скрыть разгаданные») ----------
 // Синхронизируются с ботом кнопкой 🔁: бот присылает сообщение с web_app
@@ -483,6 +557,8 @@ function applyData(data) {
   renderGrid();
   updateChallPane();
   updateHeaderProgress();
+  renderStreakStrip();
+  parseRiddleHash();
 }
 
 async function loadMovies() {
@@ -769,7 +845,8 @@ function renderRecentShelf() {
   wireFavQuick(shelf);
 }
 
-// «💫 Советуем вам» — локальные рекомендации по жанрам из «Моё»/разгаданных
+// «💫 Советуем вам» — v64: персональные рекомендации на основе твоих оценок,
+// «Моё», разгаданных и просмотренных (жанры + актёры), без выхода из аппа.
 function renderRecoShelf() {
   const shelf = document.getElementById('reco-shelf');
   if (!shelf) return;
@@ -777,21 +854,44 @@ function renderRecoShelf() {
   const favs = getFavs();
   const unlocked = getUnlocked();
   const watched = getWatched();
-  const seen = new Set([...favs, ...unlocked, ...watched, ...getRecent().slice(0, 4)]);
-  const genreCount = new Map();
-  [...favs, ...unlocked].forEach(code => {
-    const m = ALL.find(x => x.code === code);
-    (m && Array.isArray(m.genres) ? m.genres : []).forEach(g => genreCount.set(g, (genreCount.get(g) || 0) + 1));
-  });
-  const topGenres = [...genreCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([g]) => g);
-  if (topGenres.length === 0) { shelf.classList.add('hidden'); return; }
-  const cands = ALL.filter(m =>
-    !seen.has(m.code) &&
-    (Array.isArray(m.genres) ? m.genres.some(g => topGenres.includes(g)) : false)
-  );
-  // скрытые пользователем рекомендации
+  const ratings = getRatings();
+  const seen = new Set([...favs, ...unlocked, ...watched, ...getRecent().slice(0, 4)]
+    .map(c => String(c)));
+  // «вкус»: жанры и актёры из того, что ты оценил/сохранил/разгадал.
+  // Высокая оценка — сильный сигнал, низкая — почти нейтральный.
+  const genreScore = new Map(), actorScore = new Map();
+  const feed = (code, w) => {
+    const m = ALL.find(x => String(x.code) === String(code));
+    if (!m) return;
+    (m.genres || []).forEach(g => genreScore.set(g, (genreScore.get(g) || 0) + w));
+    (m.actors || []).slice(0, 5).forEach(a => actorScore.set(a, (actorScore.get(a) || 0) + w * 0.6));
+  };
+  Object.entries(ratings).forEach(([code, r]) => feed(code, ratingWeight(r)));
+  favs.forEach(code => feed(code, 2.2));
+  unlocked.forEach(code => feed(code, 1.8));
+  watched.forEach(code => feed(code, 1.2));
+  const hasTaste = genreScore.size > 0 || actorScore.size > 0;
   const hidden = new Set(getRecoHide());
-  const picks = cands.filter(m => !hidden.has(m.code)).sort(() => Math.random() - 0.5).slice(0, 6);
+  const cands = ALL.filter(m => !seen.has(String(m.code)) && !hidden.has(m.code));
+  let picks = [];
+  if (hasTaste) {
+    const scored = cands.map(m => {
+      let score = 0;
+      (m.genres || []).forEach(g => { score += genreScore.get(g) || 0; });
+      (m.actors || []).forEach(a => { score += (actorScore.get(a) || 0) * 0.8; });
+      score += Math.max(0, (parseFloat(m.rating) || 0) - 6.5);   // бонус качества
+      return { m, score };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    picks = scored.slice(0, 8).map(x => x.m);
+  } else {
+    // у новичка ещё нет вкуса — показываем лучшее по рейтингу КП
+    picks = [...cands]
+      .sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0))
+      .slice(0, 8);
+  }
+  const title = shelf.querySelector('.shelf-title');
+  if (title) title.textContent = hasTaste ? '💫 Подобрано по твоим оценкам' : '💫 Лучшее в афише';
   if (picks.length < 2) { shelf.classList.add('hidden'); return; }
   shelf.querySelector('#reco-row').innerHTML = picks.map(m => `
     <div class="hero-card" data-code="${esc(m.code)}">
@@ -1088,20 +1188,23 @@ function renderProfile() {
   // «📊 Моя неделя» — локальная активность за 7 дней (считается в самом аппе,
   // работает и без синка с ботом)
   const w7 = week7();
-  const wAct = w7.map(d => (d.open || 0) + (d.trailers || 0) + (d.favs || 0));
+  const wAct = w7.map(d => (d.open || 0) + (d.trailers || 0) + (d.favs || 0) + (d.rated || 0));
   const maxAct = Math.max(1, ...wAct);
   const sumOpen = w7.reduce((a, d) => a + d.open, 0);
   const sumTr = w7.reduce((a, d) => a + d.trailers, 0);
   const sumFv = w7.reduce((a, d) => a + d.favs, 0);
+  const sumRt = w7.reduce((a, d) => a + (d.rated || 0), 0);
   const wkBars = w7.map((d, i) => {
     const h = Math.round(6 + 34 * wAct[i] / maxAct);
     return `<div class="wk-col" title="${d.date.getDate()}.${d.date.getMonth() + 1}: ${wAct[i]} действий"><i style="height:${h}px"></i><span>${d.date.getDate()}</span></div>`;
   }).join('');
+  const dState = dailyState();
   const weekBlock = `
     <div class="pf-week">
-      <div class="pf-ach-head"><span>📊 Моя неделя</span><b>${sumOpen + sumTr + sumFv} действий</b></div>
+      <div class="pf-ach-head"><span>📊 Моя неделя</span><b>${sumOpen + sumTr + sumFv + sumRt} действий</b></div>
       <div class="wk-chart">${wkBars}</div>
-      <div class="wk-legend"><span>🔍 ${sumOpen}</span><span>▶️ ${sumTr}</span><span>❤️ ${sumFv}</span></div>
+      <div class="wk-legend"><span>🔍 ${sumOpen}</span><span>▶️ ${sumTr}</span><span>❤️ ${sumFv}</span><span>⭐ ${sumRt}</span></div>
+      <div class="wk-streak">🔥 Серия заходов: <b>${dState.series}</b> ${_daysWord(dState.series || 1)} · рекорд <b>${Math.max(dState.best, dState.series)}</b></div>
     </div>`;
   if (!PROFILE) {
     c.innerHTML = `
@@ -1574,6 +1677,97 @@ function openImdbLink(m) {
   openUrlLink('https://www.imdb.com/find/?q=' + encodeURIComponent(q || ''));
 }
 
+// ---------- v64: «🎭 Загадай другу» ----------
+// Выбираешь фильм — делишься ссылкой с эмодзи-подсказками. Друг открывает
+// мини-апп по ссылке #riddle=КОД и угадывает: сначала подсказки, потом ответ.
+const GENRE_EMOJI = {
+  'боевик': '💥', 'триллер': '🔪', 'ужасы': '👻', 'комедия': '😂', 'драма': '🎭',
+  'фантастика': '🚀', 'фантастика / фэнтези': '🚀', 'криминал': '🔫', 'детектив': '🔍',
+  'романтика': '💕', 'любовь': '💕', 'мелодрама': '💕', 'мультфильм': '🧸',
+  'анимация': '🧸', 'мультипликационный': '🧸', 'приключения': '🗺',
+  'фэнтези': '🐉', 'история': '🏛', 'исторический': '🏛', 'военный': '🎖',
+  'спорт': '🏆', 'музыка': '🎵', 'биография': '📖', 'семейный': '👨‍👩‍👧',
+  'мистика': '🔮', 'вестерн': '🤠', 'документальный': '🎥', 'короткометражка': '⏱',
+};
+function riddleHints(m) {
+  const out = [];
+  (m.genres || []).slice(0, 2).forEach(g => {
+    const e = GENRE_EMOJI[String(g).toLowerCase().trim()];
+    if (e && !out.includes(e)) out.push(e);
+  });
+  const y = parseInt(m.year, 10) || 0;
+  if (y) out.push(y < 1990 ? '📼' : y < 2005 ? '📀' : y < 2020 ? '💿' : '🆕');
+  const r = parseFloat(m.rating) || 0;
+  out.push(r >= 8 ? '🏆' : r >= 7 ? '👍' : '🤔');
+  return out.slice(0, 4).join('  ');
+}
+function shareRiddle(m) {
+  haptic('light');
+  const link = location.href.split('#')[0] + '#riddle=' + encodeURIComponent(m.code);
+  const y = parseInt(m.year, 10) || 0;
+  const text = `🎬 Я загадал фильм в «Киноафише»!\n\n` +
+    `Подсказки: ${riddleHints(m)}\n` +
+    (y ? `Эпоха: ~${Math.floor(y / 10) * 10}-е\n` : '') +
+    `Угадаешь? Открой ссылку и проверь себя 👇`;
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text);
+  try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+}
+function showRiddleModal(code) {
+  const m = ALL.find(x => String(x.code) === String(code));
+  if (!m) return;
+  const modal = document.getElementById('riddle-modal');
+  if (!modal) return;
+  const hints = document.getElementById('riddle-hints');
+  if (hints) hints.textContent = riddleHints(m);
+  const body = document.getElementById('riddle-body');
+  if (body) { body.classList.add('hidden'); body.innerHTML = `
+    <div class="riddle-reveal">
+      ${m.poster ? `<img src="${esc(m.poster)}" alt="" ${FADE}/>` : ''}
+      <div class="riddle-answer">
+        <b>${esc(m.title)}</b>
+        <span>${ratingBadge(m)}${m.year ? ' · ' + esc(String(m.year)) : ''}</span>
+      </div>
+    </div>`; }
+  const reveal = document.getElementById('btn-riddle-reveal');
+  if (reveal) {
+    reveal.classList.remove('hidden');
+    reveal.onclick = () => {
+      haptic('ok');
+      if (body) body.classList.remove('hidden');
+      reveal.classList.add('hidden');
+      const open = document.getElementById('btn-riddle-open');
+      if (open) open.classList.remove('hidden');
+    };
+  }
+  const open = document.getElementById('btn-riddle-open');
+  if (open) {
+    open.classList.add('hidden');
+    open.onclick = () => { modal.classList.add('hidden'); openDetail(m.code); };
+  }
+  modal.classList.remove('hidden');
+}
+function parseRiddleHash() {
+  // Друг пришёл по ссылке «загадай другу»: #riddle=КОД. Показываем загадку
+  // один раз и чистим хэш, чтобы при следующем открытии она не всплывала.
+  try {
+    const params = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const code = params.get('riddle');
+    if (code) {
+      history.replaceState(null, '', location.pathname + location.search);
+      setTimeout(() => showRiddleModal(code), 500);
+    }
+  } catch (e) { /* пусто */ }
+}
+(function initRiddleModal() {
+  const bg = document.getElementById('riddle-modal');
+  if (!bg) return;
+  bg.addEventListener('click', (e) => { if (e.target === bg) bg.classList.add('hidden'); });
+  ['btn-riddle-close', 'btn-riddle-close2'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.onclick = () => bg.classList.add('hidden');
+  });
+})();
+
 function renderGrid() {
   const qRaw = (document.getElementById('search').value || '').trim();
   const q = qRaw.toLowerCase();
@@ -1587,7 +1781,9 @@ function renderGrid() {
         ? ALL.filter(m => unlockedAll.includes(String(m.code)))
         : (favMode === 'watched'
             ? ALL.filter(m => watchedAll.includes(String(m.code)))
-            : ALL.filter(m => getFavs().includes(m.code))))
+            : (favMode === 'rated'
+                ? ALL.filter(m => getRatings()[String(m.code)])
+                : ALL.filter(m => getFavs().includes(m.code)))))
     : [...ALL];
   if (activeGenre) list = list.filter(m => (m.genres || []).includes(activeGenre));
   // 🙈 «Скрыть разгаданные»: прячем карточки, код которых есть в localStorage
@@ -1661,11 +1857,14 @@ function renderGrid() {
       <button class="fav-mode-btn ${favMode === 'fav' ? 'active' : ''}" data-mode="fav">❤️ Хочу</button>
       <button class="fav-mode-btn ${favMode === 'done' ? 'active' : ''}" data-mode="done">✅ Разгадал</button>
       <button class="fav-mode-btn ${favMode === 'watched' ? 'active' : ''}" data-mode="watched">👁 Смотрел</button>
+      <button class="fav-mode-btn ${favMode === 'rated' ? 'active' : ''}" data-mode="rated">⭐ Оценки</button>
     </div>` : '';
   const progressLine = (view === 'fav' && favMode === 'done')
     ? `<div class="fav-progress">Разгадано ${unlockedAll.length} из ${ALL.length} (${ALL.length ? Math.round(100 * unlockedAll.length / ALL.length) : 0}%)</div>`
     : (view === 'fav' && favMode === 'watched')
     ? `<div class="fav-progress">Просмотрено ${watchedAll.length} из ${ALL.length} (${ALL.length ? Math.round(100 * watchedAll.length / ALL.length) : 0}%)</div>`
+    : (view === 'fav' && favMode === 'rated')
+    ? `<div class="fav-progress">Оценено ${Object.keys(getRatings()).length} фильм(ов) — рекомендации стали точнее 💫</div>`
     : '';
   const smartHint = smart
     ? `<div class="smart-hint">🧠 ${esc(smart.parts.join(' · '))} · найдено: ${list.length}<button class="smart-clear" title="Сбросить" onclick="document.getElementById('search').value='';renderGrid()">✕</button></div>`
@@ -1679,13 +1878,15 @@ function renderGrid() {
     }));
   };
   if (!list.length) {
-    const emptyEmoji = view === 'fav' ? (favMode === 'done' ? '🔒' : favMode === 'watched' ? '👁' : '🤍') : '🔍';
+    const emptyEmoji = view === 'fav' ? (favMode === 'done' ? '🔒' : favMode === 'watched' ? '👁' : favMode === 'rated' ? '⭐' : '🤍') : '🔍';
     const emptyText = view === 'fav'
       ? (favMode === 'done'
           ? 'Пока ничего не разгадано — лови коды в канале! 🔑'
           : (favMode === 'watched'
               ? 'Пока ничего не отмечено — жми «👁» на карточке фильма'
-              : 'В «Моём» пока пусто — жми сердечко ❤️ на любом фильме'))
+              : (favMode === 'rated'
+                  ? 'Оценок пока нет — открой любой фильм и поставь звёзды ⭐'
+                  : 'В «Моём» пока пусто — жми сердечко ❤️ на любом фильме')))
       : 'Ничего не нашлось 🤷 Попробуй другой запрос';
     c.innerHTML = head + `<div class="empty-state">
       <div class="empty-emoji">${emptyEmoji}</div>
@@ -1703,14 +1904,17 @@ function renderGrid() {
     return;
   }
   const backup = (view === 'fav' && favMode === 'fav') ? backupFavsNotice() : '';
-  c.innerHTML = head + backup + list.map(m => `
+  c.innerHTML = head + backup + list.map(m => {
+    const myR = (view === 'fav' && favMode === 'rated') ? (getRatings()[String(m.code)] || 0) : 0;
+    return `
     <div class="movie-card" data-code="${esc(m.code)}">
       ${posterHtmlQuick(m)}
       <div class="movie-info">
         <h3>${hlTitle(m.title, q)}</h3>
-        <span class="rating">${ratingBadge(m)}</span>
+        <span class="rating">${ratingBadge(m)}${myR ? `<span class="my-stars">${'★'.repeat(myR)}</span>` : ''}</span>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   const b = document.getElementById('btn-backup');
   if (b) b.onclick = () => sendOrDeepLink({ action: 'save_favs', codes: getFavs() });
   const bc = document.getElementById('btn-copy-list');
@@ -1753,6 +1957,16 @@ function openDetail(code) {
       <div class="detail-info">
         <h2>${esc(m.title)}</h2>
         <span class="rating">${ratingBadge(m)}</span>
+        ${(() => {
+          const myR = myRating(code);
+          const stars = [1, 2, 3, 4, 5].map(i =>
+            `<button class="star-btn${i <= myR ? ' on' : ''}" data-v="${i}" data-code="${esc(code)}" title="${i} из 5">★</button>`).join('');
+          return `<div class="rate-strip">
+            <span class="rate-label">${myR ? 'Твоя оценка:' : 'Оцени фильм:'}</span>
+            <span class="rate-stars">${stars}</span>
+            ${myR ? `<button class="rate-clear" data-code="${esc(code)}" title="Убрать оценку">✕</button>` : ''}
+          </div>`;
+        })()}
         ${chips ? `<div class="detail-chips">${chips}</div>` : ''}
         ${m.director ? `<p class="people-line">🎬 Режиссёр: <b class="person-chip" data-q="${esc(m.director)}" title="Найти фильмы">${esc(m.director)}</b></p>` : ''}
         ${(m.actors || []).length ? `<p class="people-line">⭐ В ролях: ${m.actors.slice(0, 4).map(a => `<b class="person-chip" data-q="${esc(a)}" title="Найти фильмы">${esc(a)}</b>`).join(', ')}</p>` : ''}
@@ -1766,7 +1980,7 @@ function openDetail(code) {
           <button class="btn-secondary ${getWatched().includes(String(code)) ? 'active watched-btn' : 'watched-btn'}" id="btn-watched">${getWatched().includes(String(code)) ? '👁 Просмотрено' : '👁 Отметить просмотренным'}</button>
           <button class="btn-secondary" id="btn-note">📝 ${getNotes()[code] ? 'Заметка есть' : 'Заметка'}</button>
           <button class="btn-secondary" id="btn-copy">📎 Скопировать код</button>
-          <button class="btn-secondary" id="btn-rate">🌟 Оценить</button>
+          <button class="btn-secondary" id="btn-riddle">🎭 Загадать другу</button>
           <button class="btn-secondary" id="btn-review">✍️ Отзыв</button>
           <button class="btn-secondary" id="btn-remind">🔔 Напомнить через час</button>
           ${cleanKpTitle(m.title) ? '<button class="btn-secondary" id="btn-kp">⭐ IMDB</button>' : ''}
@@ -1796,6 +2010,13 @@ function openDetail(code) {
   if (watchBtn) watchBtn.onclick = () => openWatchLink(m);
   const kpBtn = document.getElementById('btn-kp');
   if (kpBtn) kpBtn.onclick = () => openImdbLink(m);
+  // v64: оценка звёздами прямо в карточке (локально) + «Загадать другу»
+  document.querySelectorAll('#view-detail .star-btn').forEach(b =>
+    b.addEventListener('click', () => { setRating(b.dataset.code, parseInt(b.dataset.v, 10)); openDetail(code); }));
+  const rateClear = document.querySelector('#view-detail .rate-clear');
+  if (rateClear) rateClear.addEventListener('click', () => { removeRating(rateClear.dataset.code); openDetail(code); });
+  const riddleBtn = document.getElementById('btn-riddle');
+  if (riddleBtn) riddleBtn.onclick = () => shareRiddle(m);
   document.getElementById('btn-fav').onclick = () => { toggleFav(code); openDetail(code); };
   document.getElementById('btn-watched').onclick = () => { toggleWatched(String(code)); openDetail(code); };
   document.getElementById('btn-note').onclick = () => {
@@ -1832,8 +2053,6 @@ function openDetail(code) {
     sendOrDeepLink({ action: 'remind_movie', code });
   const trailerBtn = document.getElementById('btn-trailer');
   if (trailerBtn) trailerBtn.onclick = () => openTrailer(m);
-  document.getElementById('btn-rate').onclick = () =>
-    sendOrDeepLink({ action: 'rate_movie', code });
   document.getElementById('btn-review').onclick = () => {
     // Не «выкидываем» человека в бота вслепую: предупреждаем, что бот попросит
     // текст отзыва, и как из этого режима выйти (кнопка «❌ Отмена» / слово «отмена»).

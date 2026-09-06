@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=63" />
+  <link rel="stylesheet" href="style.css?v=64" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -86,6 +86,7 @@
       <div id="genre-chips" class="genre-chips hidden"></div>
       <div id="search-hist" class="search-hist hidden"></div>
       <div id="code-day-banner" class="code-day hidden"></div>
+      <div id="streak-strip" class="streak-strip hidden"></div>
       <div id="chall-pane" class="chall-pane hidden">
         <div class="chall-head">
           <span class="chall-title">🎯 Челленджи дня</span>
@@ -278,6 +279,20 @@
     </div>
   </div>
 
+  <!-- Загадка от друга (#riddle=КОД) -->
+  <div id="riddle-modal" class="modal hidden">
+    <div class="modal-card riddle-card">
+      <button class="modal-close" id="btn-riddle-close">✕</button>
+      <h2>🎯 Друг загадал тебе фильм!</h2>
+      <p class="modal-muted">Угадай по подсказкам:</p>
+      <div id="riddle-hints" class="riddle-hints"></div>
+      <button class="btn-primary" id="btn-riddle-reveal">👀 Показать ответ</button>
+      <div id="riddle-body" class="hidden"></div>
+      <button class="btn-secondary hidden" id="btn-riddle-open">🔓 Открыть карточку фильма</button>
+      <button class="btn-back" id="btn-riddle-close2">← В моё кино</button>
+    </div>
+  </div>
+
   <!-- Онбординг (показывается только при первом запуске) -->
   <div id="onboarding" class="modal hidden">
     <div class="onboarding-card">
@@ -316,7 +331,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=63"></script>
+  <script src="script.js?v=64"></script>
 </body>
 </html>
 
