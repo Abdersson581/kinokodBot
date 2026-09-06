@@ -2501,8 +2501,9 @@ body.accent-purple .new-badge { background: linear-gradient(90deg, var(--gold), 
 /* ===== v74: полка «Продолжить смотреть» (история трейлеров) ====== */
 .continue-chip {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
+  bottom: 10px;
+  left: 8px;
+  right: auto; /* v81: плашка слева-внизу — не налезает на кнопку ▶️ справа */
   z-index: 3;
   background: rgba(15, 18, 32, .78);
   color: #fff;
