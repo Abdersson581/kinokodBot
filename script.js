@@ -22,6 +22,7 @@ function enterApp() {
   parseProfileHash();  // до parseUnlockedHash: тот очищает location.hash
   parseUnlockedHash();
   parseRestoreHash();  // v76: «☁️ Восстановить из бота» — до очистки хэша другими
+parseMarathonHash(); // v78: «#marathon=…» — запуск марафона по ссылке от друга
   bumpDaily();         // v64: ежедневная серия заходит
   initHideToggle();
   applyGridCols();
@@ -1171,6 +1172,92 @@ function closeMarathon(done = false) {
   }
 }
 
+// ---------- v78: марафон по жанру + шаринг марафона ----------
+// Чип «жанр · N трейлеров» собирает плейлист из всех фильмов жанра с трейлерами
+// (сортировка по рейтингу), «🎲 Случайный» — вперемешку. Ссылкой можно
+// поделиться: друг откроет афишу и марафон запустится сам (см. parseMarathonHash).
+function marathonCandidates() {
+  return ALL.filter(m => m.trailer_yt || m.trailer_file_id);
+}
+
+function renderMarathonView() {
+  const box = document.getElementById('marathon-container');
+  if (!box) return;
+  const withTr = marathonCandidates();
+  const byGenre = {};
+  withTr.forEach(m => (m.genres || []).forEach(g => {
+    const k = g.trim();
+    if (!k) return;
+    (byGenre[k] = byGenre[k] || []).push(m);
+  }));
+  const rows = Object.entries(byGenre)
+    .filter(([, arr]) => arr.length >= 2)
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, 12);
+  const withR = m => m.rating_kp || m.rating || 0;
+  box.innerHTML = `
+    <div class="chain-card marathon-intro">
+      <h2 class="chain-title">🎬 Кино-марафон</h2>
+      <p class="chain-sub">Трейлеры идут подряд сами — как сериал. Выбери жанр или собери случайный набор. Марафоном можно поделиться ссылкой!</p>
+      <button class="btn-primary" id="btn-marathon-rnd">🎲 Случайный марафон (${Math.min(5, withTr.length)})</button>
+    </div>
+    <div class="chain-card">
+      <h3 class="chain-sub" style="margin:0 0 8px">🔥 По жанрам</h3>
+      <div class="mar-genre-grid">
+        ${rows.map(([g, arr]) => `
+          <button class="mar-genre" data-g="${esc(g)}">
+            <b>${esc(g)}</b>
+            <span>${arr.length} трейлеров · ⭐ до ${Math.max(...arr.map(withR)).toFixed(1)}</span>
+          </button>`).join('')}
+      </div>
+    </div>`;
+  const startGenre = (g) => {
+    const arr = (byGenre[g] || []).slice().sort((a, b) => withR(b) - withR(a));
+    haptic('ok');
+    openMarathon(arr, 'Жанр: ' + g);
+  };
+  box.querySelectorAll('.mar-genre').forEach(b => b.addEventListener('click', () => startGenre(b.dataset.g)));
+  const rnd = document.getElementById('btn-marathon-rnd');
+  if (rnd) rnd.addEventListener('click', () => {
+    const pool = withTr.slice().sort(() => Math.random() - 0.5).slice(0, 5);
+    haptic('ok');
+    openMarathon(pool, 'Случайный набор');
+  });
+}
+
+function shareMarathon() {
+  if (!_mar.list.length) return;
+  const base = location.origin + location.pathname;
+  const url = base + '#marathon=' + _mar.list.map(m => m.code).join(',');
+  const label = _mar.label ? ' «' + _mar.label + '»' : '';
+  const text = '🎬 Кино-марафон' + label + ' — ' + _mar.list.length +
+    ' трейлеров подряд! Открой и смотри ▶️';
+  haptic('light');
+  try {
+    tg.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text));
+  } catch (e) {
+    try { navigator.clipboard.writeText(url); tg.showPopup({ type: 'ok', message: 'Ссылка скопирована 📋' }); }
+    catch (e2) { /* пусто */ }
+  }
+}
+
+function parseMarathonHash() {
+  const m = (location.hash || '').match(/#marathon=([A-Za-z0-9,_-]+)/);
+  if (!m) return;
+  const codes = m[1].split(',').map(s => s.trim()).filter(Boolean);
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; }
+  const apply = () => {
+    const list = codes.map(c => ALL.find(x => String(x.code) === String(c))).filter(Boolean)
+      .filter(x => x.trailer_yt || x.trailer_file_id);
+    if (list.length >= 2) openMarathon(list, 'Марафон друга 🎁');
+  };
+  // данных может ещё не быть на момент загрузки — ждём коротким опросом
+  let tries = 0;
+  const t = setInterval(() => {
+    if (ALL.length || ++tries > 50) { clearInterval(t); apply(); }
+  }, 300);
+}
+
 // Кнопка «🎬 Марафон» в шапке каждой живой полки на главной (тренд/сегодня/недавно/рекомендации).
 // Добавляем только если в полке ≥2 фильмов с трейлерами.
 function addMarathonButtons() {
@@ -1216,6 +1303,8 @@ function addMarathonButtons() {
   if (prev) prev.addEventListener('click', () => { haptic('light'); _marathonPrev(); });
   const pause = document.getElementById('btn-marathon-pause');
   if (pause) pause.addEventListener('click', _marathonTogglePause);
+  const share = document.getElementById('btn-marathon-share');
+  if (share) share.addEventListener('click', shareMarathon);
 })();
 
 // ---------- подборки ----------
@@ -2981,6 +3070,7 @@ function showView(name) {
   toggle('view-emoji', name === 'game');
   toggle('view-chain', name === 'chain');
   toggle('view-year', name === 'year');
+  toggle('view-marathon', name === 'marathon');
   toggle('toolbar', name === 'catalog' || name === 'trailers');
   if (name === 'catalog') renderFilmDay();  // баннер скрываем/возвращаем при смене вьюхи
   const cur = name === 'catalog' ? view : name;
@@ -3046,6 +3136,7 @@ function openView(v) {
   else if (v === 'trailers') { showView('trailers'); renderTrailerGenreChips(); renderTrailers(); }
   else if (v === 'achievements') { showView('achievements'); renderAchievements(); }
   else if (v === 'chain') { showView('chain'); renderChain(); }
+  else if (v === 'marathon') { showView('marathon'); renderMarathonView(); }
   else if (v === 'year') { showView('year'); renderYear(); }
   else { showView('catalog'); renderGrid(); }  // grid | fav
 }

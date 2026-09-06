@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=77" />
+  <link rel="stylesheet" href="style.css?v=78" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -72,6 +72,7 @@
       <button class="more-item" data-view="fav">❤️ Моё</button>
       <button class="more-item" data-view="game">🏋 Тренажёр</button>
       <button class="more-item" data-view="chain">🔗 Кино-путь</button>
+      <button class="more-item" data-view="marathon">🎬 Марафон</button>
       <button class="more-item" data-view="year">🏆 Мой год</button>
     </div>
 
@@ -166,6 +167,11 @@
     <!-- Мой кино-год (личный отчёт) -->
     <div id="view-year" class="hidden">
       <main id="year-container" class="year-feed"></main>
+    </div>
+
+    <!-- v78: Кино-марафон по жанру -->
+    <div id="view-marathon" class="hidden">
+      <main id="marathon-container"></main>
     </div>
 
     <!-- Трейлеры (все в одном месте) -->
@@ -279,6 +285,7 @@
         <button class="btn-primary" id="btn-marathon-pause">⏸ Пауза</button>
         <button class="btn-primary" id="btn-marathon-next">Далее ▶</button>
       </div>
+      <button class="marathon-share" id="btn-marathon-share" title="Поделиться марафоном">📤 Поделиться марафоном</button>
     </div>
   </div>
 
@@ -393,7 +400,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=77"></script>
+  <script src="script.js?v=78"></script>
 </body>
 </html>
 
