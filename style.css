@@ -2643,3 +2643,29 @@ body.accent-purple .new-badge { background: linear-gradient(90deg, var(--gold), 
   background: rgba(127,127,127,.12); color: inherit; font: inherit; font-size: 13px;
 }
 .marathon-share:active { opacity: .7; }
+
+/* ===== v82: марафон — прогресс и «досмотреть позже» ===== */
+.mar-resume {
+  border: 1px solid rgba(255, 138, 61, .35);
+  background: linear-gradient(135deg, rgba(255, 138, 61, .12), rgba(224, 75, 47, .06));
+}
+.mar-resume .btn-primary { width: 100%; }
+.mar-resume-x {
+  background: none;
+  border: none;
+  color: var(--muted, #8a8f98);
+  font-size: 13px;
+  margin-top: 8px;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+.mar-genre { position: relative; overflow: hidden; }
+.mar-genre .mar-prog {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff8a3d, #e04b2f);
+  border-radius: 2px;
+  opacity: .85;
+}

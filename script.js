@@ -1086,12 +1086,37 @@ function showCodeDay(meta) {
 // ---------- v74: «🎬 Кино-марафон» — трейлеры подряд ----------
 const MARATHON_SECONDS = 120;              // таймер авто-далее (~2 мин на трейлер)
 let _mar = { list: [], i: 0, paused: false, timer: null, secLeft: MARATHON_SECONDS };
+// v82: прогресс марафона — виденные коды, «досмотреть позже», ачивки-мильстоуны
+const MAR_SEEN_KEY = 'kinoafisha_marathon_seen';
+const MAR_RESUME_KEY = 'kinoafisha_marathon_resume';
+const MAR_ACH_KEY = 'kinoafisha_marathon_ach';
+const getMarSeen = () => new Set(JSON.parse(localStorage.getItem(MAR_SEEN_KEY) || '[]').map(String));
+const MAR_ACHS = [
+  [10, '🏅 Марафонец', '10 трейлеров в марафонах'],
+  [25, '🔥 Киноман', '25 трейлеров в марафонах'],
+  [50, '👑 Легенда марафона', '50 трейлеров в марафонах'],
+];
+function _marathonBump(code) {
+  let seen = [];
+  try { seen = JSON.parse(localStorage.getItem(MAR_SEEN_KEY) || '[]'); } catch (e) { seen = []; }
+  if (!seen.map(String).includes(String(code))) seen.push(code);
+  localStorage.setItem(MAR_SEEN_KEY, JSON.stringify(seen));
+  let achs = [];
+  try { achs = JSON.parse(localStorage.getItem(MAR_ACH_KEY) || '[]'); } catch (e) { achs = []; }
+  MAR_ACHS.forEach(([n, title, sub]) => {
+    if (seen.length >= n && !achs.includes(n)) {
+      achs.push(n);
+      try { tg.showPopup({ type: 'ok', title: title, message: 'Ачивка получена: ' + sub + '! 🎉' }); } catch (e) { /* пусто */ }
+    }
+  });
+  localStorage.setItem(MAR_ACH_KEY, JSON.stringify(achs));
+}
 
-function openMarathon(list, label = '') {
+function openMarathon(list, label = '', startIdx = 0) {
   const items = list.filter(m => m && (m.trailer_yt || m.trailer_file_id));
   if (items.length < 1) return;
   if (items.length < 2) { openTrailer(items[0]); return; }
-  _mar = { list: items, i: 0, paused: false, timer: null, secLeft: MARATHON_SECONDS, label };
+  _mar = { list: items, i: Math.max(0, Math.min(startIdx | 0, items.length - 1)), paused: false, timer: null, secLeft: MARATHON_SECONDS, label };
   const modal = document.getElementById('marathon-modal');
   if (!modal) return;
   modal.classList.remove('hidden');
@@ -1120,6 +1145,7 @@ function _marathonGo() {
   if (metaEl) metaEl.textContent = [m.year, m.rating ? '⭐ ' + m.rating : '', g].filter(Boolean).join(' · ');
   if (count) count.textContent = (_mar.i + 1) + ' / ' + _mar.list.length;
   pushTrailerWatch(m.code);
+  _marathonBump(m.code); // v82: прогресс марафона + ачивки
   bumpWeekStat('trailers');
   _mar.secLeft = MARATHON_SECONDS;
   _mar.paused = false;
@@ -1161,6 +1187,16 @@ function _marathonPrev() {
 }
 function closeMarathon(done = false) {
   clearTimeout(_mar.timer);
+  // v82: недосмотренный марафон сохраняем — на экране марафона появится «досмотреть позже»
+  try {
+    if (!done && _mar.list.length >= 2 && _mar.i > 0 && _mar.i < _mar.list.length - 1) {
+      localStorage.setItem(MAR_RESUME_KEY, JSON.stringify({
+        codes: _mar.list.map(m => m.code), i: _mar.i, label: _mar.label || '',
+      }));
+    } else {
+      localStorage.removeItem(MAR_RESUME_KEY);
+    }
+  } catch (e) { /* пусто */ }
   const modal = document.getElementById('marathon-modal');
   const frame = document.getElementById('marathon-frame');
   if (frame) frame.src = 'about:blank';
@@ -1195,22 +1231,58 @@ function renderMarathonView() {
     .sort((a, b) => b[1].length - a[1].length)
     .slice(0, 12);
   const withR = m => m.rating_kp || m.rating || 0;
+  // v82: «досмотреть позже» + прогресс по жанрам
+  let resume = null;
+  try {
+    const r = JSON.parse(localStorage.getItem(MAR_RESUME_KEY) || 'null');
+    if (r && Array.isArray(r.codes)) {
+      const rl = r.codes.map(c => ALL.find(x => String(x.code) === String(c)))
+        .filter(x => x && (x.trailer_yt || x.trailer_file_id));
+      if (rl.length >= 2 && r.i > 0 && r.i < rl.length) {
+        resume = { list: rl, i: Math.min(r.i, rl.length - 1), label: r.label || '' };
+      }
+    }
+  } catch (e) { /* пусто */ }
+  const seen = getMarSeen();
   box.innerHTML = `
     <div class="chain-card marathon-intro">
       <h2 class="chain-title">🎬 Кино-марафон</h2>
       <p class="chain-sub">Трейлеры идут подряд сами — как сериал. Выбери жанр или собери случайный набор. Марафоном можно поделиться ссылкой!</p>
+      <p class="chain-sub" style="margin:6px 0 0">🏅 Пройдено в марафонах: <b>${seen.size}</b></p>
       <button class="btn-primary" id="btn-marathon-rnd">🎲 Случайный марафон (${Math.min(5, withTr.length)})</button>
     </div>
+    ${resume ? `
+    <div class="chain-card mar-resume">
+      <h3 class="chain-sub" style="margin:0 0 6px">⏸ Досмотреть позже</h3>
+      <p class="chain-sub" style="margin:0 0 10px">«${esc(resume.label)}» — ты остановился на ${resume.i + 1} из ${resume.list.length}</p>
+      <button class="btn-primary" id="btn-marathon-resume">▶️ Продолжить марафон</button>
+      <button class="mar-resume-x" id="btn-marathon-resume-x">✕ Убрать</button>
+    </div>` : ''}
     <div class="chain-card">
       <h3 class="chain-sub" style="margin:0 0 8px">🔥 По жанрам</h3>
       <div class="mar-genre-grid">
-        ${rows.map(([g, arr]) => `
+        ${rows.map(([g, arr]) => {
+          const prog = arr.filter(m => seen.has(String(m.code))).length;
+          return `
           <button class="mar-genre" data-g="${esc(g)}">
+            ${prog ? `<i class="mar-prog" style="width:${Math.round(100 * prog / arr.length)}%"></i>` : ''}
             <b>${esc(g)}</b>
-            <span>${arr.length} трейлеров · ⭐ до ${Math.max(...arr.map(withR)).toFixed(1)}</span>
-          </button>`).join('')}
+            <span>${arr.length} трейлеров · ⭐ до ${Math.max(...arr.map(withR)).toFixed(1)}${prog ? ' · ✅ ' + prog : ''}</span>
+          </button>`;
+        }).join('')}
       </div>
     </div>`;
+  const rs = document.getElementById('btn-marathon-resume');
+  if (rs) rs.addEventListener('click', () => {
+    haptic('ok');
+    openMarathon(resume.list, resume.label, resume.i);
+  });
+  const rsx = document.getElementById('btn-marathon-resume-x');
+  if (rsx) rsx.addEventListener('click', () => {
+    localStorage.removeItem(MAR_RESUME_KEY);
+    haptic('light');
+    renderMarathonView();
+  });
   const startGenre = (g) => {
     const arr = (byGenre[g] || []).slice().sort((a, b) => withR(b) - withR(a));
     haptic('ok');
