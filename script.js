@@ -1887,6 +1887,18 @@ function renderGrid() {
     return (a.title || '').localeCompare(b.title || '', 'ru');
   });
   const c = document.getElementById('movies-container');
+  // v71: во время поиска прячем полки главной (тренды, премьеры, «Советуем», фильм дня),
+  // чтобы результаты или «Ничего не нашлось» были сразу под строкой поиска, а не
+  // глубоко внизу страницы. При очистке запроса полки возвращаются сами.
+  const searching = view === 'grid' && !!(qRaw || activeGenre);
+  ['hero-shelf', 'today-shelf', 'recent-shelf', 'reco-shelf', 'premieres-shelf'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const row = el.querySelector('.hero-row');
+    el.classList.toggle('hidden', searching || !row || !row.children.length);
+  });
+  const fdBan = document.getElementById('filmday-banner');
+  if (fdBan) fdBan.classList.toggle('hidden', searching || !fdBan.innerHTML.trim());
   // Переключатель «Моё»: ❤️ хочу посмотреть / ✅ разгаданные / 👁 я смотрел + прогресс
   const modeSwitch = view === 'fav' ? `<div class="fav-mode">
       <button class="fav-mode-btn ${favMode === 'fav' ? 'active' : ''}" data-mode="fav">❤️ Хочу</button>
