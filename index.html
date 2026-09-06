@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=73" />
+  <link rel="stylesheet" href="style.css?v=74" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -44,6 +44,15 @@
         </div>
         <button class="btn-lucky" id="btn-theme" title="Сменить тему">🌓</button>
         <button class="btn-lucky" id="btn-accent" title="Акцент">🎨</button>
+        <div id="accent-pop" class="accent-pop hidden">
+          <span class="ap-title">🎨 Цвет оформления</span>
+          <button class="ap-swatch is-c active" data-a="classic" title="Классика" style="--sw:#ff4466">🎯</button>
+          <button class="ap-swatch" data-a="ocean" title="Океан" style="--sw:#2f7bff">🌊</button>
+          <button class="ap-swatch" data-a="emerald" title="Изумруд" style="--sw:#19b86a">🌿</button>
+          <button class="ap-swatch" data-a="purple" title="Неон-фиолет" style="--sw:#9b59d0">🔮</button>
+          <button class="ap-swatch" data-a="neon" title="Неон-циан" style="--sw:#00e5ff">💠</button>
+          <button class="ap-swatch" data-a="gold" title="Золото" style="--sw:#ffb300">✨</button>
+        </div>
         <button class="btn-lucky" id="btn-info" title="О боте">ℹ️</button>
         <button class="btn-lucky" id="btn-lucky" title="Мне повезёт">🎲</button>
       </div>
@@ -63,6 +72,7 @@
       <button class="more-item" data-view="fav">❤️ Моё</button>
       <button class="more-item" data-view="game">🏋 Тренажёр</button>
       <button class="more-item" data-view="chain">🔗 Кино-путь</button>
+      <button class="more-item" data-view="year">🏆 Мой год</button>
     </div>
 
     <!-- Афиша + Моё -->
@@ -120,6 +130,10 @@
         <h2 class="shelf-title">🍿 Скоро в кино</h2>
         <div class="hero-row" id="premieres-row"></div>
       </div>
+      <div id="continue-shelf" class="hero-shelf hidden">
+        <h2 class="shelf-title">🎬 Продолжить смотреть</h2>
+        <div class="hero-row" id="continue-row"></div>
+      </div>
       <main id="movies-container" class="movies-grid"></main>
     </div>
 
@@ -146,6 +160,11 @@
     <!-- Кино-путь (цепочка человек — фильм — человек) -->
     <div id="view-chain" class="hidden">
       <main id="chain-container"></main>
+    </div>
+
+    <!-- Мой кино-год (личный отчёт) -->
+    <div id="view-year" class="hidden">
+      <main id="year-container" class="year-feed"></main>
     </div>
 
     <!-- Трейлеры (все в одном месте) -->
@@ -228,6 +247,36 @@
                 src=""
                 allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Кино-марафон: трейлеры подряд -->
+  <div id="marathon-modal" class="modal hidden">
+    <div class="modal-card marathon-card">
+      <div class="marathon-head">
+        <span class="marathon-title">🎬 Кино-марафон</span>
+        <span class="marathon-count" id="marathon-count">0/0</span>
+        <button class="modal-close" id="btn-marathon-close">✕</button>
+      </div>
+      <div class="marathon-frame-wrap">
+        <iframe id="marathon-frame"
+                src=""
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                allowfullscreen></iframe>
+      </div>
+      <div class="marathon-info">
+        <b id="marathon-name">—</b>
+        <span id="marathon-meta"></span>
+      </div>
+      <div class="marathon-timer">
+        <div class="mt-bar" id="mt-bar" style="width:100%"></div>
+        <span class="mt-label" id="mt-label">⏸ Авто-далее</span>
+      </div>
+      <div class="marathon-controls">
+        <button class="btn-secondary" id="btn-marathon-prev" title="Предыдущий">◀ Назад</button>
+        <button class="btn-primary" id="btn-marathon-pause">⏸ Пауза</button>
+        <button class="btn-primary" id="btn-marathon-next">Далее ▶</button>
       </div>
     </div>
   </div>
@@ -343,7 +392,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=73"></script>
+  <script src="script.js?v=74"></script>
 </body>
 </html>
 

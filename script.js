@@ -59,26 +59,41 @@ tg.onEvent('themeChanged', () => {
   if (!localStorage.getItem(THEME_KEY)) applyTheme();
 });
 
-// ---------- акцент-пресеты (классика / неон / золото) ----------
-// Три набора цвета оформления; подробрен в style.css через body.accent-*.
+// ---------- акцент-пресеты (classic / ocean / emerald / purple / neon / gold) ----------
+// Наборы цвета оформления; стили описаны в style.css через body.accent-*.
 const ACCENT_KEY = 'kinoafisha_accent';
-const ACCENTS = ['classic', 'neon', 'gold'];
+const ACCENTS = ['classic', 'ocean', 'emerald', 'purple', 'neon', 'gold'];
+const ACCENT_ICONS = { classic: '🎨', ocean: '🌊', emerald: '🌿', purple: '🔮', neon: '💠', gold: '✨' };
 function applyAccent() {
   const cur = localStorage.getItem(ACCENT_KEY) || 'classic';
-  document.body.classList.remove('accent-neon', 'accent-gold');
+  document.body.classList.remove(...ACCENTS.filter(a => a !== 'classic').map(a => 'accent-' + a));
   if (cur !== 'classic') document.body.classList.add('accent-' + cur);
   const btn = document.getElementById('btn-accent');
-  if (btn) btn.textContent = cur === 'neon' ? '💠' : cur === 'gold' ? '✨' : '🎨';
+  if (btn) btn.textContent = ACCENT_ICONS[cur] || '🎨';
+  // подсветка выбранного кружка в панели
+  document.querySelectorAll('.ap-swatch').forEach(s => s.classList.toggle('active', s.dataset.a === cur));
 }
-function cycleAccent() {
-  const cur = localStorage.getItem(ACCENT_KEY) || 'classic';
-  const next = ACCENTS[(ACCENTS.indexOf(cur) + 1) % ACCENTS.length];
-  localStorage.setItem(ACCENT_KEY, next);
+function setAccent(name) {
+  localStorage.setItem(ACCENT_KEY, ACCENTS.includes(name) ? name : 'classic');
   applyAccent();
   haptic('light');
 }
 applyAccent();
-document.getElementById('btn-accent').addEventListener('click', cycleAccent);
+// v74: кнопка 🎨 открывает панель выбора цвета (переключение кликом по кружку)
+const accentPop = document.getElementById('accent-pop');
+document.getElementById('btn-accent').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const show = accentPop.classList.contains('hidden');
+  accentPop.classList.toggle('hidden');
+  if (show) haptic('light');
+});
+document.addEventListener('click', (e) => {
+  if (accentPop && !accentPop.classList.contains('hidden') &&
+      !accentPop.contains(e.target) && e.target.id !== 'btn-accent') {
+    accentPop.classList.add('hidden');
+  }
+});
+accentPop.querySelectorAll('.ap-swatch').forEach(s => s.addEventListener('click', () => setAccent(s.dataset.a)));
 
 // ---------- состояние ----------
 let ALL = [];                       // все фильмы
@@ -186,6 +201,23 @@ const addRecent = (code) => {
   localStorage.setItem(RECENT_KEY, JSON.stringify(r.slice(0, MAX_RECENT)));
 };
 
+// ---------- v74: история просмотренных трейлеров («Продолжить смотреть») ----------
+// Отдельно от «Недавно смотрели» — здесь только те фильмы, чей трейлер реально
+// открывали. Полка на главной позволяет продолжить с места остановки.
+const TW_KEY = 'kinoafisha_trailer_watch';
+const MAX_TW = 12;
+const getTrailerWatches = () => {
+  try { return JSON.parse(localStorage.getItem(TW_KEY) || '[]'); }
+  catch (e) { return []; }
+};
+function pushTrailerWatch(code) {
+  const now = Date.now();
+  let w = getTrailerWatches().filter(x => String(x.c) !== String(code));
+  w.unshift({ c: String(code), t: now });
+  w = w.slice(0, MAX_TW);
+  localStorage.setItem(TW_KEY, JSON.stringify(w));
+}
+
 // ---------- v60: локальная активность («📊 Моя неделя» в профиле) ----------
 // Счётчики по дням: открытых карточек, просмотренных трейлеров, добавлений в «Моё».
 const WEEK_STATS_KEY = 'kinoafisha_week_stats';
@@ -203,6 +235,25 @@ function bumpWeekStat(field, n = 1) {
   const keys = Object.keys(s).sort();
   while (keys.length > 14) delete s[keys.shift()];
   localStorage.setItem(WEEK_STATS_KEY, JSON.stringify(s));
+  bumpYearStat(field);   // v74: параллельно ведём «Мой кино-год»
+}
+
+// ---------- v74: «Мой кино-год» — помесячный журнал активности ----------
+const YEAR_LOG_KEY = 'kinoafisha_year_stats';
+const _ymKey = (d = new Date()) => `${d.getFullYear()}-${d.getMonth() + 1}`;
+const getYearStats = () => {
+  try { return JSON.parse(localStorage.getItem(YEAR_LOG_KEY) || '{}') || {}; }
+  catch (e) { return {}; }
+};
+function bumpYearStat(field, n = 1) {
+  const s = getYearStats();
+  const k = _ymKey();
+  if (!s[k]) s[k] = { open: 0, trailers: 0, favs: 0, rated: 0 };
+  s[k][field] = (s[k][field] || 0) + n;
+  // храним только последние 24 месяца
+  const keys = Object.keys(s).sort();
+  while (keys.length > 24) delete s[keys.shift()];
+  localStorage.setItem(YEAR_LOG_KEY, JSON.stringify(s));
 }
 function week7() {
   // последние 7 дней по порядку: старые → свежие
@@ -573,8 +624,10 @@ function applyData(data) {
   renderHero();
   renderTodayShelf(meta);
   renderRecentShelf();
+  renderTrailerShelf();   // v74: «Продолжить смотреть»
   renderRecoShelf();
   renderPremieres(meta);
+  addMarathonButtons();   // v74: кнопки «🎬 Марафон» на полках
   renderGrid();
   updateChallPane();
   updateHeaderProgress();
@@ -865,6 +918,35 @@ function renderRecentShelf() {
   wireFavQuick(shelf);
 }
 
+// v74: «🎬 Продолжить смотреть» — последние просмотренные трейлеры.
+// Живая полка: тап по карточке переоткрывает трейлер (с хронологией свежих сверху).
+function renderTrailerShelf() {
+  const shelf = document.getElementById('continue-shelf');
+  if (!shelf) return;
+  if (view !== 'grid' && view !== 'fav') { shelf.classList.add('hidden'); return; }
+  const tw = getTrailerWatches().filter(x => ALL.some(m => String(m.code) === String(x.c))).slice(0, 10);
+  if (tw.length < 1) { shelf.classList.add('hidden'); return; }
+  const items = tw.map(x => ALL.find(m => String(m.code) === String(x.c))).filter(Boolean)
+    .filter(m => m.trailer_yt || m.trailer_file_id);
+  if (!items.length) { shelf.classList.add('hidden'); return; }
+  const row = shelf.querySelector('#continue-row');
+  row.innerHTML = items.map(m => `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      ${posterHtmlQuick(m)}
+      <span class="continue-chip">▶️ продолжить</span>
+      <div class="hero-overlay">
+        <h3>${esc(m.title)}</h3>
+        <span class="rating">${ratingBadge(m)}</span>
+      </div>
+    </div>`).join('');
+  shelf.classList.remove('hidden');
+  row.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => {
+    const m = ALL.find(x => String(x.code) === String(el.dataset.code));
+    if (m) openTrailer(m);
+  }));
+  wireFavQuick(shelf);
+}
+
 // «💫 Советуем вам» — v64: персональные рекомендации на основе твоих оценок,
 // «Моё», разгаданных и просмотренных (жанры + актёры), без выхода из аппа.
 function renderRecoShelf() {
@@ -995,6 +1077,142 @@ function showCodeDay(meta) {
   };
 }
 
+// ---------- v74: «🎬 Кино-марафон» — трейлеры подряд ----------
+const MARATHON_SECONDS = 120;              // таймер авто-далее (~2 мин на трейлер)
+let _mar = { list: [], i: 0, paused: false, timer: null, secLeft: MARATHON_SECONDS };
+
+function openMarathon(list, label = '') {
+  const items = list.filter(m => m && (m.trailer_yt || m.trailer_file_id));
+  if (items.length < 1) return;
+  if (items.length < 2) { openTrailer(items[0]); return; }
+  _mar = { list: items, i: 0, paused: false, timer: null, secLeft: MARATHON_SECONDS, label };
+  const modal = document.getElementById('marathon-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  _marathonGo();
+}
+
+function _marathonGo() {
+  const m = _mar.list[_mar.i];
+  if (!m) return closeMarathon(false);
+  const frame = document.getElementById('marathon-frame');
+  const name = document.getElementById('marathon-name');
+  const metaEl = document.getElementById('marathon-meta');
+  const count = document.getElementById('marathon-count');
+  if (frame) {
+    if (m.trailer_yt) {
+      frame.classList.remove('hidden');
+      frame.src = 'https://www.youtube.com/embed/' + m.trailer_yt + '?autoplay=1&rel=0&playsinline=1&fs=1';
+    } else {
+      frame.classList.add('hidden');
+      frame.src = 'about:blank';
+      sendOrDeepLink({ action: 'trailer_movie', code: m.code });
+    }
+  }
+  if (name) name.textContent = m.title || '';
+  const g = (m.genres || []).slice(0, 2).join(' · ');
+  if (metaEl) metaEl.textContent = [m.year, m.rating ? '⭐ ' + m.rating : '', g].filter(Boolean).join(' · ');
+  if (count) count.textContent = (_mar.i + 1) + ' / ' + _mar.list.length;
+  pushTrailerWatch(m.code);
+  bumpWeekStat('trailers');
+  _mar.secLeft = MARATHON_SECONDS;
+  _mar.paused = false;
+  const p = document.getElementById('btn-marathon-pause');
+  if (p) p.textContent = '⏸ Пауза';
+  _marathonTick();
+}
+
+function _marathonTick() {
+  clearTimeout(_mar.timer);
+  _mar.timer = setTimeout(() => {
+    if (_mar.paused) return;
+    _mar.secLeft--;
+    const bar = document.getElementById('mt-bar');
+    const lab = document.getElementById('mt-label');
+    if (bar) bar.style.width = Math.max(0, 100 * _mar.secLeft / MARATHON_SECONDS) + '%';
+    if (lab) lab.textContent = _mar.secLeft <= 0 ? '⏭ далее…' : (_mar.secLeft + ' с');
+    if (_mar.secLeft <= 0) { _marathonNext(); return; }
+    _marathonTick();
+  }, 1000);
+}
+
+function _marathonTogglePause() {
+  _mar.paused = !_mar.paused;
+  const b = document.getElementById('btn-marathon-pause');
+  if (b) b.textContent = _mar.paused ? '▶️ Продолжить' : '⏸ Пауза';
+  const lab = document.getElementById('mt-label');
+  if (lab) lab.textContent = _mar.paused ? '⏸ Пауза' : (_mar.secLeft + ' с');
+  if (!_mar.paused) _marathonTick();
+  haptic('light');
+}
+
+function _marathonNext() {
+  if (_mar.i < _mar.list.length - 1) { _mar.i++; _marathonGo(); }
+  else closeMarathon(true);
+}
+function _marathonPrev() {
+  if (_mar.i > 0) { _mar.i--; _marathonGo(); }
+}
+function closeMarathon(done = false) {
+  clearTimeout(_mar.timer);
+  const modal = document.getElementById('marathon-modal');
+  const frame = document.getElementById('marathon-frame');
+  if (frame) frame.src = 'about:blank';
+  if (modal) modal.classList.add('hidden');
+  if (done) {
+    try {
+      tg.showPopup({ type: 'ok', title: '🎬 Марафон завершён!', message: 'Все трейлеры просмотрены. Запустить ещё раз? ▶️' });
+    } catch (e) { /* пусто */ }
+  }
+}
+
+// Кнопка «🎬 Марафон» в шапке каждой живой полки на главной (тренд/сегодня/недавно/рекомендации).
+// Добавляем только если в полке ≥2 фильмов с трейлерами.
+function addMarathonButtons() {
+  document.querySelectorAll('#view-catalog .hero-shelf').forEach(shelf => {
+    if (!['hero-shelf', 'recent', 'reco', 'today'].some(k => shelf.id.includes(k))) return;
+    if (shelf.querySelector('.marathon-sm')) return;
+    const row = shelf.querySelector('.hero-row');
+    if (!row) return;
+    const codes = Array.from(row.querySelectorAll('.hero-card')).map(el => el.dataset.code).filter(Boolean);
+    const withTr = codes.filter(c => {
+      const m = ALL.find(x => String(x.code) === String(c));
+      return m && (m.trailer_yt || m.trailer_file_id);
+    });
+    if (withTr.length < 2) return;
+    const title = shelf.querySelector('.shelf-title');
+    if (!title) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'shelf-title-row';
+    title.parentElement.insertBefore(wrap, title);
+    wrap.appendChild(title);
+    const bt = document.createElement('button');
+    bt.className = 'marathon-sm';
+    bt.textContent = '🎬 ▶️ Марафон';
+    bt.addEventListener('click', () => {
+      haptic('light');
+      const items = withTr.map(c => ALL.find(x => String(x.code) === String(c))).filter(Boolean);
+      openMarathon(items, title.textContent);
+    });
+    wrap.appendChild(bt);
+  });
+}
+
+// ---------- обработчики модалки марафона ----------
+(function initMarathonModal() {
+  const bg = document.getElementById('marathon-modal');
+  if (!bg) return;
+  bg.addEventListener('click', (e) => { if (e.target === bg) closeMarathon(false); });
+  const close = document.getElementById('btn-marathon-close');
+  if (close) close.addEventListener('click', () => closeMarathon(false));
+  const next = document.getElementById('btn-marathon-next');
+  if (next) next.addEventListener('click', () => { haptic('light'); _marathonNext(); });
+  const prev = document.getElementById('btn-marathon-prev');
+  if (prev) prev.addEventListener('click', () => { haptic('light'); _marathonPrev(); });
+  const pause = document.getElementById('btn-marathon-pause');
+  if (pause) pause.addEventListener('click', _marathonTogglePause);
+})();
+
 // ---------- подборки ----------
 function renderCols() {
   const c = document.getElementById('cols-container');
@@ -1030,8 +1248,12 @@ function renderCols() {
       view = 'cols-detail';
       showView('cols');
       const list = ALL.filter(m => col.codes.includes(m.code));
+      const trList = list.filter(m => m.trailer_yt || m.trailer_file_id);
       c.innerHTML = `
         <button class="btn-back" id="btn-cols-back">◀️ Все подборки</button>
+        ${trList.length >= 2
+          ? `<button class="btn-primary" id="btn-cols-marathon" style="margin-top:8px">🎬 ▶️ Марафон трейлеров (${trList.length})</button>`
+          : ''}
         <div class="movies-grid">${list.map(m => `
           <div class="movie-card" data-code="${esc(m.code)}">
             ${posterHtml(m)}
@@ -1042,6 +1264,8 @@ function renderCols() {
           </div>`).join('')}
         </div>`;
       document.getElementById('btn-cols-back').onclick = () => { view = 'cols'; renderCols(); };
+      const mar = document.getElementById('btn-cols-marathon');
+      if (mar) mar.onclick = () => openMarathon(trList, col.title);
       c.querySelectorAll('.movie-card').forEach(elc =>
         elc.addEventListener('click', () => openDetail(elc.dataset.code)));
     }));
@@ -1341,6 +1565,151 @@ function renderProfile() {
   }
 }
 
+// ---------- v74: «Мой кино-год» — личный отчёт по активности ----------
+// Считаем по локальным данным: помесячный журнал (open/trailers/favs/rated)
+// + текущие списки (Моё, оценки, просмотренные, разгаданные).
+const MONTH_NAMES = ['', 'янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+function renderYear() {
+  const c = document.getElementById('year-container');
+  if (!c) return;
+  const year = new Date().getFullYear();
+  const fmtYear = humanYearWord(year);
+
+  const sm = getYearStats();
+  const sumOf = (f) => Object.values(sm).reduce((a, m) => a + ((m && m[f]) || 0), 0);
+  const totOpen = sumOf('open');
+  const totTr = sumOf('trailers');
+  const totFv = sumOf('favs');
+  const totRt = sumOf('rated');
+  const totAct = totOpen + totTr + totFv + totRt;
+
+  const ratings = getRatings();
+  const ratCount = Object.keys(ratings).length;
+  const watchedCnt = getWatched().length;
+  const favCnt = getFavs().length;
+  const unlCnt = getUnlocked().length;
+
+  // Любимые жанры: из оценок (вес 2) + «Моё» (вес 1.5) + просмотренных (вес 1) + разгаданных (1)
+  const gScore = new Map();
+  const feedG = (code, w) => {
+    const m = ALL.find(x => String(x.code) === String(code));
+    if (!m) return;
+    (m.genres || []).forEach(g => gScore.set(g, (gScore.get(g) || 0) + w));
+  };
+  Object.keys(ratings).forEach(code => feedG(code, 2));
+  getFavs().forEach(code => feedG(code, 1.5));
+  getWatched().forEach(code => feedG(code, 1));
+  getUnlocked().forEach(code => feedG(code, 1));
+  const topGenres = [...gScore.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([g]) => g);
+
+  // Лучший фильм по моей оценке (при равенстве — выше рейтинг КП)
+  let best = null;
+  Object.entries(ratings).forEach(([code, r]) => {
+    const m = ALL.find(x => String(x.code) === String(code));
+    if (!m) return;
+    if (!best || r > best.r || (r === best.r && (parseFloat(m.rating) || 0) > (parseFloat(best.m.rating) || 0))) {
+      best = { m, r };
+    }
+  });
+
+  // Гистограмма: последние 12 месяцев (включая текущий), считаем активность
+  const months = [];
+  const now = new Date();
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const k = d.getFullYear() + '-' + (d.getMonth() + 1);
+    const m = sm[k];
+    months.push({
+      label: MONTH_NAMES[d.getMonth() + 1] || '', year: d.getFullYear(),
+      act: m ? ((m.open || 0) + (m.trailers || 0) + (m.favs || 0) + (m.rated || 0)) : 0,
+    });
+  }
+  const maxAct = Math.max(1, ...months.map(x => x.act));
+  const chart = months.map(x => {
+    const h = Math.max(3, Math.round(44 * x.act / maxAct));
+    return `<span class="yr-col" title="${x.label} ${x.year}: ${x.act}">` +
+      `<i style="height:${h}px"></i><em>${x.label}</em></span>`;
+  }).join('');
+  const chartBlock = `
+    <div class="yr-mnt">
+      <h3>📅 Активность по месяцам</h3>
+      <div class="yr-chart">${chart}</div>
+    </div>`;
+  const bestBlock = best
+    ? `<div class="yr-best">
+        <h3>⭐ Лучший по твоей оценке</h3>
+        <div class="yr-best-card" data-code="${esc(best.m.code)}">
+          ${best.m.poster
+            ? `<img src="${esc(best.m.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none'"/>`
+            : '<span style="font-size:26px">🎬</span>'}
+          <div style="flex:1;min-width:0">
+            <b>${esc(best.m.title)}</b>
+            <span>${'★'.repeat(best.r)} · ⭐ ${esc(String(best.m.rating || '—'))}</span>
+          </div>
+        </div>
+      </div>`
+    : '';
+
+  const shareBtn = totAct >= 5
+    ? `<button class="btn-primary yr-share" id="yr-share">📤 Поделиться итогом года</button>`
+    : '';
+
+  if (totAct === 0 && ratCount === 0 && watchedCnt === 0) {
+    c.innerHTML = `
+      <div class="year-head"><h2>🏆 Мой кино-год — ${year}</h2></div>
+      <div class="yr-empty">Здесь будет личный отчёт: сколько фильмов открыл, трейлеров посмотрел, оценок поставил.<br/><br/>
+      Статистика начнёт копиться сама — просто пользуйся приложением! 🎬</div>
+      <button class="btn-primary" style="width:100%;margin-top:10px" id="yr-go">🎬 Перейти в афишу</button>`;
+    document.getElementById('yr-go').onclick = () => openView('grid');
+    return;
+  }
+
+  c.innerHTML = `
+    <div class="year-head">
+      <h2>🏆 Мой кино-год — ${year}</h2>
+      <p class="year-sub">${fmtYear} · ${totAct} действий · статистика считается на этом устройстве</p>
+    </div>
+    <div class="yr-stats">
+      <div class="yr-stat"><b>🔍 ${totOpen}</b><span>карточек фильмов открыто</span></div>
+      <div class="yr-stat"><b>▶️ ${totTr}</b><span>трейлеров просмотрено</span></div>
+      <div class="yr-stat"><b>❤️ ${totFv}</b><span>раз добавлено в «Моё»</span></div>
+      <div class="yr-stat"><b>⭐ ${totRt}</b><span>оценок поставлено</span></div>
+      <div class="yr-stat"><b>⭐ ${ratCount}</b><span>фильмов оценено</span></div>
+      <div class="yr-stat"><b>👁 ${watchedCnt}</b><span>отмечено просмотренными</span></div>
+      <div class="yr-stat"><b>🔓 ${unlCnt}</b><span>кодов разгадано</span></div>
+      <div class="yr-stat"><b>🔑 ${favCnt}</b><span>в «Хочу посмотреть»</span></div>
+    </div>
+    ${chartBlock}
+    ${topGenres.length ? `<div class="yr-genres">
+        <h3>🎭 Твои жанры</h3>
+        <div class="yr-tags">${topGenres.map(g => `<span class="yr-tag">${esc(g)}</span>`).join('')}</div>
+      </div>` : ''}
+    ${bestBlock}
+    ${shareBtn}`;
+
+  const bestCard = document.querySelector('.yr-best-card');
+  if (bestCard) bestCard.addEventListener('click', () => openDetail(bestCard.dataset.code));
+  const share = document.getElementById('yr-share');
+  if (share) {
+    share.onclick = () => {
+      haptic('light');
+      const text = `🎬 Мой кино-${year} в «Киноафише» Капитана Кино:\n` +
+        `🔍 ${totOpen} открытий · ▶️ ${totTr} трейлеров · ⭐ ${totRt} оценок · ❤️ ${totFv} «Моё»\n` +
+        `Любимые жанры: ${topGenres.slice(0, 3).join(', ') || '—'}`;
+      const url = 'https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') +
+        '&text=' + encodeURIComponent(text);
+      try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+    };
+  }
+}
+function humanYearWord(y) {
+  const r = y % 100;
+  if (r >= 11 && r <= 14) return `За ${y} год`;
+  const d = r % 10;
+  if (d === 1) return `За ${y} год`;
+  if (d >= 2 && d <= 4) return `За ${y} года`;
+  return `За ${y} лет`;
+}
 // ---------- трейлеры «🎥» ----------
 // Все трейлеры в одном месте — с поиском, сортировкой и фильтром по жанру.
 let _trailerSearchTimer = null;
@@ -1597,25 +1966,100 @@ function renderAchievements() {
   renderCodeCollection();
 }
 
-// ---------- бэкап «Моё» через бота ----------
+// ---------- бэкап «Моё»: через бота + переносимый бэкап на другое устройство ----------
+// v74: компактная строка-копия содержит «Моё», оценки, просмотренные и заметки.
+// Её можно вставить в Telegram («Избранное») и восстановить на другом устройстве.
+const BAK_PREFIX = 'kinokod:v1:';
+function buildBackupString() {
+  const payload = JSON.stringify({
+    favs: getFavs(),
+    ratings: getRatings(),
+    watched: getWatched(),
+    notes: getNotes(),
+    at: Date.now(),
+  });
+  return BAK_PREFIX + encodeURIComponent(payload);
+}
+function importBackupString(raw) {
+  try {
+    const s = String(raw || '').trim();
+    if (!s.startsWith(BAK_PREFIX)) return 'not_backup';
+    const data = JSON.parse(decodeURIComponent(s.slice(BAK_PREFIX.length)));
+    if (!data || typeof data !== 'object') return 'bad';
+    const add1 = (v) => Array.isArray(v) ? v.filter(x => x !== null && x !== '').map(String) : [];
+    const add2 = (v) => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+    localStorage.setItem(FAV_KEY, JSON.stringify(add1(data.favs)));
+    localStorage.setItem(WATCHED_KEY, JSON.stringify(add1(data.watched)));
+    localStorage.setItem(RATINGS_KEY, JSON.stringify(add2(data.ratings)));
+    localStorage.setItem(NOTES_KEY, JSON.stringify(add2(data.notes)));
+    return 'ok';
+  } catch (e) { return 'bad'; }
+}
+function copyBackup() {
+  haptic('light');
+  const text = buildBackupString();
+  const done = () => {
+    try {
+      tg.showPopup({
+        type: 'ok',
+        title: '💾 Бэкап скопирован',
+        message: 'Вставь этот текст себе в «Избранное» в Telegram — потом на другом устройстве нажми «📥 Восстановить» и вставь его.',
+      });
+    } catch (e) { /* пусто */ }
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(done);
+  } else done();
+}
+function importBackup() {
+  haptic('light');
+  try {
+    tg.showPopup({
+      type: 'prompt',
+      title: '📥 Восстановление из бэкапа',
+      message: 'Вставь скопированную строку кинокода и нажми OK. Текущие «Моё», оценки, просмотренные и заметки будут заменены.',
+      placeholder: 'kinokod:v1:…',
+      text: '',
+      callback: (btnId, value) => {
+        if (btnId !== 'ok') return;
+        const r = importBackupString(value || '');
+        if (r === 'ok') {
+          haptic('ok');
+          try { tg.showPopup({ type: 'ok', title: '✅ Восстановлено!', message: 'Данные перенесены с другого устройства.' }); } catch (e) {}
+          renderGrid();
+          renderRecoShelf();
+        } else if (r === 'not_backup') {
+          try { tg.showPopup({ type: 'alert', title: 'Не та строка', message: 'Это не бэкап «Киноафиши». Убедись, что вставил строку kinokod:v1:… целиком.' }); } catch (e) {}
+        } else {
+          try { tg.showPopup({ type: 'alert', title: 'Ошибка', message: 'Бэкап повреждён или устарел — восстановить не удалось.' }); } catch (e) {}
+        }
+      },
+    });
+  } catch (e) { /* пусто */ }
+}
 function backupFavsNotice() {
   const favs = getFavs();
   const favTitles = favs.map(code => {
     const m = ALL.find(x => String(x.code) === String(code));
     return m ? `${m.code} — ${m.title}` : `${code}`;
   });
-  if (favs.length < 2) return ''; // маленький список ни к чему не гонять
   // Переменная используется кнопкой «📋 Скопировать список» (см. copyFavsList)
   window._favTitlesCache = favTitles;
+  const ratN = Object.keys(getRatings()).length;
+  const watN = getWatched().length;
   return `
     <div class="cols-list">
       <div class="col-card backup-card">
         <div class="col-body">
-          <h3>${favs.length > 0 ? `💾 «Моё» хранится локально (${favs.length})` : ''}</h3>
-          <p>Сохрани список в боте — не потеряется при переустановке.</p>
+          <h3>💾 «Моё» хранится локально${favs.length ? ` (${favs.length})` : ''}</h3>
+          <p>${favs.length || ratN || watN
+            ? `❤️ ${favs.length} · ⭐ ${ratN} · 👁 ${watN} — переноси на другое устройство`
+            : 'Список пуст — нажми ❤️ на любом фильме.'}</p>
         </div>
-        <button class="btn-secondary" id="btn-copy-list">📋 Скопировать список</button>
-        <button class="btn-secondary" id="btn-backup">💾 Сохранить в боте</button>
+        ${favs.length ? '<button class="btn-secondary" id="btn-copy-list">📋 Скопировать список</button>' : ''}
+        ${favs.length ? '<button class="btn-secondary" id="btn-backup">💾 Сохранить в боте</button>' : ''}
+        <button class="btn-secondary" id="btn-copy-backup">📱💾 Копия для другого устройства</button>
+        <button class="btn-secondary" id="btn-import-backup">📥 Восстановить здесь</button>
       </div>
     </div>`;
 }
@@ -2012,12 +2456,18 @@ function renderGrid() {
                   ? 'Оценок пока нет — открой любой фильм и поставь звёзды ⭐'
                   : 'В «Моём» пока пусто — жми сердечко ❤️ на любом фильме')))
       : 'Ничего не нашлось 🤷 Попробуй другой запрос';
-    c.innerHTML = head + `<div class="empty-state">
+    // v74: даже при пустом «Моём» показываем карточку с бэкапом/восстановлением
+    const backupEmpty = (view === 'fav' && (favMode || 'fav') === 'fav') ? backupFavsNotice() : '';
+    c.innerHTML = head + backupEmpty + `<div class="empty-state">
       <div class="empty-emoji">${emptyEmoji}</div>
       <p>${emptyText}</p>
       <button class="btn-secondary" id="btn-empty-lucky">🎲 Мне повезёт</button>
     </div>`;
     wireFavMode();
+    const cbE = document.getElementById('btn-copy-backup');
+    if (cbE) cbE.onclick = copyBackup;
+    const ibE = document.getElementById('btn-import-backup');
+    if (ibE) ibE.onclick = importBackup;
     const el = document.getElementById('btn-empty-lucky');
     if (el) el.onclick = () => {
       if (!ALL.length) return;
@@ -2027,7 +2477,7 @@ function renderGrid() {
     };
     return;
   }
-  const backup = (view === 'fav' && favMode === 'fav') ? backupFavsNotice() : '';
+  const backup = (view === 'fav' && (favMode || 'fav') === 'fav') ? backupFavsNotice() : '';
   c.innerHTML = head + backup + list.map(m => {
     const myR = (view === 'fav' && favMode === 'rated') ? (getRatings()[String(m.code)] || 0) : 0;
     return `
@@ -2043,6 +2493,10 @@ function renderGrid() {
   if (b) b.onclick = () => sendOrDeepLink({ action: 'save_favs', codes: getFavs() });
   const bc = document.getElementById('btn-copy-list');
   if (bc) bc.onclick = copyFavsList;
+  const cb2 = document.getElementById('btn-copy-backup');
+  if (cb2) cb2.onclick = copyBackup;
+  const ib2 = document.getElementById('btn-import-backup');
+  if (ib2) ib2.onclick = importBackup;
   wireFavMode();
   // каскадное появление карточек
   Array.from(c.children).forEach((el, i) => {
@@ -2442,6 +2896,7 @@ function showView(name) {
   toggle('view-game', name === 'game');
   toggle('view-emoji', name === 'game');
   toggle('view-chain', name === 'chain');
+  toggle('view-year', name === 'year');
   toggle('toolbar', name === 'catalog' || name === 'trailers');
   if (name === 'catalog') renderFilmDay();  // баннер скрываем/возвращаем при смене вьюхи
   const cur = name === 'catalog' ? view : name;
@@ -2449,7 +2904,7 @@ function showView(name) {
     t.classList.toggle('active', t.dataset.view === cur));
   const moreTab = document.getElementById('tab-more');
   if (moreTab) moreTab.classList.toggle('active',
-    ['cols', 'top', 'achievements', 'profile', 'fav', 'game', 'chain'].includes(cur));
+    ['cols', 'top', 'achievements', 'profile', 'fav', 'game', 'chain', 'year'].includes(cur));
   document.querySelectorAll('.more-item').forEach(b =>
     b.classList.toggle('active', b.dataset.view === cur));
 }
@@ -2507,6 +2962,7 @@ function openView(v) {
   else if (v === 'trailers') { showView('trailers'); renderTrailerGenreChips(); renderTrailers(); }
   else if (v === 'achievements') { showView('achievements'); renderAchievements(); }
   else if (v === 'chain') { showView('chain'); renderChain(); }
+  else if (v === 'year') { showView('year'); renderYear(); }
   else { showView('catalog'); renderGrid(); }  // grid | fav
 }
 document.querySelectorAll('.tab[data-view]').forEach(t => t.addEventListener('click', () => openView(t.dataset.view)));
@@ -2853,6 +3309,12 @@ function openTrailer(m) {
   window._challTrailerWatched = (window._challTrailerWatched || 0) + 1;
   challDone('watch_trailer');
   bumpWeekStat('trailers');
+  pushTrailerWatch(m.code);      // v74: в «Продолжить смотреть»
+  // v74: полка «Продолжить смотреть» обновляется сразу, если она видна
+  if (view === 'grid' || view === 'fav') {
+    const cs = document.getElementById('continue-shelf');
+    if (cs && !cs.classList.contains('hidden')) renderTrailerShelf();
+  }
   if (!m.trailer_yt && !m.trailer_file_id) {
     return;
   }
