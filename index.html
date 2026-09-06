@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=71" />
+  <link rel="stylesheet" href="style.css?v=72" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -80,6 +80,8 @@
             <input type="checkbox" id="hide-unlocked" />
             <span class="hide-toggle-pill">🙈 <span class="ht-text">Разгаданные</span></span>
           </label>
+          <button class="btn-sync" id="btn-random" title="Случайный фильм">🎲</button>
+          <button class="btn-sync" id="btn-refresh" title="Обновить афишу">⟳</button>
           <button class="btn-sync" id="btn-grid-cols" title="Компактность сетки">📐</button>
           <button class="btn-sync" id="btn-sync" title="Синхронизировать с ботом">🔁</button>
         </div>
@@ -238,6 +240,15 @@
     </div>
   </div>
 
+  <div id="random-modal" class="modal hidden">
+    <div class="modal-card random-card">
+      <button class="modal-close" id="btn-random-close">✕</button>
+      <h2>🎲 Случайный фильм</h2>
+      <p class="modal-muted">Если сложно выбрать — доверься кубику</p>
+      <div id="random-body"></div>
+      <button class="btn-secondary" id="btn-random-again">🎲 Ещё вариант</button>
+    </div>
+  </div>
   <!-- Как играть -->
   <div id="howto-modal" class="modal hidden">
     <div class="modal-card">
@@ -332,7 +343,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=71"></script>
+  <script src="script.js?v=72"></script>
 </body>
 </html>
 

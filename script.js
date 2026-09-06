@@ -386,11 +386,12 @@ function applyGridCols() {
   mc.classList.toggle('grid-cols-4', cur === 4);
 }
 
-// ---------- история поиска: чипы под поиском ----------
-function initSearchHist() {
+// ---------- история поиска: чипы под поиском (с автодополнением по вводу) ----------
+function initSearchHist(prefix) {
   const chips = document.getElementById('search-hist');
   if (!chips) return;
-  const hist = getSearchHist();
+  const p = (prefix || '').trim().toLowerCase();
+  const hist = getSearchHist().filter(q => !p || q.toLowerCase().includes(p));
   if (!hist.length) { chips.classList.add('hidden'); return; }
   chips.innerHTML = hist.map(q => `<button class="sh-chip" data-q="${esc(q)}">${esc(q)} ✕</button>`).join('');
   chips.classList.remove('hidden');
@@ -401,7 +402,7 @@ function initSearchHist() {
       if (inp) inp.value = q;
       const hist2 = getSearchHist().filter(x => x.toLowerCase() !== q.toLowerCase());
       localStorage.setItem(SEARCH_HIST_KEY, JSON.stringify(hist2));
-      initSearchHist();
+      initSearchHist('');
       renderGrid();
       haptic('light');
     });
@@ -579,6 +580,7 @@ function applyData(data) {
   updateHeaderProgress();
   renderStreakStrip();
   parseRiddleHash();
+  parseMovieHash();
 }
 
 async function loadMovies() {
@@ -1698,12 +1700,86 @@ function openUrlLink(url) {
 }
 function openWatchLink(m) {
   if (m.link) return openUrlLink(m.link);   // прямая ссылка на просмотр (kinogo.ec)
+  if (m.link2) return openUrlLink(m.link2); // v72: запасное зеркало
   openImdbLink(m);                          // иначе — страница о фильме на IMDB
 }
 function openImdbLink(m) {
   const q = cleanKpTitle(m.title);
   openUrlLink('https://www.imdb.com/find/?q=' + encodeURIComponent(q || ''));
 }
+
+// ---------- v72: флаги стран, красивый шаринг, «Случайный фильм», #m=КОД ----------
+const COUNTRY_FLAGS = {
+  'сша': '🇺🇸', 'россия': '🇷🇺', 'великобритания': '🇬🇧', 'франция': '🇫🇷',
+  'германия': '🇩🇪', 'канада': '🇨🇦', 'япония': '🇯🇵', 'южная корея': '🇰🇷',
+  'китай': '🇨🇳', 'италия': '🇮🇹', 'испания': '🇪🇸', 'индия': '🇮🇳',
+  'австралия': '🇦🇺', 'бразилия': '🇧🇷', 'мексика': '🇲🇽', 'швеция': '🇸🇪',
+  'дания': '🇩🇰', 'норвегия': '🇳🇴', 'ирландия': '🇮🇪', 'новая зеландия': '🇳🇿',
+  'польша': '🇵🇱', 'украина': '🇺🇦', 'чехия': '🇨🇿', 'гонконг': '🇭🇰',
+  'нидерланды': '🇳🇱', 'бельгия': '🇧🇪', 'швейцария': '🇨🇭', 'австрия': '🇦🇹',
+  'финляндия': '🇫🇮', 'израиль': '🇮🇱', 'турция': '🇹🇷', 'аргентина': '🇦🇷',
+};
+const flagOf = (ct) => COUNTRY_FLAGS[String(ct || '').toLowerCase().trim()] || '🌍';
+
+// Красивый шаринг фильма: эмодзи-текст + ссылка #m=КОД (откроет карточку в приложении)
+function shareMovie(m) {
+  haptic('light');
+  const link = location.href.split('#')[0] + '#m=' + encodeURIComponent(m.code);
+  const g = (m.genres || []).slice(0, 2).join(' · ');
+  const text = `🎬 «${m.title}»${m.year ? ' (' + m.year + ')' : ''}\n` +
+    `⭐ ${m.rating || '—'}${g ? ' · ' + g : ''}\n\n` +
+    `Угадывай фильмы по кодам и смотри кино в «Киноафише» 👇`;
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text);
+  try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+}
+
+// Открываем карточку фильма по прямой ссылке #m=КОД (из шеринга)
+function parseMovieHash() {
+  const h = (location.hash || '').replace(/^#/, '');
+  if (!/^m=[^&]+/.test(h)) return;
+  const code = decodeURIComponent(h.slice(2));
+  if (code && ALL.some(x => String(x.code) === code)) {
+    history.replaceState(null, '', location.pathname + location.search);
+    setTimeout(() => openDetail(code), 250);
+  }
+}
+
+// Случайный фильм: без недавних показов, приоритет — с постером и рейтингом
+let _recentRandom = [];
+function pickRandomMovie() {
+  if (!ALL.length) return null;
+  let pool = ALL.filter(m => m.poster && !_recentRandom.includes(String(m.code)));
+  if (!pool.length) pool = ALL.filter(m => !_recentRandom.includes(String(m.code)));
+  if (!pool.length) { _recentRandom = []; pool = ALL.slice(); }
+  const m = pool[Math.floor(Math.random() * pool.length)];
+  _recentRandom.push(String(m.code));
+  if (_recentRandom.length > 5) _recentRandom = _recentRandom.slice(-5);
+  return m;
+}
+function renderRandomMovie() {
+  const m = pickRandomMovie();
+  const body = document.getElementById('random-body');
+  if (!m || !body) return;
+  haptic('light');
+  const flags = (m.countries || []).slice(0, 2).map(flagOf).join(' ');
+  body.innerHTML = `
+    <div class="rm-card" data-code="${esc(m.code)}">
+      ${m.poster ? `<img src="${esc(m.poster)}" alt="" ${FADE}${dimStyle(m)}/>` : '<div class="rm-ph">🎬</div>'}
+      <div class="rm-info">
+        <b>${esc(m.title)}</b>
+        <span>${ratingBadge(m)}${m.year ? ' · ' + esc(String(m.year)) : ''}${flags ? ' · ' + flags : ''}</span>
+        ${(m.genres || []).length ? '<em>' + m.genres.slice(0, 3).map(g => `<i class="chip chip-genre" data-g="${esc(g)}">${esc(g)}</i>`).join(' ') + '</em>' : ''}
+      </div>
+    </div>
+    ${m.link || m.link2 ? '<button class="btn-watch" id="btn-rm-watch">▶️ Смотреть фильм</button>' : ''}`;
+  const card = body.querySelector('.rm-card');
+  if (card) card.onclick = () => { closeRandom(); openDetail(m.code); };
+  body.querySelectorAll('.chip-genre').forEach(ch =>
+    ch.addEventListener('click', (e) => { e.stopPropagation(); closeRandom(); activeGenre = ch.dataset.g; renderGenreChips(); openView('grid'); }));
+  const w = document.getElementById('btn-rm-watch');
+  if (w) w.onclick = () => openWatchLink(m);
+}
+function closeRandom() { document.getElementById('random-modal').classList.add('hidden'); }
 
 // ---------- v64: «🎭 Загадай другу» ----------
 // Выбираешь фильм — делишься ссылкой с эмодзи-подсказками. Друг открывает
@@ -1916,7 +1992,10 @@ function renderGrid() {
   const smartHint = smart
     ? `<div class="smart-hint">🧠 ${esc((smart.parts || []).join(' · '))} · найдено: ${list.length}<button class="smart-clear" title="Сбросить" onclick="document.getElementById('search').value='';renderGrid()">✕</button></div>`
     : '';
-  const head = modeSwitch + progressLine + smartHint;
+  const head = modeSwitch + progressLine + smartHint
+    + (view === 'grid' && !searching && ALL.length
+      ? `<div class="seen-bar"><span>👁 ${watchedAll.length} из ${ALL.length} просмотрено</span><span class="seen-track"><i style="width:${Math.round(100 * watchedAll.length / ALL.length)}%"></i></span></div>`
+      : '');
   const wireFavMode = () => {
     c.querySelectorAll('.fav-mode-btn').forEach(b => b.addEventListener('click', () => {
       try { localStorage.setItem(FAV_MODE_KEY, b.dataset.mode); } catch (e) {}
@@ -1993,7 +2072,7 @@ function openDetail(code) {
   const chips = [
     m.year ? `<span class="chip chip-dim">📅 ${esc(m.year)}</span>` : '',
     m.duration ? `<span class="chip chip-dim">⏱ ${esc(fmtDuration(m.duration))}</span>` : '',
-    ...(m.countries || []).slice(0, 2).map(ct => `<span class="chip chip-dim">🌍 ${esc(ct)}</span>`),
+    ...(m.countries || []).slice(0, 2).map(ct => `<span class="chip chip-dim">${flagOf(ct)} ${esc(ct)}</span>`),
     ...(m.genres || []).map(g =>
       `<button class="chip chip-genre${activeGenre === g ? ' active' : ''}" data-g="${esc(g)}" title="Фильмы этого жанра">${esc(g)}</button>`),
   ].filter(Boolean).join('');
@@ -2021,6 +2100,7 @@ function openDetail(code) {
         ${getNotes()[code] ? `<div class="note-box">📝 ${esc(getNotes()[code])}</div>` : ''}
         <div class="detail-actions">
           ${(m.link || cleanKpTitle(m.title)) ? '<button class="btn-watch" id="btn-watch">' + (m.link ? '▶️ Смотреть фильм' : '🍿 Где посмотреть') + '</button>' : ''}
+          ${m.link2 ? '<button class="btn-secondary" id="btn-mirror">🔗 Зеркало</button>' : ''}
           <button class="btn-primary" id="btn-open">🔓 Открыть код</button>
           ${m.trailer_mp4 || m.trailer_yt || m.trailer_file_id ? '<button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>' : ''}
           <button class="btn-fav ${fav ? 'active' : ''}" id="btn-fav">${fav ? '❤️ В «Моём»' : '🤍 Хочу посмотреть'}</button>
@@ -2055,6 +2135,8 @@ function openDetail(code) {
     () => sendOrDeepLink({ action: 'open_movie', code });
   const watchBtn = document.getElementById('btn-watch');
   if (watchBtn) watchBtn.onclick = () => openWatchLink(m);
+  const mirrorBtn = document.getElementById('btn-mirror');
+  if (mirrorBtn) mirrorBtn.onclick = () => openUrlLink(m.link2);
   const kpBtn = document.getElementById('btn-kp');
   if (kpBtn) kpBtn.onclick = () => openImdbLink(m);
   // v64: оценка звёздами прямо в карточке (локально) + «Загадать другу»
@@ -2121,10 +2203,7 @@ function openDetail(code) {
       sendOrDeepLink({ action: 'review_movie', code });
     }
   };
-  document.getElementById('btn-share').onclick = () => {
-    const text = `🎬 «${m.title}» — рейтинг ${m.rating || '—'} на КП! Угадай фильм по коду в боте «Капитан Кино» 🎲`;
-    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/kapitan_kino_bot')}&text=${encodeURIComponent(text)}`);
-  };
+  document.getElementById('btn-share').onclick = () => shareMovie(m);
   // Тап по похожему фильму → открываем его карточку
   document.querySelectorAll('#view-detail .similar-card').forEach(el => {
     el.addEventListener('click', () => {
@@ -2505,6 +2584,7 @@ document.getElementById('search').addEventListener('input', () => {
     activeGenre = '';
     renderGenreChips();
   }
+  initSearchHist(document.getElementById('search').value);
   _searchTimer = setTimeout(renderGrid, 180);
 });
 document.getElementById('sort').addEventListener('change', renderGrid);
@@ -2556,6 +2636,30 @@ document.getElementById('btn-lucky').addEventListener('click', () => {
   haptic('light');
   const m = ALL[Math.floor(Math.random() * ALL.length)];
   openDetail(m.code);
+});
+
+// ---------- v72: «🎲 Случайный фильм» и «⟳ Обновить афишу» ----------
+const rndModal = document.getElementById('random-modal');
+document.getElementById('btn-random').addEventListener('click', () => {
+  if (!ALL.length) return;
+  rndModal.classList.remove('hidden');
+  renderRandomMovie();
+});
+document.getElementById('btn-random-close').addEventListener('click', closeRandom);
+document.getElementById('btn-random-again').addEventListener('click', renderRandomMovie);
+rndModal.addEventListener('click', (e) => { if (e.target === rndModal) closeRandom(); });
+
+const refreshBtn = document.getElementById('btn-refresh');
+refreshBtn.addEventListener('click', async () => {
+  if (refreshBtn.dataset.busy) return;
+  refreshBtn.dataset.busy = '1';
+  refreshBtn.classList.add('spin');
+  haptic('light');
+  try { await loadMovies(); } catch (e) {}
+  refreshBtn.classList.remove('spin');
+  delete refreshBtn.dataset.busy;
+  refreshBtn.textContent = '✓';
+  setTimeout(() => { refreshBtn.textContent = '⟳'; }, 1600);
 });
 
 // 👇 Pull-to-refresh: на верху страницы тянешь список вниз — данные обновляются
