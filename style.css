@@ -1690,3 +1690,181 @@ body.accent-neon .new-badge,
 body.accent-gold .new-badge { background: linear-gradient(90deg, var(--gold), var(--accent)); }
 body.accent-neon .howto-step span,
 body.accent-gold .howto-step span { background: linear-gradient(135deg, var(--accent), var(--gold)); }
+/* ===== v52: «Я смотрел», заметки, компактная сетка, история поиска, челленджи, коллекция ===== */
+/* «Я смотрел» — бейдж на постере */
+.watched-badge {
+  position: absolute;
+  top: 34px;
+  right: 8px;
+  z-index: 2;
+  font-size: 13px;
+  background: rgba(15, 18, 32, .75);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Заметка — бейдж на постере */
+.note-badge {
+  position: absolute;
+  top: 34px;
+  right: 34px;
+  z-index: 2;
+  font-size: 12px;
+  background: rgba(15, 18, 32, .75);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.light .watched-badge, .light .note-badge { background: rgba(255,255,255,.85); }
+/* Блок заметки в карточке фильма */
+.note-box {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(255, 209, 102, .1);
+  border: 1px solid rgba(255, 209, 102, .25);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+}
+.light .note-box { background: rgba(255, 209, 102, .18); }
+/* Кнопка «Просмотрено» в карточке */
+.watched-btn.active { background: var(--accent); color: #fff; }
+
+/* Компактный режим сетки */
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr) !important; }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr) !important; }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr) !important; }
+.grid-cols-2 .movie-info h3 { font-size: 12px; }
+.grid-cols-3 .movie-info h3, .grid-cols-4 .movie-info h3 { font-size: 11px; }
+.grid-cols-3 .code-badge, .grid-cols-4 .code-badge { font-size: 10px; padding: 2px 5px; }
+
+/* История поиска — чипы */
+.search-hist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 2px 0;
+}
+.sh-chip {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--card);
+  color: var(--muted);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: color .15s ease;
+}
+.sh-chip:hover { color: var(--text); }
+.light .sh-chip { background: #fff; border-color: rgba(20,20,40,.12); }
+
+/* Челленджи дня */
+.chall-pane {
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 12px;
+  margin: 10px 2px 0;
+}
+.chall-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.chall-title { font-size: 14px; font-weight: 800; }
+.chall-count { font-size: 13px; font-weight: 700; color: var(--accent); }
+.chall-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 6px;
+  border-radius: 10px;
+  font-size: 12.5px;
+}
+.chall-item + .chall-item { margin-top: 2px; }
+.chall-item.done { background: rgba(34,197,94,.1); }
+.chall-emoji { font-size: 18px; }
+.chall-body { flex: 1; min-width: 0; }
+.chall-body b { display: block; font-size: 12.5px; }
+.chall-body span { display: block; font-size: 11px; color: var(--muted); }
+.chall-check { font-size: 14px; }
+.light .chall-pane { background: #fff; border-color: rgba(20,20,40,.10); }
+
+/* Коллекция кодов (на вкладке достижений) */
+.code-collection {
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 12px;
+  margin: 6px 0 0;
+}
+.coll-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.coll-head h3 { margin: 0; font-size: 15px; }
+.coll-head span { font-size: 12px; color: var(--muted); font-weight: 700; }
+.coll-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+  gap: 4px;
+}
+.coll-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: default;
+}
+.coll-cell.on {
+  background: rgba(255,209,102,.1);
+  border-color: rgba(255,209,102,.3);
+  cursor: pointer;
+}
+.coll-cell.on:active { transform: scale(.92); }
+.light .code-collection { background: #fff; border-color: rgba(20,20,40,.10); }
+.light .coll-cell { background: #f5f6fa; border-color: rgba(20,20,40,.08); }
+.light .coll-cell.on { background: rgba(255,209,102,.16); }
+
+/* ===== v52b: против «чёрных квадратов» — fade-in картинок и shimmer-заглушка ===== */
+/* Картинка невидима, пока грузится (потом плавно проявляется через .ld-on) */
+.ld { opacity: 0; transition: opacity .35s ease; }
+.ld.ld-on { opacity: 1; }
+/* shimmer бежит под картинкой, пока она не загрузилась */
+.poster-wrap::before,
+.trailer-thumb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.08) 50%, rgba(255,255,255,0) 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+  pointer-events: none;
+}
+/* картинка — над shimmer-подложкой */
+.poster-wrap img,
+.trailer-thumb img { position: relative; z-index: 1; }
+/* если постера нет вовсе (ошибка загрузки) — гасим shimmer */
+.poster-wrap.no-poster::before,
+.hero-card.no-poster::before { animation: none; opacity: 0; }
+.light .poster-wrap::before,
+.light .trailer-thumb::before {
+  background: linear-gradient(100deg, rgba(20,20,40,0) 30%, rgba(20,20,40,.06) 50%, rgba(20,20,40,0) 70%);
+  background-size: 200% 100%;
+}

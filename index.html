@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=51" />
+  <link rel="stylesheet" href="style.css?v=52" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -78,11 +78,22 @@
             <input type="checkbox" id="hide-unlocked" />
             <span class="hide-toggle-pill">🙈 <span class="ht-text">Разгаданные</span></span>
           </label>
+          <button class="btn-sync" id="btn-grid-cols" title="Компактность сетки">📐</button>
           <button class="btn-sync" id="btn-sync" title="Синхронизировать с ботом">🔁</button>
         </div>
       </div>
       <div id="genre-chips" class="genre-chips hidden"></div>
+      <div id="search-hist" class="search-hist hidden"></div>
       <div id="code-day-banner" class="code-day hidden"></div>
+      <div id="chall-pane" class="chall-pane hidden">
+        <div class="chall-head">
+          <span class="chall-title">🎯 Челленджи дня</span>
+          <span class="chall-count" id="chall-count">0/3</span>
+        </div>
+        <div id="chall-list" class="chall-list">
+          <div class="chall-list"><div class="chall-item">Загрузка…</div></div>
+        </div>
+      </div>
       <div id="hero-shelf" class="hero-shelf hidden">
         <h2 class="shelf-title">🔥 Сейчас в тренде</h2>
         <div class="hero-row" id="hero-row"></div>
@@ -143,6 +154,7 @@
     <!-- Достижения (прогресс по ачивкам) -->
     <div id="view-achievements" class="hidden">
       <main id="achievements-container" class="achievements-feed"></main>
+      <div id="code-collection" class="code-collection hidden"></div>
     </div>
 
     <!-- Карточка фильма -->
@@ -297,7 +309,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=51"></script>
+  <script src="script.js?v=52"></script>
 </body>
 </html>
 

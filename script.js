@@ -22,6 +22,8 @@ function enterApp() {
   parseProfileHash();  // до parseUnlockedHash: тот очищает location.hash
   parseUnlockedHash();
   initHideToggle();
+  applyGridCols();
+  initSearchHist();
   loadMovies();
 }
 // ВНИМАНИЕ: запуск (enterApp/showGate) перенесён в САМЫЙ КОНЕЦ файла —
@@ -92,10 +94,84 @@ const getFavs = () => JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
 const setFavs = (a) => localStorage.setItem(FAV_KEY, JSON.stringify([...a]));
 const toggleFav = (code) => {
   const f = new Set(getFavs());
+  const adding = !f.has(code);
   f.has(code) ? f.delete(code) : f.add(code);
   setFavs(f);
-  haptic(f.has(code) ? 'ok' : 'light');
+  haptic(adding ? 'ok' : 'light');
+  if (adding) challDone('add_fav');
 };
+
+// ---------- «Я смотрел» (локальный список просмотренных) ----------
+// Помечай фильм как просмотренный — список покажется в «Моё» третьим режимом,
+// а рекомендации и статистика станут точнее.
+const WATCHED_KEY = 'kinoafisha_watched';
+const getWatched = () => JSON.parse(localStorage.getItem(WATCHED_KEY) || '[]');
+const setWatched = (a) => localStorage.setItem(WATCHED_KEY, JSON.stringify([...a]));
+const toggleWatched = (code) => {
+  const w = new Set(getWatched());
+  w.has(code) ? w.delete(code) : w.add(code);
+  setWatched(w);
+  haptic(w.has(code) ? 'ok' : 'light');
+  return w.has(code);
+};
+
+// ---------- заметки на фильмах (локально) ----------
+// Короткая заметка на карточке: сохраняется состояние прямо в приложении.
+const NOTES_KEY = 'kinoafisha_notes';
+const getNotes = () => JSON.parse(localStorage.getItem(NOTES_KEY) || '{}');
+const setNote = (code, text) => {
+  const n = getNotes();
+  const t = (text || '').trim();
+  if (t) n[code] = t; else delete n[code];
+  localStorage.setItem(NOTES_KEY, JSON.stringify(n));
+};
+
+// ---------- компактный режим афиши (2/3/4 колонки) ----------
+const GRID_COLS_KEY = 'kinoafisha_grid_cols';
+const getGridCols = () => {
+  const v = parseInt(localStorage.getItem(GRID_COLS_KEY) || '0', 10);
+  return [2, 3, 4].includes(v) ? v : 0;  // 0 = авто
+};
+
+// ---------- история поиска ----------
+const SEARCH_HIST_KEY = 'kinoafisha_search_hist';
+const MAX_SEARCH_HIST = 6;
+const getSearchHist = () => JSON.parse(localStorage.getItem(SEARCH_HIST_KEY) || '[]');
+const addSearchHist = (q) => {
+  if (!q) return;
+  const h = getSearchHist().filter(x => x.toLowerCase() !== q.toLowerCase());
+  h.unshift(q);
+  localStorage.setItem(SEARCH_HIST_KEY, JSON.stringify(h.slice(0, MAX_SEARCH_HIST)));
+};
+
+// ---------- ежедневные кино-челленджи (локальные, меняются каждый день) ----------
+// Три задания на день, выполняются собственными действиями в приложении.
+// Прогресс хранится локально и автоматически сбрасывается на новый день.
+const CHALL_KEY = 'kinoafisha_challenges';
+const CHALLENGE_LIST = [
+  { id: 'watch_trailer', emoji: '🎥', name: 'Глянь трейлер', desc: 'Открой любой трейлер длиннее 2 минут', check: () => ((window._challTrailerWatched || 0) >= 1) },
+  { id: 'open_movie', emoji: '🔍', name: 'Открой карточку', desc: 'Загляни в карточку любого фильма', check: () => (getRecent().length >= 1) },
+  { id: 'add_fav', emoji: '❤️', name: 'Пополни «Моё»', desc: 'Добавь фильм в «Хочу посмотреть»', check: () => (getFavs().length >= 1) },
+];
+function challDateKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+function getChallenges() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CHALL_KEY) || 'null');
+    if (raw && raw.date === challDateKey()) return raw;
+  } catch (e) {}
+  return { date: challDateKey(), done: [] };
+}
+function setChallenges(c) { localStorage.setItem(CHALL_KEY, JSON.stringify(c)); }
+function challDone(id) {
+  const c = getChallenges();
+  if (c.done.includes(id)) return;
+  c.done.push(id);
+  setChallenges(c);
+  updateChallPane();
+}
 
 // ---------- история просмотров (для «🕘 Недавно смотрели») ----------
 // Локальная история последних открытых карточек (макс 12). Используется
@@ -182,6 +258,48 @@ function initHideToggle() {
     haptic('light');
     sendOrDeepLink({ action: 'sync_unlocked' });
   });
+  // Компактность сетки: цикл 0 (авто) → 2 → 3 → 4 колонки
+  const gridBtn = document.getElementById('btn-grid-cols');
+  if (gridBtn) gridBtn.addEventListener('click', () => {
+    const cur = getGridCols();
+    const next = cur === 0 ? 2 : cur === 2 ? 3 : cur === 3 ? 4 : 0;
+    localStorage.setItem(GRID_COLS_KEY, next ? String(next) : '0');
+    applyGridCols();
+    haptic('light');
+    renderGrid();
+  });
+}
+
+// Применяет класс колонок к контейнеру афиши
+function applyGridCols() {
+  const mc = document.getElementById('movies-container');
+  if (!mc) return;
+  const cur = getGridCols();
+  mc.classList.toggle('grid-cols-2', cur === 2);
+  mc.classList.toggle('grid-cols-3', cur === 3);
+  mc.classList.toggle('grid-cols-4', cur === 4);
+}
+
+// ---------- история поиска: чипы под поиском ----------
+function initSearchHist() {
+  const chips = document.getElementById('search-hist');
+  if (!chips) return;
+  const hist = getSearchHist();
+  if (!hist.length) { chips.classList.add('hidden'); return; }
+  chips.innerHTML = hist.map(q => `<button class="sh-chip" data-q="${esc(q)}">${esc(q)} ✕</button>`).join('');
+  chips.classList.remove('hidden');
+  chips.querySelectorAll('.sh-chip').forEach(b => {
+    b.addEventListener('click', () => {
+      const q = b.dataset.q;
+      const inp = document.getElementById('search');
+      if (inp) inp.value = q;
+      const hist2 = getSearchHist().filter(x => x.toLowerCase() !== q.toLowerCase());
+      localStorage.setItem(SEARCH_HIST_KEY, JSON.stringify(hist2));
+      initSearchHist();
+      renderGrid();
+      haptic('light');
+    });
+  });
 }
 
 // ---------- утилиты ----------
@@ -242,15 +360,30 @@ const ratingBadge = (m) => {
 const isNew = (m) =>
   !!m.added_at && (Date.now() - new Date(m.added_at).getTime()) < 30 * 24 * 3600 * 1000;
 
+// Очень тёмные постеры («Гран Торино», «Последний самурай»…) в маленьких
+// карточках выглядят чёрным пятном. Слегка подсвечиваем их через CSS-фильтр:
+// pb — средняя яркость постера 0..255 (считает _fix_thumbs2.py в movies.json).
+const dimStyle = (m) => {
+  const pb = parseFloat(m && m.pb);
+  if (!pb || pb >= 70) return '';
+  return ` style="filter:brightness(${Math.min(1.5, 1 + (70 - pb) / 70).toFixed(2)})"`;
+};
+
+// Картинка появляется мягко (fade-in) — пока грузится, видна shimmer-заглушка,
+// а не «чёрный квадрат».
+const FADE = `class="ld" onload="this.classList.add('ld-on')"`;
+
+
 function posterHtml(m) {
   const fav = getFavs().includes(m.code);
   return `<div class="poster-wrap">
     ${m.poster
-      ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" decoding="async"
+      ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(m)}
            onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
       : `<div class="poster-placeholder"><span>🎬</span><em>${esc(m.title)}</em></div>`}
     <span class="code-badge">🔑 ${esc(String(m.code))}</span>
     ${isNew(m) ? '<span class="new-badge">🔥 Новинка</span>' : ''}
+    ${getNotes()[m.code] ? '<span class="note-badge" title="Заметка">📝</span>' : ''}
     ${fav ? '<span class="fav-badge">❤️</span>' : ''}
   </div>`;
 }
@@ -258,13 +391,17 @@ function posterHtml(m) {
 // Быстрая кнопка «❤️/🤍» на карточке фильма (в сетке и полках) — без открытия
 function posterHtmlQuick(m) {
   const fav = getFavs().includes(m.code);
+  const watched = getWatched().includes(String(m.code));
+  const hasNote = !!getNotes()[m.code];
   return `<div class="poster-wrap">
     ${m.poster
-      ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" decoding="async"
+      ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(m)}
            onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
       : `<div class="poster-placeholder"><span>🎬</span><em>${esc(m.title)}</em></div>`}
     <span class="code-badge">🔑 ${esc(String(m.code))}</span>
     ${isNew(m) ? '<span class="new-badge">🔥 Новинка</span>' : ''}
+    ${watched ? '<span class="watched-badge" title="Просмотрено">👁</span>' : ''}
+    ${hasNote ? '<span class="note-badge" title="Заметка">📝</span>' : ''}
     <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '❤️' : '🤍'}</button>
   </div>`;
 }
@@ -307,6 +444,7 @@ function applyData(data) {
   renderRecoShelf();
   renderPremieres(meta);
   renderGrid();
+  updateChallPane();
   updateHeaderProgress();
 }
 
@@ -392,6 +530,59 @@ function _levDist(a, b) {
   return prev[b.length];
 }
 
+// ---------- ежедневные челленджи: панель на главной ----------
+function updateChallPane() {
+  const pane = document.getElementById('chall-pane');
+  if (!pane) return;
+  const c = getChallenges();
+  const listEl = document.getElementById('chall-list');
+  const countEl = document.getElementById('chall-count');
+  const items = CHALLENGE_LIST.map(ch => {
+    const ok = c.done.includes(ch.id) || ch.check();
+    return `<div class="chall-item ${ok ? 'done' : ''}">
+      <span class="chall-emoji">${ch.emoji}</span>
+      <div class="chall-body">
+        <b>${esc(ch.name)}</b>
+        <span>${esc(ch.desc)}</span>
+      </div>
+      <span class="chall-check">${ok ? '✅' : '○'}</span>
+    </div>`;
+  }).join('');
+  listEl.innerHTML = items;
+  const doneCount = CHALLENGE_LIST.filter(ch => c.done.includes(ch.id) || ch.check()).length;
+  if (countEl) countEl.textContent = `${doneCount}/${CHALLENGE_LIST.length}`;
+  pane.classList.remove('hidden');
+  // после показа — если все сделаны, добавим поздравление
+  if (doneCount === CHALLENGE_LIST.length && !c.done.includes('all_done')) {
+    c.done.push('all_done');
+    setChallenges(c);
+  }
+}
+
+// ---------- коллекция кодов (сетка всех кодов в Дастижениях) ----------
+function renderCodeCollection() {
+  const wrap = document.getElementById('code-collection');
+  if (!wrap) return;
+  const unlocked = getUnlocked();
+  const unlockedSet = new Set(unlocked.map(String));
+  const all = [...ALL].sort((a, b) => (+a.code || 0) - (+b.code || 0));
+  if (all.length < 2) { wrap.classList.add('hidden'); return; }
+  const openPct = all.length ? Math.round(100 * unlocked.length / all.length) : 0;
+  wrap.classList.remove('hidden');
+  wrap.innerHTML = `
+    <div class="coll-head">
+      <h3>🔑 Коллекция кодов</h3>
+      <span>${unlocked.length}/${all.length} · ${openPct}%</span>
+    </div>
+    <div class="coll-grid">${all.map(m => {
+      const ok = unlockedSet.has(String(m.code));
+      return `<span class="coll-cell ${ok ? 'on' : ''}" title="${esc(m.title)}"
+          data-code="${esc(m.code)}">${ok ? '🎬' : '❔'}</span>`;
+    }).join('')}</div>`;
+  wrap.querySelectorAll('.coll-cell.on').forEach(cell =>
+    cell.addEventListener('click', () => openDetail(cell.dataset.code)));
+}
+
 // ---------- hero-полка «Сейчас в тренде» ----------
 // Живая строка статистики в шапке
 function updateSubtitle() {
@@ -471,7 +662,7 @@ function renderTodayShelf(meta) {
   row.innerHTML = soon.map(p => `
     <div class="hero-card" data-title="${esc(p.title || '')}">
       ${p.poster
-        ? `<img src="${esc(p.poster)}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+        ? `<img src="${esc(p.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
         : `<div class="poster-placeholder"><span>⭐</span></div>`}
       <span class="hero-rank">⭐</span>
       <div class="hero-overlay">
@@ -515,7 +706,8 @@ function renderRecoShelf() {
   if (view === 'profile' || view === 'game') return;
   const favs = getFavs();
   const unlocked = getUnlocked();
-  const seen = new Set([...favs, ...unlocked, ...getRecent().slice(0, 4)]);
+  const watched = getWatched();
+  const seen = new Set([...favs, ...unlocked, ...watched, ...getRecent().slice(0, 4)]);
   const genreCount = new Map();
   [...favs, ...unlocked].forEach(code => {
     const m = ALL.find(x => x.code === code);
@@ -573,7 +765,7 @@ function renderPremieres(meta) {
     return `
     <div class="hero-card" data-title="${esc(title)}">
       ${p.poster
-        ? `<img src="${esc(p.poster)}" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+        ? `<img src="${esc(p.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
         : `<div class="poster-placeholder"><span>🍿</span></div>`}
       <span class="hero-rank">🍿</span>
       <div class="hero-overlay">
@@ -906,6 +1098,7 @@ function renderProfile() {
         <div class="pf-stat"><b>💰 ${esc(String(p.pts ?? 0))}</b><span>кинобаллов</span></div>
         <div class="pf-stat"><b>🔥 ${esc(String(p.str ?? 0))}</b><span>стрик · рекорд ${esc(String(p.bst ?? 0))}</span></div>
         <div class="pf-stat"><b>🔓 ${esc(String(unl))}</b><span>из ${esc(String(p.tot ?? ALL.length))} фильмов</span></div>
+        <div class="pf-stat"><b>👁 ${esc(String(getWatched().length))}</b><span>просмотрено</span></div>
         <div class="pf-stat"><b>${rank ? '🏆 №' + rank : '🏆 —'}</b><span>${rank ? 'в общем топе' : 'ещё не в топе'}</span></div>
       </div>
       ${achBlock}
@@ -995,7 +1188,7 @@ function renderTrailers() {
           const src = m.trailer_thumb || m.poster || (m.trailer_yt ? `https://i.ytimg.com/vi/${encodeURIComponent(m.trailer_yt)}/0.jpg` : '');
           const fb = m.poster || (m.trailer_yt ? `https://i.ytimg.com/vi/${encodeURIComponent(m.trailer_yt)}/hqdefault.jpg` : '');
           return src
-            ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="if(!this.dataset.f){this.dataset.f=1;this.src='${esc(fb || '')}'}else{this.style.display='none'}"/>`
+            ? `<img src="${esc(src)}" alt="" loading="lazy" ${FADE}${dimStyle(m)} onerror="if(!this.dataset.f){this.dataset.f=1;this.src='${esc(fb || '')}'}else{this.style.display='none'}"/>`
             : `<div class="trailer-thumb-ph">🎬</div>`;
         })()}
         <span class="trailer-play">▶️</span>
@@ -1151,6 +1344,7 @@ function renderAchievements() {
   try { localStorage.setItem(ACH_SEEN_KEY, String(opened)); } catch (e) {}
   const moreTab = document.getElementById('tab-more');
   if (moreTab) moreTab.classList.remove('has-badge');
+  renderCodeCollection();
 }
 
 // ---------- бэкап «Моё» через бота ----------
@@ -1193,12 +1387,15 @@ function renderGrid() {
   const qRaw = (document.getElementById('search').value || '').trim();
   const q = qRaw.toLowerCase();
   const sort = document.getElementById('sort').value;
-  const favMode = localStorage.getItem(FAV_MODE_KEY) === 'done' ? 'done' : 'fav';
+  const favMode = localStorage.getItem(FAV_MODE_KEY);  // fav | done | watched
   const unlockedAll = getUnlocked();
+  const watchedAll = getWatched();
   let list = view === 'fav'
     ? (favMode === 'done'
         ? ALL.filter(m => unlockedAll.includes(String(m.code)))
-        : ALL.filter(m => getFavs().includes(m.code)))
+        : (favMode === 'watched'
+            ? ALL.filter(m => watchedAll.includes(String(m.code)))
+            : ALL.filter(m => getFavs().includes(m.code))))
     : [...ALL];
   if (activeGenre) list = list.filter(m => (m.genres || []).includes(activeGenre));
   // 🙈 «Скрыть разгаданные»: прячем карточки, код которых есть в localStorage
@@ -1242,13 +1439,16 @@ function renderGrid() {
     return (a.title || '').localeCompare(b.title || '', 'ru');
   });
   const c = document.getElementById('movies-container');
-  // Переключатель «Моё»: ❤️ хочу посмотреть / ✅ разгаданные + прогресс
+  // Переключатель «Моё»: ❤️ хочу посмотреть / ✅ разгаданные / 👁 я смотрел + прогресс
   const modeSwitch = view === 'fav' ? `<div class="fav-mode">
-      <button class="fav-mode-btn ${favMode === 'fav' ? 'active' : ''}" data-mode="fav">❤️ Хочу посмотреть</button>
-      <button class="fav-mode-btn ${favMode === 'done' ? 'active' : ''}" data-mode="done">✅ Разгаданные</button>
+      <button class="fav-mode-btn ${favMode === 'fav' ? 'active' : ''}" data-mode="fav">❤️ Хочу</button>
+      <button class="fav-mode-btn ${favMode === 'done' ? 'active' : ''}" data-mode="done">✅ Разгадал</button>
+      <button class="fav-mode-btn ${favMode === 'watched' ? 'active' : ''}" data-mode="watched">👁 Смотрел</button>
     </div>` : '';
   const progressLine = (view === 'fav' && favMode === 'done')
     ? `<div class="fav-progress">Разгадано ${unlockedAll.length} из ${ALL.length} (${ALL.length ? Math.round(100 * unlockedAll.length / ALL.length) : 0}%)</div>`
+    : (view === 'fav' && favMode === 'watched')
+    ? `<div class="fav-progress">Просмотрено ${watchedAll.length} из ${ALL.length} (${ALL.length ? Math.round(100 * watchedAll.length / ALL.length) : 0}%)</div>`
     : '';
   const head = modeSwitch + progressLine;
   const wireFavMode = () => {
@@ -1259,11 +1459,13 @@ function renderGrid() {
     }));
   };
   if (!list.length) {
-    const emptyEmoji = view === 'fav' ? (favMode === 'done' ? '🔒' : '🤍') : '🔍';
+    const emptyEmoji = view === 'fav' ? (favMode === 'done' ? '🔒' : favMode === 'watched' ? '👁' : '🤍') : '🔍';
     const emptyText = view === 'fav'
       ? (favMode === 'done'
           ? 'Пока ничего не разгадано — лови коды в канале! 🔑'
-          : 'В «Моём» пока пусто — жми сердечко ❤️ на любом фильме')
+          : (favMode === 'watched'
+              ? 'Пока ничего не отмечено — жми «👁» на карточке фильма'
+              : 'В «Моём» пока пусто — жми сердечко ❤️ на любом фильме'))
       : 'Ничего не нашлось 🤷 Попробуй другой запрос';
     c.innerHTML = head + `<div class="empty-state">
       <div class="empty-emoji">${emptyEmoji}</div>
@@ -1308,6 +1510,7 @@ function openDetail(code) {
   const m = ALL.find(x => x.code === code);
   if (!m) return;
   addRecent(m.code);
+  challDone('open_movie');
   if (view && view !== 'detail') detailOrigin = view;
   view = 'detail';
   showView('detail');
@@ -1331,10 +1534,13 @@ function openDetail(code) {
         <span class="rating">${ratingBadge(m)}</span>
         ${chips ? `<div class="detail-chips">${chips}</div>` : ''}
         <p class="desc">${esc(m.description || 'Описание скоро появится.')}</p>
+        ${getNotes()[code] ? `<div class="note-box">📝 ${esc(getNotes()[code])}</div>` : ''}
         <div class="detail-actions">
           <button class="btn-primary" id="btn-open">🔓 Открыть код</button>
           ${m.trailer_mp4 || m.trailer_yt || m.trailer_file_id ? '<button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>' : ''}
           <button class="btn-fav ${fav ? 'active' : ''}" id="btn-fav">${fav ? '❤️ В «Моём»' : '🤍 Хочу посмотреть'}</button>
+          <button class="btn-secondary ${getWatched().includes(String(code)) ? 'active watched-btn' : 'watched-btn'}" id="btn-watched">${getWatched().includes(String(code)) ? '👁 Просмотрено' : '👁 Отметить просмотренным'}</button>
+          <button class="btn-secondary" id="btn-note">📝 ${getNotes()[code] ? 'Заметка есть' : 'Заметка'}</button>
           <button class="btn-secondary" id="btn-copy">📎 Скопировать код</button>
           <button class="btn-secondary" id="btn-rate">🌟 Оценить</button>
           <button class="btn-secondary" id="btn-review">✍️ Отзыв</button>
@@ -1351,7 +1557,7 @@ function openDetail(code) {
           <div class="similar-card" data-code="${esc(s.code)}">
             <div class="similar-poster">
               ${s.poster
-                ? `<img src="${esc(s.poster)}" alt="${esc(s.title)}" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+                ? `<img src="${esc(s.poster)}" alt="${esc(s.title)}" loading="lazy" ${FADE}${dimStyle(s)} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
                 : `<div class="poster-placeholder similar-ph"><span>🎬</span></div>`}
             </div>
             <div class="similar-name">${esc(s.title)}</div>
@@ -1362,6 +1568,24 @@ function openDetail(code) {
   document.getElementById('btn-open').onclick =
     () => sendOrDeepLink({ action: 'open_movie', code });
   document.getElementById('btn-fav').onclick = () => { toggleFav(code); openDetail(code); };
+  document.getElementById('btn-watched').onclick = () => { toggleWatched(String(code)); openDetail(code); };
+  document.getElementById('btn-note').onclick = () => {
+    const current = getNotes()[code] || '';
+    tg.showPopup({
+      type: 'prompt',
+      title: '📝 Заметка о фильме',
+      message: 'Короткая заметка сохранится на этом устройстве.',
+      placeholder: current,
+      text: current,
+      callback: (btnId, value) => {
+        if (btnId === 'ok') {
+          setNote(code, value || '');
+          haptic('ok');
+          openDetail(code);
+        }
+      }
+    });
+  };
   document.getElementById('btn-copy').onclick = () => {
     const done = () => {
       try { tg.HapticFeedback.impactOccurred('light'); } catch (e) {}
@@ -1620,6 +1844,12 @@ document.getElementById('search').addEventListener('input', () => {
   _searchTimer = setTimeout(renderGrid, 180);
 });
 document.getElementById('sort').addEventListener('change', renderGrid);
+document.getElementById('search').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const q = document.getElementById('search').value.trim();
+    if (q) { addSearchHist(q); initSearchHist(); }
+  }
+});
 
 // ---------- поиск/сортировка трейлеров ----------
 document.getElementById('trailer-search').addEventListener('input', () => {
@@ -1810,7 +2040,7 @@ function runPick() {
     <div class="pick-card" data-code="${esc(m.code)}">
       <div class="pick-thumb">
         ${m.poster
-          ? `<img src="${esc(m.poster)}" alt="" loading="lazy" onerror="this.style.display='none'"/>`
+          ? `<img src="${esc(m.poster)}" alt="" loading="lazy" ${FADE}${dimStyle(m)} onerror="this.style.display='none'"/>`
           : `<div class="trailer-thumb-ph">🎬</div>`}
       </div>
       <div class="pick-info">
@@ -1853,6 +2083,8 @@ function _exitFs() {
 
 function openTrailer(m) {
   if (!m) return;
+  window._challTrailerWatched = (window._challTrailerWatched || 0) + 1;
+  challDone('watch_trailer');
   if (!m.trailer_yt && !m.trailer_file_id) {
     return;
   }
