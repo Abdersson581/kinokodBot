@@ -1834,8 +1834,27 @@ function openDetail(code) {
   if (trailerBtn) trailerBtn.onclick = () => openTrailer(m);
   document.getElementById('btn-rate').onclick = () =>
     sendOrDeepLink({ action: 'rate_movie', code });
-  document.getElementById('btn-review').onclick = () =>
-    sendOrDeepLink({ action: 'review_movie', code });
+  document.getElementById('btn-review').onclick = () => {
+    // Не «выкидываем» человека в бота вслепую: предупреждаем, что бот попросит
+    // текст отзыва, и как из этого режима выйти (кнопка «❌ Отмена» / слово «отмена»).
+    haptic('light');
+    const reviewTitle = cleanKpTitle(m.title) || m.title || 'фильму';
+    try {
+      tg.showPopup({
+        title: '✍️ Отзыв о фильме',
+        message: `Бот попросит написать отзыв о «${reviewTitle}» одним сообщением.\n\nВыйти из режима можно кнопкой «❌ Отмена» у сообщения бота или словом «отмена» — отзыв не сохранится.`,
+        buttons: [
+          { id: 'go', type: 'default', text: '✍️ Открыть бота' },
+          { id: 'no', type: 'cancel', text: 'Не сейчас' },
+        ],
+        callback: (btnId) => {
+          if (btnId === 'go') sendOrDeepLink({ action: 'review_movie', code });
+        },
+      });
+    } catch (e) {
+      sendOrDeepLink({ action: 'review_movie', code });
+    }
+  };
   document.getElementById('btn-share').onclick = () => {
     const text = `🎬 «${m.title}» — рейтинг ${m.rating || '—'} на КП! Угадай фильм по коду в боте «Капитан Кино» 🎲`;
     tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/kapitan_kino_bot')}&text=${encodeURIComponent(text)}`);
