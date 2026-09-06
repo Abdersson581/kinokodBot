@@ -384,6 +384,20 @@ body {
 }
 .btn-primary { background: var(--accent); }
 .btn-secondary { background: var(--card); }
+/* v61: «Смотреть фильм» — заметная кнопка на всю ширину в карточке фильма */
+.btn-watch {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #e55d30, #b83e1f);
+  box-shadow: 0 2px 12px rgba(232, 93, 48, .25);
+  font-size: 15px;
+  padding: 13px;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  cursor: pointer;
+}
+.light .btn-watch { box-shadow: 0 2px 10px rgba(232, 93, 48, .18); }
 .btn-fav { background: var(--card); }
 .btn-fav.active { background: #7a3b52; }
 .btn-back {

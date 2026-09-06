@@ -1549,6 +1549,31 @@ function parseSmartQuery(raw) {
   return parts.length ? out : null;
 }
 
+// ---------- v61: «Смотреть фильм» ----------
+// Чистим название для поиска на Кинопоиске: «На грани» (Man on a Ledge, 2012) -> «На грани»
+function cleanKpTitle(raw) {
+  let s = String(raw || '');
+  const qm = s.match(/«([^»]+)»/);
+  if (qm) s = qm[1];
+  return s.replace(/\s*\([^)]*\)\s*$/, '').replace(/[«»"]/g, '').trim();
+}
+function openUrlLink(url) {
+  if (!url) return;
+  haptic('ok');
+  try { tg.openLink(url, { try_instant_view: false }); } catch (_) { window.open(url, '_blank'); }
+}
+function openWatchLink(m) {
+  if (m.link) return openUrlLink(m.link);   // прямая ссылка на просмотр
+  openKpLink(m);                            // иначе — поиск на Кинопоиске
+}
+function openKpLink(m) {
+  const id = String(m.kinopoisk_id || '');
+  const url = id
+    ? `https://www.kinopoisk.ru/film/${encodeURIComponent(id)}/`
+    : 'https://www.kinopoisk.ru/index.php?kp_query=' + encodeURIComponent(cleanKpTitle(m.title));
+  openUrlLink(url);
+}
+
 function renderGrid() {
   const qRaw = (document.getElementById('search').value || '').trim();
   const q = qRaw.toLowerCase();
@@ -1734,6 +1759,7 @@ function openDetail(code) {
         <p class="desc">${esc(m.description || 'Описание скоро появится.')}</p>
         ${getNotes()[code] ? `<div class="note-box">📝 ${esc(getNotes()[code])}</div>` : ''}
         <div class="detail-actions">
+          ${(m.link || cleanKpTitle(m.title)) ? '<button class="btn-watch" id="btn-watch">' + (m.link ? '▶️ Смотреть фильм' : '🍿 Где посмотреть') + '</button>' : ''}
           <button class="btn-primary" id="btn-open">🔓 Открыть код</button>
           ${m.trailer_mp4 || m.trailer_yt || m.trailer_file_id ? '<button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>' : ''}
           <button class="btn-fav ${fav ? 'active' : ''}" id="btn-fav">${fav ? '❤️ В «Моём»' : '🤍 Хочу посмотреть'}</button>
@@ -1743,6 +1769,7 @@ function openDetail(code) {
           <button class="btn-secondary" id="btn-rate">🌟 Оценить</button>
           <button class="btn-secondary" id="btn-review">✍️ Отзыв</button>
           <button class="btn-secondary" id="btn-remind">🔔 Напомнить через час</button>
+          ${(m.kinopoisk_id || cleanKpTitle(m.title)) ? '<button class="btn-secondary" id="btn-kp">🎬 Кинопоиск</button>' : ''}
           <button class="btn-secondary" id="btn-share">📤 Поделиться с другом</button>
         </div>
       </div>
@@ -1765,6 +1792,10 @@ function openDetail(code) {
   document.getElementById('btn-back').onclick = () => openView(detailOrigin || 'grid');
   document.getElementById('btn-open').onclick =
     () => sendOrDeepLink({ action: 'open_movie', code });
+  const watchBtn = document.getElementById('btn-watch');
+  if (watchBtn) watchBtn.onclick = () => openWatchLink(m);
+  const kpBtn = document.getElementById('btn-kp');
+  if (kpBtn) kpBtn.onclick = () => openKpLink(m);
   document.getElementById('btn-fav').onclick = () => { toggleFav(code); openDetail(code); };
   document.getElementById('btn-watched').onclick = () => { toggleWatched(String(code)); openDetail(code); };
   document.getElementById('btn-note').onclick = () => {
