@@ -414,6 +414,10 @@ function wireFavQuick(container) {
       const fav = getFavs().includes(btn.dataset.code);
       btn.textContent = fav ? '❤️' : '🤍';
       btn.classList.toggle('active', fav);
+      // v59: «взрыв сердечка» — короткая анимация нажатия
+      btn.classList.remove('pop');
+      void btn.offsetWidth;
+      btn.classList.add('pop');
       // В «Моё» (режим «хочу посмотреть») карточка должна пропасть из списка
       if (view === 'fav' && localStorage.getItem(FAV_MODE_KEY) !== 'done') {
         renderGrid();
@@ -438,6 +442,7 @@ function applyData(data) {
   updateSubtitle();
   renderGenreChips();
   showCodeDay(meta);
+  renderFilmDay();
   renderHero();
   renderTodayShelf(meta);
   renderRecentShelf();
@@ -677,6 +682,39 @@ function renderTodayShelf(meta) {
     if (m) openDetail(m.code);
     else tg.showPopup({ type: 'ok', title: '⭐ Сегодня в кино', message: 'В кинотеатрах уже идёт! Увидимся на сеансе 🎟' });
   }));
+}
+
+// «⭐ Фильм дня» — hero-баннер на главной: детерминированно выбираем фильм
+// по дате (у всех пользователей в один день — один и тот же фильм)
+function filmDayPick() {
+  const cands = ALL.filter(m => (parseFloat(m.rating) || 0) >= 7.3 && m.poster);
+  if (cands.length < 5) return null;
+  const d = new Date();
+  const seed = d.getFullYear() * 373 + (d.getMonth() + 1) * 31 + d.getDate();
+  return cands[seed % cands.length];
+}
+function renderFilmDay() {
+  const el = document.getElementById('filmday-banner');
+  if (!el) return;
+  const m = (view === 'fav') ? null : filmDayPick();  // в «Моём» баннер лишний
+  if (!m) { el.classList.add('hidden'); return; }
+  const fav = getFavs().includes(m.code);
+  const genres = (m.genres || []).slice(0, 3).join(' · ');
+  el.classList.remove('hidden');
+  el.innerHTML = `
+    <div class="fd-grad"></div>
+    <div class="fd-content">
+      <div class="fd-info">
+        <span class="fd-badge">⭐ Фильм дня</span>
+        <div class="fd-title">${esc(m.title)}</div>
+        <div class="fd-meta">${esc(String(m.year || ''))}${m.year && m.rating ? ' · ' : ''}⭐ ${esc(String(m.rating || ''))}${genres ? ' · ' + esc(genres) : ''}</div>
+      </div>
+      <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '❤️' : '🤍'}</button>
+    </div>`;
+  const bgImg = m.trailer_thumb || m.poster;
+  el.style.backgroundImage = `url('${esc(bgImg)}')`;
+  el.onclick = () => openDetail(m.code);
+  wireFavQuick(el);
 }
 
 // «🕘 Недавно смотрели» — история из localStorage, показываем на главной
@@ -1787,6 +1825,7 @@ function showView(name) {
   toggle('view-game', name === 'game');
   toggle('view-emoji', name === 'game');
   toggle('toolbar', name === 'catalog' || name === 'trailers');
+  if (name === 'catalog') renderFilmDay();  // баннер скрываем/возвращаем при смене вьюхи
   const cur = name === 'catalog' ? view : name;
   document.querySelectorAll('.tab[data-view]').forEach(t =>
     t.classList.toggle('active', t.dataset.view === cur));

@@ -1930,3 +1930,101 @@ body.accent-gold .howto-step span { background: linear-gradient(135deg, var(--ac
 .pg-info { font-size: 11.5px; color: var(--muted); margin-left: 6px; }
 .light .pg-btn { background: #fff; border-color: rgba(20,20,40,.12); color: #667; }
 .light .pg-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+/* ===== v59: hero-баннер «⭐ Фильм дня» ===== */
+.filmday-banner {
+  position: relative;
+  margin-top: 14px;
+  border-radius: 18px;
+  overflow: hidden;
+  min-height: 168px;
+  display: flex;
+  align-items: flex-end;
+  background-size: cover;
+  background-position: center 22%;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .35);
+  cursor: pointer;
+}
+.fd-grad {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    rgba(10, 12, 24, .10) 0%,
+    rgba(10, 12, 24, .45) 50%,
+    rgba(8, 10, 20, .92) 100%);
+}
+.fd-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  color: #fff;
+}
+.fd-info { min-width: 0; }
+.fd-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+.fd-title {
+  margin: 6px 0 2px;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, .55);
+}
+.fd-meta {
+  font-size: 12px;
+  opacity: .85;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, .5);
+}
+/* В баннере сердечко — обычный элемент строки, а не абсолют поверх постера */
+.filmday-banner .fav-quick { position: static; flex: 0 0 auto; }
+
+/* ===== v59: микро-анимации ===== */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(10px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes favPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+.fav-quick.pop { animation: favPop .35s ease; }
+/* Каскадное появление карточек сетки (задержка растёт до 12-й карточки) */
+.movie-card { animation: cardIn .32s ease both; }
+.movie-card:nth-child(2)  { animation-delay: .025s; }
+.movie-card:nth-child(3)  { animation-delay: .05s; }
+.movie-card:nth-child(4)  { animation-delay: .075s; }
+.movie-card:nth-child(5)  { animation-delay: .1s; }
+.movie-card:nth-child(6)  { animation-delay: .12s; }
+.movie-card:nth-child(7)  { animation-delay: .14s; }
+.movie-card:nth-child(8)  { animation-delay: .16s; }
+.movie-card:nth-child(9)  { animation-delay: .18s; }
+.movie-card:nth-child(10) { animation-delay: .2s; }
+.movie-card:nth-child(11) { animation-delay: .21s; }
+.movie-card:nth-child(12) { animation-delay: .22s; }
+.movie-card:nth-child(n + 13) { animation-delay: .22s; }
+/* Полки на главной — та же мягкая задержка */
+.hero-shelf .hero-card { animation: cardIn .35s ease both; }
+.hero-shelf .hero-card:nth-child(2)  { animation-delay: .04s; }
+.hero-shelf .hero-card:nth-child(3)  { animation-delay: .08s; }
+.hero-shelf .hero-card:nth-child(4)  { animation-delay: .12s; }
+.hero-shelf .hero-card:nth-child(5)  { animation-delay: .16s; }
+.hero-shelf .hero-card:nth-child(n + 6) { animation-delay: .18s; }
+/* Табы и пункты меню — лёгкий отклик на нажатие */
+.tab:active, .more-item:active { transform: scale(.96); }
+/* Уважаем настройку «уменьшить анимации» */
+@media (prefers-reduced-motion: reduce) {
+  .movie-card, .hero-shelf .hero-card, .filmday-banner, .fav-quick.pop {
+    animation: none;
+  }
+}
