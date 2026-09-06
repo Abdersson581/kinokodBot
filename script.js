@@ -21,6 +21,7 @@ function enterApp() {
   document.getElementById('app').classList.remove('hidden');
   parseProfileHash();  // до parseUnlockedHash: тот очищает location.hash
   parseUnlockedHash();
+  parseRestoreHash();  // v76: «☁️ Восстановить из бота» — до очистки хэша другими
   bumpDaily();         // v64: ежедневная серия заходит
   initHideToggle();
   applyGridCols();
@@ -490,6 +491,7 @@ function sendOrDeepLink(data) {
   else if (data.action === 'review_movie') start = 'review_' + data.code;
   else if (data.action === 'trailer_movie' || data.action === 'trailer') start = 'trailer_' + data.code;
   else if (data.action === 'sync_unlocked') start = 'sync_unlocked';
+  else if (data.action === 'restore_backup') start = 'restore_backup';
   else if (data.action === 'kinogod') start = 'kinogod';
   else if (data.action === 'toggle_optin') start = data.on ? 'optin_on' : 'optin_off';
   else if (data.action === 'set_theme') start = 'theme_' + data.theme;
@@ -2058,8 +2060,9 @@ function backupFavsNotice() {
         </div>
         ${favs.length ? '<button class="btn-secondary" id="btn-copy-list">📋 Скопировать список</button>' : ''}
         ${favs.length ? '<button class="btn-secondary" id="btn-backup">💾 Сохранить в боте</button>' : ''}
-        <button class="btn-secondary" id="btn-copy-backup">📱💾 Копия для другого устройства</button>
-        <button class="btn-secondary" id="btn-import-backup">📥 Восстановить здесь</button>
+        ${favs.length ? '<button class="btn-secondary" id="btn-copy-backup">📱💾 Копия для другого устройства</button>' : ''}
+        ${favs.length ? '<button class="btn-secondary" id="btn-import-backup">📥 Восстановить здесь</button>' : ''}
+        <button class="btn-secondary" id="btn-restore-bot">☁️ Восстановить из бота</button>
       </div>
     </div>`;
 }
@@ -2304,6 +2307,26 @@ function parseRiddleHash() {
     }
   } catch (e) { /* пусто */ }
 }
+// v76: восстановление «Моё» из бота — кнопка «📥 Восстановить» в чате открывает
+// мини-апп с #restore=<строка бэкапа>. Импортируем и чистим хэш.
+function parseRestoreHash() {
+  try {
+    const params = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const data = params.get('restore');
+    if (!data) return;
+    history.replaceState(null, '', location.pathname + location.search);
+    const r = importBackupString(String(data));
+    setTimeout(() => {
+      try {
+        if (r === 'ok') {
+          tg.showPopup({ type: 'ok', title: '✅ Восстановлено из бота!', message: '«Моё», оценки, просмотренные и заметки перенесены на это устройство.' });
+        } else {
+          tg.showPopup({ type: 'alert', title: 'Не удалось', message: 'Бэкап повреждён или устарел. Скопируй строку заново в «❤️ Моё».' });
+        }
+      } catch (e) { /* пусто */ }
+    }, 400);
+  } catch (e) { /* пусто */ }
+}
 (function initRiddleModal() {
   const bg = document.getElementById('riddle-modal');
   if (!bg) return;
@@ -2470,6 +2493,8 @@ function renderGrid() {
     if (cbE) cbE.onclick = copyBackup;
     const ibE = document.getElementById('btn-import-backup');
     if (ibE) ibE.onclick = importBackup;
+    const rbE = document.getElementById('btn-restore-bot');
+    if (rbE) rbE.onclick = () => sendOrDeepLink({ action: 'restore_backup' });
     const el = document.getElementById('btn-empty-lucky');
     if (el) el.onclick = () => {
       if (!ALL.length) return;
@@ -2499,6 +2524,8 @@ function renderGrid() {
   if (cb2) cb2.onclick = copyBackup;
   const ib2 = document.getElementById('btn-import-backup');
   if (ib2) ib2.onclick = importBackup;
+  const rb2 = document.getElementById('btn-restore-bot');
+  if (rb2) rb2.onclick = () => sendOrDeepLink({ action: 'restore_backup' });
   wireFavMode();
   // каскадное появление карточек
   Array.from(c.children).forEach((el, i) => {

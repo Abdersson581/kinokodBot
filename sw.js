@@ -1,5 +1,5 @@
 /* ===== v57: Service Worker — оффлайн-кэш и мгновенные повторные загрузки ===== */
-const SW_CACHE = 'kinokod-v75';
+const SW_CACHE = 'kinokod-v76';
 const SW_SHELL = ['./', './index.html', './style.css', './script.js'];
 const SW_DATA = ['./data/movies.json', './data/meta.json', './data/collections.json'];
 
@@ -59,7 +59,25 @@ self.addEventListener('fetch', (e) => {
     })());
     return;
   }
-  // Шэлл (html/css/js): stale-while-revalidate — мгновенный показ + фоновое обновление
+  // v76: index.html — network-first. Раньше был stale-while-revalidate, из-за
+  // чего обновления приложения применялись только СО ВТОРОГО открытия (пользователь
+  // видел старую версию из кэша). Теперь свежий html всегда с сети, кэш — запасной.
+  if (path === '/' || path.endsWith('/index.html')) {
+    e.respondWith((async () => {
+      const cache = await caches.open(SW_CACHE);
+      try {
+        const resp = await fetch(req, { cache: 'no-cache' });
+        if (resp.ok) cache.put(req, resp.clone());
+        return resp;
+      } catch (err) {
+        const cached = await cache.match(req);
+        if (cached) return cached;
+        throw err;
+      }
+    })());
+    return;
+  }
+  // Шэлл (css/js): stale-while-revalidate — мгновенный показ + фоновое обновление
   e.respondWith((async () => {
     const cache = await caches.open(SW_CACHE);
     const cached = await cache.match(req);
