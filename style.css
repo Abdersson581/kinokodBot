@@ -1338,6 +1338,8 @@ body.light #err-banner { background: #dc2626; }
   height: 100%;
   object-fit: cover;
 }
+/* v55: картинка с непостерными пропорциями (квадрат и т.п.) — показываем целиком */
+.trailer-thumb.contain img { object-fit: contain; }
 .trailer-thumb-ph {
   font-size: 32px;
 }

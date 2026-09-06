@@ -1203,7 +1203,7 @@ function renderTrailers() {
           const src = m.trailer_thumb || m.poster || (m.trailer_yt ? `https://i.ytimg.com/vi/${encodeURIComponent(m.trailer_yt)}/0.jpg` : '');
           const fb = m.poster || (m.trailer_yt ? `https://i.ytimg.com/vi/${encodeURIComponent(m.trailer_yt)}/hqdefault.jpg` : '');
           return src
-            ? `<img src="${esc(src)}" alt="" loading="lazy" ${FADE}${dimStyle(m)} onerror="if(!this.dataset.f){this.dataset.f=1;this.src='${esc(fb || '')}'}else{this.style.display='none'}"/>`
+            ? `<img src="${esc(src)}" alt="" loading="lazy" ${FADE}${dimStyle(m)} onload="const t=this.parentElement,r=this.naturalWidth/(this.naturalHeight||1);t.classList.toggle('wide',r>=1.05);t.classList.toggle('contain',r>=0.72&&r<1.05);" onerror="if(!this.dataset.f){this.dataset.f=1;this.src='${esc(fb || '')}'}else{this.style.display='none'}"/>`
             : `<div class="trailer-thumb-ph">🎬</div>`;
         })()}
         <span class="trailer-play">▶️</span>
