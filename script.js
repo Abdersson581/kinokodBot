@@ -98,7 +98,7 @@ const toggleFav = (code) => {
   f.has(code) ? f.delete(code) : f.add(code);
   setFavs(f);
   haptic(adding ? 'ok' : 'light');
-  if (adding) challDone('add_fav');
+  if (adding) { challDone('add_fav'); bumpWeekStat('favs'); }
 };
 
 // ---------- «Я смотрел» (локальный список просмотренных) ----------
@@ -184,6 +184,38 @@ const addRecent = (code) => {
   r.unshift(code);
   localStorage.setItem(RECENT_KEY, JSON.stringify(r.slice(0, MAX_RECENT)));
 };
+
+// ---------- v60: локальная активность («📊 Моя неделя» в профиле) ----------
+// Счётчики по дням: открытых карточек, просмотренных трейлеров, добавлений в «Моё».
+const WEEK_STATS_KEY = 'kinoafisha_week_stats';
+const _wdayKey = (d = new Date()) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+const getWeekStats = () => {
+  try { return JSON.parse(localStorage.getItem(WEEK_STATS_KEY) || '{}') || {}; }
+  catch (e) { return {}; }
+};
+function bumpWeekStat(field, n = 1) {
+  const s = getWeekStats();
+  const k = _wdayKey();
+  if (!s[k]) s[k] = { open: 0, trailers: 0, favs: 0 };
+  s[k][field] = (s[k][field] || 0) + n;
+  // храним только последние 14 дней
+  const keys = Object.keys(s).sort();
+  while (keys.length > 14) delete s[keys.shift()];
+  localStorage.setItem(WEEK_STATS_KEY, JSON.stringify(s));
+}
+function week7() {
+  // последние 7 дней по порядку: старые → свежие
+  const s = getWeekStats();
+  const out = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const k = _wdayKey(d);
+    const v = s[k] || {};
+    out.push({ date: d, open: v.open || 0, trailers: v.trailers || 0, favs: v.favs || 0 });
+  }
+  return out;
+}
 
 // ---------- рекомендации («💫 Советуем вам») ----------
 // Локально: на основе жанров из «Моё» и разгаданных выбираем похожие фильмы,
@@ -1053,6 +1085,24 @@ function fmtDuration(mins) {
 function renderProfile() {
   const c = document.getElementById('profile-container');
   if (!c) return;
+  // «📊 Моя неделя» — локальная активность за 7 дней (считается в самом аппе,
+  // работает и без синка с ботом)
+  const w7 = week7();
+  const wAct = w7.map(d => (d.open || 0) + (d.trailers || 0) + (d.favs || 0));
+  const maxAct = Math.max(1, ...wAct);
+  const sumOpen = w7.reduce((a, d) => a + d.open, 0);
+  const sumTr = w7.reduce((a, d) => a + d.trailers, 0);
+  const sumFv = w7.reduce((a, d) => a + d.favs, 0);
+  const wkBars = w7.map((d, i) => {
+    const h = Math.round(6 + 34 * wAct[i] / maxAct);
+    return `<div class="wk-col" title="${d.date.getDate()}.${d.date.getMonth() + 1}: ${wAct[i]} действий"><i style="height:${h}px"></i><span>${d.date.getDate()}</span></div>`;
+  }).join('');
+  const weekBlock = `
+    <div class="pf-week">
+      <div class="pf-ach-head"><span>📊 Моя неделя</span><b>${sumOpen + sumTr + sumFv} действий</b></div>
+      <div class="wk-chart">${wkBars}</div>
+      <div class="wk-legend"><span>🔍 ${sumOpen}</span><span>▶️ ${sumTr}</span><span>❤️ ${sumFv}</span></div>
+    </div>`;
   if (!PROFILE) {
     c.innerHTML = `
       <div class="profile-card">
@@ -1060,6 +1110,7 @@ function renderProfile() {
         <h2>Мой профиль</h2>
         <p class="pf-hint">Уровень, кинобаллы и стрик хранятся в боте.<br/>
         Синхронизируй — и они появятся здесь.</p>
+        ${weekBlock}
         <button class="btn-primary" id="pf-sync">🔁 Синхронизировать с ботом</button>
         <button class="btn-secondary pf-invite" id="pf-invite">📣 Пригласить друга</button>
       </div>`;
@@ -1140,6 +1191,7 @@ function renderProfile() {
         <div class="pf-stat"><b>${rank ? '🏆 №' + rank : '🏆 —'}</b><span>${rank ? 'в общем топе' : 'ещё не в топе'}</span></div>
       </div>
       ${achBlock}
+      ${weekBlock}
       ${favouriteGenre() ? `<div class="pf-favgenre">🌟 Любимый жанр: <b>${esc(favouriteGenre())}</b></div>` : ''}
       ${wgBlock}
       ${optBlock}
@@ -1452,9 +1504,55 @@ function hlTitle(title, q) {
   } catch (e) { return esc(t); }
 }
 
+// ---------- v60: умный поиск-фраза ----------
+// Разбираем «драмы 8+», «триллеры 2010-х», «боевик до 2 часов» на фильтры.
+function parseSmartQuery(raw) {
+  const q = (raw || '').toLowerCase().replace(/ё/g, 'е');
+  if (!q || q.length > 60) return null;
+  const parts = [];
+  const out = {};
+
+  // жанр: слово во фразе совпадает с началом известного жанра из базы
+  const genreMap = new Map();
+  ALL.forEach(m => (m.genres || []).forEach(g => {
+    const gl = String(g).toLowerCase();
+    const stem = gl.replace(/(ый|ой|ая|ое|ые|а|я|ы|и|е|у|ь)$/, '');
+    if (stem.length >= 4 && !genreMap.has(stem)) genreMap.set(stem, gl);
+  }));
+  for (const [stem, gl] of genreMap) {
+    if (q.includes(stem)) { out.genre = gl; parts.push('жанр: ' + gl); break; }
+  }
+
+  const rm = q.match(/(\d)(?:[.,](\d))?\s*\+/);          // «8+», «7.5+»
+  if (rm) {
+    out.minRating = parseFloat(rm[1] + '.' + (rm[2] || '0'));
+    parts.push('рейтинг ' + out.minRating + '+');
+  }
+
+  const dm = q.match(/(19|20)(\d)0\s*[-–—]?\s*(х|е|ых|ов)/);  // «2010-х», «2000-е»
+  if (dm) {
+    out.decade = parseInt(dm[1] + dm[2] + '0', 10);
+    parts.push(out.decade + '-е');
+  } else {
+    const ym = q.match(/\b(19\d{2}|20\d{2})\b/);              // точный год
+    if (ym) { out.year = parseInt(ym[1], 10); parts.push(out.year + ' год'); }
+  }
+
+  const dmax = q.match(/до\s*(\d(?:[.,]\d)?)\s*(ч|час)/);     // «до 2 часов»
+  if (dmax) {
+    out.maxMin = Math.round(parseFloat(dmax[1].replace(',', '.')) * 60);
+    parts.push('до ' + dmax[1] + ' ч');
+  }
+  if (/коротк/.test(q)) { out.maxMin = Math.min(out.maxMin || 999, 100); parts.push('короткие'); }
+  if (/длинн/.test(q)) { out.minDurMin = 120; parts.push('длинные'); }
+
+  return parts.length ? out : null;
+}
+
 function renderGrid() {
   const qRaw = (document.getElementById('search').value || '').trim();
   const q = qRaw.toLowerCase();
+  const smart = parseSmartQuery(qRaw);
   const sort = document.getElementById('sort').value;
   const favMode = localStorage.getItem(FAV_MODE_KEY);  // fav | done | watched
   const unlockedAll = getUnlocked();
@@ -1472,7 +1570,7 @@ function renderGrid() {
     const unlockedSet = new Set(getUnlocked());
     if (unlockedSet.size) list = list.filter(m => !unlockedSet.has(String(m.code)));
   }
-  if (q) {
+  if (q && !smart) {
     const digits = q.replace(/\D/g, '');
     // Сначала точные совпадения (подстрока/код), затем — нечёткие по
     // расстоянию Левенштейна: «интерстелар» найдёт «Интерстеллар».
@@ -1512,6 +1610,16 @@ function renderGrid() {
     }
     list = matches.map(x => x.m);
   }
+  // Умный фильтр: применяем разобранные из фразы директивы напрямую
+  if (smart) {
+    list = [...ALL];
+    if (smart.genre) list = list.filter(m => (m.genres || []).some(g => String(g).toLowerCase() === smart.genre));
+    if (smart.minRating != null) list = list.filter(m => (parseFloat(m.rating) || 0) >= smart.minRating);
+    if (smart.decade) list = list.filter(m => m.year >= smart.decade && m.year < smart.decade + 10);
+    if (smart.year) list = list.filter(m => String(m.year) === String(smart.year));
+    if (smart.maxMin) list = list.filter(m => !m.duration || m.duration <= smart.maxMin);
+    if (smart.minDurMin) list = list.filter(m => !m.duration || m.duration >= smart.minDurMin);
+  }
   list.sort((a, b) => {
     if (sort === 'rating') return (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0);
     if (sort === 'code') return (+a.code || 0) - (+b.code || 0);
@@ -1534,7 +1642,10 @@ function renderGrid() {
     : (view === 'fav' && favMode === 'watched')
     ? `<div class="fav-progress">Просмотрено ${watchedAll.length} из ${ALL.length} (${ALL.length ? Math.round(100 * watchedAll.length / ALL.length) : 0}%)</div>`
     : '';
-  const head = modeSwitch + progressLine;
+  const smartHint = smart
+    ? `<div class="smart-hint">🧠 ${esc(smart.parts.join(' · '))} · найдено: ${list.length}<button class="smart-clear" title="Сбросить" onclick="document.getElementById('search').value='';renderGrid()">✕</button></div>`
+    : '';
+  const head = modeSwitch + progressLine + smartHint;
   const wireFavMode = () => {
     c.querySelectorAll('.fav-mode-btn').forEach(b => b.addEventListener('click', () => {
       try { localStorage.setItem(FAV_MODE_KEY, b.dataset.mode); } catch (e) {}
@@ -1593,6 +1704,7 @@ let detailOrigin = 'grid';  // откуда открыт фильм — для �
 function openDetail(code) {
   const m = ALL.find(x => x.code === code);
   if (!m) return;
+  bumpWeekStat('open');
   addRecent(m.code);
   challDone('open_movie');
   if (view && view !== 'detail') detailOrigin = view;
@@ -1617,8 +1729,8 @@ function openDetail(code) {
         <h2>${esc(m.title)}</h2>
         <span class="rating">${ratingBadge(m)}</span>
         ${chips ? `<div class="detail-chips">${chips}</div>` : ''}
-        ${m.director ? `<p class="people-line">🎬 Режиссёр: <b>${esc(m.director)}</b></p>` : ''}
-        ${(m.actors || []).length ? `<p class="people-line">⭐ В ролях: ${esc(m.actors.slice(0, 4).join(', '))}</p>` : ''}
+        ${m.director ? `<p class="people-line">🎬 Режиссёр: <b class="person-chip" data-q="${esc(m.director)}" title="Найти фильмы">${esc(m.director)}</b></p>` : ''}
+        ${(m.actors || []).length ? `<p class="people-line">⭐ В ролях: ${m.actors.slice(0, 4).map(a => `<b class="person-chip" data-q="${esc(a)}" title="Найти фильмы">${esc(a)}</b>`).join(', ')}</p>` : ''}
         <p class="desc">${esc(m.description || 'Описание скоро появится.')}</p>
         ${getNotes()[code] ? `<div class="note-box">📝 ${esc(getNotes()[code])}</div>` : ''}
         <div class="detail-actions">
@@ -1717,6 +1829,23 @@ function openDetail(code) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   });
+  // Тап по актёру/режиссёру → афиша с поиском по нему (поиск ищет и по составу)
+  document.querySelectorAll('#view-detail .person-chip').forEach(ch => {
+    ch.addEventListener('click', () => {
+      const q = ch.dataset.q || '';
+      if (!q) return;
+      haptic('light');
+      const si = document.getElementById('search');
+      if (si) si.value = q;
+      addSearchHist(q);
+      activeGenre = '';
+      view = 'grid';
+      showView('catalog');
+      renderGenreChips();
+      renderGrid();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
 }
 
 function findSimilar(m) {
@@ -1806,6 +1935,101 @@ function renderGameEnd() {
   document.getElementById('btn-game-back2').onclick = () => { view = 'grid'; showView('catalog'); renderGrid(); };
 }
 
+// ---------- v60: «🔗 Кино-путь» — цепочка человек → фильм → человек ----------
+function buildPersonGraph() {
+  const g = new Map();  // ключ (lowercase) -> { display, films:Set(коды) }
+  ALL.forEach(m => {
+    [...(m.actors || []), ...(m.director ? [m.director] : [])].forEach(p => {
+      if (!p) return;
+      const k = p.toLowerCase();
+      if (!g.has(k)) g.set(k, { display: p, films: new Set() });
+      g.get(k).films.add(String(m.code));
+    });
+  });
+  return g;
+}
+function renderChain() {
+  const c = document.getElementById('chain-container');
+  if (!c) return;
+  const filmRow = (film) => film
+    ? `<div class="chain-film" data-code="${esc(film.code)}">${film.poster ? `<img src="${esc(film.poster)}" loading="lazy" alt=""/>` : '<div class="chain-ph">🎬</div>'}<span>${esc(film.title)}${film.year ? ' · ' + esc(String(film.year)) : ''}</span></div>`
+    : '';
+  const shell = (rows, hint) => `
+    <button class="btn-back" id="btn-chain-back">◀️ Назад</button>
+    <div class="chain-card">
+      <h2>🔗 Кино-путь</h2>
+      <p class="chain-hint">${esc(hint)}</p>
+      <div class="chain-row">${rows}</div>
+      <button class="btn-primary" id="btn-chain-new">🎲 Новый путь</button>
+    </div>`;
+  const empty = () => {
+    c.innerHTML = `<div class="empty-state"><div class="empty-emoji">🔗</div><p>Пока маловато данных для цепочек — добавь фильмы в канал, и здесь появится «Кино-путь».</p></div>`;
+  };
+
+  const g = buildPersonGraph();
+  const people = [...g.values()].filter(v => v.films.size >= 2);
+  if (people.length >= 3) {
+    // режим «человек — фильм — человек» (когда синк подтянул актёров)
+    const used = new Set();
+    const rows = [];
+    let info = people[Math.floor(Math.random() * people.length)];
+    for (let s = 0; s < 7; s++) {
+      const films = [...info.films].filter(f => !used.has(f));
+      if (!films.length) break;
+      const film = ALL.find(x => String(x.code) === films[Math.floor(Math.random() * films.length)]);
+      used.add(String(film.code));
+      rows.push(`<div class="chain-step"><div class="chain-person">🎭 ${esc(info.display)}</div>${filmRow(film)}</div>`);
+      const co = [...(film.actors || []), ...(film.director ? [film.director] : [])]
+        .map(p => String(p).toLowerCase())
+        .filter(k => g.has(k) && g.get(k).films.size >= 2 && g.get(k) !== info);
+      if (!co.length) break;
+      info = g.get(co[Math.floor(Math.random() * co.length)]);
+    }
+    if (rows.length < 2) { empty(); return; }
+    c.innerHTML = shell(rows.join('<div class="chain-link">↔️</div>'),
+      'Случайная цепочка «человек — фильм — человек» по базе канала. Тапни по фильму, чтобы открыть карточку.');
+  } else {
+    // режим «фильм — жанр — фильм»: работает сразу, на текущих данных без актёров
+    const genreCount = new Map();
+    ALL.forEach(m => (m.genres || []).forEach(gg => genreCount.set(gg, (genreCount.get(gg) || 0) + 1)));
+    const rows = [];
+    const used = new Set();
+    let cur = ALL[Math.floor(Math.random() * ALL.length)];
+    used.add(String(cur.code));
+    rows.push(`<div class="chain-step">${filmRow(cur)}</div>`);
+    for (let s = 0; s < 4; s++) {
+      const gs = (cur.genres || []).filter(gg => genreCount.get(gg) >= 2);
+      if (!gs.length) break;
+      const gSel = gs[Math.floor(Math.random() * gs.length)];
+      const nexts = ALL.filter(m => !used.has(String(m.code)) && (m.genres || []).includes(gSel));
+      if (!nexts.length) break;
+      const next = nexts[Math.floor(Math.random() * nexts.length)];
+      used.add(String(next.code));
+      rows.push(`<button class="chain-genre" data-g="${esc(gSel)}">🔗 ${esc(gSel)} <em>${genreCount.get(gSel)}</em></button>`);
+      rows.push(`<div class="chain-step">${filmRow(next)}</div>`);
+      cur = next;
+    }
+    if (rows.length < 3) { empty(); return; }
+    c.innerHTML = shell(rows.join(''),
+      'Цепочка «фильм — жанр — фильм» из твоей базы. Тапни по жанру — откроется подборка, по фильму — карточка.');
+  }
+
+  document.getElementById('btn-chain-back').onclick = () => openView('grid');
+  document.getElementById('btn-chain-new').onclick = () => { haptic('light'); renderChain(); };
+  c.querySelectorAll('.chain-film').forEach(el =>
+    el.addEventListener('click', () => { haptic('light'); openDetail(el.dataset.code); }));
+  c.querySelectorAll('.chain-genre').forEach(el =>
+    el.addEventListener('click', () => {
+      haptic('light');
+      activeGenre = el.dataset.g || '';
+      view = 'grid';
+      showView('catalog');
+      renderGenreChips();
+      renderGrid();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }));
+}
+
 // ---------- вкладки и показ ----------
 function showView(name) {
   // Null-safe: если webview отдал старый закэшированный index.html без новой
@@ -1824,6 +2048,7 @@ function showView(name) {
   toggle('view-detail', name === 'detail');
   toggle('view-game', name === 'game');
   toggle('view-emoji', name === 'game');
+  toggle('view-chain', name === 'chain');
   toggle('toolbar', name === 'catalog' || name === 'trailers');
   if (name === 'catalog') renderFilmDay();  // баннер скрываем/возвращаем при смене вьюхи
   const cur = name === 'catalog' ? view : name;
@@ -1831,7 +2056,7 @@ function showView(name) {
     t.classList.toggle('active', t.dataset.view === cur));
   const moreTab = document.getElementById('tab-more');
   if (moreTab) moreTab.classList.toggle('active',
-    ['cols', 'top', 'achievements', 'profile', 'fav', 'game'].includes(cur));
+    ['cols', 'top', 'achievements', 'profile', 'fav', 'game', 'chain'].includes(cur));
   document.querySelectorAll('.more-item').forEach(b =>
     b.classList.toggle('active', b.dataset.view === cur));
 }
@@ -1888,9 +2113,45 @@ function openView(v) {
   else if (v === 'profile') { showView('profile'); renderProfile(); }
   else if (v === 'trailers') { showView('trailers'); renderTrailerGenreChips(); renderTrailers(); }
   else if (v === 'achievements') { showView('achievements'); renderAchievements(); }
+  else if (v === 'chain') { showView('chain'); renderChain(); }
   else { showView('catalog'); renderGrid(); }  // grid | fav
 }
 document.querySelectorAll('.tab[data-view]').forEach(t => t.addEventListener('click', () => openView(t.dataset.view)));
+
+// ---------- v60: свайп влево/вправо листает главные вкладки ----------
+// Афиша → Трейлеры → Новости и обратно. В доп. разделах («Ещё») и в карточке
+// фильма свайп не работает, чтобы не уводить со специфичного экрана.
+(() => {
+  const ORDER = ['grid', 'trailers', 'news'];
+  let sx = 0, sy = 0, armed = false;
+  const modalOpen = () => !!document.querySelector('.modal:not(.hidden)');
+  document.addEventListener('touchstart', (e) => {
+    armed = false;
+    if (modalOpen()) return;
+    if (moreMenu && !moreMenu.classList.contains('hidden')) return;
+    const det = document.getElementById('view-detail');
+    if (det && !det.classList.contains('hidden')) return;
+    // не мешаем горизонтальным прокруткам и формам
+    if (e.target.closest('input, textarea, select, .hero-row, .similar-row, .genre-chips, .trailer-genre-chips')) return;
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    armed = true;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (!armed) return;
+    armed = false;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > 45) return;
+    const cur = view === 'fav' ? 'grid' : view;
+    const i = ORDER.indexOf(cur);
+    if (i === -1) return;
+    const next = dx < 0 ? ORDER[i + 1] : ORDER[i - 1];
+    if (!next) return;
+    haptic('light');
+    openView(next);
+  }, { passive: true });
+})();
 
 // ---------- раскрывающееся подменю «Ещё» ----------
 const moreTab = document.getElementById('tab-more');
@@ -2173,6 +2434,7 @@ function openTrailer(m) {
   if (!m) return;
   window._challTrailerWatched = (window._challTrailerWatched || 0) + 1;
   challDone('watch_trailer');
+  bumpWeekStat('trailers');
   if (!m.trailer_yt && !m.trailer_file_id) {
     return;
   }

@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=59" />
+  <link rel="stylesheet" href="style.css?v=60" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -61,6 +61,7 @@
       <button class="more-item" data-view="profile">👤 Профиль</button>
       <button class="more-item" data-view="fav">❤️ Моё</button>
       <button class="more-item" data-view="game">🏋 Тренажёр</button>
+      <button class="more-item" data-view="chain">🔗 Кино-путь</button>
     </div>
 
     <!-- Афиша + Моё -->
@@ -136,6 +137,11 @@
     <!-- Профиль игрока (уровень/баллы/стрик) -->
     <div id="view-profile" class="hidden">
       <main id="profile-container" class="profile-feed"></main>
+    </div>
+
+    <!-- Кино-путь (цепочка человек — фильм — человек) -->
+    <div id="view-chain" class="hidden">
+      <main id="chain-container"></main>
     </div>
 
     <!-- Трейлеры (все в одном месте) -->
@@ -310,7 +316,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=59"></script>
+  <script src="script.js?v=60"></script>
 </body>
 </html>
 
