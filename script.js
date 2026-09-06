@@ -1365,11 +1365,17 @@ function renderTrailers() {
   let list = ALL.filter(m => m.trailer_yt || m.trailer_file_id);
   if (trailerGenre) list = list.filter(m => (m.genres || []).includes(trailerGenre));
   if (qRaw) {
-    const digits = qRaw.replace(/\D/g, '');
-    list = list.filter(m =>
-      (m.title || '').toLowerCase().includes(qRaw) ||
-      (digits && String(m.code || '').includes(digits))
-    );
+    // v64: ё-нормализация + все слова запроса + код (если запрос целиком число)
+    const q = qRaw.replace(/ё/g, 'е');
+    const isCode = /^\d+$/.test(q.replace(/\s+/g, ''));
+    const digits = q.replace(/\D/g, '');
+    const norm = (t) => (t || '').toLowerCase().replace(/ё/g, 'е');
+    const tks = q.split(/\s+/).filter(Boolean);
+    list = list.filter(m => {
+      if (isCode && digits && String(m.code || '').includes(digits)) return true;
+      const t = norm(m.title);
+      return tks.every(w => t.includes(w));
+    });
   }
   list.sort((a, b) => {
     if (sort === 'rating') return (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0);
@@ -1649,7 +1655,9 @@ function parseSmartQuery(raw) {
   if (/коротк/.test(q)) { out.maxMin = Math.min(out.maxMin || 999, 100); parts.push('короткие'); }
   if (/длинн/.test(q)) { out.minDurMin = 120; parts.push('длинные'); }
 
-  return parts.length ? out : null;
+  if (!parts.length) return null;
+  out.parts = parts;   // v65: parts нужен рендеру подсказки «🧠 …» — раньше был undefined и рендер падал
+  return out;
 }
 
 // ---------- v62: «Смотреть фильм» ----------
@@ -1794,54 +1802,36 @@ function renderGrid() {
   }
     if (q && !smart) {
     const digits = q.replace(/\D/g, '');
-    // Сначала точные совпадения (подстрока/код), затем — нечёткие по
-    // расстоянию Левенштейна: «интерстелар» найдёт «Интерстеллар».
+    const isCode = /^\d+$/.test(q.replace(/\s+/g, ''));  // весь запрос — число → это код
+    // Сначала точные совпадения (все слова запроса в названии/описании или код),
+    // затем раскладка, затем нечёткий поиск по Левенштейну («интерстелар» найдёт «Интерстеллар»).
     const norm = (t) => (t || '').toLowerCase().replace(/ё/g, 'е');
+    const toks = q.split(/\s+/).filter(Boolean);
     let matches = [];
-    list.forEach(m => {
-      const t = norm(m.title);
-      if (t.includes(q) || (digits && String(m.code || '').includes(digits))) {
-        matches.push({ m, score: 0 });
-      }
-    });
-    if (!matches.length) {
-      // 2-й эшелон: поиск «по содержимому» — описание, жанры, страны, год,
-      // режиссёр и актёры (последние появятся по мере обогащения данных).
+    const tryQuery = (query) => {
+      const tks = query.split(/\s+/).filter(Boolean);
       list.forEach(m => {
-        const hay = norm([
-          m.description,
-          (m.genres || []).join(' '),
-          (m.countries || []).join(' '),
-          m.year || '',
-          m.director || '',
-          (m.actors || []).join(' ')
-        ].filter(Boolean).join(' · '));
-        if (hay && hay.includes(q)) matches.push({ m, score: 1 });
+        const t = norm(m.title);
+        // «стог сена»: название + описание + жанры + страны + год + люди
+        const hay = norm([t, m.description, (m.genres || []).join(' '),
+          (m.countries || []).join(' '), m.year || '', m.director || '',
+          (m.actors || []).join(' ')].filter(Boolean).join(' · '));
+        const codeHit = isCode && digits && String(m.code || '').includes(digits);
+        // все слова запроса должны найтись (в любом поле) — так «зеленая миля 1999»
+        // и «торино гран» работают независимо от порядка слов
+        if (codeHit || (tks.length && tks.every(w => hay.includes(w)))) {
+          if (!matches.some(x => x.m === m)) matches.push({ m, score: 0 });
+        }
       });
-    }
-    if (!matches.length) {
-      // 3-й эшелон: неправильная раскладка клавиатуры. «ptktyfz» → «зеленая»,
-      // «vbh» → «мир» и т.п. Конвертируем латиницу в русскую раскладку и ищем заново.
+    };
+    tryQuery(q);
+    if (!matches.length && /[a-z]/.test(q)) {
+      // 2-й эшелон: неправильная раскладка клавиатуры — «ptktyfz» → «зеленая»
       const RU_LAYOUT = { q:'й', w:'ц', e:'у', r:'к', t:'е', y:'н', u:'г', i:'ш', o:'щ', p:'з',
         a:'ф', s:'ы', d:'в', f:'а', g:'п', h:'р', j:'о', k:'л', l:'д', z:'я', x:'ч', c:'с',
         v:'м', b:'и', n:'т', m:'ь', '[':'х', ']':'ъ', ';':'ж', "'":'э', ',':'б', '.':'ю' };
-      if (/[a-z]/.test(q)) {
-        const qRu = q.replace(/[a-z\[\];',.]/g, ch => RU_LAYOUT[ch] || ch);
-        if (qRu && qRu !== q) {
-          list.forEach(m => {
-            const t = norm(m.title);
-            if (t.includes(qRu) || (digits && String(m.code || '').includes(digits))) {
-              matches.push({ m, score: 0 });
-            }
-          });
-          if (!matches.length) {
-            list.forEach(m => {
-              const hay = norm([m.description, (m.genres || []).join(' ')].filter(Boolean).join(' '));
-              if (hay && hay.includes(qRu)) matches.push({ m, score: 1 });
-            });
-          }
-        }
-      }
+      const qRu = q.replace(/[a-z\[\];',.]/g, ch => RU_LAYOUT[ch] || ch);
+      if (qRu && qRu !== q) tryQuery(qRu);
     }
     if (!matches.length) {
       const limit = q.length <= 6 ? 2 : (q.length <= 12 ? 3 : 4);
@@ -1892,7 +1882,7 @@ function renderGrid() {
     ? `<div class="fav-progress">Оценено ${Object.keys(getRatings()).length} фильм(ов) — рекомендации стали точнее 💫</div>`
     : '';
   const smartHint = smart
-    ? `<div class="smart-hint">🧠 ${esc(smart.parts.join(' · '))} · найдено: ${list.length}<button class="smart-clear" title="Сбросить" onclick="document.getElementById('search').value='';renderGrid()">✕</button></div>`
+    ? `<div class="smart-hint">🧠 ${esc((smart.parts || []).join(' · '))} · найдено: ${list.length}<button class="smart-clear" title="Сбросить" onclick="document.getElementById('search').value='';renderGrid()">✕</button></div>`
     : '';
   const head = modeSwitch + progressLine + smartHint;
   const wireFavMode = () => {
