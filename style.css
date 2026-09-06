@@ -120,6 +120,7 @@ body {
   position: absolute;
   top: 8px;
   left: 8px;
+  z-index: 2;   /* v66: без z-index бейдж оказался ПОД постером (v52b поднял img в z-index:1) — код перестал быть виден */
   background: rgba(15, 18, 32, 0.85);
   color: var(--gold);
   font-size: 12px;
@@ -132,6 +133,7 @@ body {
   position: absolute;
   bottom: 8px;
   left: 8px;
+  z-index: 2;   /* v66: аналогично коду — был под постером */
   background: linear-gradient(90deg, #ff8a3d, #ff4466);
   color: #fff;
   font-size: 11px;
