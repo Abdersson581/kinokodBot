@@ -1,27 +1,27 @@
 {
- "code_of_day": "430",
- "code_of_day_date": "2026-09-05",
+ "code_of_day": "435",
+ "code_of_day_date": "2026-09-06",
  "updated_at": "2026-09-06",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 14,
-   "total": 56
+   "unlocks": 16,
+   "total": 58
   },
   {
    "rank": 2,
    "unlocks": 14,
-   "total": 14
+   "total": 123
   },
   {
    "rank": 3,
-   "unlocks": 12,
-   "total": 121
+   "unlocks": 14,
+   "total": 14
   },
   {
    "rank": 4,
-   "unlocks": 4,
-   "total": 4
+   "unlocks": 5,
+   "total": 5
   },
   {
    "rank": 5,
@@ -30,70 +30,70 @@
   },
   {
    "rank": 6,
+   "unlocks": 4,
+   "total": 4
+  },
+  {
+   "rank": 7,
+   "unlocks": 4,
+   "total": 4
+  },
+  {
+   "rank": 8,
+   "unlocks": 4,
+   "total": 4
+  },
+  {
+   "rank": 9,
    "unlocks": 3,
    "total": 5
   },
   {
-   "rank": 7,
-   "unlocks": 3,
-   "total": 3
-  },
-  {
-   "rank": 8,
-   "unlocks": 3,
-   "total": 3
-  },
-  {
-   "rank": 9,
-   "unlocks": 2,
-   "total": 12
-  },
-  {
    "rank": 10,
-   "unlocks": 2,
-   "total": 2
+   "unlocks": 3,
+   "total": 3
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🌀🍰⏰🧠",
-   "answer": "Начало",
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "answer": "Зеленая миля",
    "options": [
-    "Не говори никому",
-    "Звук свободы",
-    "Начало",
-    "Человек божий"
+    "Меняющие реальность",
+    "Дом у озера",
+    "Хитмен. Последнее дело",
+    "Зеленая миля"
    ]
   },
   {
-   "emoji": "🪨🔨🌧️🎵",
-   "answer": "Побег из Шоушенка",
+   "emoji": "🌀🍰⏰🧠",
+   "answer": "Начало",
    "options": [
-    "Ветреная река",
-    "Константин: Повелитель тьмы",
-    "Побег из Шоушенка",
-    "За пивом"
+    "Начало",
+    "Последний самурай",
+    "Враг государства",
+    "Истина и измена"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "answer": "Хатико: Самый верный друг",
    "options": [
+    "Истина и измена",
     "Хатико: Самый верный друг",
-    "Два ствола",
-    "Девушка и море",
-    "Дом у озера"
+    "В конце туннеля",
+    "Бездна"
    ]
   },
   {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "answer": "Зеленая миля",
+   "emoji": "🪨🔨🌧️🎵",
+   "answer": "Побег из Шоушенка",
    "options": [
-    "По соображениям совести",
-    "Ангел-А",
-    "Зеленая миля",
-    "Дело храбрых"
+    "Дело храбрых",
+    "Побег из Шоушенка",
+    "Освобождение",
+    "Девушка и море"
    ]
   }
  ],
@@ -111,6 +111,13 @@
    "image": "https://www.kinonews.ru/insimgs/2026/artimg/big/artimg142984.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1788628824.4386275
+  },
+  {
+   "title": "Претендентам на роль Джеймса Бонда разослали контракты",
+   "link": "https://www.kinonews.ru/news_142997/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg142997.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1788715488.4015281
   }
  ],
  "premieres": [
