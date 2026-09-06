@@ -24,7 +24,20 @@ body {
 }
 
 /* Компактная шапка-брендинг */
-.header { padding: 6px 0 2px; position: relative; }
+/* v77: стеклянная «липкая» шапка — тянется на всю ширину, размывает контент под собой */
+.header {
+  padding: 6px 0 2px;
+  position: sticky; top: 0; z-index: 60;
+  margin: -12px -12px 0;
+  padding: 12px 12px 6px;
+  background: rgba(15, 18, 32, .72);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  transition: box-shadow .25s ease;
+}
+body.light .header { background: rgba(246, 247, 252, .78); }
+.header.scrolled { box-shadow: 0 8px 26px rgba(0, 0, 0, .38); }
+body.light .header.scrolled { box-shadow: 0 8px 26px rgba(30, 40, 80, .14); }
 .brand {
   display: flex;
   align-items: center;
@@ -669,6 +682,31 @@ body.light .glass {
   -webkit-overflow-scrolling: touch;
 }
 .hero-row::-webkit-scrollbar { display: none; }
+/* v77: стрелки прокрутки полок на ПК (появляются при наведении) */
+.hero-shelf { position: relative; }
+.shelf-arrow {
+  display: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px; height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(26, 31, 54, .88);
+  color: var(--text);
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 5;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .4);
+  transition: background .2s ease, transform .15s ease;
+}
+.shelf-arrow:hover { background: var(--accent); transform: translateY(-50%) scale(1.08); }
+.shelf-arrow.sa-prev { left: -6px; }
+.shelf-arrow.sa-next { right: -6px; }
+@media (hover: hover) and (min-width: 700px) {
+  .hero-shelf:hover .shelf-arrow { display: flex; align-items: center; justify-content: center; }
+}
 .hero-card {
   position: relative;
   flex: 0 0 150px;
@@ -2541,3 +2579,42 @@ body.accent-purple .new-badge { background: linear-gradient(90deg, var(--gold), 
 .yr-empty { text-align: center; color: var(--muted); padding: 26px 12px; }
 .yr-share { margin-top: 14px; }
 
+
+/* v77: чипы «Сколько времени есть?» */
+.time-chips {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.time-chips::-webkit-scrollbar { display: none; }
+.t-chip {
+  flex: 0 0 auto;
+  border: 1px solid rgba(139, 144, 167, .35);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all .18s ease;
+}
+.t-chip:active { transform: scale(.95); }
+.t-chip.active {
+  background: linear-gradient(135deg, var(--accent), #ff7a3d);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(255, 68, 102, .35);
+}
+/* v77: бейдж длительности на карточке */
+.dur-chip {
+  font-size: 11px;
+  color: var(--muted);
+  background: rgba(139, 144, 167, .14);
+  border-radius: 8px;
+  padding: 2px 6px;
+  white-space: nowrap;
+}

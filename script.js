@@ -26,6 +26,9 @@ function enterApp() {
   initHideToggle();
   applyGridCols();
   initSearchHist();
+  renderTimeChips();  // v77: чипы длительности
+  initShelfArrows();  // v77: стрелки полок (ПК)
+  initHeaderScroll(); // v77: стеклянная шапка
   loadMovies();
 }
 // ВНИМАНИЕ: запуск (enterApp/showGate) перенесён в САМЫЙ КОНЕЦ файла —
@@ -2337,6 +2340,56 @@ function parseRestoreHash() {
   });
 })();
 
+// ---------- v77: «Сколько времени есть?» — фильтр афиши по длительности ----------
+let timeLimit = 0;  // 0 = любая длительность
+const durOf = (m) => { const d = parseInt(m && m.duration, 10); return d > 0 ? d : 0; };
+function renderTimeChips() {
+  const box = document.getElementById('time-chips');
+  if (!box) return;
+  const chips = [
+    { v: 0, label: '⏱ Любое время' },
+    { v: 100, label: '🎬 ~1,5 ч' },
+    { v: 125, label: '🎬 ~2 ч' },
+    { v: 190, label: '🎬 до 3 ч' },
+  ];
+  box.innerHTML = chips.map(c =>
+    `<button class="t-chip${timeLimit === c.v ? ' active' : ''}" data-t="${c.v}">${c.label}</button>`).join('');
+  box.querySelectorAll('.t-chip').forEach(ch => {
+    ch.addEventListener('click', () => {
+      timeLimit = parseInt(ch.dataset.t, 10) || 0;
+      haptic('light');
+      renderTimeChips();
+      renderGrid();
+    });
+  });
+}
+// v77: стрелки прокрутки полок на ПК (на тач-устройствах остаётся свайп)
+function initShelfArrows() {
+  document.querySelectorAll('.hero-shelf').forEach(shelf => {
+    const row = shelf.querySelector('.hero-row');
+    if (!row || shelf.querySelector('.shelf-arrow')) return;
+    const go = (dir) => row.scrollBy({ left: dir * Math.max(260, row.clientWidth * 0.8), behavior: 'smooth' });
+    const mk = (cls, title, dir) => {
+      const b = document.createElement('button');
+      b.className = 'shelf-arrow ' + cls;
+      b.textContent = dir > 0 ? '›' : '‹';
+      b.title = title;
+      b.addEventListener('click', () => { haptic('light'); go(dir); });
+      shelf.appendChild(b);
+    };
+    mk('sa-prev', 'Назад', -1);
+    mk('sa-next', 'Вперёд', 1);
+  });
+}
+// v77: тень стеклянной шапки при прокрутке
+function initHeaderScroll() {
+  const h = document.querySelector('.header');
+  if (!h) return;
+  const upd = () => h.classList.toggle('scrolled', (window.scrollY || 0) > 8);
+  window.addEventListener('scroll', upd, { passive: true });
+  upd();
+}
+
 function renderGrid() {
   const qRaw = (document.getElementById('search').value || '').trim();
   // v64: нормализуем запрос (ё→е) — раньше «зелёная» с ё не находила «Зеленая миля»
@@ -2356,6 +2409,8 @@ function renderGrid() {
                 : ALL.filter(m => getFavs().includes(m.code)))))
     : [...ALL];
   if (activeGenre) list = list.filter(m => (m.genres || []).includes(activeGenre));
+  // v77: фильтр «Сколько времени есть?» — только фильмы с известной длительностью
+  if (timeLimit && view === 'grid') list = list.filter(m => { const d = durOf(m); return d && d <= timeLimit; });
   // 🙈 «Скрыть разгаданные»: прячем карточки, код которых есть в localStorage
   if (localStorage.getItem(HIDE_KEY) === '1' && view !== 'fav') {
     const unlockedSet = new Set(getUnlocked());
@@ -2512,7 +2567,7 @@ function renderGrid() {
       ${posterHtmlQuick(m)}
       <div class="movie-info">
         <h3>${hlTitle(m.title, q)}</h3>
-        <span class="rating">${ratingBadge(m)}${myR ? `<span class="my-stars">${'★'.repeat(myR)}</span>` : ''}</span>
+        <span class="rating">${ratingBadge(m)}${myR ? `<span class="my-stars">${'★'.repeat(myR)}</span>` : ''}${durOf(m) ? `<span class="dur-chip">⏱ ${durOf(m)} мин</span>` : ''}</span>
       </div>
     </div>`;
   }).join('');
