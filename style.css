@@ -284,12 +284,13 @@ body {
   top: 8px;
   right: 8px;
   z-index: 3;
-  width: 30px;
-  height: 30px;
-  border: none;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, .28);
   border-radius: 50%;
-  background: rgba(15, 18, 32, .72);
-  backdrop-filter: blur(3px);
+  background: rgba(15, 18, 32, .55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   color: #fff;
   font-size: 15px;
   line-height: 1;
@@ -299,12 +300,17 @@ body {
   padding: 0;
   margin: 0;
   cursor: pointer;
-  opacity: .85;
-  transition: transform .12s ease, opacity .12s ease;
+  opacity: .9;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .35);
+  transition: transform .15s ease, opacity .15s ease, background .2s ease, box-shadow .2s ease;
 }
-.fav-quick.active { background: rgba(255, 68, 102, .9); }
-.fav-quick:active { transform: scale(.9); }
-.fav-quick:hover { opacity: 1; }
+.fav-quick.active {
+  background: linear-gradient(135deg, #ff5573, #e5304f);
+  border-color: rgba(255, 255, 255, .4);
+  box-shadow: 0 0 0 3px rgba(255, 68, 102, .22), 0 3px 12px rgba(229, 48, 79, .45);
+}
+.fav-quick:active { transform: scale(.88); }
+.fav-quick:hover { opacity: 1; transform: scale(1.08); }
 /* Кнопка «скрыть рекомендацию» */
 .reco-hide {
   position: absolute;
@@ -375,29 +381,61 @@ body {
 }
 .empty-emoji { font-size: 44px; margin-bottom: 10px; }
 .empty-state p { margin: 0 0 14px; font-size: 14px; }
+/* v68: кнопки действий — градиент, блик, живое нажатие */
 .btn-primary, .btn-secondary, .btn-fav {
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 13px;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   color: #fff;
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
 }
-.btn-primary { background: var(--accent); }
-.btn-secondary { background: var(--card); }
-/* v61: «Смотреть фильм» — заметная кнопка на всю ширину в карточке фильма */
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), #c22850);
+  box-shadow: 0 3px 14px rgba(228, 45, 90, .35), inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+.btn-secondary {
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, .09);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
+}
+.btn-primary:hover, .btn-watch:hover, .btn-fav:hover { filter: brightness(1.07); }
+.btn-primary:active, .btn-secondary:active, .btn-watch:active, .btn-fav:active { transform: scale(.97); }
+/* бегущий блик по главной кнопке */
+.btn-primary::after, .btn-watch::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .22), transparent);
+  transform: skewX(-18deg);
+  animation: btnShine 4.5s ease-in-out infinite;
+}
+@keyframes btnShine {
+  0%, 55% { left: -80%; }
+  75%, 100% { left: 130%; }
+}
+/* «Смотреть фильм» — заметная кнопка на всю ширину в карточке фильма */
 .btn-watch {
   grid-column: 1 / -1;
-  background: linear-gradient(135deg, #e55d30, #b83e1f);
-  box-shadow: 0 2px 12px rgba(232, 93, 48, .25);
+  background: linear-gradient(135deg, #ff8a3d, #e04b2f);
+  box-shadow: 0 4px 16px rgba(232, 93, 48, .4), inset 0 1px 0 rgba(255, 255, 255, .28);
   font-size: 15px;
   padding: 13px;
   font-weight: 700;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   color: #fff;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s ease, filter .2s ease, box-shadow .2s ease;
 }
 .light .btn-watch { box-shadow: 0 2px 10px rgba(232, 93, 48, .18); }
 .btn-fav { background: var(--card); }
@@ -2004,32 +2042,33 @@ body.accent-gold .howto-step span { background: linear-gradient(135deg, var(--ac
 /* В баннере сердечко — обычный элемент строки, а не абсолют поверх постера */
 .filmday-banner .fav-quick { position: static; flex: 0 0 auto; }
 
-/* v67: быстрая кнопка «▶️ Смотреть» на постере (низ-право) */
+/* v68: кнопки на постере — стеклянные круги с подсветкой */
 .watch-quick {
   position: absolute;
   bottom: 8px;
   right: 8px;
   z-index: 3;
-  height: 26px;
-  border: none;
-  border-radius: 13px;
-  background: linear-gradient(135deg, #ff8c2e, #ff4f42);
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(255, 140, 46, .95), rgba(232, 62, 48, .95));
   color: #fff;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 9px;
+  padding: 0 0 0 2px; /* оптическое центрирование треугольника */
   margin: 0;
   cursor: pointer;
-  opacity: .92;
-  box-shadow: 0 2px 8px rgba(0,0,0,.35);
-  transition: transform .12s ease, opacity .12s ease;
+  box-shadow: 0 3px 12px rgba(232, 62, 48, .45), inset 0 1px 0 rgba(255, 255, 255, .35);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
 }
-.watch-quick:active { transform: scale(.92); }
-.light .watch-quick { box-shadow: 0 2px 8px rgba(40,40,70,.25); }
+.watch-quick:hover { transform: scale(1.1); filter: brightness(1.08); }
+.watch-quick:active { transform: scale(.9); }
+.light .watch-quick { box-shadow: 0 3px 10px rgba(232, 62, 48, .35), inset 0 1px 0 rgba(255,255,255,.35); }
 
 /* v67: индикатор отсутствия сети (данные из кэша Service Worker) */
 .net-banner {
@@ -2090,6 +2129,7 @@ body.accent-gold .howto-step span { background: linear-gradient(135deg, var(--ac
   .movie-card, .hero-shelf .hero-card, .filmday-banner, .fav-quick.pop {
     animation: none;
   }
+  .btn-primary::after, .btn-watch::after { animation: none; display: none; }
 }
 
 /* ===== v60: кликабельные актёры/режиссёр в карточке ===== */
