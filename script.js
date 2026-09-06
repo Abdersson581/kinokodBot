@@ -509,6 +509,7 @@ function posterHtmlQuick(m) {
     ${watched ? '<span class="watched-badge" title="Просмотрено">👁</span>' : ''}
     ${hasNote ? '<span class="note-badge" title="Заметка">📝</span>' : ''}
     <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '❤️' : '🤍'}</button>
+    ${m.link ? `<button class="watch-quick" data-code="${esc(m.code)}" aria-label="Смотреть" title="▶️ Смотреть фильм">▶️</button>` : ''}
   </div>`;
 }
 function wireFavQuick(container) {
@@ -529,6 +530,16 @@ function wireFavQuick(container) {
         renderGrid();
         haptic('ok');
       }
+    });
+  });
+  // v67: быстрая кнопка «▶️ Смотреть» на постере — прямая ссылка на фильм
+  container.querySelectorAll('.watch-quick').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const m = ALL.find(x => String(x.code) === String(btn.dataset.code));
+      if (!m) return;
+      haptic('light');
+      openWatchLink(m);
     });
   });
 }
@@ -2747,6 +2758,17 @@ function openTrailer(m) {
     sendOrDeepLink({ action: 'trailer_movie', code: m.code });
   }
 }
+
+// v67: индикатор оффлайна — при потере сети показываем баннер,
+// данные остаются доступны из кэша Service Worker.
+(function () {
+  const nb = document.getElementById('net-banner');
+  if (!nb) return;
+  const update = () => nb.classList.toggle('hidden', navigator.onLine !== false);
+  window.addEventListener('offline', () => { update(); haptic('heavy'); });
+  window.addEventListener('online', update);
+  update();
+})();
 
 function closeTrailer() {
   _exitFs();
