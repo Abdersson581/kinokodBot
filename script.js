@@ -508,8 +508,8 @@ function posterHtmlQuick(m) {
     ${isNew(m) ? '<span class="new-badge">🔥 Новинка</span>' : ''}
     ${watched ? '<span class="watched-badge" title="Просмотрено">👁</span>' : ''}
     ${hasNote ? '<span class="note-badge" title="Заметка">📝</span>' : ''}
-    <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '❤️' : '🤍'}</button>
-    ${m.link ? `<button class="watch-quick" data-code="${esc(m.code)}" aria-label="Смотреть" title="▶️ Смотреть фильм">▶️</button>` : ''}
+    <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '♥\uFE0E' : '♡'}</button>
+    ${m.link ? `<button class="watch-quick" data-code="${esc(m.code)}" aria-label="Смотреть" title="Смотреть фильм"></button>` : ''}
   </div>`;
 }
 function wireFavQuick(container) {
@@ -519,7 +519,7 @@ function wireFavQuick(container) {
       e.stopPropagation();
       toggleFav(btn.dataset.code);
       const fav = getFavs().includes(btn.dataset.code);
-      btn.textContent = fav ? '❤️' : '🤍';
+      btn.textContent = fav ? '♥\uFE0E' : '♡';
       btn.classList.toggle('active', fav);
       // v59: «взрыв сердечка» — короткая анимация нажатия
       btn.classList.remove('pop');
@@ -549,7 +549,16 @@ const DATA_CACHE_KEY = 'kinoafisha_data_cache';
 
 // Применяем порцию данных (из кэша или сети) ко всему интерфейсу
 function applyData(data) {
-  ALL = data.all || [];
+  // v69: нормализация полей — старый кэш/синк мог отдать actors/genres/countries строкой
+  const toArr = (v) => Array.isArray(v) ? v
+    : (typeof v === 'string' && v.trim() ? v.split(/\s*[,;]\s*/).filter(Boolean) : []);
+  ALL = (data.all || []).map(m => {
+    m.actors = toArr(m.actors);
+    m.genres = toArr(m.genres);
+    m.countries = toArr(m.countries);
+    if (m.director && typeof m.director !== 'string') m.director = String(m.director);
+    return m;
+  });
   COLLS = data.cols || [];
   const meta = data.meta || {};
   EMOJI_RIDDLES = Array.isArray(meta.emoji_riddles) ? meta.emoji_riddles : [];
@@ -828,7 +837,7 @@ function renderFilmDay() {
         <div class="fd-title">${esc(m.title)}</div>
         <div class="fd-meta">${esc(String(m.year || ''))}${m.year && m.rating ? ' · ' : ''}⭐ ${esc(String(m.rating || ''))}${genres ? ' · ' + esc(genres) : ''}</div>
       </div>
-      <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '❤️' : '🤍'}</button>
+      <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '♥\uFE0E' : '♡'}</button>
     </div>`;
   const bgImg = m.trailer_thumb || m.poster;
   el.style.backgroundImage = `url('${esc(bgImg)}')`;
