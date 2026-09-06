@@ -1337,7 +1337,12 @@ body.light #err-banner { background: #dc2626; }
   height: 100%;
   object-fit: contain; /* v56: картинка всегда видна целиком, без обрезки */
 }
-/* v56: размытая копия картинки заполняет поля вокруг непостерных пропорций */
+/* v57: режиссёр и актёры в карточке фильма (данные подтягиваются синком бота) */
+.people-line { font-size: .86rem; color: #9aa3b2; margin: 6px 0 0; }
+.people-line b { color: inherit; font-weight: 600; }
+.light .people-line { color: #667; }
+
+/* v57: размытая копия картинки заполняет поля вокруг непостерных пропорций */
 .thumb-blur {
   position: absolute;
   inset: -12px;

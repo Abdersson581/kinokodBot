@@ -1160,6 +1160,13 @@ function renderTrailerGenreChips() {
 function renderTrailers() {
   const c = document.getElementById('trailers-container');
   if (!c) return;
+  if (!ALL.length) {
+    // Первый визит, данные ещё грузятся — скелетоны вместо пустоты
+    c.innerHTML = `<div class="trailers-grid">${Array.from({ length: 6 }, () =>
+      '<div class="trailer-card skeleton-card"><div class="skel poster"></div><div class="skel line"></div></div>'
+    ).join('')}</div>`;
+    return;
+  }
   const qRaw = (document.getElementById('trailer-search').value || '').trim().toLowerCase();
   const sort = document.getElementById('trailer-sort').value;
   let list = ALL.filter(m => m.trailer_yt || m.trailer_file_id);
@@ -1440,6 +1447,21 @@ function renderGrid() {
       }
     });
     if (!matches.length) {
+      // 2-й эшелон: поиск «по содержимому» — описание, жанры, страны, год,
+      // режиссёр и актёры (последние появятся по мере обогащения данных).
+      list.forEach(m => {
+        const hay = norm([
+          m.description,
+          (m.genres || []).join(' '),
+          (m.countries || []).join(' '),
+          m.year || '',
+          m.director || '',
+          (m.actors || []).join(' ')
+        ].filter(Boolean).join(' · '));
+        if (hay && hay.includes(q)) matches.push({ m, score: 1 });
+      });
+    }
+    if (!matches.length) {
       const limit = q.length <= 6 ? 2 : (q.length <= 12 ? 3 : 4);
       list.forEach(m => {
         const t = norm(m.title);
@@ -1557,6 +1579,8 @@ function openDetail(code) {
         <h2>${esc(m.title)}</h2>
         <span class="rating">${ratingBadge(m)}</span>
         ${chips ? `<div class="detail-chips">${chips}</div>` : ''}
+        ${m.director ? `<p class="people-line">🎬 Режиссёр: <b>${esc(m.director)}</b></p>` : ''}
+        ${(m.actors || []).length ? `<p class="people-line">⭐ В ролях: ${esc(m.actors.slice(0, 4).join(', '))}</p>` : ''}
         <p class="desc">${esc(m.description || 'Описание скоро появится.')}</p>
         ${getNotes()[code] ? `<div class="note-box">📝 ${esc(getNotes()[code])}</div>` : ''}
         <div class="detail-actions">
@@ -2262,3 +2286,11 @@ document.querySelectorAll('.modal:not(#trailer-modal):not(#onboarding)').forEach
     }
   }, { passive: true });
 });
+
+// ---------- Service Worker: оффлайн + мгновенные повторные загрузки ----------
+// Регистрируем только на https (в Telegram webview и на GitHub Pages).
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
