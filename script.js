@@ -1770,7 +1770,8 @@ function parseRiddleHash() {
 
 function renderGrid() {
   const qRaw = (document.getElementById('search').value || '').trim();
-  const q = qRaw.toLowerCase();
+  // v64: нормализуем запрос (ё→е) — раньше «зелёная» с ё не находила «Зеленая миля»
+  const q = qRaw.toLowerCase().replace(/ё/g, 'е');
   const smart = parseSmartQuery(qRaw);
   const sort = document.getElementById('sort').value;
   const favMode = localStorage.getItem(FAV_MODE_KEY);  // fav | done | watched
@@ -1791,7 +1792,7 @@ function renderGrid() {
     const unlockedSet = new Set(getUnlocked());
     if (unlockedSet.size) list = list.filter(m => !unlockedSet.has(String(m.code)));
   }
-  if (q && !smart) {
+    if (q && !smart) {
     const digits = q.replace(/\D/g, '');
     // Сначала точные совпадения (подстрока/код), затем — нечёткие по
     // расстоянию Левенштейна: «интерстелар» найдёт «Интерстеллар».
@@ -1817,6 +1818,30 @@ function renderGrid() {
         ].filter(Boolean).join(' · '));
         if (hay && hay.includes(q)) matches.push({ m, score: 1 });
       });
+    }
+    if (!matches.length) {
+      // 3-й эшелон: неправильная раскладка клавиатуры. «ptktyfz» → «зеленая»,
+      // «vbh» → «мир» и т.п. Конвертируем латиницу в русскую раскладку и ищем заново.
+      const RU_LAYOUT = { q:'й', w:'ц', e:'у', r:'к', t:'е', y:'н', u:'г', i:'ш', o:'щ', p:'з',
+        a:'ф', s:'ы', d:'в', f:'а', g:'п', h:'р', j:'о', k:'л', l:'д', z:'я', x:'ч', c:'с',
+        v:'м', b:'и', n:'т', m:'ь', '[':'х', ']':'ъ', ';':'ж', "'":'э', ',':'б', '.':'ю' };
+      if (/[a-z]/.test(q)) {
+        const qRu = q.replace(/[a-z\[\];',.]/g, ch => RU_LAYOUT[ch] || ch);
+        if (qRu && qRu !== q) {
+          list.forEach(m => {
+            const t = norm(m.title);
+            if (t.includes(qRu) || (digits && String(m.code || '').includes(digits))) {
+              matches.push({ m, score: 0 });
+            }
+          });
+          if (!matches.length) {
+            list.forEach(m => {
+              const hay = norm([m.description, (m.genres || []).join(' ')].filter(Boolean).join(' '));
+              if (hay && hay.includes(qRu)) matches.push({ m, score: 1 });
+            });
+          }
+        }
+      }
     }
     if (!matches.length) {
       const limit = q.length <= 6 ? 2 : (q.length <= 12 ? 3 : 4);
