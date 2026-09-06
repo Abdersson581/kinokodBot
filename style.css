@@ -1324,13 +1324,15 @@ body.light #err-banner { background: #dc2626; }
 }
 .trailer-thumb {
   position: relative;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 2 / 3; /* v54: показываем постер целиком, без обрезки */
   background: linear-gradient(135deg, #1a1f36, #2a2f46);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
 }
+/* широкоформатные кадры (локальные копии кадров YouTube) — 16:9 */
+.trailer-thumb.wide { aspect-ratio: 16 / 9; }
 .trailer-thumb img {
   width: 100%;
   height: 100%;
@@ -1872,3 +1874,32 @@ body.accent-gold .howto-step span { background: linear-gradient(135deg, var(--ac
   background: linear-gradient(100deg, rgba(20,20,40,0) 30%, rgba(20,20,40,.06) 50%, rgba(20,20,40,0) 70%);
   background-size: 200% 100%;
 }
+
+/* ===== v54: пагинация сетки трейлеров ===== */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 14px 0 4px;
+}
+.pg-btn {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 36px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color .15s ease, background .15s ease, transform .1s ease;
+}
+.pg-btn:active { transform: scale(.94); }
+.pg-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pg-btn:disabled { opacity: .35; cursor: default; }
+.pg-info { font-size: 11.5px; color: var(--muted); margin-left: 6px; }
+.light .pg-btn { background: #fff; border-color: rgba(20,20,40,.12); color: #667; }
+.light .pg-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }

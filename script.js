@@ -1131,6 +1131,8 @@ function renderProfile() {
 // ---------- трейлеры «🎥» ----------
 // Все трейлеры в одном месте — с поиском, сортировкой и фильтром по жанру.
 let _trailerSearchTimer = null;
+let _trailerPage = 1;                 // текущая страница сетки трейлеров
+const TRAILERS_PER_PAGE = 20;         // фильмов на одной странице
 
 function renderTrailerGenreChips() {
   const wrap = document.getElementById('trailer-genre-chips');
@@ -1149,6 +1151,7 @@ function renderTrailerGenreChips() {
   wrap.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
     haptic('light');
     trailerGenre = ch.dataset.g || '';
+    _trailerPage = 1;
     renderTrailerGenreChips();
     renderTrailers();
   }));
@@ -1181,9 +1184,21 @@ function renderTrailers() {
     c.innerHTML = '<p class="error">Нет трейлеров по запросу 🎬</p>';
     return;
   }
-  c.innerHTML = `<div class="trailers-grid">${list.map(m => `
+  // v54: пагинация — по TRAILERS_PER_PAGE фильмов на страницу
+  const pages = Math.max(1, Math.ceil(list.length / TRAILERS_PER_PAGE));
+  if (_trailerPage > pages) _trailerPage = pages;
+  if (_trailerPage < 1) _trailerPage = 1;
+  const pageItems = list.slice((_trailerPage - 1) * TRAILERS_PER_PAGE, _trailerPage * TRAILERS_PER_PAGE);
+  const pager = pages > 1 ? `<div class="pager">
+      <button class="pg-btn" data-pg="prev" ${_trailerPage === 1 ? 'disabled' : ''} aria-label="Назад">◀</button>
+      ${Array.from({ length: pages }, (_, i) =>
+        `<button class="pg-btn${i + 1 === _trailerPage ? ' active' : ''}" data-pg="${i + 1}">${i + 1}</button>`).join('')}
+      <button class="pg-btn" data-pg="next" ${_trailerPage === pages ? 'disabled' : ''} aria-label="Вперёд">▶</button>
+      <span class="pg-info">🎬 ${list.length}</span>
+    </div>` : '';
+  c.innerHTML = `<div class="trailers-grid">${pageItems.map(m => `
     <div class="trailer-card" data-code="${esc(m.code)}">
-      <div class="trailer-thumb">
+      <div class="trailer-thumb${/^posters\/yt|ytimg\.com/.test(m.trailer_thumb || '') ? ' wide' : ''}">
         ${(() => {
           const src = m.trailer_thumb || m.poster || (m.trailer_yt ? `https://i.ytimg.com/vi/${encodeURIComponent(m.trailer_yt)}/0.jpg` : '');
           const fb = m.poster || (m.trailer_yt ? `https://i.ytimg.com/vi/${encodeURIComponent(m.trailer_yt)}/hqdefault.jpg` : '');
@@ -1201,13 +1216,22 @@ function renderTrailers() {
           ${m.rating ? `<span>⭐ ${esc(String(m.rating))}</span>` : ''}
         </div>
       </div>
-    </div>`).join('')}</div>`;
+    </div>`).join('')}</div>${pager}`;
   c.querySelectorAll('.trailer-card').forEach(el => {
     el.addEventListener('click', () => {
       const m = ALL.find(x => x.code === el.dataset.code);
       if (m) openTrailer(m);
     });
   });
+  c.querySelectorAll('.pg-btn').forEach(b => b.addEventListener('click', () => {
+    const v = b.dataset.pg;
+    if (v === 'prev') _trailerPage = Math.max(1, _trailerPage - 1);
+    else if (v === 'next') _trailerPage = Math.min(pages, _trailerPage + 1);
+    else _trailerPage = parseInt(v, 10) || 1;
+    haptic('light');
+    renderTrailers();
+    window.scrollTo({ top: Math.max(0, c.offsetTop - 70), behavior: 'smooth' });
+  }));
 }
 
 // ---------- достижения «🎖» ----------
@@ -1854,10 +1878,11 @@ document.getElementById('search').addEventListener('keydown', (e) => {
 // ---------- поиск/сортировка трейлеров ----------
 document.getElementById('trailer-search').addEventListener('input', () => {
   clearTimeout(_trailerSearchTimer);
+  _trailerPage = 1;
   if (trailerGenre) { trailerGenre = ''; renderTrailerGenreChips(); }
   _trailerSearchTimer = setTimeout(renderTrailers, 180);
 });
-document.getElementById('trailer-sort').addEventListener('change', renderTrailers);
+document.getElementById('trailer-sort').addEventListener('change', () => { _trailerPage = 1; renderTrailers(); });
 
 // ---------- кнопка «наверх» (glass-дизайн) ----------
 const btnTop = document.getElementById('btn-top');
