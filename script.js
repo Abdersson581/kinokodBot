@@ -832,17 +832,15 @@ function renderFilmDay() {
   const genres = (m.genres || []).slice(0, 3).join(' · ');
   el.classList.remove('hidden');
   el.innerHTML = `
-    <div class="fd-grad"></div>
-    <div class="fd-content">
-      <div class="fd-info">
+    <div class="fd-poster">${m.poster
+      ? `<img src="${esc(m.poster)}" alt="" ${FADE}${dimStyle(m)} onerror="this.style.display='none';this.parentElement.classList.add('fd-noposter')"/>`
+      : '<div class="fd-ph">🎬</div>'}</div>
+    <div class="fd-info">
         <span class="fd-badge">⭐ Фильм дня</span>
         <div class="fd-title">${esc(m.title)}</div>
         <div class="fd-meta">${esc(String(m.year || ''))}${m.year && m.rating ? ' · ' : ''}⭐ ${esc(String(m.rating || ''))}${genres ? ' · ' + esc(genres) : ''}</div>
       </div>
-      <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '♥\uFE0E' : '♡'}</button>
-    </div>`;
-  const bgImg = m.trailer_thumb || m.poster;
-  el.style.backgroundImage = `url('${esc(bgImg)}')`;
+      <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '♥\uFE0E' : '♡'}</button>`;
   el.onclick = () => openDetail(m.code);
   wireFavQuick(el);
 }
