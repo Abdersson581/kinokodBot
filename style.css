@@ -330,11 +330,12 @@ body.light .header.scrolled { box-shadow: 0 8px 26px rgba(30, 40, 80, .14); }
 }
 .fav-quick:active { transform: scale(.88); }
 .fav-quick:hover { opacity: 1; transform: scale(1.08); }
-/* Кнопка «скрыть рекомендацию» */
+/* Кнопка «скрыть рекомендацию» — v80: нижний ЛЕВЫЙ угол, чтобы не
+   наезжать на «▶️ Смотреть» (низ-право, v67+) */
 .reco-hide {
   position: absolute;
   bottom: 8px;
-  right: 8px;
+  left: 8px;
   z-index: 3;
   width: 24px;
   height: 24px;
