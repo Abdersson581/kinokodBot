@@ -1331,15 +1331,21 @@ body.light #err-banner { background: #dc2626; }
   justify-content: center;
   overflow: hidden;
 }
-/* широкоформатные кадры (локальные копии кадров YouTube) — 16:9 */
-.trailer-thumb.wide { aspect-ratio: 16 / 9; }
+/* v54: рамка превью всегда 2:3 — ровная сетка (широкие кадры вписываются с блюр-фоном) */
 .trailer-thumb img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* v56: картинка всегда видна целиком, без обрезки */
 }
-/* v55: картинка с непостерными пропорциями (квадрат и т.п.) — показываем целиком */
-.trailer-thumb.contain img { object-fit: contain; }
+/* v56: размытая копия картинки заполняет поля вокруг непостерных пропорций */
+.thumb-blur {
+  position: absolute;
+  inset: -12px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(14px) brightness(.65);
+  z-index: 0;
+}
 .trailer-thumb-ph {
   font-size: 32px;
 }
