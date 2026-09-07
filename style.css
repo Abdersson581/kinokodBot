@@ -2912,3 +2912,20 @@ body.light.tabs-stuck .tabs {
   color: color-mix(in srgb, var(--text, #fff) 55%, transparent);
 }
 .gate .gate-hint { opacity: .85; }
+/* v97: точки-позиции плейлиста в марафоне */
+.mar-dots {
+  display: flex; justify-content: center; align-items: center;
+  gap: 4px; flex-wrap: wrap; margin-top: 6px;
+}
+.mar-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: color-mix(in srgb, var(--text, #fff) 28%, transparent);
+  transition: background .2s, width .2s;
+}
+.mar-dot.done {
+  background: color-mix(in srgb, var(--accent, #ffd166) 55%, transparent);
+}
+.mar-dot.cur {
+  width: 16px; border-radius: 3px;
+  background: var(--accent, #ffd166);
+}

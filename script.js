@@ -1337,6 +1337,17 @@ function _marathonGo() {
   const g = (m.genres || []).slice(0, 2).join(' · ');
   if (metaEl) metaEl.textContent = [m.year, m.rating ? '⭐ ' + m.rating : '', g].filter(Boolean).join(' · ');
   if (count) count.textContent = (_mar.i + 1) + ' / ' + _mar.list.length;
+  // v97: точки-позиции плейлиста (короткие марафоны) — видно, где находишься
+  const dots = document.getElementById('mar-dots');
+  if (dots) {
+    if (_mar.list.length <= 20) {
+      dots.innerHTML = _mar.list.map((_, k) =>
+        `<span class="mar-dot${k < _mar.i ? ' done' : ''}${k === _mar.i ? ' cur' : ''}"></span>`).join('');
+      dots.classList.remove('hidden');
+    } else {
+      dots.classList.add('hidden');
+    }
+  }
   pushTrailerWatch(m.code);
   _marathonBump(m.code); // v82: прогресс марафона + ачивки
   bumpWeekStat('trailers');
@@ -1400,6 +1411,38 @@ function closeMarathon(done = false) {
     } catch (e) { /* пусто */ }
   }
 }
+
+// ---------- v97: навигация марафона — свайпы на телефоне, стрелки на ПК ----------
+// Свайп влево = следующий трейлер, вправо = предыдущий (в модалке марафона).
+// На ПК то же самое делают клавиши ← и →. Вертикальные жесты не трогаем —
+// свайп вниз по шапке по-прежнему закрывает модалку (универсальный хендлер).
+(() => {
+  const modal = document.getElementById('marathon-modal');
+  if (!modal) return;
+  let sx = 0, sy = 0, on = false;
+  modal.addEventListener('touchstart', (e) => {
+    if (modal.classList.contains('hidden')) return;
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    on = true;
+  }, { passive: true });
+  modal.addEventListener('touchend', (e) => {
+    if (!on) return;
+    on = false;
+    if (modal.classList.contains('hidden')) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > 45) return;
+    haptic('light');
+    if (dx < 0) _marathonNext(); else _marathonPrev();
+  }, { passive: true });
+  document.addEventListener('keydown', (e) => {
+    if (modal.classList.contains('hidden')) return;
+    if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') { haptic('light'); _marathonNext(); }
+    else if (e.key === 'ArrowLeft') { haptic('light'); _marathonPrev(); }
+  });
+})();
 
 // ---------- v78: марафон по жанру + шаринг марафона ----------
 // Чип «жанр · N трейлеров» собирает плейлист из всех фильмов жанра с трейлерами
