@@ -122,7 +122,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdH2qbWNbSyCprE8EXbdWfUwmw-JO1AALUnwAC_LHgSGPyRdenNTebPQQ",
   "trailer_thumb": "posters/470.jpg",
   "director": "Люк Бессон",
-  "actors": "Жамель Деббуз, Рье Расмуссен, Жильбер Мелки, Серж Рябукин, Эрик Балье",
+  "actors": [
+   "Жамель Деббуз",
+   "Рье Расмуссен",
+   "Жильбер Мелки",
+   "Серж Рябукин",
+   "Эрик Балье"
+  ],
   "kinopoisk_id": 160929,
   "link": "https://kinogo.ec/25134--angel-a.html"
  },
@@ -149,7 +155,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdHGqbWNANTeLeeyGk1W4SFjDvEQfPAALRnwAC_LHgSJrMauVUZ6-GPQQ",
   "trailer_thumb": "posters/464.jpg",
   "director": "Саймон Селлан Джонс",
-  "actors": "Марк Уолберг, Симу Лю, Натали Эммануэль, Али Сулиман, Джульет Райлэнс",
+  "actors": [
+   "Марк Уолберг",
+   "Симу Лю",
+   "Натали Эммануэль",
+   "Али Сулиман",
+   "Джульет Райлэнс"
+  ],
   "kinopoisk_id": 1402937,
   "link": "https://kinogo.ec/109913--artur-ty-korol.html"
  },
@@ -175,7 +187,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/472.jpg",
   "director": "Аллан Ангар",
-  "actors": "Джош Дюамель, Элиша Катберт, Мэл Гибсон, Нестор Карбонелл, Свен Теммел",
+  "actors": [
+   "Джош Дюамель",
+   "Элиша Катберт",
+   "Мэл Гибсон",
+   "Нестор Карбонелл",
+   "Свен Теммел"
+  ],
   "kinopoisk_id": 1448499,
   "link": "https://kinogo.ec/55011--bandit-2022-v1.html"
  },
@@ -201,7 +219,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/445.jpg",
   "director": "Джеймс Кэмерон",
-  "actors": "Эд Харрис, Мэри Элизабет Мастрантонио, Майкл Бин, Лео Бёрместер, Тодд Графф",
+  "actors": [
+   "Эд Харрис",
+   "Мэри Элизабет Мастрантонио",
+   "Майкл Бин",
+   "Лео Бёрместер",
+   "Тодд Графф"
+  ],
   "kinopoisk_id": 2342,
   "link": "https://kinogo.ec/27496--bezdna.html"
  },
@@ -228,7 +252,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdEmqbWLxyKlYbqhpDJhzA3q784f63AALHnwAC_LHgSFXHVKbpcPJVPQQ",
   "trailer_thumb": "posters/446.jpg",
   "director": "Брайан Сингер",
-  "actors": "Рами Малек, Люси Бойнтон, Гвилим Ли, Бен Харди, Джозеф Маццелло",
+  "actors": [
+   "Рами Малек",
+   "Люси Бойнтон",
+   "Гвилим Ли",
+   "Бен Харди",
+   "Джозеф Маццелло"
+  ],
   "kinopoisk_id": 568289,
   "link": "https://kinogo.ec/11974--bogemskaja-rapsodija.html"
  },
@@ -255,7 +285,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/451.jpg",
   "director": "Петер Флинт",
-  "actors": "Николай Костер-Вальдау, Джо Коул, Чарльз Дэнс, Сэм Редфорд, Гисли Эдн Гардарссон",
+  "actors": [
+   "Николай Костер-Вальдау",
+   "Джо Коул",
+   "Чарльз Дэнс",
+   "Сэм Редфорд",
+   "Гисли Эдн Гардарссон"
+  ],
   "kinopoisk_id": 4368657,
   "link": "https://kinogo.ec/53875--borba-so-ldom.html"
  },
@@ -282,7 +318,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdEGqbWLZrI68GWmLJ7AG5dzYAAfNC0wACxZ8AAvyx4EiYpj-sOjadvT0E",
   "trailer_thumb": "posters/443.jpg",
   "director": "Родриго Гранде",
-  "actors": "Леонардо Сбаралья, Пабло Эчарри, Клара Лаго, Федерико Луппи, Ума Сальдуэнде",
+  "actors": [
+   "Леонардо Сбаралья",
+   "Пабло Эчарри",
+   "Клара Лаго",
+   "Федерико Луппи",
+   "Ума Сальдуэнде"
+  ],
   "kinopoisk_id": 940122,
   "link": "https://kinogo.ec/22534-v-konce-tunnelja.html"
  },
@@ -343,7 +385,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/433.jpg",
   "director": "Кевин Рейнольдс",
-  "actors": "Кевин Костнер, Деннис Хоппер, Джинн Трипплхорн, Тина Мажорино, Майкл Джитер",
+  "actors": [
+   "Кевин Костнер",
+   "Деннис Хоппер",
+   "Джинн Трипплхорн",
+   "Тина Мажорино",
+   "Майкл Джитер"
+  ],
   "kinopoisk_id": 8165,
   "link": "https://kinogo.ec/14244--vodnyj-mir.html"
  },
@@ -368,7 +416,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdHWqbWNPN7_-HkqYOdTMyELYQV45FAALSnwAC_LHgSPDG-nnus4eMPQQ",
   "trailer_thumb": "posters/466.jpg",
   "director": "Тони Скотт",
-  "actors": "Уилл Смит, Джин Хэкмен, Джон Войт, Реджина Кинг, Лорен Дин",
+  "actors": [
+   "Уилл Смит",
+   "Джин Хэкмен",
+   "Джон Войт",
+   "Реджина Кинг",
+   "Лорен Дин"
+  ],
   "kinopoisk_id": 3954,
   "link": "https://kinogo.ec/24481--vrag-gosudarstva.html"
  },
@@ -393,7 +447,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/435.jpg",
   "director": "Скотт Купер",
-  "actors": "Кристиан Бэйл, Гарри Меллинг, Саймон Макберни, Тимоти Сполл, Тоби Джонс",
+  "actors": [
+   "Кристиан Бэйл",
+   "Гарри Меллинг",
+   "Саймон Макберни",
+   "Тимоти Сполл",
+   "Тоби Джонс"
+  ],
   "kinopoisk_id": 4474320,
   "link": "https://kinogo.ec/55588--vsevidjaschee-oko.html"
  },
@@ -418,7 +478,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdGWqbWMnv6lUqZRnlPXjzWDB5PGX-AALOnwAC_LHgSPnMZKQ5bX_mPQQ",
   "trailer_thumb": "posters/yt459.jpg",
   "director": "Клинт Иствуд",
-  "actors": "Клинт Иствуд, Би Ванг, Кристофер Карли, Эни Хи, Брайан Хейли",
+  "actors": [
+   "Клинт Иствуд",
+   "Би Ванг",
+   "Кристофер Карли",
+   "Эни Хи",
+   "Брайан Хейли"
+  ],
   "kinopoisk_id": 408410,
   "link": "https://kinogo.ec/16757--gran-torino.html"
  },
@@ -445,7 +511,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdFGqbWL_LyRiQDYqVVhUVscXICaf3AALJnwAC_LHgSDshhfHl1Kh_PQQ",
   "trailer_thumb": "posters/452.jpg",
   "director": "Даг Лайман",
-  "actors": "Том Круз, Эмили Блант, Билл Пэкстон, Брендан Глисон, Ноа Тейлор",
+  "actors": [
+   "Том Круз",
+   "Эмили Блант",
+   "Билл Пэкстон",
+   "Брендан Глисон",
+   "Ноа Тейлор"
+  ],
   "kinopoisk_id": 505851,
   "link": "https://kinogo.ec/29559--gran-buduschego.html"
  },
@@ -473,7 +545,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdIGqbWNhAHae-lI3a6t66Sk-16stSAALVnwAC_LHgSEKk5oUFCQo7PQQ",
   "trailer_thumb": "posters/471.jpg",
   "director": "Энтони Марас",
-  "actors": "Эндрю Скотт, Брендан Фрейзер, Керри Кондон, Крис Мессина, Дэмиэн Льюис",
+  "actors": [
+   "Эндрю Скотт",
+   "Брендан Фрейзер",
+   "Керри Кондон",
+   "Крис Мессина",
+   "Дэмиэн Льюис"
+  ],
   "kinopoisk_id": 6606844,
   "link": "https://kinogo.ec/125431-davlenie.html"
  },
@@ -493,7 +571,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdIWqbWNvt07HltazrEywVVJkHGGeLAALWnwAC_LHgSM6AhkoVtkTxPQQ",
   "trailer_thumb": "posters/473.jpg",
   "director": "Бальтасар Кормакур",
-  "actors": "Дензел Вашингтон, Марк Уолберг, Пола Пэттон, Билл Пэкстон, Эдвард Джеймс Олмос",
+  "actors": [
+   "Дензел Вашингтон",
+   "Марк Уолберг",
+   "Пола Пэттон",
+   "Билл Пэкстон",
+   "Эдвард Джеймс Олмос"
+  ],
   "kinopoisk_id": 464290,
   "link": "https://kinogo.ec/12201--dva-stvola.html"
  },
@@ -557,7 +641,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdC2qbWKzWbxWPb6WH7uHZjb_N2wOXAALAnwAC_LHgSGkD6DoTrWE-PQQ",
   "trailer_thumb": "posters/436.jpg",
   "director": "Джозеф Косински",
-  "actors": "Джош Бролин, Майлз Теллер, Джефф Бриджес, Дженнифер Коннелли, Джеймс Бэдж Дейл",
+  "actors": [
+   "Джош Бролин",
+   "Майлз Теллер",
+   "Джефф Бриджес",
+   "Дженнифер Коннелли",
+   "Джеймс Бэдж Дейл"
+  ],
   "kinopoisk_id": 965754,
   "link": "https://kinogo.ec/24116-delo-hrabryh.html"
  },
@@ -584,7 +674,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdDWqbWLG4SGbU5wrzCI8mLx1sveNBAALCnwAC_LHgSDG7mtKsmKKdPQQ",
   "trailer_thumb": "posters/439.jpg",
   "director": "Алехандро Агрести",
-  "actors": "Киану Ривз, Сандра Буллок, Кристофер Пламмер, Эбон Мосс-Бакрак, Виллеке ван Аммельрой",
+  "actors": [
+   "Киану Ривз",
+   "Сандра Буллок",
+   "Кристофер Пламмер",
+   "Эбон Мосс-Бакрак",
+   "Виллеке ван Аммельрой"
+  ],
   "kinopoisk_id": 102130,
   "link": "https://kinogo.ec/19421--dom-u-ozera.html"
  },
@@ -707,7 +803,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "",
   "director": "Рон Ховард",
-  "actors": "Рассел Кроу, Эд Харрис, Дженнифер Коннелли, Кристофер Пламмер, Пол Беттани",
+  "actors": [
+   "Рассел Кроу",
+   "Эд Харрис",
+   "Дженнифер Коннелли",
+   "Кристофер Пламмер",
+   "Пол Беттани"
+  ],
   "kinopoisk_id": 530,
   "link": "https://kinogo.ec/21249--igry-razuma.html"
  },
@@ -736,9 +838,41 @@
   "trailer_file_id": "",
   "trailer_thumb": "",
   "director": "Нил Бёргер",
-  "actors": "Эдвард Нортон, Пол Джаматти, Джессика Бил, Руфус Сьюэлл, Эдди Марсан",
+  "actors": [
+   "Эдвард Нортон",
+   "Пол Джаматти",
+   "Джессика Бил",
+   "Руфус Сьюэлл",
+   "Эдди Марсан"
+  ],
   "kinopoisk_id": 102198,
   "link": "https://kinogo.ec/16093-illjuzionist.html"
+ },
+ {
+  "code": "477",
+  "title": "Интерстеллар",
+  "rating": "8.7",
+  "poster": "posters/477.jpg",
+  "description": "Когда засуха, пыльные бури и вымирание растений приводят человечество к продовольственному кризису, коллектив исследователей и учёных отправляется сквозь червоточину (которая предположительно соединяет области пространства-времени через большое расстояние)…",
+  "genres": [],
+  "duration": 0,
+  "countries": [],
+  "year": "2014",
+  "added_at": "",
+  "trailer": "https://widgets.kinopoisk.ru/discovery/trailer/104746?onlyPlayer=1&autoplay=1&cover=1",
+  "trailer_yt": "",
+  "trailer_file_id": "",
+  "trailer_thumb": "",
+  "director": "Кристофер Нолан",
+  "actors": [
+   "Мэттью Макконахи",
+   "Энн Хэтэуэй",
+   "Джессика Честейн",
+   "Маккензи Фой",
+   "Майкл Кейн"
+  ],
+  "kinopoisk_id": 258687,
+  "link": "https://kinogo.ec/17487--interstellar.html"
  },
  {
   "code": "421",
@@ -831,7 +965,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "",
   "director": "Дункан Джонс",
-  "actors": "Джейк Джилленхол, Мишель Монахэн, Вера Фармига, Джеффри Райт, Майкл Арден",
+  "actors": [
+   "Джейк Джилленхол",
+   "Мишель Монахэн",
+   "Вера Фармига",
+   "Джеффри Райт",
+   "Майкл Арден"
+  ],
   "kinopoisk_id": 409295,
   "link": "https://kinogo.ec/29568--ishodnyj-kod.html"
  },
@@ -856,7 +996,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/449.jpg",
   "director": "Чхве Джэ-хун",
-  "actors": "Чан Хёк, Ли Со-ён, Ли Сын-джун, Брюс Хан, Ли Чхэ-ён",
+  "actors": [
+   "Чан Хёк",
+   "Ли Со-ён",
+   "Ли Сын-джун",
+   "Брюс Хан",
+   "Ли Чхэ-ён"
+  ],
   "kinopoisk_id": 4880777,
   "link": "https://kinogo.ec/54735--killer-devchonka-dolzhna-umeret.html"
  },
@@ -949,7 +1095,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdD2qbWLWd2PD9TlR8nY4tzquKS__qAALEnwAC_LHgSEh0Esc62SI7PQQ",
   "trailer_thumb": "posters/442.jpg",
   "director": "Жан-Франсуа Рише",
-  "actors": "Джерард Батлер, Майк Колтер, Тони Голдуин, Йосон Ань, Ивэн Дэйн Тейлор",
+  "actors": [
+   "Джерард Батлер",
+   "Майк Колтер",
+   "Тони Голдуин",
+   "Йосон Ань",
+   "Ивэн Дэйн Тейлор"
+  ],
   "kinopoisk_id": 1338502,
   "link": "https://kinogo.ec/55627--krushenie.html"
  },
@@ -977,7 +1129,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdCWqbWKcGMHEK82-l9DMzxKEXVC61AAK-nwAC_LHgSMprocs4nGHNPQQ",
   "trailer_thumb": "posters/432.jpg",
   "director": "Роберт Редфорд",
-  "actors": "Уилл Смит, Мэтт Дэймон, Шарлиз Терон, Брюс Макгилл, Джоэль Гретш",
+  "actors": [
+   "Уилл Смит",
+   "Мэтт Дэймон",
+   "Шарлиз Терон",
+   "Брюс Макгилл",
+   "Джоэль Гретш"
+  ],
   "kinopoisk_id": 736,
   "link": "https://kinogo.ec/26089--legenda-bagera-vansa.html"
  },
@@ -1004,7 +1162,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdEWqbWLmIN34l5zgw5c5F9jWKoTRSAALGnwAC_LHgSOQAAahGUnRk5T0E",
   "trailer_thumb": "posters/444.jpg",
   "director": "Барри Зонненфельд",
-  "actors": "Томми Ли Джонс, Уилл Смит, Линда Фиорентино, Винсент Д’Онофрио, Рип Торн",
+  "actors": [
+   "Томми Ли Джонс",
+   "Уилл Смит",
+   "Линда Фиорентино",
+   "Винсент Д’Онофрио",
+   "Рип Торн"
+  ],
   "kinopoisk_id": 1091,
   "link": "https://kinogo.ec/30433--ludi-v-chernom.html"
  },
@@ -1061,7 +1225,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdFmqbWMLP7OQQgSQe1lzjttqmpK_YAALLnwAC_LHgSOPNPKli10qyPQQ",
   "trailer_thumb": "posters/456.jpg",
   "director": "Джордж Нолфи",
-  "actors": "Мэтт Дэймон, Эмили Блант, Энтони Маки, Джон Слэттери, Теренс Стэмп",
+  "actors": [
+   "Мэтт Дэймон",
+   "Эмили Блант",
+   "Энтони Маки",
+   "Джон Слэттери",
+   "Теренс Стэмп"
+  ],
   "kinopoisk_id": 450765,
   "link": "https://kinogo.ec/16686-menjajuschie-realnost.html"
  },
@@ -1090,7 +1260,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/440.jpg",
   "director": "Николай Арсель",
-  "actors": "Мадс Миккельсен, Аманда Коллин, Симон Беннебьерг, Мелина Хагберг, Кристине Куят Торп",
+  "actors": [
+   "Мадс Миккельсен",
+   "Аманда Коллин",
+   "Симон Беннебьерг",
+   "Мелина Хагберг",
+   "Кристине Куят Торп"
+  ],
   "kinopoisk_id": 4991138,
   "link": "https://kinogo.ec/82510--mech-korolja.html"
  },
@@ -1117,7 +1293,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/450.jpg",
   "director": "Джосс Уидон",
-  "actors": "Нэйтан Филлион, Джина Торрес, Алан Тьюдик, Морена Баккарин, Адам Болдуин",
+  "actors": [
+   "Нэйтан Филлион",
+   "Джина Торрес",
+   "Алан Тьюдик",
+   "Морена Баккарин",
+   "Адам Болдуин"
+  ],
   "kinopoisk_id": "",
   "link": "https://kinogo.ec/20062-missija-sereniti.html"
  },
@@ -1157,7 +1339,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "",
   "director": "Ян Комаса",
-  "actors": "Энсон Бун, Стивен Грэм, Андреа Райзборо, Кит Ракусен, Моника Фрайчик",
+  "actors": [
+   "Энсон Бун",
+   "Стивен Грэм",
+   "Андреа Райзборо",
+   "Кит Ракусен",
+   "Моника Фрайчик"
+  ],
   "kinopoisk_id": 10956019,
   "link": "https://kinogo.ec/125080-na-cepi.html"
  },
@@ -1182,7 +1370,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdCmqbWKo8aV3nhhEhKt16x92Y5KbPAAK_nwAC_LHgSO1Cpt5mwOXfPQQ",
   "trailer_thumb": "posters/434.jpg",
   "director": "Ванесса Касвиль",
-  "actors": "Майка Монро, Тайрик Уизерс, Брэдли Уитфорд, Лорен Грэм, Дженнифер Робертсон",
+  "actors": [
+   "Майка Монро",
+   "Тайрик Уизерс",
+   "Брэдли Уитфорд",
+   "Лорен Грэм",
+   "Дженнифер Робертсон"
+  ],
   "kinopoisk_id": 9823847,
   "link": "https://kinogo.ec/125799-napominanie-o-nem.html"
  },
@@ -1211,7 +1405,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/467.jpg",
   "director": "Кристофер Нолан",
-  "actors": "Леонардо ДиКаприо, Джозеф Гордон-Левитт, Эллиот Пейдж, Том Харди, Кэн Ватанабэ",
+  "actors": [
+   "Леонардо ДиКаприо",
+   "Джозеф Гордон-Левитт",
+   "Эллиот Пейдж",
+   "Том Харди",
+   "Кэн Ватанабэ"
+  ],
   "kinopoisk_id": 447301,
   "link": "https://kinogo.ec/23767--nachalo.html"
  },
@@ -1272,7 +1472,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdDmqbWLJ6bdvfbHeEjQ0c9jHQa0vRAALDnwAC_LHgSCZN6aVIwuwHPQQ",
   "trailer_thumb": "posters/441.jpg",
   "director": "Петра Бьондина Вольпе",
-  "actors": "Леони Бенеш, Соня Ризен, Алиреза Байрам, Selma Jamal Aldin, Margherita Schoch",
+  "actors": [
+   "Леони Бенеш",
+   "Соня Ризен",
+   "Алиреза Байрам",
+   "Selma Jamal Aldin",
+   "Margherita Schoch"
+  ],
   "kinopoisk_id": 7331891,
   "link": "https://kinogo.ec/121398--nochnaja-smena.html"
  },
@@ -1329,7 +1535,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/437.jpg",
   "director": "Джон Мэдден",
-  "actors": "Джессика Честейн, Марк Стронг, Гугу Эмбата-Ро, Элисон Пилл, Майкл Стулбарг",
+  "actors": [
+   "Джессика Честейн",
+   "Марк Стронг",
+   "Гугу Эмбата-Ро",
+   "Элисон Пилл",
+   "Майкл Стулбарг"
+  ],
   "kinopoisk_id": 933307,
   "link": "https://kinogo.ec/18884--opasnaja-igra-sloun.html"
  },
@@ -1354,7 +1566,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdDGqbWK6G0tm3pOtPDpZAVwjUCtzbAALBnwAC_LHgSJFbqKNO265zPQQ",
   "trailer_thumb": "posters/438.jpg",
   "director": "Антуан Фукуа",
-  "actors": "Уилл Смит, Бен Фостер, Чармэйн Бингва, Стивен Огг, Мустафа Шакир",
+  "actors": [
+   "Уилл Смит",
+   "Бен Фостер",
+   "Чармэйн Бингва",
+   "Стивен Огг",
+   "Мустафа Шакир"
+  ],
   "kinopoisk_id": 4503141,
   "link": "https://kinogo.ec/55445--osvobozhdenie-2022-hd.html"
  },
@@ -1374,7 +1592,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "",
   "director": "Мортен Тильдум",
-  "actors": "Аксель Хенни, Николай Костер-Вальдау, Сюннёве Макоди Лунд, Эйвинн Сандер, Юлие Эльгор",
+  "actors": [
+   "Аксель Хенни",
+   "Николай Костер-Вальдау",
+   "Сюннёве Макоди Лунд",
+   "Эйвинн Сандер",
+   "Юлие Эльгор"
+  ],
   "kinopoisk_id": 526812,
   "link": "https://kinogo.ec/19336-ohotniki-za-golovami.html"
  },
@@ -1400,7 +1624,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdHmqbWNV9VW5yW8V9crJJtOge2YsWAALTnwAC_LHgSP8F59_7__1hPQQ",
   "trailer_thumb": "posters/468.jpg",
   "director": "Доминик Сена",
-  "actors": "Джон Траволта, Хью Джекман, Холли Берри, Дон Чидл, Сэм Шепард",
+  "actors": [
+   "Джон Траволта",
+   "Хью Джекман",
+   "Холли Берри",
+   "Дон Чидл",
+   "Сэм Шепард"
+  ],
   "kinopoisk_id": 849,
   "link": "https://kinogo.ec/24459--parol-ryba-mech.html"
  },
@@ -1426,7 +1656,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdBmqbWKMuua8aJv1QYfjTH49MsqvHAAK7nwAC_LHgSPMUbT4XIPABPQQ",
   "trailer_thumb": "posters/428.jpg",
   "director": "Паоло Дженовезе",
-  "actors": "Тони Сервилло, Валерио Мастандреа, Маргерита Буй, Сара Серрайокко, Габриэле Кристини",
+  "actors": [
+   "Тони Сервилло",
+   "Валерио Мастандреа",
+   "Маргерита Буй",
+   "Сара Серрайокко",
+   "Габриэле Кристини"
+  ],
   "kinopoisk_id": 1138971,
   "link": "https://kinogo.ec/56605--pervyj-den-moej-zhizni.html"
  },
@@ -1453,7 +1689,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdF2qbWMVua0zq4KLBrWpkpoEZJUHTAALMnwAC_LHgSFcspKasLpVhPQQ",
   "trailer_thumb": "posters/457.jpg",
   "director": "Мэл Гибсон",
-  "actors": "Эндрю Гарфилд, Сэм Уортингтон, Тереза Палмер, Люк Брейси, Винс Вон",
+  "actors": [
+   "Эндрю Гарфилд",
+   "Сэм Уортингтон",
+   "Тереза Палмер",
+   "Люк Брейси",
+   "Винс Вон"
+  ],
   "kinopoisk_id": 649917,
   "link": "https://kinogo.ec/18325--po-soobrazhenijam-sovesti-v1.html"
  },
@@ -1477,7 +1719,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdGmqbWMzStZmdHDwmd4y6Al97ZOZTAALPnwAC_LHgSFftBqNAn_RNPQQ",
   "trailer_thumb": "posters/461.jpg",
   "director": "Фрэнк Дарабонт",
-  "actors": "Тим Роббинс, Морган Фриман, Боб Гантон, Уильям Сэдлер, Клэнси Браун",
+  "actors": [
+   "Тим Роббинс",
+   "Морган Фриман",
+   "Боб Гантон",
+   "Уильям Сэдлер",
+   "Клэнси Браун"
+  ],
   "kinopoisk_id": 326,
   "link": "https://kinogo.ec/29176--pobeg-iz-shoushenka.html"
  },
@@ -1504,7 +1752,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdGGqbWMYI5cPHqfMpUAPuZp_y3lEXAALNnwAC_LHgSFznmFh2g8KnPQQ",
   "trailer_thumb": "posters/458.jpg",
   "director": "Эдвард Цвик",
-  "actors": "Кэн Ватанабэ, Том Круз, Коюки, Уильям Этертон, Тони Голдуин",
+  "actors": [
+   "Кэн Ватанабэ",
+   "Том Круз",
+   "Коюки",
+   "Уильям Этертон",
+   "Тони Голдуин"
+  ],
   "kinopoisk_id": 6764,
   "link": "https://kinogo.ec/22875--poslednij-samuraj.html"
  },
@@ -1563,7 +1817,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdG2qbWM46Iyru6DscRjoLPCle1ZLBAALQnwAC_LHgSJMHczlwVskqPQQ",
   "trailer_thumb": "posters/463.jpg",
   "director": "Сэм Мендес",
-  "actors": "Том Хэнкс, Тайлер Хэклин, Пол Ньюман, Джуд Лоу, Дэниэл Крэйг",
+  "actors": [
+   "Том Хэнкс",
+   "Тайлер Хэклин",
+   "Пол Ньюман",
+   "Джуд Лоу",
+   "Дэниэл Крэйг"
+  ],
   "kinopoisk_id": 548,
   "link": "https://kinogo.ec/24651-prokljatyj-put.html"
  },
@@ -1622,7 +1882,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/469.jpg",
   "director": "Тед Мелфи",
-  "actors": "Тараджи П. Хенсон, Октавия Спенсер, Жанель Моне, Кевин Костнер, Кирстен Данст",
+  "actors": [
+   "Тараджи П. Хенсон",
+   "Октавия Спенсер",
+   "Жанель Моне",
+   "Кевин Костнер",
+   "Кирстен Данст"
+  ],
   "kinopoisk_id": 966036,
   "link": "https://kinogo.ec/13858--skrytye-figury.html"
  },
@@ -1679,7 +1945,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdCGqbWKYa6Jg3Gz3zh_Hu3l7crA5wAAK9nwAC_LHgSJGZtg0l40u5PQQ",
   "trailer_thumb": "posters/431.jpg",
   "director": "Потси Пончироли",
-  "actors": "Тим Блейк Нельсон, Скотт Хейз, Гэвин Льюис, Трэйси Эдкинс, Стивен Дорфф",
+  "actors": [
+   "Тим Блейк Нельсон",
+   "Скотт Хейз",
+   "Гэвин Льюис",
+   "Трэйси Эдкинс",
+   "Стивен Дорфф"
+  ],
   "kinopoisk_id": 4293245,
   "link": "https://kinogo.ec/53115--staryj-genri.html"
  },
@@ -1703,7 +1975,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdFWqbWMA5J9Lk0LZXet3_-g51uHpuAALKnwAC_LHgSOKjPfZTS2vIPQQ",
   "trailer_thumb": "posters/yt454.jpg",
   "director": "Мэл Гибсон",
-  "actors": "Джеймс Кэвизел, Майя Моргенштерн, Христо Живков, Франческо Де Вито, Моника Беллуччи",
+  "actors": [
+   "Джеймс Кэвизел",
+   "Майя Моргенштерн",
+   "Христо Живков",
+   "Франческо Де Вито",
+   "Моника Беллуччи"
+  ],
   "kinopoisk_id": 3707,
   "link": "https://kinogo.ec/17464--strasti-hristovy.html"
  },
@@ -1729,7 +2007,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/427.jpg",
   "director": "Джонатан Мостоу",
-  "actors": "Брюс Уиллис, Рада Митчелл, Розамунд Пайк, Борис Коджо, Джеймс Джинти",
+  "actors": [
+   "Брюс Уиллис",
+   "Рада Митчелл",
+   "Розамунд Пайк",
+   "Борис Коджо",
+   "Джеймс Джинти"
+  ],
   "kinopoisk_id": 397671,
   "link": "https://kinogo.ec/29255-surrogaty.html"
  },
@@ -1756,7 +2040,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdE2qbWLyX_wh1m_E07qKANd7PzsOiAALInwAC_LHgSKI947qVazocPQQ",
   "trailer_thumb": "posters/448.jpg",
   "director": "Джон С. Бейрд",
-  "actors": "Тэрон Эджертон, Никита Ефремов, Софья Лебедева, Энтони Бойл, Бен Майлз",
+  "actors": [
+   "Тэрон Эджертон",
+   "Никита Ефремов",
+   "Софья Лебедева",
+   "Энтони Бойл",
+   "Бен Майлз"
+  ],
   "kinopoisk_id": 1396300,
   "link": "https://kinogo.ec/56011--tetris-2023.html"
  },
@@ -1821,7 +2111,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/465.jpg",
   "director": "Роджер Споттисвуд",
-  "actors": "Люк Тредэвэй, Боб, Рута Гедминтас, Джоэнн Фрогатт, Энтони Хэд",
+  "actors": [
+   "Люк Тредэвэй",
+   "Боб",
+   "Рута Гедминтас",
+   "Джоэнн Фрогатт",
+   "Энтони Хэд"
+  ],
   "kinopoisk_id": 930442,
   "link": "https://kinogo.ec/21056--ulichnyj-kot-po-klichke-bob.html"
  },
@@ -1848,7 +2144,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/462.jpg",
   "director": "Лассе Халльстрём",
-  "actors": "Ричард Гир, Джоан Аллен, Кэри-Хироюки Тагава, Сара Ремер, Джейсон Александер",
+  "actors": [
+   "Ричард Гир",
+   "Джоан Аллен",
+   "Кэри-Хироюки Тагава",
+   "Сара Ремер",
+   "Джейсон Александер"
+  ],
   "kinopoisk_id": 387556,
   "link": "https://kinogo.ec/20500-hatiko-samyj-vernyj-drug.html"
  },
@@ -1875,7 +2177,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/460.jpg",
   "director": "Майкл Китон",
-  "actors": "Майкл Китон, Аль Пачино, Джеймс Марсден, Сьюзи Накамура, Джон Хугенэккер",
+  "actors": [
+   "Майкл Китон",
+   "Аль Пачино",
+   "Джеймс Марсден",
+   "Сьюзи Накамура",
+   "Джон Хугенэккер"
+  ],
   "kinopoisk_id": 5094888,
   "link": "https://kinogo.ec/109967-hitmen-poslednee-delo.html"
  },
@@ -1900,7 +2208,13 @@
   "trailer_file_id": "BAACAgIAAxkDAAIdB2qbWKW8AjCaZ-tf62LwlaY2e7OuAAK8nwAC_LHgSCkQJ13jxvs2PQQ",
   "trailer_thumb": "posters/430.jpg",
   "director": "Елена Попович",
-  "actors": "Арис Серветалис, Александр Петров, Тония Сотиропулу, Микки Рурк, Яннис Станкоглу",
+  "actors": [
+   "Арис Серветалис",
+   "Александр Петров",
+   "Тония Сотиропулу",
+   "Микки Рурк",
+   "Яннис Станкоглу"
+  ],
   "kinopoisk_id": 1003448,
   "link": "https://kinogo.ec/54027-chelovek-bozhij.html"
  },
@@ -1929,7 +2243,13 @@
   "trailer_file_id": "",
   "trailer_thumb": "posters/453.jpg",
   "director": "Декстер Флетчер",
-  "actors": "Тэрон Эджертон, Хью Джекман, Кристофер Уокен, Ирис Бербен, Марк Бентон",
+  "actors": [
+   "Тэрон Эджертон",
+   "Хью Джекман",
+   "Кристофер Уокен",
+   "Ирис Бербен",
+   "Марк Бентон"
+  ],
   "kinopoisk_id": 394619,
   "link": "https://kinogo.ec/20564--jeddi-orel.html"
  }

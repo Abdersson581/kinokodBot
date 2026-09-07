@@ -1,22 +1,22 @@
 {
- "code_of_day": "435",
- "code_of_day_date": "2026-09-06",
- "updated_at": "2026-09-06",
+ "code_of_day": "432",
+ "code_of_day_date": "2026-09-07",
+ "updated_at": "2026-09-07",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 16,
-   "total": 58
+   "unlocks": 15,
+   "total": 60
   },
   {
    "rank": 2,
    "unlocks": 14,
-   "total": 123
+   "total": 14
   },
   {
    "rank": 3,
-   "unlocks": 14,
-   "total": 14
+   "unlocks": 13,
+   "total": 123
   },
   {
    "rank": 4,
@@ -45,13 +45,13 @@
   },
   {
    "rank": 9,
-   "unlocks": 3,
-   "total": 5
+   "unlocks": 4,
+   "total": 4
   },
   {
    "rank": 10,
-   "unlocks": 3,
-   "total": 3
+   "unlocks": 4,
+   "total": 4
   }
  ],
  "leaderboard_kind": "week",
@@ -60,40 +60,40 @@
    "emoji": "🌀🍰⏰🧠",
    "answer": "Начало",
    "options": [
-    "Хатико: Самый верный друг",
-    "Охотники за головами",
-    "Гран Торино",
-    "Начало"
-   ]
-  },
-  {
-   "emoji": "🪨🔨🌧️🎵",
-   "answer": "Побег из Шоушенка",
-   "options": [
+    "Скрытые фигуры",
+    "Люди в черном",
     "Начало",
-    "Побег из Шоушенка",
-    "Звук свободы",
-    "Меч короля"
+    "Исходный код"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "answer": "Хатико: Самый верный друг",
    "options": [
-    "Исходный код",
     "Хатико: Самый верный друг",
-    "Между нами горы",
-    "Человек божий"
+    "Скрытые фигуры",
+    "Спасти рядового Райана",
+    "Охотники за головами"
+   ]
+  },
+  {
+   "emoji": "🪨🔨🌧️🎵",
+   "answer": "Побег из Шоушенка",
+   "options": [
+    "Побег из Шоушенка",
+    "Расплата",
+    "Борьба со льдом",
+    "Зеленая миля"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "answer": "Зеленая миля",
    "options": [
-    "Всевидящее око",
-    "Легенда Багера Ванса",
-    "Гран Торино",
-    "Зеленая миля"
+    "О чем говорят незнакомцы",
+    "Зеленая миля",
+    "Суррогаты",
+    "Богемская рапсодия"
    ]
   }
  ],
@@ -125,6 +125,13 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg142996.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1788715493.4861042
+  },
+  {
+   "title": "Сергей Урсуляк экранизировал Бородинское сражение",
+   "link": "https://www.kinonews.ru/news_143019/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143019.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1788802713.6478791
   }
  ],
  "premieres": [
@@ -144,13 +151,13 @@
    "ru_date": "2026-09-10"
   },
   {
-   "title": "Надежда",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5230825.jpg",
+   "title": "Хитрый койот",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/572477.jpg",
    "ru_date": "2026-09-10"
   },
   {
-   "title": "Хитрый койот",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/572477.jpg",
+   "title": "Надежда",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5230825.jpg",
    "ru_date": "2026-09-10"
   },
   {

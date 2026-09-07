@@ -111,6 +111,9 @@ let activeGenre = '';               // выбранный жанр-фильтр 
 let activeCountry = '';             // v89: выбранная страна-фильтр ('' = все)
 let onlyTrailer = false;            // v90: показывать только фильмы с трейлером
 let onlyOnline = false;             // v91: только фильмы с прямой ссылкой на просмотр
+const GRID_PAGE_SIZE = 30;          // v93: афиша по 30 карточек + «Показать ещё»
+let gridPage = 1;
+let _gridFilterKey = '';            // ключ текущих фильтров — при смене сбрасываем страницу
 let trailerGenre = '';              // жанр-фильтр для трейлеров
 const FAV_KEY = 'kinoafisha_favs';
 const FAV_MODE_KEY = 'kinoafisha_fav_mode';  // «Моё»: fav = хочу посмотреть | done = разгаданные
@@ -208,6 +211,21 @@ const addRecent = (code) => {
   r.unshift(code);
   localStorage.setItem(RECENT_KEY, JSON.stringify(r.slice(0, MAX_RECENT)));
 };
+
+// ---------- v93: счётчик открытий карточки ----------
+// Показывает «👀 Открывал(а) N раз» в карточке фильма — приятная «память» приложения.
+const OPEN_COUNT_KEY = 'kinoafisha_open_count';
+const getOpenCounts = () => {
+  try { return JSON.parse(localStorage.getItem(OPEN_COUNT_KEY) || '{}') || {}; }
+  catch (e) { return {}; }
+};
+function bumpOpenCount(code) {
+  const c = getOpenCounts();
+  const k = String(code);
+  c[k] = (c[k] || 0) + 1;
+  try { localStorage.setItem(OPEN_COUNT_KEY, JSON.stringify(c)); } catch (e) {}
+  return c[k];
+}
 
 // ---------- v74: история просмотренных трейлеров («Продолжить смотреть») ----------
 // Отдельно от «Недавно смотрели» — здесь только те фильмы, чей трейлер реально
@@ -2768,6 +2786,12 @@ function renderGrid() {
   const q = qRaw.toLowerCase().replace(/ё/g, 'е');
   const smart = parseSmartQuery(qRaw);
   const sort = document.getElementById('sort').value;
+  // v93: «Показать ещё» — афиша порциями по GRID_PAGE_SIZE (30). При смене
+  // любого фильтра/поиска/сортировки страница сбрасывается на первую.
+  const gKey = [view, qRaw, smart ? JSON.stringify(smart) : '', sort, favMode,
+    activeGenre, activeCountry, timeLimit, onlyTrailer, onlyOnline,
+    localStorage.getItem(HIDE_KEY)].join('§');
+  if (gKey !== _gridFilterKey) { _gridFilterKey = gKey; gridPage = 1; }
   const favMode = localStorage.getItem(FAV_MODE_KEY);  // fav | done | watched
   const unlockedAll = getUnlocked();
   const watchedAll = getWatched();
@@ -2949,7 +2973,14 @@ function renderGrid() {
     return;
   }
   const backup = (view === 'fav' && (favMode || 'fav') === 'fav') ? backupFavsNotice() : '';
-  c.innerHTML = head + backup + list.map(m => {
+  // v93: виртуализация афиши — рисуем только текущую страницу (по 30),
+  // кнопка «Показать ещё» появляется, когда за границей остались фильмы.
+  const gridClipped = (view === 'grid') && list.length > GRID_PAGE_SIZE;
+  const visible = gridClipped ? list.slice(0, gridPage * GRID_PAGE_SIZE) : list;
+  const showMoreBtn = gridClipped && visible.length < list.length
+    ? `<button class="btn-show-more" id="btn-show-more">🎞 Показать ещё (${list.length - visible.length})</button>`
+    : '';
+  c.innerHTML = head + backup + visible.map(m => {
     const myR = (view === 'fav' && favMode === 'rated') ? (getRatings()[String(m.code)] || 0) : 0;
     return `
     <div class="movie-card${(view === 'fav' && (favMode || 'fav') === 'fav' && getFavs().includes(String(m.code))) ? ' card-fav' : ''}" data-code="${esc(m.code)}">
@@ -2959,7 +2990,7 @@ function renderGrid() {
         <span class="rating">${ratingBadge(m)}${myR ? `<span class="my-stars">${'★'.repeat(myR)}</span>` : ''}${durOf(m) ? `<span class="dur-chip">⏱ ${durOf(m)} мин</span>` : ''}</span>
       </div>
     </div>`;
-  }).join('');
+  }).join('') + showMoreBtn;
   const b = document.getElementById('btn-backup');
   if (b) b.onclick = () => sendOrDeepLink({ action: 'save_favs', codes: getFavs() });
   const bc = document.getElementById('btn-copy-list');
@@ -2990,6 +3021,13 @@ function renderGrid() {
     renderGrid();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+  // v93: «Показать ещё» — добавляем следующую порцию карточек
+  const sm = document.getElementById('btn-show-more');
+  if (sm) sm.onclick = () => {
+    haptic('light');
+    gridPage++;
+    renderGrid();
+  };
   wireFavQuick(c);
 }
 // ---------- карточка фильма ----------
@@ -2999,6 +3037,7 @@ function openDetail(code) {
   if (!m) return;
   bumpWeekStat('open');
   addRecent(m.code);
+  const openN = bumpOpenCount(code);   // v93: счётчик открытий карточки
   challDone('open_movie');
   if (view && view !== 'detail') detailOrigin = view;
   view = 'detail';
@@ -3036,6 +3075,7 @@ function openDetail(code) {
         ${m.director ? `<p class="people-line">🎬 Режиссёр: <b class="person-chip" data-q="${esc(m.director)}" title="Найти фильмы">${esc(m.director)}</b></p>` : ''}
         ${(m.actors || []).length ? `<p class="people-line">⭐ В ролях: ${m.actors.slice(0, 4).map(a => `<b class="person-chip" data-q="${esc(a)}" title="Найти фильмы">${esc(a)}</b>`).join(', ')}</p>` : ''}
         <p class="desc">${esc(m.description || 'Описание скоро появится.')}</p>
+        ${openN > 1 ? `<p class="open-count">👀 Открывал(а) ${openN} раз(а)</p>` : (openN === 1 ? '<p class="open-count">👀 Впервые открыл(а) — как тебе?</p>' : '')}
         ${getNotes()[code] ? `<div class="note-box">📝 ${esc(getNotes()[code])}</div>` : ''}
         <div class="detail-actions">
           ${(m.link || cleanKpTitle(m.title)) ? '<button class="btn-watch" id="btn-watch">' + (m.link ? '▶️ Смотреть фильм' : '🍿 Где посмотреть') + '</button>' : ''}
