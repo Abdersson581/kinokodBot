@@ -8,7 +8,7 @@
   --muted: #8b90a7;
 }
 * { box-sizing: border-box; }
-html, body { overflow-x: hidden; } /* страница не должна скроллиться вбок */
+html, body { overflow-x: hidden; overflow-x: clip; } /* v86: clip не ломает sticky */ /* страница не должна скроллиться вбок */
 body {
   margin: 0;
   padding: 12px;
@@ -27,7 +27,8 @@ body {
 /* v77: стеклянная «липкая» шапка — тянется на всю ширину, размывает контент под собой */
 .header {
   padding: 6px 0 2px;
-  position: sticky; top: 0; z-index: 60;
+  /* v86: шапка НЕ липкая — липнут только табы (иначе перекрывают друг друга) */
+  position: static;
   margin: -12px -12px 0;
   padding: 12px 12px 6px;
   background: rgba(15, 18, 32, .97); /* v85: почти непрозрачная */
@@ -198,10 +199,13 @@ body.light .header.scrolled { box-shadow: 0 8px 26px rgba(30, 40, 80, .14); }
 .gate .btn-back { width: 100%; text-align: center; margin-top: 14px; }
 /* Вкладки */
 .tabs {
+  position: sticky; top: 0; z-index: 55; /* v86: табы прилипают к верху при скролле */
+  background: var(--bg);
+  margin: 0 -12px;
+  padding: 8px 12px 6px;
   display: flex;
   flex-wrap: wrap; /* 9 вкладок: не влезают в один ряд — переносим на второй */
   gap: 6px;
-  margin-top: 10px;
 }
 .tab {
   flex: 1;
