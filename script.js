@@ -2680,11 +2680,9 @@ function pickRandomMovie() {
   if (_recentRandom.length > 5) _recentRandom = _recentRandom.slice(-5);
   return m;
 }
-function renderRandomMovie() {
-  const m = pickRandomMovie();
+function _renderRandomCard(m) {
   const body = document.getElementById('random-body');
   if (!m || !body) return;
-  haptic('light');
   const flags = (m.countries || []).slice(0, 2).map(flagOf).join(' ');
   body.innerHTML = `
     <div class="rm-card" data-code="${esc(m.code)}">
@@ -2704,6 +2702,32 @@ function renderRandomMovie() {
   if (w) w.onclick = () => openWatchLink(m);
 }
 function closeRandom() { document.getElementById('random-modal').classList.add('hidden'); }
+
+// v98: рулетка — «Случайный фильм» перебирает названия с замедлением,
+// затем фиксирует выпавшую карточку. Закрытие модалки останавливает крутку.
+function renderRandomMovie() {
+  const m = pickRandomMovie();
+  const body = document.getElementById('random-body');
+  const modal = document.getElementById('random-modal');
+  if (!m || !body || !modal) return;
+  haptic('light');
+  const spin = () => {
+    let n = 0, delay = 60;
+    body.innerHTML = '<div class="rm-roll"><span class="rm-roll-dice">🎲</span><b id="rm-roll-name">…</b></div>';
+    const step = () => {
+      if (modal.classList.contains('hidden')) return;   // закрыли во время вращения
+      if (n++ >= 12) { _renderRandomCard(m); return; }
+      const r = ALL[Math.floor(Math.random() * ALL.length)];
+      const el = document.getElementById('rm-roll-name');
+      if (el) el.textContent = r.title || '…';
+      if (n % 4 === 0) haptic('light');
+      delay *= 1.22;
+      setTimeout(step, delay);
+    };
+    step();
+  };
+  spin();
+}
 
 // ---------- v64: «🎭 Загадай другу» ----------
 // Выбираешь фильм — делишься ссылкой с эмодзи-подсказками. Друг открывает
@@ -4119,10 +4143,30 @@ function showOnboarding() {
   modal.classList.remove('hidden');
 }
 
+// v98: «Что нового» — показываем один раз на версию, только после входа в апп
+const CHANGELOG_V = '98';
+const CL_KEY = 'kinoafisha_seen_changelog';
+function showChangelog() {
+  try { if (localStorage.getItem(CL_KEY) === CHANGELOG_V) return; } catch (e) { return; }
+  const m = document.getElementById('changelog-modal');
+  if (!m) return;
+  m.classList.remove('hidden');
+  const done = () => {
+    m.classList.add('hidden');
+    try { localStorage.setItem(CL_KEY, CHANGELOG_V); } catch (e) { /* пусто */ }
+  };
+  const ok = document.getElementById('btn-cl-ok');
+  if (ok) ok.onclick = () => { haptic('light'); done(); };
+  const x = document.getElementById('btn-cl-close');
+  if (x) x.onclick = done;
+  m.addEventListener('click', (e) => { if (e.target === m) done(); });
+}
+
 parseAccessHash();  // v96: подтверждение подписки (#access=1) — до решения гейт/вход
 if (localStorage.getItem(ACCESS_KEY) === '1') {
   enterApp();
   showOnboarding();
+  setTimeout(showChangelog, 900);  // v98: «Что нового» — раз на версию
 } else {
   showGate();
 }

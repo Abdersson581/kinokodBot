@@ -2929,3 +2929,18 @@ body.light.tabs-stuck .tabs {
   width: 16px; border-radius: 3px;
   background: var(--accent, #ffd166);
 }
+/* v98: рулетка случайного фильма + «Что нового» */
+.rm-roll {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 34px 12px; margin: 4px 0 12px;
+  border: 1px dashed color-mix(in srgb, var(--text, #fff) 25%, transparent);
+  border-radius: 14px;
+}
+.rm-roll-dice { font-size: 30px; display: inline-block; animation: rm-dice-spin 0.5s linear infinite; }
+@keyframes rm-dice-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.rm-roll b { font-size: 15px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+.cl-list { display: flex; flex-direction: column; gap: 10px; margin: 10px 0 14px; }
+.cl-item { display: flex; gap: 10px; align-items: flex-start; }
+.cl-item span { font-size: 20px; flex: 0 0 auto; line-height: 1.2; }
+.cl-item p { margin: 0; font-size: 13px; line-height: 1.45; color: color-mix(in srgb, var(--text, #fff) 80%, transparent); }
+.cl-item b { color: var(--text, #fff); }

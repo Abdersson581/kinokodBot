@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=97" />
+  <link rel="stylesheet" href="style.css?v=98" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -323,6 +323,21 @@
       <button class="btn-secondary" id="btn-random-again">🎲 Ещё вариант</button>
     </div>
   </div>
+  <!-- v98: Что нового — один раз на версию -->
+  <div id="changelog-modal" class="modal hidden">
+    <div class="modal-card">
+      <button class="modal-close" id="btn-cl-close">✕</button>
+      <h2>🎉 Что нового</h2>
+      <div class="cl-list">
+        <div class="cl-item"><span>🎲</span><p><b>Рулетка «Случайного фильма»</b> — кубик крутит варианты, потом выдаёт карточку</p></div>
+        <div class="cl-item"><span>☰</span><p><b>Режим «Список»</b> в афише — переключатель «Вид: Сетка / Список»</p></div>
+        <div class="cl-item"><span>🌗</span><p><b>Авто-тема</b> — днём светлая, вечером тёмная (ручной выбор важнее)</p></div>
+        <div class="cl-item"><span>🎬</span><p><b>Марафон</b>: свайпы и стрелки ←→, точки плейлиста, «досмотреть позже»</p></div>
+        <div class="cl-item"><span>🔒</span><p>Афиша — для подписчиков канала: вход через «✅ Проверить»</p></div>
+      </div>
+      <button class="btn-primary" id="btn-cl-ok">Круто, погнали! 🚀</button>
+    </div>
+  </div>
   <!-- Как играть -->
   <div id="howto-modal" class="modal hidden">
     <div class="modal-card">
@@ -420,7 +435,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=97"></script>
+  <script src="script.js?v=98"></script>
 </body>
 </html>
 
