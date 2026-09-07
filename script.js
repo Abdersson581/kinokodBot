@@ -13,7 +13,6 @@ function showGate() {
   document.getElementById('btn-gate-channel').onclick = () => tg.openTelegramLink(CHANNEL_URL);
   document.getElementById('btn-gate-check').onclick = () =>
     sendOrDeepLink({ action: 'access_check' });
-  document.getElementById('btn-gate-skip').onclick = enterApp;
 }
 function enterApp() {
   localStorage.setItem(ACCESS_KEY, '1');
@@ -1505,6 +1504,15 @@ function shareMarathon() {
     try { navigator.clipboard.writeText(url); tg.showPopup({ type: 'ok', message: 'Ссылка скопирована 📋' }); }
     catch (e2) { /* пусто */ }
   }
+}
+
+// v96: подтверждение подписки от бота — бот после успешной проверки открывает
+// апп с хэшем #access=1, это единственный способ пройти гейт (обход убран).
+function parseAccessHash() {
+  if (!/(^|[#&])access=1/.test(location.hash || '')) return false;
+  try { localStorage.setItem(ACCESS_KEY, '1'); } catch (e) {}
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; }
+  return true;
 }
 
 function parseMarathonHash() {
@@ -4068,6 +4076,7 @@ function showOnboarding() {
   modal.classList.remove('hidden');
 }
 
+parseAccessHash();  // v96: подтверждение подписки (#access=1) — до решения гейт/вход
 if (localStorage.getItem(ACCESS_KEY) === '1') {
   enterApp();
   showOnboarding();

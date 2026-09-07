@@ -2906,3 +2906,9 @@ body.light.tabs-stuck .tabs {
   position: static; width: 30px; height: 30px; font-size: 14px;
 }
 .row-chev { font-size: 20px; color: color-mix(in srgb, var(--text, #fff) 42%, transparent); }
+/* v96: подсказка под кнопкой проверки подписки (гейт стал жёстким) */
+.gate-hint {
+  margin: 6px 0 0; font-size: 12px; line-height: 1.45;
+  color: color-mix(in srgb, var(--text, #fff) 55%, transparent);
+}
+.gate .gate-hint { opacity: .85; }
