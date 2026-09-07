@@ -108,6 +108,7 @@ let LEADERBOARD = [];               // топ игроков сезона
 let LEADERBOARD_KIND = 'week';      // week | total — по чему ранжируем
 let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game | news | top | profile | trailers | achievements
 let activeGenre = '';               // выбранный жанр-фильтр ('' = все)
+let activeCountry = '';             // v89: выбранная страна-фильтр ('' = все)
 let trailerGenre = '';              // жанр-фильтр для трейлеров
 const FAV_KEY = 'kinoafisha_favs';
 const FAV_MODE_KEY = 'kinoafisha_fav_mode';  // «Моё»: fav = хочу посмотреть | done = разгаданные
@@ -721,6 +722,7 @@ function applyData(data) {
   LEADERBOARD_KIND = meta.leaderboard_kind === 'total' ? 'total' : 'week';
   updateSubtitle();
   renderGenreChips();
+  renderCountryChips();  // v89: фильтр по стране (флаги)
   showCodeDay(meta);
   renderFilmDay();
   renderEvening();      // v88: «Что посмотреть?» по настроению
@@ -915,6 +917,26 @@ function renderGenreChips() {
     renderGrid();
   }));
 }
+function renderCountryChips() {
+  const wrap = document.getElementById('country-chips');
+  if (!wrap) return;
+  const counter = new Map();
+  ALL.forEach(m => (m.countries || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1)));
+  const top = [...counter.entries()].filter(([, n]) => n >= 4)
+    .sort((a, b) => b[1] - a[1]).slice(0, 9);
+  if (!top.length) { wrap.classList.add('hidden'); return; }
+  wrap.innerHTML = `<button class="chip${activeCountry === '' ? ' active' : ''}" data-c="">🌍 Все</button>` +
+    top.map(([c, n]) =>
+      `<button class="chip${activeCountry === c ? ' active' : ''}" data-c="${esc(c)}">${flagOf(c)} ${esc(c)} <em>${n}</em></button>`
+    ).join('');
+  wrap.classList.remove('hidden');
+  wrap.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+    haptic('light');
+    activeCountry = ch.dataset.c || '';
+    renderCountryChips();
+    renderGrid();
+  }));
+}
 function renderHero() {
   const top = [...ALL]
     .filter(m => m.poster && parseFloat(m.rating))
@@ -973,9 +995,14 @@ function renderTodayShelf(meta) {
 
 // «⭐ Фильм дня» — hero-баннер на главной: детерминированно выбираем фильм
 // по дате (у всех пользователей в один день — один и тот же фильм)
+let _fdManual = null;  // v89: локальная «перебросанная» версия дня (только у этого пользователя)
 function filmDayPick() {
   const cands = ALL.filter(m => (parseFloat(m.rating) || 0) >= 7.3 && m.poster);
   if (cands.length < 5) return null;
+  if (_fdManual && cands.some(x => x.code === _fdManual)) {
+    const m = cands.find(x => x.code === _fdManual);
+    if (m) return m;
+  }
   const d = new Date();
   const seed = d.getFullYear() * 373 + (d.getMonth() + 1) * 31 + d.getDate();
   return cands[seed % cands.length];
@@ -997,8 +1024,22 @@ function renderFilmDay() {
         <div class="fd-title">${esc(m.title)}</div>
         <div class="fd-meta">${esc(String(m.year || ''))}${m.year && m.rating ? ' · ' : ''}⭐ ${esc(String(m.rating || ''))}${genres ? ' · ' + esc(genres) : ''}</div>
       </div>
+      <button class="fd-roll" id="fd-roll" title="Другой фильм дня">🎲</button>
       <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '♥\uFE0E' : '♡'}</button>`;
-  el.onclick = () => openDetail(m.code);
+  el.onclick = (e) => {
+    if (e.target.closest('#fd-roll')) return;  // кнопка «другой» не открывает карточку
+    if (e.target.closest('.fav-quick')) return;
+    openDetail(m.code);
+  };
+  const rollBtn = document.getElementById('fd-roll');
+  if (rollBtn) rollBtn.onclick = (ev) => {
+    ev.stopPropagation();
+    haptic('light');
+    const cands = ALL.filter(x => (parseFloat(x.rating) || 0) >= 7.3 && x.poster && String(x.code) !== String(m.code));
+    if (!cands.length) return;
+    _fdManual = cands[Math.floor(Math.random() * cands.length)].code;
+    renderFilmDay();
+  };
   wireFavQuick(el);
 }
 
@@ -2668,6 +2709,7 @@ function renderGrid() {
                 : ALL.filter(m => getFavs().includes(m.code)))))
     : [...ALL];
   if (activeGenre) list = list.filter(m => (m.genres || []).includes(activeGenre));
+  if (activeCountry) list = list.filter(m => (m.countries || []).includes(activeCountry));
   // v77: фильтр «Сколько времени есть?» — только фильмы с известной длительностью
   if (timeLimit && view === 'grid') list = list.filter(m => { const d = durOf(m); return d && d <= timeLimit; });
   // 🙈 «Скрыть разгаданные»: прячем карточки, код которых есть в localStorage
@@ -3382,6 +3424,11 @@ document.getElementById('search').addEventListener('input', () => {
   if (activeGenre) {
     activeGenre = '';
     renderGenreChips();
+  }
+  // v89: сброс фильтра по стране при вводе поиска — как и жанровый
+  if (activeCountry) {
+    activeCountry = '';
+    renderCountryChips();
   }
   initSearchHist(document.getElementById('search').value);
   _searchTimer = setTimeout(renderGrid, 180);
