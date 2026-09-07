@@ -2823,3 +2823,16 @@ body.tabs-stuck .tabs {
 body.light.tabs-stuck .tabs {
   box-shadow: 0 8px 22px rgba(30, 35, 60, .14);
 }
+
+/* v92: кнопка ""Сбросить фильтры"" — появляется при активном фильтре */
+.btn-clear-filters {
+  display: block; margin: 6px 0 2px;
+  padding: 6px 14px; border: 1px solid rgba(255,255,255,.16);
+  border-radius: 18px;
+  background: rgba(255,120,90,.14); color: #ffab8e;
+  font: 600 12.5px/1 Manrope, sans-serif; cursor: pointer;
+  transition: opacity .15s;
+}
+.btn-clear-filters:active { transform: scale(.96); }
+.light .btn-clear-filters { background: rgba(255,100,80,.12); color: #c05638; }
+

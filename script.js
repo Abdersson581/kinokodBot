@@ -2194,6 +2194,18 @@ function renderTrailers() {
   }));
 }
 
+// v92: «🎲 Случайный трейлер» — открывает случайный трейлер в плеере
+(function wireTrailerRandom() {
+  const b = document.getElementById('btn-tr-random');
+  if (!b) return;
+  b.addEventListener('click', () => {
+    const pool = ALL.filter(m => m.trailer_yt || m.trailer_file_id);
+    if (!pool.length) return;
+    haptic('light');
+    openTrailer(pool[Math.floor(Math.random() * pool.length)]);
+  });
+})();
+
 // ---------- достижения «🎖» ----------
 const ACHIEVEMENTS_LIST = [
   { id: 'first_code', emoji: '🔓', name: 'Первый код', desc: 'Разгадай первый код' },
@@ -2845,8 +2857,20 @@ function renderGrid() {
       const db = new Date(b.added_at || 0).getTime();
       return db - da;
     }
+    // v92: «⭐ По моей оценке» — сначала твои 5★→1★, потом неоценённые
+    if (sort === 'myrating') {
+      const ra = getRatings()[String(a.code)] || 0;
+      const rb = getRatings()[String(b.code)] || 0;
+      if (ra !== rb) return (rb - ra);
+      return (a.title || '').localeCompare(b.title || '', 'ru');
+    }
     return (a.title || '').localeCompare(b.title || '', 'ru');
   });
+  // v92: кнопка «🧹 Сбросить фильтры» — видна, когда активен хоть один фильтр
+  const anyFilter = !!(qRaw || activeGenre || activeCountry || timeLimit || onlyTrailer || onlyOnline);
+  const clearBtn = anyFilter
+    ? `<button class="btn-clear-filters" id="btn-clear-filters" title="Сбросить все фильтры">🧹 Сбросить фильтры</button>`
+    : '';
   const c = document.getElementById('movies-container');
   // v71: во время поиска прячем полки главной (тренды, премьеры, «Советуем», фильм дня),
   // чтобы результаты или «Ничего не нашлось» были сразу под строкой поиска, а не
@@ -2877,7 +2901,7 @@ function renderGrid() {
   const smartHint = smart
     ? `<div class="smart-hint">🧠 ${esc((smart.parts || []).join(' · '))} · найдено: ${list.length}<button class="smart-clear" title="Сбросить" onclick="document.getElementById('search').value='';renderGrid()">✕</button></div>`
     : '';
-  const head = modeSwitch + progressLine + smartHint
+  const head = modeSwitch + progressLine + smartHint + clearBtn
     // v75: полоску «просмотрено» показываем только когда есть хоть одна отметка —
     // «0 из 71» выглядело как баг и занимало место
     + (view === 'grid' && !searching && ALL.length && watchedAll.length > 0
@@ -2953,6 +2977,19 @@ function renderGrid() {
   });
   c.querySelectorAll('.movie-card').forEach(el =>
     el.addEventListener('click', () => openDetail(el.dataset.code)));
+  // v92: сброс всех фильтров одной кнопкой
+  const cf = document.getElementById('btn-clear-filters');
+  if (cf) cf.onclick = () => {
+    document.getElementById('search').value = '';
+    activeGenre = ''; renderGenreChips();
+    activeCountry = ''; renderCountryChips();
+    timeLimit = 0; renderTimeChips();
+    onlyTrailer = false; const tb = document.getElementById('btn-only-tr'); if (tb) tb.classList.remove('active');
+    onlyOnline = false; const ob = document.getElementById('btn-only-online'); if (ob) ob.classList.remove('active');
+    haptic('light');
+    renderGrid();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   wireFavQuick(c);
 }
 // ---------- карточка фильма ----------
