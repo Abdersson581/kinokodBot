@@ -39,9 +39,14 @@ parseMarathonHash(); // v78: «#marathon=…» — запуск марафона
 // ---------- тема: авто из Telegram + ручной переключатель ----------
 const THEME_KEY = 'kinoafisha_theme';
 function applyTheme() {
-  // Ручной переключатель имеет приоритет над авто-темой из Telegram
+  // Ручной переключатель имеет приоритет над авто-темой
   const saved = localStorage.getItem(THEME_KEY);
-  const scheme = saved || (tg.colorScheme || 'dark');
+  let scheme = saved;
+  if (!scheme) {
+    // v94: авто-тема по времени суток, пока пользователь не выбрал вручную
+    const h = new Date().getHours();
+    scheme = (h >= 8 && h < 20) ? 'light' : 'dark';
+  }
   document.body.classList.toggle('light', scheme === 'light');
 }
 function toggleTheme() {
@@ -114,6 +119,9 @@ let onlyOnline = false;             // v91: только фильмы с пря�
 const GRID_PAGE_SIZE = 30;          // v93: афиша по 30 карточек + «Показать ещё»
 let gridPage = 1;
 let _gridFilterKey = '';            // ключ текущих фильтров — при смене сбрасываем страницу
+// v94: режим афиши «Сетка» (по умолчанию) / «Список» — компактные строки
+const LAYOUT_KEY = 'kinoafisha_layout';
+let gridLayout = (localStorage.getItem(LAYOUT_KEY) || 'grid') === 'list' ? 'list' : 'grid';
 let trailerGenre = '';              // жанр-фильтр для трейлеров
 const FAV_KEY = 'kinoafisha_favs';
 const FAV_MODE_KEY = 'kinoafisha_fav_mode';  // «Моё»: fav = хочу посмотреть | done = разгаданные
@@ -589,6 +597,33 @@ function posterHtmlQuick(m) {
     ${hasNote ? '<span class="note-badge" title="Заметка">📝</span>' : ''}
     <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '♥\uFE0E' : '♡'}</button>
     ${m.link ? `<button class="watch-quick" data-code="${esc(m.code)}" aria-label="Смотреть" title="Смотреть фильм"></button>` : ''}
+  </div>`;
+}
+// v94: строка компактного списка — альтернатива карточке-постеру (афиша → «☰ Список»)
+function listRowHtml(m, q) {
+  const fav = getFavs().includes(m.code);
+  const myR = getRatings()[String(m.code)] || 0;
+  const meta = [m.year, (m.genres || []).slice(0, 3).join(' · '),
+    durOf(m) ? `⏱ ${durOf(m)} мин` : ''].filter(Boolean).join(' · ');
+  const poster = m.poster
+    ? `<img src="${esc(m.poster)}" alt="" loading="lazy" decoding="async" ${FADE}${dimStyle(m)}
+         onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+    : `<div class="poster-placeholder"><span>🎬</span></div>`;
+  return `<div class="movie-row" data-code="${esc(m.code)}">
+    <div class="row-poster">
+      ${poster}
+      <span class="code-badge">🔑 ${esc(String(m.code))}</span>
+    </div>
+    <div class="row-info">
+      <h3>${hlTitle(m.title, q)}</h3>
+      ${meta ? `<div class="row-meta">${esc(meta)}</div>` : ''}
+      <span class="rating">${ratingBadge(m)}${myR ? `<span class="my-stars">${'★'.repeat(myR)}</span>` : ''}</span>
+    </div>
+    <div class="row-actions">
+      <button class="fav-quick${fav ? ' active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '♥\uFE0E' : '♡'}</button>
+      ${m.link ? `<button class="watch-quick" data-code="${esc(m.code)}" aria-label="Смотреть" title="Смотреть фильм"></button>` : ''}
+      <span class="row-chev">›</span>
+    </div>
   </div>`;
 }
 function wireFavQuick(container) {
@@ -2925,7 +2960,13 @@ function renderGrid() {
   const smartHint = smart
     ? `<div class="smart-hint">🧠 ${esc((smart.parts || []).join(' · '))} · найдено: ${list.length}<button class="smart-clear" title="Сбросить" onclick="document.getElementById('search').value='';renderGrid()">✕</button></div>`
     : '';
-  const head = modeSwitch + progressLine + smartHint + clearBtn
+  const head = (view === 'grid'
+    ? `<div class="layout-switch"><span class="ls-label">Вид:</span>
+        <button class="ls-btn${gridLayout === 'grid' ? ' active' : ''}" data-l="grid">▦ Сетка</button>
+        <button class="ls-btn${gridLayout === 'list' ? ' active' : ''}" data-l="list">☰ Список</button>
+      </div>`
+    : '')
+    + modeSwitch + progressLine + smartHint + clearBtn
     // v75: полоску «просмотрено» показываем только когда есть хоть одна отметка —
     // «0 из 71» выглядело как баг и занимало место
     + (view === 'grid' && !searching && ALL.length && watchedAll.length > 0
@@ -2980,7 +3021,9 @@ function renderGrid() {
   const showMoreBtn = gridClipped && visible.length < list.length
     ? `<button class="btn-show-more" id="btn-show-more">🎞 Показать ещё (${list.length - visible.length})</button>`
     : '';
-  c.innerHTML = head + backup + visible.map(m => {
+  c.innerHTML = head + backup + (gridLayout === 'list'
+    ? visible.map(m => listRowHtml(m, q)).join('')
+    : visible.map(m => {
     const myR = (view === 'fav' && favMode === 'rated') ? (getRatings()[String(m.code)] || 0) : 0;
     return `
     <div class="movie-card${(view === 'fav' && (favMode || 'fav') === 'fav' && getFavs().includes(String(m.code))) ? ' card-fav' : ''}" data-code="${esc(m.code)}">
@@ -2990,7 +3033,7 @@ function renderGrid() {
         <span class="rating">${ratingBadge(m)}${myR ? `<span class="my-stars">${'★'.repeat(myR)}</span>` : ''}${durOf(m) ? `<span class="dur-chip">⏱ ${durOf(m)} мин</span>` : ''}</span>
       </div>
     </div>`;
-  }).join('') + showMoreBtn;
+  }).join('')) + showMoreBtn;
   const b = document.getElementById('btn-backup');
   if (b) b.onclick = () => sendOrDeepLink({ action: 'save_favs', codes: getFavs() });
   const bc = document.getElementById('btn-copy-list');
@@ -3008,6 +3051,18 @@ function renderGrid() {
   });
   c.querySelectorAll('.movie-card').forEach(el =>
     el.addEventListener('click', () => openDetail(el.dataset.code)));
+  // v94: переключатель «Сетка/Список» — режим сохраняется на устройство
+  c.querySelectorAll('.ls-btn').forEach(b => b.addEventListener('click', () => {
+    gridLayout = b.dataset.l === 'list' ? 'list' : 'grid';
+    try { localStorage.setItem(LAYOUT_KEY, gridLayout); } catch (e) {}
+    haptic('light');
+    renderGrid();
+  }));
+  // v94: строки списка кликабельны (кнопки внутри не перехватываем)
+  c.querySelectorAll('.movie-row').forEach(el => el.addEventListener('click', (e) => {
+    if (e.target.closest('button')) return;
+    openDetail(el.dataset.code);
+  }));
   // v92: сброс всех фильтров одной кнопкой
   const cf = document.getElementById('btn-clear-filters');
   if (cf) cf.onclick = () => {
