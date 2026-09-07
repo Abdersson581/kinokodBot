@@ -2043,6 +2043,9 @@ function renderYear() {
   if (!c) return;
   const year = new Date().getFullYear();
   const fmtYear = humanYearWord(year);
+  // v99: «Цель года» — хранится локально (число кодов: 12/24/36/50)
+  const YEAR_GOAL_KEY = 'kinoafisha_year_goal';
+  const getYearGoal = () => { try { return parseInt(localStorage.getItem(YEAR_GOAL_KEY) || '', 10) || 0; } catch (e) { return 0; } };
 
   const sm = getYearStats();
   const sumOf = (f) => Object.values(sm).reduce((a, m) => a + ((m && m[f]) || 0), 0);
@@ -2057,6 +2060,37 @@ function renderYear() {
   const watchedCnt = getWatched().length;
   const favCnt = getFavs().length;
   const unlCnt = getUnlocked().length;
+
+  // v99: «Цель года» — разгадай N кодов. Локально, прогресс по разгаданным.
+  const GOAL_CHOICES = [12, 24, 36, 50];
+  const goal = getYearGoal();
+  const goalPct = goal ? Math.min(100, Math.round(100 * unlCnt / goal)) : 0;
+  const goalDone = goal && unlCnt >= goal;
+  const goalBlock = `
+    <div class="yr-goal${goalDone ? ' done' : ''}">
+      <h3>🎯 Цель года</h3>
+      ${goal
+        ? (goalDone
+            ? `<p class="yr-goal-msg">🎉 Цель ${goal} выполнена! Разгадано ${unlCnt}. Так держать — есть куда расти 😎</p>`
+            : `<div class="yr-goal-bar"><i style="width:${goalPct}%"></i></div>
+               <p class="yr-goal-msg">${unlCnt} из ${goal} разгадано · осталось ${Math.max(0, goal - unlCnt)}</p>`)
+        : `<p class="yr-goal-msg">Разгадаешь N кодов за ${year} год? Прогресс-бар будет виден здесь.</p>
+           <div class="yr-goal-chips">
+             ${GOAL_CHOICES.map(n => `<button class="ls-btn" data-g="${n}">${n} кодов</button>`).join('')}
+             <button class="ls-btn" data-g="0">Позже</button>
+           </div>`}
+      ${goal ? '<button class="btn-secondary yr-goal-edit" id="yr-goal-edit">Изменить</button>' : ''}
+    </div>`;
+  const wireYearGoal = () => {
+    c.querySelectorAll('.yr-goal-chips .ls-btn').forEach(b => b.addEventListener('click', () => {
+      try { localStorage.setItem(YEAR_GOAL_KEY, b.dataset.g); } catch (e) {}
+      haptic('light');
+      if (b.dataset.g === '0') { c.querySelector('.yr-goal')?.remove(); return; }
+      renderYear();
+    }));
+    const ed = document.getElementById('yr-goal-edit');
+    if (ed) ed.onclick = () => { try { localStorage.removeItem(YEAR_GOAL_KEY); } catch (e) {} renderYear(); };
+  };
 
   // Любимые жанры: из оценок (вес 2) + «Моё» (вес 1.5) + просмотренных (вес 1) + разгаданных (1)
   const gScore = new Map();
@@ -2128,8 +2162,10 @@ function renderYear() {
       <div class="year-head"><h2>🏆 Мой кино-год — ${year}</h2></div>
       <div class="yr-empty">Здесь будет личный отчёт: сколько фильмов открыл, трейлеров посмотрел, оценок поставил.<br/><br/>
       Статистика начнёт копиться сама — просто пользуйся приложением! 🎬</div>
+      ${goalBlock}
       <button class="btn-primary" style="width:100%;margin-top:10px" id="yr-go">🎬 Перейти в афишу</button>`;
     document.getElementById('yr-go').onclick = () => openView('grid');
+    wireYearGoal();
     return;
   }
 
@@ -2138,6 +2174,7 @@ function renderYear() {
       <h2>🏆 Мой кино-год — ${year}</h2>
       <p class="year-sub">${fmtYear} · ${totAct} действий · статистика считается на этом устройстве</p>
     </div>
+    ${goalBlock}
     <div class="yr-stats">
       <div class="yr-stat"><b>🔍 ${totOpen}</b><span>карточек фильмов открыто</span></div>
       <div class="yr-stat"><b>▶️ ${totTr}</b><span>трейлеров просмотрено</span></div>
@@ -2158,6 +2195,7 @@ function renderYear() {
 
   const bestCard = document.querySelector('.yr-best-card');
   if (bestCard) bestCard.addEventListener('click', () => openDetail(bestCard.dataset.code));
+  wireYearGoal();
   const share = document.getElementById('yr-share');
   if (share) {
     share.onclick = () => {

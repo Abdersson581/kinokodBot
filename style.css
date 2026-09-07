@@ -2944,3 +2944,23 @@ body.light.tabs-stuck .tabs {
 .cl-item span { font-size: 20px; flex: 0 0 auto; line-height: 1.2; }
 .cl-item p { margin: 0; font-size: 13px; line-height: 1.45; color: color-mix(in srgb, var(--text, #fff) 80%, transparent); }
 .cl-item b { color: var(--text, #fff); }
+/* v99: Цель года */
+.yr-goal {
+  margin: 4px 0 10px; padding: 12px 14px;
+  border: 1px dashed color-mix(in srgb, var(--accent, #ffd166) 45%, transparent);
+  border-radius: 14px; background: color-mix(in srgb, var(--bg2, #151927) 92%, transparent);
+}
+.yr-goal.done { border-color: color-mix(in srgb, var(--accent, #ffd166) 80%, #fff); }
+.yr-goal h3 { margin: 0 0 6px; font-size: 14px; font-weight: 700; }
+.yr-goal-msg { margin: 4px 0; font-size: 12.5px; line-height: 1.5; color: color-mix(in srgb, var(--text, #fff) 72%, transparent); }
+.yr-goal-bar {
+  height: 10px; margin: 6px 0; border-radius: 6px; overflow: hidden;
+  background: color-mix(in srgb, var(--bg2, #151927) 60%, transparent);
+}
+.yr-goal-bar i {
+  display: block; height: 100%;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent, #ffd166) 70%, #fff), var(--accent, #ffd166));
+  transition: width .4s ease;
+}
+.yr-goal-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.yr-goal-edit { margin-top: 4px; font-size: 12px; padding: 4px 12px; }
