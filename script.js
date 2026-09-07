@@ -109,6 +109,7 @@ let LEADERBOARD_KIND = 'week';      // week | total — по чему ранжи
 let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game | news | top | profile | trailers | achievements
 let activeGenre = '';               // выбранный жанр-фильтр ('' = все)
 let activeCountry = '';             // v89: выбранная страна-фильтр ('' = все)
+let onlyTrailer = false;            // v90: показывать только фильмы с трейлером
 let trailerGenre = '';              // жанр-фильтр для трейлеров
 const FAV_KEY = 'kinoafisha_favs';
 const FAV_MODE_KEY = 'kinoafisha_fav_mode';  // «Моё»: fav = хочу посмотреть | done = разгаданные
@@ -1731,6 +1732,24 @@ function fmtDuration(mins) {
   return (h ? h + ' ч' : '') + (m % 60 ? (h ? ' ' : '') + (m % 60) + ' мин' : '');
 }
 
+// v90: вкусовая строка профиля — средняя оценка и любимый актёр (по локальным данным)
+function tasteLine() {
+  const ratings = getRatings();
+  const vals = Object.values(ratings).map(Number).filter(v => v > 0);
+  if (!vals.length) return '';
+  const avg = (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
+  const cnt = new Map();
+  Object.entries(ratings).forEach(([code, v]) => {
+    if (Number(v) < 4) return;
+    const m = ALL.find(x => String(x.code) === String(code));
+    ((m && m.actors) || []).forEach(a => cnt.set(a, (cnt.get(a) || 0) + 1));
+  });
+  let actor = '', best = 0;
+  cnt.forEach((n, a) => { if (n > best) { best = n; actor = a; } });
+  return `<div class="pf-taste">⭐ Средняя оценка: <b>${avg}</b> <span class="pf-taste-sub">(${vals.length})</span>`
+    + (actor ? ` · 🌟 Любимый актёр: <b>${esc(actor)}</b>` : '') + `</div>`;
+}
+
 function renderProfile() {
   const c = document.getElementById('profile-container');
   if (!c) return;
@@ -1762,6 +1781,7 @@ function renderProfile() {
         <h2>Мой профиль</h2>
         <p class="pf-hint">Уровень, кинобаллы и стрик хранятся в боте.<br/>
         Синхронизируй — и они появятся здесь.</p>
+        ${tasteLine()}
         ${weekBlock}
         <button class="btn-primary" id="pf-sync">🔁 Синхронизировать с ботом</button>
         <button class="btn-secondary pf-invite" id="pf-invite">📣 Пригласить друга</button>
@@ -1845,6 +1865,7 @@ function renderProfile() {
       ${achBlock}
       ${weekBlock}
       ${favouriteGenre() ? `<div class="pf-favgenre">🌟 Любимый жанр: <b>${esc(favouriteGenre())}</b></div>` : ''}
+      ${tasteLine()}
       ${wgBlock}
       ${optBlock}
       <div class="pf-actions">
@@ -2712,6 +2733,8 @@ function renderGrid() {
   if (activeCountry) list = list.filter(m => (m.countries || []).includes(activeCountry));
   // v77: фильтр «Сколько времени есть?» — только фильмы с известной длительностью
   if (timeLimit && view === 'grid') list = list.filter(m => { const d = durOf(m); return d && d <= timeLimit; });
+  // v90: «▶️ С трейлером» — только фильмы, которые можно посмотреть с видео
+  if (onlyTrailer && view === 'grid') list = list.filter(m => m.trailer_yt || m.trailer_mp4 || m.trailer_file_id);
   // 🙈 «Скрыть разгаданные»: прячем карточки, код которых есть в localStorage
   if (localStorage.getItem(HIDE_KEY) === '1' && view !== 'fav') {
     const unlockedSet = new Set(getUnlocked());
@@ -2968,6 +2991,20 @@ function openDetail(code) {
       </div>
     </div>` : ''}`;
   document.getElementById('btn-back').onclick = () => openView(detailOrigin || 'grid');
+  // v90: тап по постеру в карточке — лайтбокс на весь экран
+  const dPw = document.querySelector('#view-detail .poster-wrap');
+  if (dPw) {
+    dPw.classList.add('zoomable');
+    dPw.addEventListener('click', (e) => {
+      const img = dPw.querySelector('img');
+      const lb = document.getElementById('lightbox');
+      if (!img || !lb) return;
+      e.stopPropagation();
+      haptic('light');
+      lb.querySelector('img').src = img.src;
+      lb.classList.remove('hidden');
+    });
+  }
   document.getElementById('btn-open').onclick =
     () => sendOrDeepLink({ action: 'open_movie', code });
   const watchBtn = document.getElementById('btn-watch');
@@ -3494,6 +3531,21 @@ document.getElementById('btn-random').addEventListener('click', () => {
 document.getElementById('btn-random-close').addEventListener('click', closeRandom);
 document.getElementById('btn-random-again').addEventListener('click', renderRandomMovie);
 rndModal.addEventListener('click', (e) => { if (e.target === rndModal) closeRandom(); });
+
+// v90: «▶️ С трейлером» — фильтр афиши по наличию видео
+document.getElementById('btn-only-tr').addEventListener('click', () => {
+  onlyTrailer = !onlyTrailer;
+  haptic('light');
+  document.getElementById('btn-only-tr').classList.toggle('active', onlyTrailer);
+  renderGrid();
+});
+
+// v90: лайтбокс — закрытие по тапу в любом месте
+(function initLightbox() {
+  const lb = document.getElementById('lightbox');
+  if (!lb) return;
+  lb.addEventListener('click', () => { lb.classList.add('hidden'); lb.querySelector('img').src = ''; });
+})();
 
 const refreshBtn = document.getElementById('btn-refresh');
 refreshBtn.addEventListener('click', async () => {

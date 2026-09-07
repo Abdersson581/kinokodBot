@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=89" />
+  <link rel="stylesheet" href="style.css?v=90" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -91,6 +91,7 @@
             <input type="checkbox" id="hide-unlocked" />
             <span class="hide-toggle-pill">🙈 <span class="ht-text">Разгаданные</span></span>
           </label>
+          <button class="hide-toggle-pill tr-toggle" id="btn-only-tr" title="Только фильмы с трейлером">▶️ <span class="ht-text">С трейлером</span></button>
           <button class="btn-sync" id="btn-random" title="Случайный фильм">🎲</button>
           <button class="btn-sync" id="btn-refresh" title="Обновить афишу">⟳</button>
           <button class="btn-sync" id="btn-grid-cols" title="Компактность сетки">📐</button>
@@ -374,6 +375,9 @@
     </div>
   </div>
 
+  <!-- v90: лайтбокс постера на весь экран -->
+  <div id="lightbox" class="lightbox hidden"><img alt="Постер"/></div>
+
   <!-- Онбординг (показывается только при первом запуске) -->
   <div id="onboarding" class="modal hidden">
     <div class="onboarding-card">
@@ -412,7 +416,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=89"></script>
+  <script src="script.js?v=90"></script>
 </body>
 </html>
 

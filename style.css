@@ -1025,6 +1025,47 @@ body.light .evening-chip { box-shadow: 0 1px 4px rgba(20,25,50,.08); }
 }
 .hide-toggle:active .hide-toggle-pill { transform: scale(.96); }
 .light .hide-toggle-pill { border-color: rgba(20,20,40,.18); color: #5a5f70; }
+/* v90: «▶️ С трейлером» — pill-фильтр в тулбаре (в активном — золотой) */
+.tr-toggle { cursor: pointer; background: rgba(255,255,255,.05); }
+.tr-toggle.active {
+  background: rgba(255,209,102,.16);
+  border-color: #ffd166;
+  color: #ffd166;
+  font-weight: 700;
+}
+.tr-toggle:active { transform: scale(.96); }
+.light .tr-toggle { background: rgba(0,0,0,.04); }
+.light .tr-toggle.active { background: rgba(255,190,60,.18); }
+
+/* v90: лайтбокс постера на весь экран */
+.lightbox {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(5, 7, 14, .94);
+  display: flex; align-items: center; justify-content: center;
+  cursor: zoom-out;
+  animation: lbIn .18s ease;
+}
+.lightbox img {
+  max-width: 94vw; max-height: 94vh;
+  border-radius: 14px;
+  box-shadow: 0 18px 60px rgba(0,0,0,.6);
+}
+@keyframes lbIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* v90: постер в карточке — зум-курсор (ПК) */
+.poster-wrap.zoomable { cursor: zoom-in; }
+
+/* v90: вкусовая строка профиля */
+.pf-taste {
+  margin-top: 10px; font-size: 13px; opacity: .92;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px; padding: 8px 12px;
+}
+.pf-taste b { color: #ffd166; }
+.pf-taste-sub { opacity: .6; }
+.light .pf-taste { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.08); }
+.light .pf-taste b { color: #b07d10; }
 .light .hide-toggle.on .hide-toggle-pill {
   background: rgba(255,193,7,.18);
   border-color: #c9a227;
