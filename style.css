@@ -2669,3 +2669,14 @@ body.accent-purple .new-badge { background: linear-gradient(90deg, var(--gold), 
   border-radius: 2px;
   opacity: .85;
 }
+
+/* ===== v83: табы на узких экранах — всё в один ряд ===== */
+@media (max-width: 420px) {
+  .tabs { gap: 4px; }
+  .tab { font-size: 12px; padding: 8px 2px; min-width: 0; white-space: nowrap; }
+  .tab-more { font-size: 12px; padding: 8px 10px; white-space: nowrap; }
+}
+@media (max-width: 360px) {
+  .tab { font-size: 11px; padding: 8px 1px; }
+  .tab-more { font-size: 11px; padding: 8px 8px; }
+}

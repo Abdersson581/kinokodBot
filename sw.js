@@ -1,5 +1,5 @@
 /* ===== v57: Service Worker РІР‚вЂќ Р С•РЎвЂћРЎвЂћР В»Р В°Р в„–Р Р…-Р С”РЎРЊРЎв‚¬ Р С‘ Р СР С–Р Р…Р С•Р Р†Р ВµР Р…Р Р…РЎвЂ№Р Вµ Р С—Р С•Р Р†РЎвЂљР С•РЎР‚Р Р…РЎвЂ№Р Вµ Р В·Р В°Р С–РЎР‚РЎС“Р В·Р С”Р С‘ ===== */
-const SW_CACHE = 'kinokod-v82';
+const SW_CACHE = 'kinokod-v83';
 const SW_SHELL = ['./', './index.html', './style.css', './script.js'];
 const SW_DATA = ['./data/movies.json', './data/meta.json', './data/collections.json'];
 
