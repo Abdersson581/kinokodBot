@@ -30,12 +30,14 @@ body {
   position: sticky; top: 0; z-index: 60;
   margin: -12px -12px 0;
   padding: 12px 12px 6px;
-  background: rgba(15, 18, 32, .72);
+  background: rgba(15, 18, 32, .97); /* v85: почти непрозрачная */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
   backdrop-filter: blur(16px) saturate(1.4);
   transition: box-shadow .25s ease;
 }
-body.light .header { background: rgba(246, 247, 252, .78); }
+body.light .header { background: rgba(246, 247, 252, .98); -webkit-backdrop-filter: none; backdrop-filter: none; }
 .header.scrolled { box-shadow: 0 8px 26px rgba(0, 0, 0, .38); }
 body.light .header.scrolled { box-shadow: 0 8px 26px rgba(30, 40, 80, .14); }
 .brand {
@@ -2682,6 +2684,8 @@ body.accent-purple .new-badge { background: linear-gradient(90deg, var(--gold), 
   .tab-more { font-size: 12.5px; padding: 8px 10px; white-space: nowrap; }
   .tab-ico { display: none; }
 }
+/* v85: без эмодзи в табах на ВСЕХ ширинах */
+.tab-ico { display: none; }
 @media (max-width: 360px) {
   .tab { font-size: 11px; padding: 8px 1px; }
   .tab-more { font-size: 11px; padding: 8px 8px; }
