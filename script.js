@@ -110,6 +110,7 @@ let view = 'grid';                  // grid | cols | cols-detail | fav | detail 
 let activeGenre = '';               // выбранный жанр-фильтр ('' = все)
 let activeCountry = '';             // v89: выбранная страна-фильтр ('' = все)
 let onlyTrailer = false;            // v90: показывать только фильмы с трейлером
+let onlyOnline = false;             // v91: только фильмы с прямой ссылкой на просмотр
 let trailerGenre = '';              // жанр-фильтр для трейлеров
 const FAV_KEY = 'kinoafisha_favs';
 const FAV_MODE_KEY = 'kinoafisha_fav_mode';  // «Моё»: fav = хочу посмотреть | done = разгаданные
@@ -1750,6 +1751,38 @@ function tasteLine() {
     + (actor ? ` · 🌟 Любимый актёр: <b>${esc(actor)}</b>` : '') + `</div>`;
 }
 
+// v91: сброс локальных данных (с подтверждением). Бэкап в боте не трогаем.
+function resetLocalData() {
+  haptic('light');
+  const doReset = () => {
+    ['kinoafisha_favs', 'kinoafisha_ratings', 'kinoafisha_watched', 'kinoafisha_notes',
+     'kinoafisha_recent', 'kinoafisha_daily', 'kinoafisha_week_stats', 'kinoafisha_year_stats',
+     'kinoafisha_challenges', 'kinoafisha_search_hist', 'kinoafisha_reco',
+     'kinoafisha_trailer_watch', 'kinoafisha_marathon_seen', 'kinoafisha_marathon_resume',
+     'kinoafisha_marathon_ach', 'kinoafisha_ach_seen', 'kinoafisha_news_seen_ts',
+     'kinoafisha_fd_manual'].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+    activeGenre = ''; activeCountry = ''; timeLimit = 0; onlyTrailer = false; onlyOnline = false;
+    _fdManual = null;
+    const tb = document.getElementById('btn-only-tr'); if (tb) tb.classList.remove('active');
+    const ob = document.getElementById('btn-only-online'); if (ob) ob.classList.remove('active');
+    haptic('ok');
+    try { tg.showPopup({ type: 'ok', title: '✅ Данные сброшены', message: '«Моё», оценки, просмотренные и статистика очищены на этом устройстве. Если делал бэкап — восстанови через «☁️ Восстановить из бота».' }); } catch (e) {}
+    renderTimeChips(); renderGenreChips(); renderCountryChips(); renderGrid();
+    if (typeof renderProfile === 'function' && view === 'profile') renderProfile();
+  };
+  try {
+    tg.showPopup({
+      title: '♻️ Сбросить данные?',
+      message: 'Удалю на этом устройстве: «Моё», оценки, просмотренные, заметки, недавние, серию и статистику. Это необратимо. Бэкап в боте (если делал) сохранится.',
+      buttons: [
+        { id: 'yes', type: 'destructive', text: '♻️ Сбросить' },
+        { id: 'no', type: 'cancel', text: 'Отмена' },
+      ],
+      callback: (btnId) => { if (btnId === 'yes') doReset(); },
+    });
+  } catch (e) { /* без попапа — тихо выходим */ }
+}
+
 function renderProfile() {
   const c = document.getElementById('profile-container');
   if (!c) return;
@@ -1785,10 +1818,13 @@ function renderProfile() {
         ${weekBlock}
         <button class="btn-primary" id="pf-sync">🔁 Синхронизировать с ботом</button>
         <button class="btn-secondary pf-invite" id="pf-invite">📣 Пригласить друга</button>
+        <button class="btn-secondary pf-reset" id="pf-reset">♻️ Сбросить данные приложения</button>
       </div>`;
     document.getElementById('pf-sync').onclick = () => sendOrDeepLink({ action: 'sync_unlocked' });
     const inv0 = document.getElementById('pf-invite');
     if (inv0) inv0.onclick = _inviteFriend;
+    const rst0 = document.getElementById('pf-reset');
+    if (rst0) rst0.onclick = resetLocalData;
     return;
   }
   const p = PROFILE;
@@ -1873,6 +1909,7 @@ function renderProfile() {
         <button class="btn-secondary" id="pf-bot">🏅 Профиль в боте</button>
       </div>
       <button class="btn-secondary pf-invite" id="pf-invite">📣 Пригласить друга</button>
+      <button class="btn-secondary pf-reset" id="pf-reset">♻️ Сбросить данные приложения</button>
     </div>`;
   document.getElementById('pf-sync2').onclick = () => sendOrDeepLink({ action: 'sync_unlocked' });
   const inv = document.getElementById('pf-invite');
@@ -1882,6 +1919,8 @@ function renderProfile() {
     try { tg.openTelegramLink('https://t.me/kapitan_kino_bot'); }
     catch (e) { window.open('https://t.me/kapitan_kino_bot', '_blank'); }
   };
+  const rst1 = document.getElementById('pf-reset');
+  if (rst1) rst1.onclick = resetLocalData;
   const optIn = document.getElementById('pf-opt-in');
   if (optIn) {
     optIn.addEventListener('change', () => {
@@ -2735,6 +2774,8 @@ function renderGrid() {
   if (timeLimit && view === 'grid') list = list.filter(m => { const d = durOf(m); return d && d <= timeLimit; });
   // v90: «▶️ С трейлером» — только фильмы, которые можно посмотреть с видео
   if (onlyTrailer && view === 'grid') list = list.filter(m => m.trailer_yt || m.trailer_mp4 || m.trailer_file_id);
+  // v91: «🟢 Онлайн» — только фильмы с прямой ссылкой на просмотр
+  if (onlyOnline && view === 'grid') list = list.filter(m => !!m.link);
   // 🙈 «Скрыть разгаданные»: прячем карточки, код которых есть в localStorage
   if (localStorage.getItem(HIDE_KEY) === '1' && view !== 'fav') {
     const unlockedSet = new Set(getUnlocked());
@@ -2887,7 +2928,7 @@ function renderGrid() {
   c.innerHTML = head + backup + list.map(m => {
     const myR = (view === 'fav' && favMode === 'rated') ? (getRatings()[String(m.code)] || 0) : 0;
     return `
-    <div class="movie-card" data-code="${esc(m.code)}">
+    <div class="movie-card${(view === 'fav' && (favMode || 'fav') === 'fav' && getFavs().includes(String(m.code))) ? ' card-fav' : ''}" data-code="${esc(m.code)}">
       ${posterHtmlQuick(m)}
       <div class="movie-info">
         <h3>${hlTitle(m.title, q)}</h3>
@@ -2951,6 +2992,7 @@ function openDetail(code) {
             <span class="rate-label">${myR ? 'Твоя оценка:' : 'Оцени фильм:'}</span>
             <span class="rate-stars">${stars}</span>
             ${myR ? `<button class="rate-clear" data-code="${esc(code)}" title="Убрать оценку">✕</button>` : ''}
+            ${myR && m.rating ? `<span class="rate-cmp" title="Сравнение с рейтингом Кинопоиска">⚖️ КП ${esc(String(m.rating))} · твоя ${myR}/5${(myR / 5) * 10 >= parseFloat(m.rating) ? ' · 🔥 не хуже КП' : ''}</span>` : ''}
           </div>`;
         })()}
         ${chips ? `<div class="detail-chips">${chips}</div>` : ''}
@@ -3537,6 +3579,14 @@ document.getElementById('btn-only-tr').addEventListener('click', () => {
   onlyTrailer = !onlyTrailer;
   haptic('light');
   document.getElementById('btn-only-tr').classList.toggle('active', onlyTrailer);
+  renderGrid();
+});
+
+// v91: «🟢 Онлайн» — фильтр афиши по прямой ссылке на просмотр
+document.getElementById('btn-only-online').addEventListener('click', () => {
+  onlyOnline = !onlyOnline;
+  haptic('light');
+  document.getElementById('btn-only-online').classList.toggle('active', onlyOnline);
   renderGrid();
 });
 

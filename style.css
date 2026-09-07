@@ -1066,6 +1066,16 @@ body.light .evening-chip { box-shadow: 0 1px 4px rgba(20,25,50,.08); }
 .pf-taste-sub { opacity: .6; }
 .light .pf-taste { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.08); }
 .light .pf-taste b { color: #b07d10; }
+
+/* v91: золотая рамка карточек в «Моё → Хочу посмотреть» */
+.movie-card.card-fav {
+  box-shadow: 0 0 0 2px rgba(255, 209, 102, .85), 0 8px 24px rgba(255, 190, 60, .16);
+}
+/* v91: сравнение «твоя vs КП» в строке оценки */
+.rate-cmp { font-size: 11px; opacity: .75; margin-left: auto; white-space: nowrap; }
+/* v91: кнопка сброса — приглушённая, в конце профиля */
+.pf-reset { opacity: .65; font-size: 12px; }
+.pf-reset:active { opacity: 1; }
 .light .hide-toggle.on .hide-toggle-pill {
   background: rgba(255,193,7,.18);
   border-color: #c9a227;
