@@ -3602,6 +3602,25 @@ function openTrailer(m) {
   update();
 })();
 
+// v87: таб-бар «отрывается» от контента, когда прилип к верху —
+// скруглённый низ + тень, чтобы не выглядел обрезанным при скролле.
+(function () {
+  const bar = document.querySelector('.tabs');
+  window.__tabsDbg = { bar: !!bar, ran: 1, upds: 0 };
+  if (!bar) return;
+  let ticking = false;
+  const upd = () => {
+    ticking = false;
+    window.__tabsDbg.upds++;
+    const stuck = window.scrollY > 60 && bar.getBoundingClientRect().top <= 2;
+    document.body.classList.toggle('tabs-stuck', stuck);
+  };
+  window.addEventListener('scroll', () => {
+    // прямой вызов — rAF в части WebView не срабатывает, а вычисление дешёвое
+    upd();
+  }, { passive: true });
+})();
+
 function closeTrailer() {
   _exitFs();
   const modal = document.getElementById('trailer-modal');

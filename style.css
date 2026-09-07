@@ -199,7 +199,7 @@ body.light .header.scrolled { box-shadow: 0 8px 26px rgba(30, 40, 80, .14); }
 .gate .btn-back { width: 100%; text-align: center; margin-top: 14px; }
 /* Вкладки */
 .tabs {
-  position: sticky; top: 0; z-index: 55; /* v86: табы прилипают к верху при скролле */
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 55; /* v87: safe-area — не заезжаем под системную панель */
   background: var(--bg);
   margin: 0 -12px;
   padding: 8px 12px 6px;
@@ -212,7 +212,7 @@ body.light .header.scrolled { box-shadow: 0 8px 26px rgba(30, 40, 80, .14); }
   background: var(--card);
   color: var(--muted);
   border: none;
-  border-radius: 10px;
+  border-radius: 999px; /* v87: овальные «пилюли» */
   padding: 9px 4px;
   font-size: 13px;
   font-weight: 600;
@@ -2693,4 +2693,13 @@ body.accent-purple .new-badge { background: linear-gradient(90deg, var(--gold), 
 @media (max-width: 360px) {
   .tab { font-size: 11px; padding: 8px 1px; }
   .tab-more { font-size: 11px; padding: 8px 8px; }
+}
+
+/* ===== v87: прилипший таб-бар — скруглённый низ, тень, «отрыв» от контента ===== */
+body.tabs-stuck .tabs {
+  border-radius: 0 0 18px 18px;
+  box-shadow: 0 8px 22px rgba(15, 18, 32, .28);
+}
+body.light.tabs-stuck .tabs {
+  box-shadow: 0 8px 22px rgba(30, 35, 60, .14);
 }
