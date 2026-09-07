@@ -2964,3 +2964,9 @@ body.light.tabs-stuck .tabs {
 }
 .yr-goal-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
 .yr-goal-edit { margin-top: 4px; font-size: 12px; padding: 4px 12px; }
+/* v100: подсказка-код под строкой поиска */
+.code-hint {
+  display: inline-block; margin: 2px 0 8px; font-size: 12px; line-height: 1.5;
+  color: color-mix(in srgb, var(--text, #fff) 72%, transparent);
+}
+.code-hint.hidden { display: none; }

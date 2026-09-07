@@ -3755,12 +3755,36 @@ document.getElementById('search').addEventListener('input', () => {
     renderCountryChips();
   }
   initSearchHist(document.getElementById('search').value);
+  // v100: живая подсказка «код найден» под строкой поиска
+  const hint = document.getElementById('code-hint');
+  const cq = document.getElementById('search').value.trim();
+  if (hint) {
+    if (/^\d+$/.test(cq) && cq.length >= 2) {
+      const m = ALL.find(x => String(x.code) === cq);
+      hint.textContent = m
+        ? '🔑 ' + cq + ' · ' + (m.title || '') + ' — Enter откроет'
+        : '🤷 Кода ' + cq + ' нет в афише';
+      hint.classList.remove('hidden');
+    } else {
+      hint.classList.add('hidden');
+    }
+  }
   _searchTimer = setTimeout(renderGrid, 180);
 });
 document.getElementById('sort').addEventListener('change', renderGrid);
 document.getElementById('search').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     const q = document.getElementById('search').value.trim();
+    if (/^\d+$/.test(q)) {
+      // v100: ввёл чистый код → Enter = мгновенно открыть карточку
+      const m = ALL.find(x => String(x.code) === q);
+      if (m) {
+        addSearchHist(q); initSearchHist();
+        haptic('ok');
+        openDetail(m.code);
+        return;
+      }
+    }
     if (q) { addSearchHist(q); initSearchHist(); }
   }
 });
