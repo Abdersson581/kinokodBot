@@ -542,8 +542,13 @@ body.light .game-reveal { background: rgba(255,255,255,.92); color: var(--text);
   border: 1px solid #2a3050;
   color: var(--gold);
   font-size: 18px;
-  padding: 8px 12px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%; /* v84: строго круглые кнопки в шапке */
   cursor: pointer;
   transition: transform 0.15s ease;
 }
@@ -2671,10 +2676,11 @@ body.accent-purple .new-badge { background: linear-gradient(90deg, var(--gold), 
 }
 
 /* ===== v83: табы на узких экранах — всё в один ряд ===== */
-@media (max-width: 420px) {
+@media (max-width: 480px) {
   .tabs { gap: 4px; }
-  .tab { font-size: 12px; padding: 8px 2px; min-width: 0; white-space: nowrap; }
-  .tab-more { font-size: 12px; padding: 8px 10px; white-space: nowrap; }
+  .tab { font-size: 12.5px; padding: 8px 6px; min-width: 0; white-space: nowrap; }
+  .tab-more { font-size: 12.5px; padding: 8px 10px; white-space: nowrap; }
+  .tab-ico { display: none; }
 }
 @media (max-width: 360px) {
   .tab { font-size: 11px; padding: 8px 1px; }
