@@ -2786,13 +2786,13 @@ function renderGrid() {
   const q = qRaw.toLowerCase().replace(/ё/g, 'е');
   const smart = parseSmartQuery(qRaw);
   const sort = document.getElementById('sort').value;
+  const favMode = localStorage.getItem(FAV_MODE_KEY);  // fav | done | watched
   // v93: «Показать ещё» — афиша порциями по GRID_PAGE_SIZE (30). При смене
   // любого фильтра/поиска/сортировки страница сбрасывается на первую.
   const gKey = [view, qRaw, smart ? JSON.stringify(smart) : '', sort, favMode,
     activeGenre, activeCountry, timeLimit, onlyTrailer, onlyOnline,
     localStorage.getItem(HIDE_KEY)].join('§');
   if (gKey !== _gridFilterKey) { _gridFilterKey = gKey; gridPage = 1; }
-  const favMode = localStorage.getItem(FAV_MODE_KEY);  // fav | done | watched
   const unlockedAll = getUnlocked();
   const watchedAll = getWatched();
   let list = view === 'fav'
