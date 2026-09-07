@@ -857,6 +857,61 @@ mark.hl { background: #d4a01733; color: inherit; border-radius: 3px; padding: 0 
   display: flex; align-items: center; justify-content: center; padding: 20px;
 }
 .modal.hidden { display: none; }
+/* v88: «Что посмотреть?» — список подбора по настроению */
+.mood-card { border-radius: 18px; }
+.mood-title { font-size: 18px; font-weight: 700; margin: 0 0 12px; }
+.mood-list { display: flex; flex-direction: column; gap: 10px; }
+.ew-item {
+  display: flex; gap: 10px; align-items: center;
+  cursor: pointer; border-radius: 12px; padding: 8px 10px;
+  background: rgba(255,255,255,.06);
+  transition: background .15s ease;
+}
+.ew-item:active { transform: scale(.98); }
+.ew-poster {
+  width: 52px; height: 78px; border-radius: 8px; flex: 0 0 auto;
+  overflow: hidden; background: #2a2a33;
+}
+.ew-poster img { width: 100%; height: 100%; object-fit: cover; }
+.ew-poster .ew-ph { display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.ew-body { min-width: 0; flex: 1 1 auto; }
+.ew-name { font-size: 14px; font-weight: 600; line-height: 1.25; color: #eee; }
+.ew-meta { font-size: 12px; color: #b8b8c4; margin-top: 3px; }
+.ew-why { font-size: 12px; color: #ffd86b; margin-top: 3px; }
+.ew-empty { padding: 18px; color: #b8b8c4; text-align: center; }
+/* v88: панель «Что посмотреть?» на главной — строка чипов настроений */
+.evening-panel { margin: 10px 0 2px; }
+.evening-head { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.evening-head b { color: var(--text); }
+.evening-sub { opacity: .75; font-size: 11px; margin-left: 4px; }
+.evening-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
+.evening-chips::-webkit-scrollbar { display: none; }
+.evening-chip {
+  flex: 0 0 auto; border: none; cursor: pointer; padding: 8px 14px;
+  border-radius: 999px; font-size: 13px; font-weight: 600;
+  background: var(--card); color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,.18);
+  transition: transform .12s ease, background .15s ease;
+}
+.evening-chip:active { transform: scale(.96); }
+body.light .evening-chip { box-shadow: 0 1px 4px rgba(20,25,50,.08); }
+/* v88: коллекция кодов */
+.code-wallet { margin: 8px 0 2px; }
+.cw-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 14px;
+  background: var(--card);
+}
+.cw-icon { font-size: 20px; }
+.cw-info { font-size: 13px; color: var(--text); flex: 1 1 auto; }
+.cw-info b { color: var(--accent); }
+.cw-btn {
+  border: none; cursor: pointer; padding: 8px 14px;
+  border-radius: 999px; font-size: 13px; font-weight: 600;
+  background: var(--accent); color: #fff;
+  transition: transform .12s ease;
+}
+.cw-btn:active { transform: scale(.95); }
 .modal-card {
   position: relative; max-width: 420px; width: 100%; max-height: 82vh; overflow: auto;
   background: #1c1c22; color: #eee; border-radius: 18px; padding: 22px 20px;

@@ -602,6 +602,102 @@ function wireFavQuick(container) {
   });
 }
 
+// ---------- v88: «Коллекция кодов» — охота за неразгаданными ----------
+// Показываем прогресс разгаданных кодов (данные приходят от бота кнопкой 🔁).
+// Скрыт, пока не разгадан ни один код.
+const _unlockedSet = () => new Set(getUnlocked());
+function renderCodeWallet() {
+  const c = document.getElementById('code-wallet');
+  if (!c) return;
+  const unlocked = _unlockedSet();
+  const total = ALL.length;
+  const done = ALL.filter(m => unlocked.has(String(m.code))).length;
+  const left = total - done;
+  if (!done) { c.classList.add('hidden'); return; }
+  c.classList.remove('hidden');
+  c.innerHTML = `<div class="cw-row">
+      <span class="cw-icon">🗝</span>
+      <div class="cw-info"><b>${done}</b> из ${total} · ${left ? 'осталось ' + left : 'все собраны! 🎉'}</div>
+      ${left ? '<button class="cw-btn" id="cw-hunt">🎯 Охота</button>'
+             : '<button class="cw-btn" id="cw-hunt">🏆 Всё собрано</button>'}
+    </div>`;
+  const btn = document.getElementById('cw-hunt');
+  if (btn) btn.onclick = () => {
+    // «Охота» = показать только неразгаданные: включаем «🙈 Разгаданные»
+    const box = document.getElementById('hide-unlocked');
+    if (box) { box.checked = true; localStorage.setItem(HIDE_KEY, '1'); initHideToggle(); }
+    haptic('light');
+    openView('grid');
+  };
+}
+
+// ---------- v88: «Что посмотреть?» — подбор по настроению ----------
+// 6 настроений → 4 фильма под вкус пользователя (оценки/«Моё»/просмотренные)
+// с коротким «почему». Работает полностью на локальных данных.
+const MOODS = [
+  { k: 'party',  e: '🎉', t: 'Праздник',        g: ['комедия', 'мультфильм', 'семейный', 'музыка'] },
+  { k: 'drive',  e: '⚡', t: 'Драйв',           g: ['боевик', 'триллер', 'фантастика', 'приключения'] },
+  { k: 'sleep',  e: '😴', t: 'Перед сном',      g: ['драма', 'мелодрама', 'детектив', 'исторический'] },
+  { k: 'light',  e: '🍿', t: 'Лёгкое',          g: ['комедия', 'мелодрама', 'мультфильм'] },
+  { k: 'scary',  e: '👻', t: 'Щекотка нервов',  g: ['ужасы', 'триллер', 'детектив'] },
+  { k: 'epic',   e: '⚔️', t: 'Эпик на вечер',   g: ['фантастика', 'приключения', 'боевик', 'драма'] },
+];
+function moodPrefScore(m) {
+  let s = 0;
+  const r = myRating(m.code);
+  if (r >= 4) s += 3; else if (r >= 2) s += 1;
+  if (getFavs().includes(m.code)) s += 2;
+  if (getWatched().includes(String(m.code)) || _unlockedSet().has(String(m.code))) s += 1;
+  return s;
+}
+function whyLine(m) {
+  const r = myRating(m.code);
+  if (r >= 4) return '⭐ ты оценил похожее (рейтинг ' + r + ')';
+  if (getFavs().includes(m.code)) return '❤️ уже в твоём «Моём»';
+  if (getWatched().includes(String(m.code))) return '👁 ты уже смотрел';
+  const g = (m.genres || [])[0];
+  return g ? 'совпадает с твоим вкусом (' + g + ')' : 'высокий рейтинг';
+}
+function renderEvening() {
+  const c = document.getElementById('evening-panel');
+  if (!c) return;
+  c.classList.remove('hidden');
+  c.innerHTML = `<div class="evening-head">🌙 <b>Что посмотреть?</b> <span class="evening-sub">по настроению</span></div>
+    <div class="evening-chips">${MOODS.map(mo => `<button class="evening-chip" data-mood="${mo.k}">${mo.e} ${mo.t}</button>`).join('')}</div>`;
+  c.querySelectorAll('.evening-chip').forEach(b =>
+    b.addEventListener('click', () => openMood(b.dataset.mood)));
+}
+function openMood(k) {
+  const mo = MOODS.find(x => x.k === k);
+  if (!mo) return;
+  const pool = ALL.filter(m => m.genres && m.genres.some(g => mo.g.includes(String(g).toLowerCase())));
+  const ranked = pool
+    .map(m => ({ m, sc: moodPrefScore(m) + (parseFloat(m.rating) || 0) * 0.3 }))
+    .sort((a, b) => b.sc - a.sc)
+    .slice(0, 4);
+  const list = document.getElementById('mood-list');
+  const title = document.getElementById('mood-title');
+  const modal = document.getElementById('mood-modal');
+  if (!list || !title || !modal) return;
+  title.textContent = mo.e + ' ' + mo.t;
+  list.innerHTML = ranked.length
+    ? ranked.map(({ m }) => `
+      <div class="ew-item" data-code="${esc(m.code)}">
+        <div class="ew-poster">${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" ${dimStyle(m)} onerror="this.style.display='none'"/>` : `<span class="ew-ph">🎬</span>`}</div>
+        <div class="ew-body">
+          <div class="ew-name">${esc(m.title)}</div>
+          <div class="ew-meta">${ratingBadge(m)}${m.duration ? ' · ⏱ ' + esc(fmtDuration(m.duration)) : ''}</div>
+          <div class="ew-why">${whyLine(m)}</div>
+        </div>
+      </div>`).join('')
+    : '<div class="ew-empty">Пока нет фильмов под это настроение — скоро добавим!</div>';
+  modal.classList.remove('hidden');
+  modal.querySelectorAll('.ew-item').forEach(it =>
+    it.addEventListener('click', () => { modal.classList.add('hidden'); openDetail(it.dataset.code); }));
+  const closeBtn = modal.querySelector('.modal-close');
+  if (closeBtn) closeBtn.onclick = () => modal.classList.add('hidden');
+}
+
 // ---------- загрузка ----------
 const DATA_CACHE_KEY = 'kinoafisha_data_cache';
 
@@ -627,6 +723,8 @@ function applyData(data) {
   renderGenreChips();
   showCodeDay(meta);
   renderFilmDay();
+  renderEvening();      // v88: «Что посмотреть?» по настроению
+  renderCodeWallet();   // v88: коллекция разгаданных кодов
   renderHero();
   renderTodayShelf(meta);
   renderRecentShelf();

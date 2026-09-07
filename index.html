@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=87" />
+  <link rel="stylesheet" href="style.css?v=88" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -112,6 +112,8 @@
         </div>
       </div>
       <div id="filmday-banner" class="filmday-banner hidden"></div>
+      <div id="code-wallet" class="code-wallet hidden"></div>
+      <div id="evening-panel" class="evening-panel hidden"></div>
       <div id="hero-shelf" class="hero-shelf hidden">
         <h2 class="shelf-title">🔥 Сейчас в тренде</h2>
         <div class="hero-row" id="hero-row"></div>
@@ -241,6 +243,15 @@
       📚 <b>Подборки</b>, 🏆 <b>Топ</b>, 🎖 <b>Достижения</b>, ❤️ <b>«Моё»</b> и профиль — в меню <b>«Ещё»</b>.</p>
       <p class="modal-muted">Всё бесплатно. Подписка на канал — ключ к фильмам.</p>
       <button class="btn-primary" id="btn-about-channel">📢 Открыть канал</button>
+    </div>
+  </div>
+
+  <!-- Модалка «Что посмотреть?» (подбор по настроению) -->
+  <div id="mood-modal" class="modal hidden">
+    <div class="modal-card mood-card">
+      <button class="modal-close" id="btn-mood-close">✕</button>
+      <div class="mood-title" id="mood-title">🌙 Что посмотреть?</div>
+      <div class="mood-list" id="mood-list"></div>
     </div>
   </div>
 
@@ -400,7 +411,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=87"></script>
+  <script src="script.js?v=88"></script>
 </body>
 </html>
 
