@@ -999,7 +999,9 @@ body.light .evening-chip { box-shadow: 0 1px 4px rgba(20,25,50,.08); }
 .toolbar-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  flex-wrap: wrap;      /* v95: пилюли фильтров переносятся — «Онлайн» больше не обрезается */
+  row-gap: 6px;
   gap: 8px;
   margin-top: 8px;
   width: 100%;
