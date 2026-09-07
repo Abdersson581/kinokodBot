@@ -2580,6 +2580,7 @@ function backupFavsNotice() {
         ${favs.length ? '<button class="btn-secondary" id="btn-copy-backup">📱💾 Копия для другого устройства</button>' : ''}
         ${favs.length ? '<button class="btn-secondary" id="btn-import-backup">📥 Восстановить здесь</button>' : ''}
         <button class="btn-secondary" id="btn-restore-bot">☁️ Восстановить из бота</button>
+        ${favs.length ? '<button class="btn-watch" id="btn-clear-fav" style="margin-top:8px">🧹 Очистить «Хочу посмотреть»</button>' : ''}
       </div>
     </div>`;
 }
@@ -3157,6 +3158,19 @@ function renderGrid() {
   if (ib2) ib2.onclick = importBackup;
   const rb2 = document.getElementById('btn-restore-bot');
   if (rb2) rb2.onclick = () => sendOrDeepLink({ action: 'restore_backup' });
+  // v101: «🧹 Очистить „Хочу посмотреть“» — с подтверждением, очищает только список ❤️
+  const clr = document.getElementById('btn-clear-fav');
+  if (clr) clr.onclick = () => {
+    const n = getFavs().length;
+    if (!n) return;
+    try {
+      const confirm = tg.showConfirm || tg.showPopup;
+      confirm('Очистить список «Хочу посмотреть»?',
+        (ok) => {
+          if (ok) { setFavs([]); haptic('ok'); renderGrid(); renderRecoShelf(); }
+        });
+    } catch (e) { setFavs([]); renderGrid(); }
+  };
   wireFavMode();
   // каскадное появление карточек
   Array.from(c.children).forEach((el, i) => {
@@ -3734,6 +3748,7 @@ if (moreTab && moreMenu) {
   });
   document.querySelectorAll('.more-item').forEach(b => b.addEventListener('click', () => {
     closeMoreMenu();
+    if (b.id === 'more-changelog') { showChangelog(true); return; }  // v101: открываемый инфоблок
     openView(b.dataset.view);
   }));
 }
@@ -4208,8 +4223,9 @@ function showOnboarding() {
 // v98: «Что нового» — показываем один раз на версию, только после входа в апп
 const CHANGELOG_V = '98';
 const CL_KEY = 'kinoafisha_seen_changelog';
-function showChangelog() {
-  try { if (localStorage.getItem(CL_KEY) === CHANGELOG_V) return; } catch (e) { return; }
+function showChangelog(force = false) {
+  // v101: force=true — открываем даже если уже видели («Ещё → Что нового»)
+  try { if (!force && localStorage.getItem(CL_KEY) === CHANGELOG_V) return; } catch (e) { return; }
   const m = document.getElementById('changelog-modal');
   if (!m) return;
   m.classList.remove('hidden');
