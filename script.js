@@ -424,6 +424,20 @@ function parseUnlockedHash() {
     const codes = raw.split(',').map(s => s.trim()).filter(Boolean);
     if (codes.length) {
       localStorage.setItem(UNLOCKED_KEY, JSON.stringify([...new Set(codes)]));
+      // v102: «⚡ Спидраннер» — разгадал 5+ кодов за один день (счётчик локальный)
+      const SPEED_KEY = 'kinoafisha_speedrun';
+      const today = new Date().toISOString().slice(0, 10);
+      let sp = {};
+      try { sp = JSON.parse(localStorage.getItem(SPEED_KEY) || '{}'); } catch (e) { sp = {}; }
+      sp = sp.d === today ? sp : { d: today, n: 0 };
+      sp.n = sp.n + 1;
+      try { localStorage.setItem(SPEED_KEY, JSON.stringify(sp)); } catch (e) {}
+      if (sp.n >= 5) {
+        try {
+          tg.showPopup({ type: 'ok', title: '⚡ Спидраннер!', message: '5+ кодов за день — ты разгадываешь их как профессионал! 🔥' });
+        } catch (e) { /* пусто */ }
+        try { localStorage.setItem(SPEED_KEY, JSON.stringify({ d: today, n: 999 })); } catch (e) {}
+      }
       // очищаем хэш, чтобы повторные открытия не переписывали старым списком
       history.replaceState(null, '', location.pathname);
     }
@@ -782,6 +796,7 @@ function applyData(data) {
   renderEvening();      // v88: «Что посмотреть?» по настроению
   renderCodeWallet();   // v88: коллекция разгаданных кодов
   renderHero();
+  renderNewCodes();      // v102: «🆕 Новые коды»
   renderTodayShelf(meta);
   renderRecentShelf();
   renderTrailerShelf();   // v74: «Продолжить смотреть»
@@ -1002,6 +1017,33 @@ function renderHero() {
     <div class="hero-card" data-code="${esc(m.code)}">
       ${posterHtmlQuick(m)}
       <span class="hero-rank">#${i + 1}</span>
+      <div class="hero-overlay">
+        <h3>${esc(m.title)}</h3>
+        ${ratingBadge(m)}
+      </div>
+    </div>`).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.code)));
+  wireFavQuick(shelf);
+}
+
+// v102: полка «🆕 Новые коды» — последние добавленные фильмы. Сортировка по added_at,
+// чтобы игроки сразу видели свежие коды канала.
+function renderNewCodes() {
+  const shelf = document.getElementById('new-codes-shelf');
+  if (!shelf) return;
+  const items = [...ALL]
+    .filter(m => m.added_at)
+    .sort((a, b) => new Date(b.added_at).getTime() - new Date(a.added_at).getTime())
+    .slice(0, 8);
+  if (items.length < 3 || !shelf) { shelf.classList.add('hidden'); return; }
+  const row = document.getElementById('new-codes-row');
+  row.innerHTML = items.map(m => `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      ${posterHtmlQuick(m)}
+      <span class="hero-rank">🔑 ${esc(String(m.code))}</span>
+      ${isNew(m) ? '<span class="new-badge">🔥 Новинка</span>' : ''}
       <div class="hero-overlay">
         <h3>${esc(m.title)}</h3>
         ${ratingBadge(m)}
@@ -1264,7 +1306,7 @@ function showCodeDay(meta) {
       <span class="code-day-label">🎁 Код дня</span>
       <span class="code-day-code">🔑 ${esc(code)}</span>
       ${m ? `<span class="code-day-title"> • ${esc(m.title)}</span>` : ''}
-      <button class="btn-lucky" id="btn-cod-open" style="margin-left:auto">Открыть</button>
+      <button class="kd-open-btn" id="btn-cod-open">Открыть</button>
       <button class="btn-bell" id="btn-cod-bell" title="Напоминать каждый день">🔔</button>
     </div>`;
   banner.classList.remove('hidden');
@@ -1855,37 +1897,7 @@ function tasteLine() {
     + (actor ? ` · 🌟 Любимый актёр: <b>${esc(actor)}</b>` : '') + `</div>`;
 }
 
-// v91: сброс локальных данных (с подтверждением). Бэкап в боте не трогаем.
-function resetLocalData() {
-  haptic('light');
-  const doReset = () => {
-    ['kinoafisha_favs', 'kinoafisha_ratings', 'kinoafisha_watched', 'kinoafisha_notes',
-     'kinoafisha_recent', 'kinoafisha_daily', 'kinoafisha_week_stats', 'kinoafisha_year_stats',
-     'kinoafisha_challenges', 'kinoafisha_search_hist', 'kinoafisha_reco',
-     'kinoafisha_trailer_watch', 'kinoafisha_marathon_seen', 'kinoafisha_marathon_resume',
-     'kinoafisha_marathon_ach', 'kinoafisha_ach_seen', 'kinoafisha_news_seen_ts',
-     'kinoafisha_fd_manual'].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
-    activeGenre = ''; activeCountry = ''; timeLimit = 0; onlyTrailer = false; onlyOnline = false;
-    _fdManual = null;
-    const tb = document.getElementById('btn-only-tr'); if (tb) tb.classList.remove('active');
-    const ob = document.getElementById('btn-only-online'); if (ob) ob.classList.remove('active');
-    haptic('ok');
-    try { tg.showPopup({ type: 'ok', title: '✅ Данные сброшены', message: '«Моё», оценки, просмотренные и статистика очищены на этом устройстве. Если делал бэкап — восстанови через «☁️ Восстановить из бота».' }); } catch (e) {}
-    renderTimeChips(); renderGenreChips(); renderCountryChips(); renderGrid();
-    if (typeof renderProfile === 'function' && view === 'profile') renderProfile();
-  };
-  try {
-    tg.showPopup({
-      title: '♻️ Сбросить данные?',
-      message: 'Удалю на этом устройстве: «Моё», оценки, просмотренные, заметки, недавние, серию и статистику. Это необратимо. Бэкап в боте (если делал) сохранится.',
-      buttons: [
-        { id: 'yes', type: 'destructive', text: '♻️ Сбросить' },
-        { id: 'no', type: 'cancel', text: 'Отмена' },
-      ],
-      callback: (btnId) => { if (btnId === 'yes') doReset(); },
-    });
-  } catch (e) { /* без попапа — тихо выходим */ }
-}
+// (функция сброса локальных данных удалена — по запросу пользователя)
 
 function renderProfile() {
   const c = document.getElementById('profile-container');
@@ -1922,13 +1934,10 @@ function renderProfile() {
         ${weekBlock}
         <button class="btn-primary" id="pf-sync">🔁 Синхронизировать с ботом</button>
         <button class="btn-secondary pf-invite" id="pf-invite">📣 Пригласить друга</button>
-        <button class="btn-secondary pf-reset" id="pf-reset">♻️ Сбросить данные приложения</button>
       </div>`;
     document.getElementById('pf-sync').onclick = () => sendOrDeepLink({ action: 'sync_unlocked' });
     const inv0 = document.getElementById('pf-invite');
     if (inv0) inv0.onclick = _inviteFriend;
-    const rst0 = document.getElementById('pf-reset');
-    if (rst0) rst0.onclick = resetLocalData;
     return;
   }
   const p = PROFILE;
@@ -2013,7 +2022,6 @@ function renderProfile() {
         <button class="btn-secondary" id="pf-bot">🏅 Профиль в боте</button>
       </div>
       <button class="btn-secondary pf-invite" id="pf-invite">📣 Пригласить друга</button>
-      <button class="btn-secondary pf-reset" id="pf-reset">♻️ Сбросить данные приложения</button>
     </div>`;
   document.getElementById('pf-sync2').onclick = () => sendOrDeepLink({ action: 'sync_unlocked' });
   const inv = document.getElementById('pf-invite');
@@ -2023,8 +2031,6 @@ function renderProfile() {
     try { tg.openTelegramLink('https://t.me/kapitan_kino_bot'); }
     catch (e) { window.open('https://t.me/kapitan_kino_bot', '_blank'); }
   };
-  const rst1 = document.getElementById('pf-reset');
-  if (rst1) rst1.onclick = resetLocalData;
   const optIn = document.getElementById('pf-opt-in');
   if (optIn) {
     optIn.addEventListener('change', () => {
@@ -3049,7 +3055,7 @@ function renderGrid() {
   // чтобы результаты или «Ничего не нашлось» были сразу под строкой поиска, а не
   // глубоко внизу страницы. При очистке запроса полки возвращаются сами.
   const searching = view === 'grid' && !!(qRaw || activeGenre);
-  ['hero-shelf', 'today-shelf', 'recent-shelf', 'reco-shelf', 'premieres-shelf'].forEach(id => {
+  ['hero-shelf', 'today-shelf', 'new-codes-shelf', 'recent-shelf', 'reco-shelf', 'premieres-shelf'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     const row = el.querySelector('.hero-row');
