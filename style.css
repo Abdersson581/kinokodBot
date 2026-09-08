@@ -569,6 +569,7 @@ body.light .game-reveal { background: rgba(255,255,255,.92); color: var(--text);
 }
 .code-day-inner {
   display: flex;
+  overflow: hidden;
   align-items: center;
   gap: 8px;
   background: linear-gradient(90deg, rgba(255, 209, 102, 0.15), rgba(255, 68, 102, 0.12));
@@ -578,7 +579,7 @@ body.light .game-reveal { background: rgba(255,255,255,.92); color: var(--text);
 }
 .code-day-label { font-weight: 800; color: var(--gold); font-size: 13px; white-space: nowrap; }
 .code-day-code { font-weight: 800; color: var(--text); font-size: 15px; }
-.code-day-title { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.code-day-title { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 0 1 auto; }
 .code-day .btn-lucky { font-size: 13px; color: var(--text); }
 /* Кнопка «Открыть» на плитке кода дня — компактная пилюля, не круг */
 .kd-open-btn {
