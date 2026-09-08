@@ -3627,6 +3627,7 @@ function showView(name) {
   toggle('view-chain', name === 'chain');
   toggle('view-year', name === 'year');
   toggle('view-marathon', name === 'marathon');
+  toggle('view-tinder', name === 'tinder');
   toggle('toolbar', name === 'catalog' || name === 'trailers');
   if (name === 'catalog') renderFilmDay();  // баннер скрываем/возвращаем при смене вьюхи
   const cur = name === 'catalog' ? view : name;
@@ -3634,9 +3635,184 @@ function showView(name) {
     t.classList.toggle('active', t.dataset.view === cur));
   const moreTab = document.getElementById('tab-more');
   if (moreTab) moreTab.classList.toggle('active',
-    ['cols', 'top', 'achievements', 'profile', 'fav', 'game', 'chain', 'year'].includes(cur));
+    ['cols', 'top', 'achievements', 'profile', 'fav', 'game', 'chain', 'year', 'tinder'].includes(cur));
   document.querySelectorAll('.more-item').forEach(b =>
     b.classList.toggle('active', b.dataset.view === cur));
+}
+
+// ---------- «🎴 Тиндер кино» — свайп-подбор ----------
+// Вправо = «хочу посмотреть» (в Моё), вверх = «уже смотрю», влево = «мимо».
+let _tinderQueue = [];   // фильмы в текущей сессии
+let _tinderIdx = 0;      // текущая позиция
+let _tinderPicks = [];   // коды отобранных (вправо)
+function shuffleArr(a) {
+  const r = a.slice();
+  for (let i = r.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [r[i], r[j]] = [r[j], r[i]];
+  }
+  return r;
+}
+function renderTinder() {
+  const box = document.getElementById('tinder-container');
+  if (!box) return;
+  if (!ALL.length) { box.innerHTML = '<p class="empty-note">Загрузка базы…</p>'; return; }
+  const seen = new Set(getWatched().map(String));
+  const favs = new Set(getFavs());
+  // Колода — все фильмы вперемешку; уже в Моё/просмотренные уходят в хвост.
+  _tinderQueue = shuffleArr(ALL).sort((a, b) => {
+    const pa = seen.has(String(a.code)) || favs.has(String(a.code)) ? 1 : 0;
+    const pb = seen.has(String(b.code)) || favs.has(String(b.code)) ? 1 : 0;
+    return pa - pb;
+  });
+  _tinderIdx = 0;
+  _tinderPicks = [];
+  drawTinderHead(box);
+  drawTinderCard();
+}
+function drawTinderHead(box) {
+  box.innerHTML = `
+    <div class="tinder-head">
+      <h2>🎴 Тиндер кино</h2>
+      <p class="tinder-hint">Свайпни вправо — «хочу посмотреть» · вверх — «смотрю» · влево — «мимо»</p>
+      <span class="tinder-count" id="tinder-count"></span>
+    </div>
+    <div class="tinder-stage" id="tinder-stage">
+      <div class="tinder-card" id="tinder-card"></div>
+      <div class="tinder-actions">
+        <button class="tinder-btn tinder-no" id="tinder-no" title="Мимо">✖️</button>
+        <button class="tinder-btn tinder-yes" id="tinder-yes" title="Хочу посмотреть">❤️</button>
+        <button class="tinder-btn tinder-watch" id="tinder-watch" title="Уже смотрел(а)">👁</button>
+      </div>
+      <div class="tinder-tip">Тап по карточке — открыть фильм</div>
+    </div>`;
+  document.getElementById('tinder-no').onclick = () => swypeTinder('left');
+  document.getElementById('tinder-yes').onclick = () => swypeTinder('right');
+  document.getElementById('tinder-watch').onclick = () => swypeTinder('up');
+  bindTinderSwipe();
+}
+function drawTinderCard() {
+  const card = document.getElementById('tinder-card');
+  const cnt = document.getElementById('tinder-count');
+  if (!card) return;
+  if (_tinderIdx >= _tinderQueue.length) { tinderFinish(); return; }
+  const m = _tinderQueue[_tinderIdx];
+  const fav = getFavs().includes(m.code);
+  const watched = getWatched().includes(String(m.code));
+  const meta = [m.year, fmtDuration(m.duration), (m.genres || []).slice(0, 3).join(' · ')].filter(Boolean).join(' · ');
+  if (cnt) cnt.textContent = `${_tinderIdx + 1} / ${_tinderQueue.length}`;
+  card.innerHTML = `
+    <div class="tinder-poster">
+      ${m.poster
+        ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(m)}
+             onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+        : `<div class="poster-placeholder"><span>🎬</span></div>`}
+      <span class="code-badge">🔑 ${esc(String(m.code))}</span>
+      ${fav ? '<span class="tinder-flag t-fav">❤️ в «Моём»</span>' : ''}
+      ${watched ? '<span class="tinder-flag">👁 смотрю</span>' : ''}
+    </div>
+    <div class="tinder-info">
+      <h3>${esc(m.title)}</h3>
+      ${meta ? `<div class="tinder-meta">${esc(meta)}</div>` : ''}
+      <span class="rating">${ratingBadge(m)}</span>
+      ${m.director ? `<div class="tinder-dir">🎬 ${esc(m.director)}</div>` : ''}
+    </div>`;
+  card.style.transform = '';
+  card.style.opacity = '1';
+  card.style.transition = 'none';
+  card.onclick = (e) => {
+    if (e.target.closest('.tinder-actions') || e.target.closest('.tinder-btn')) return;
+    openDetail(m.code);
+  };
+}
+
+function tinderFinish() {
+  const card = document.getElementById('tinder-card');
+  const cnt = document.getElementById('tinder-count');
+  if (cnt) cnt.textContent = '';
+  if (!card) return;
+  const favs = _tinderPicks.map(code => ALL.find(x => x.code === code)).filter(Boolean);
+  card.innerHTML = `
+    <div class="tinder-finish">
+      <h3>${favs.length ? '🎉 Твоя подборка на вечер' : '🌙 Всё пересмотрели'}</h3>
+      <p class="tinder-finish-sub">${favs.length
+        ? `Выбрал(а) ${favs.length}${favs.length === 1 ? ' фильм' : ' фильмов'} — нажми, чтобы открыть`
+        : 'В этой колоде ничего не приглянулось. Начнёшь новую?'}</p>
+      ${favs.length ? '<div class="tinder-minis">' + favs.map(m => `
+        <div class="tinder-mini" data-c="${esc(m.code)}">
+          <div class="tm-poster">${m.poster
+            ? `<img src="${esc(m.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none'"/>`
+            : '<span>🎬</span>'}</div>
+          <div class="tm-name">${esc(m.title)}</div>
+        </div>`).join('') + '</div>' : ''}
+      <div class="tinder-finish-actions">
+        <button class="btn-primary" id="tinder-restart">🎴 Листать ещё</button>
+      </div>
+    </div>`;
+  const ok = document.getElementById('tinder-restart');
+  if (ok) ok.onclick = () => { haptic('light'); renderTinder(); };
+  card.querySelectorAll('.tinder-mini').forEach(el => el.addEventListener('click', () => {
+    const m = ALL.find(x => String(x.code) === String(el.dataset.c));
+    if (m) openDetail(m.code);
+  }));
+}
+function swypeTinder(dir) {
+  const card = document.getElementById('tinder-card');
+  if (!card || _tinderIdx >= _tinderQueue.length) return;
+  const m = _tinderQueue[_tinderIdx];
+  const W = window.innerWidth || 400;
+  card.style.transition = 'transform .28s ease, opacity .28s ease';
+  if (dir === 'right') {
+    haptic('ok');
+    if (!getFavs().includes(m.code)) toggleFav(m.code);
+    _tinderPicks.push(m.code);
+    card.style.transform = `translateX(${W}px) rotate(12deg)`;
+    card.style.opacity = '0';
+  } else if (dir === 'up') {
+    haptic('ok');
+    if (!getWatched().includes(String(m.code))) toggleWatched(m.code);
+    card.style.transform = `translateY(-${W * 1.4}px) rotate(-10deg)`;
+    card.style.opacity = '0';
+  } else {
+    haptic('light');
+    card.style.transform = `translateX(-${W}px) rotate(-12deg)`;
+    card.style.opacity = '0';
+  }
+  setTimeout(() => { _tinderIdx++; drawTinderCard(); }, 280);
+}
+function bindTinderSwipe() {
+  const stage = document.getElementById('tinder-stage');
+  const card = document.getElementById('tinder-card');
+  if (!stage || !card) return;
+  let startX = 0, startY = 0, down = false, moved = false;
+  stage.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    startX = t.clientX; startY = t.clientY; down = true; moved = false;
+  }, { passive: true });
+  stage.addEventListener('touchmove', (e) => {
+    if (!down) return;
+    const t = e.touches[0];
+    const dx = t.clientX - startX, dy = t.clientY - startY;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true;
+    if (moved && card && _tinderIdx < _tinderQueue.length) {
+      const rot = Math.max(-14, Math.min(14, dx / 16));
+      card.style.transition = 'none';
+      card.style.transform = `translate(${dx}px, ${dy > 0 ? dy * 0.4 : dy}px) rotate(${rot}deg)`;
+      card.style.opacity = String(Math.max(.35, 1 - Math.abs(dx) / 420));
+    }
+  }, { passive: true });
+  stage.addEventListener('touchend', (e) => {
+    if (!down) return;
+    down = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX, dy = t.clientY - startY;
+    if (moved && _tinderIdx < _tinderQueue.length) {
+      if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy)) swypeTinder(dx > 0 ? 'right' : 'left');
+      else if (Math.abs(dy) > 80 && dy < 0 && Math.abs(dy) > Math.abs(dx)) swypeTinder('up');
+      else { card.style.transition = 'transform .2s ease, opacity .2s ease'; card.style.transform = ''; card.style.opacity = '1'; }
+    }
+    moved = false;
+  }, { passive: true });
 }
 
 // ---------- мини-игра «😀 Угадай по эмодзи» ----------
@@ -3694,6 +3870,7 @@ function openView(v) {
   else if (v === 'chain') { showView('chain'); renderChain(); }
   else if (v === 'marathon') { showView('marathon'); renderMarathonView(); }
   else if (v === 'year') { showView('year'); renderYear(); }
+  else if (v === 'tinder') { showView('tinder'); renderTinder(); }
   else { showView('catalog'); renderGrid(); }  // grid | fav
 }
 document.querySelectorAll('.tab[data-view]').forEach(t => t.addEventListener('click', () => openView(t.dataset.view)));
