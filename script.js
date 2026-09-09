@@ -2545,10 +2545,13 @@ function renderYear() {
         <div class="yr-tags">${topGenres.map(g => `<span class="yr-tag">${esc(g)}</span>`).join('')}</div>
       </div>` : ''}
     ${bestBlock}
-    ${shareBtn}`;
+    ${shareBtn}
+    ${totAct >= 5 ? '<button class="btn-secondary yr-share" id="yr-card" style="width:100%;margin-top:8px">🖼 Скачать открытку года</button>' : ''}`;
 
   const bestCard = document.querySelector('.yr-best-card');
   if (bestCard) bestCard.addEventListener('click', () => openDetail(bestCard.dataset.code));
+  const yrCardBtn = document.getElementById('yr-card');
+  if (yrCardBtn) yrCardBtn.onclick = openYearCard;
   wireYearGoal();
   const share = document.getElementById('yr-share');
   if (share) {
@@ -2570,6 +2573,64 @@ function humanYearWord(y) {
   if (d === 1) return `За ${y} год`;
   if (d >= 2 && d <= 4) return `За ${y} года`;
   return `За ${y} лет`;
+}
+
+// ---------- v110: «Киногод картинкой» — canvas-открытка года ----------
+function drawYearCard(cb) {
+  const W = 500, H = 750;
+  let cv, ctx;
+  try {
+    cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    ctx = cv.getContext('2d');
+  } catch (e) { cb(null); return; }
+  ctx.fillStyle = '#10131f';
+  ctx.fillRect(0, 0, W, H);
+  // рамка
+  ctx.strokeStyle = 'rgba(255,193,7,.6)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(6, 6, W - 12, H - 12);
+  // заголовок
+  ctx.fillStyle = 'rgba(255,193,7,.95)';
+  ctx.font = 'bold 26px Manrope, Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('МОЙ КИНО-ГОД', W / 2, 54);
+  const sums = {
+    открытий: getYearStats().reduce((a, m) => a + ((m && m.open) || 0), 0),
+    трейлеров: getYearStats().reduce((a, m) => a + ((m && m.trailers) || 0), 0),
+    оценок: getYearStats().reduce((a, m) => a + ((m && m.rated) || 0), 0),
+  };
+  ctx.fillStyle = 'rgba(255,255,255,.85)';
+  ctx.font = 'bold 16px Manrope, Arial';
+  const keys = Object.keys(sums);
+  let y = 96;
+  keys.forEach(k => { ctx.fillText(`🔹 ${k}: ${sums[k]}`, W / 2, y); y += 32; });
+  ctx.fillStyle = 'rgba(255,255,255,.5)';
+  ctx.font = 'bold 13px Manrope, Arial';
+  ctx.fillText('🎬 КАПИТАН КИНО', W / 2, H - 14);
+  cb(cv);
+}
+function openYearCard() {
+  const modal = document.getElementById('sharecard-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const prev = document.getElementById('sharecard-preview');
+  prev.innerHTML = '<p class="modal-muted">🎨 Рисуем открытку…</p>';
+  drawYearCard((cv) => {
+    if (!cv) { prev.innerHTML = '<p class="modal-muted">Открытку не удалось собрать</p>'; return; }
+    try {
+      const url = cv.toDataURL ? cv.toDataURL('image/png') : '';
+      if (!url) { prev.innerHTML = '<p class="modal-muted">Открытку не удалось собрать</p>'; return; }
+      prev.innerHTML = `<img src="${url}" alt="Мой кино-год"/>`;
+      const dl = document.getElementById('btn-sharecard-download');
+      if (dl) dl.onclick = () => {
+        try {
+          const a = document.createElement('a');
+          a.href = url; a.download = 'kinokod_year.png'; a.click();
+        } catch (e) { window.open(url, '_blank'); }
+      };
+    } catch (e) { prev.innerHTML = '<p class="modal-muted">Открытку не удалось собрать</p>'; }
+  });
 }
 // ---------- трейлеры «🎥» ----------
 // Все трейлеры в одном месте — с поиском, сортировкой и фильтром по жанру.
@@ -3388,7 +3449,17 @@ function shareRiddle(m) {
   const url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text);
   try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
 }
-function showRiddleModal(code) {
+
+// v110: «Загадать с ответом» — ссылка с параметром reveal=1, чтобы друг мог сразу
+// проверить, угадал ли (ответ разворачивается автоматически после паузы).
+function shareRiddleReveal(m) {
+  haptic('light');
+  const link = location.href.split('#')[0] + '#riddle=' + encodeURIComponent(m.code) + '&reveal=1';
+  const text = `🎬 Проверь себя: отгадаешь по подсказкам?\n\n${riddleHints(m)}\n\nОткрой ссылку — там фильм и ответ. Ты был близок? 😉`;
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text);
+  try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+}
+function showRiddleModal(code, autoReveal) {
   const m = ALL.find(x => String(x.code) === String(code));
   if (!m) return;
   const modal = document.getElementById('riddle-modal');
@@ -3421,6 +3492,15 @@ function showRiddleModal(code) {
     open.onclick = () => { modal.classList.add('hidden'); openDetail(m.code); };
   }
   modal.classList.remove('hidden');
+  // v110: ссылка с reveal=1 — друг сразу видит ответ (после паузы)
+  if (autoReveal) {
+    setTimeout(() => {
+      haptic('ok');
+      if (body) body.classList.remove('hidden');
+      if (reveal) reveal.classList.add('hidden');
+      if (open) open.classList.remove('hidden');
+    }, 1200);
+  }
 }
 function parseRiddleHash() {
   // Друг пришёл по ссылке «загадай другу»: #riddle=КОД. Показываем загадку
@@ -3430,7 +3510,7 @@ function parseRiddleHash() {
     const code = params.get('riddle');
     if (code) {
       history.replaceState(null, '', location.pathname + location.search);
-      setTimeout(() => showRiddleModal(code), 500);
+      setTimeout(() => showRiddleModal(code, params.get('reveal') === '1'), 500);
     }
   } catch (e) { /* пусто */ }
 }
@@ -3858,6 +3938,7 @@ function openDetail(code) {
           <button class="btn-secondary" id="btn-note">📝 ${getNotes()[code] ? 'Заметка есть' : 'Заметка'}</button>
           <button class="btn-secondary" id="btn-copy">📎 Скопировать код</button>
           <button class="btn-secondary" id="btn-riddle">🎭 Загадать другу</button>
+          <button class="btn-secondary" id="btn-riddle-reveal-share">🎭 Загадать с ответом</button>
           <button class="btn-secondary" id="btn-review">✍️ Отзыв</button>
           <button class="btn-secondary" id="btn-remind">🔔 Напомнить через час</button>
           ${cleanKpTitle(m.title) ? '<button class="btn-secondary" id="btn-kp">⭐ IMDB</button>' : ''}
