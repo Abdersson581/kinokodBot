@@ -3992,6 +3992,8 @@ function openDetail(code) {
   if (rateClear) rateClear.addEventListener('click', () => { removeRating(rateClear.dataset.code); openDetail(code); });
   const riddleBtn = document.getElementById('btn-riddle');
   if (riddleBtn) riddleBtn.onclick = () => shareRiddle(m);
+  const riddleRevBtn = document.getElementById('btn-riddle-reveal-share');
+  if (riddleRevBtn) riddleRevBtn.onclick = () => shareRiddleReveal(m);
   document.getElementById('btn-fav').onclick = () => { toggleFav(code); openDetail(code); };
   document.getElementById('btn-watched').onclick = () => { toggleWatched(String(code)); openDetail(code); };
   document.getElementById('btn-note').onclick = () => {
