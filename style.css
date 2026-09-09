@@ -1629,6 +1629,35 @@ body.light #err-banner { background: #dc2626; }
   padding: 2px 5px;
   line-height: 1;
 }
+/* v109: кнопка «закрепить трейлер» */
+.trailer-pin {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(0,0,0,.45);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .12s ease, background .15s ease;
+  z-index: 3;
+}
+.trailer-pin.pinned {
+  background: rgba(255,193,7,.28);
+  border-color: rgba(255,193,7,.7);
+}
+.trailer-pin:active { transform: scale(.85); }
+/* v109: мини-прогресс просмотра на полке «Продолжить смотреть» */
+.watch-bar {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(255,193,7,.9), rgba(255,68,102,.8));
 .trailer-info {
   padding: 8px 10px;
 }

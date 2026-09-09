@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=108" />
+  <link rel="stylesheet" href="style.css?v=109" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -53,6 +53,7 @@
           <button class="ap-swatch" data-a="neon" title="Неон-циан" style="--sw:#00e5ff">💠</button>
           <button class="ap-swatch" data-a="gold" title="Золото" style="--sw:#ffb300">✨</button>
         </div>
+        <button class="btn-lucky" id="btn-mute" title="Вибрации вкл/выкл">🔔</button>
         <button class="btn-lucky" id="btn-info" title="О боте">ℹ️</button>
         <button class="btn-lucky" id="btn-lucky" title="Мне повезёт">🎲</button>
       </div>
@@ -111,13 +112,15 @@
       <div id="code-day-banner" class="code-day hidden"></div>
       <div id="streak-strip" class="streak-strip hidden"></div>
       <div id="chall-pane" class="chall-pane hidden">
-        <div class="chall-head">
-          <span class="chall-title">🎯 Челленджи дня</span>
+        <div class="chall-head" id="chall-head">
+          <span class="chall-title">🎯 Цель дня</span>
           <span class="chall-count" id="chall-count">0/3</span>
+          <span class="chall-arrow" id="chall-arrow">▾</span>
         </div>
         <div id="chall-list" class="chall-list">
           <div class="chall-list"><div class="chall-item">Загрузка…</div></div>
         </div>
+        <button class="btn-primary hidden" id="chall-reward" style="margin:8px 10px 10px">💰 Забрать баллы за цель дня</button>
       </div>
       <div id="filmday-banner" class="filmday-banner hidden"></div>
       <div id="code-wallet" class="code-wallet hidden"></div>
@@ -127,7 +130,7 @@
         <div class="hero-row" id="hero-row"></div>
       </div>
       <div id="new-codes-shelf" class="hero-shelf hidden">
-        <h2 class="shelf-title">🆕 Новые коды</h2>
+        <h2 class="shelf-title">🆕 Новинки недели</h2>
         <div class="hero-row" id="new-codes-row"></div>
       </div>
       <div id="today-shelf" class="hero-shelf hidden">
@@ -196,7 +199,7 @@
     <!-- Трейлеры (все в одном месте) -->
     <div id="view-trailers" class="hidden">
       <div class="toolbar glass">
-        <input type="text" id="trailer-search" placeholder="🔍 Поиск трейлера…" />
+        <input type="text" id="trailer-search" placeholder="🔍 Трейлер, актёр, код…" />
         <select id="trailer-sort">
           <option value="new">🔥 По новизне</option>
           <option value="rating">⭐ По рейтингу</option>
@@ -468,7 +471,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=108"></script>
+  <script src="script.js?v=109"></script>
 </body>
 </html>
 

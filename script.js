@@ -268,6 +268,47 @@ function pushTrailerWatch(code) {
   localStorage.setItem(TW_KEY, JSON.stringify(w));
 }
 
+// ---------- v109: «🎬 Смотрю сейчас» — прогресс просмотра трейлеров ----------
+// Те же данные, что у «Продолжить смотреть», но с длительностью сессии:
+// когда пользователь открывает трейлер, засекаем время; при закрытии пишем,
+// сколько секунд реально смотрел. На главной полка показывает мини-прогресс.
+const SESSION_KEY = 'kinoafisha_watch_session';
+function startWatchSession(code) { localStorage.setItem(SESSION_KEY, JSON.stringify({ c: String(code), t: Date.now() })); }
+function endWatchSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+    if (!s) return;
+    localStorage.removeItem(SESSION_KEY);
+    const sec = Math.round((Date.now() - s.t) / 1000);
+    if (sec < 2) return;                       // случайный клик — не считаем
+    let w = getTrailerWatches().filter(x => String(x.c) !== s.c);
+    w.unshift({ c: s.c, t: Date.now(), sec });
+    localStorage.setItem(TW_KEY, JSON.stringify(w.slice(0, MAX_TW)));
+  } catch (e) { localStorage.removeItem(SESSION_KEY); }
+}
+function watchProgress(code) {
+  const w = getTrailerWatches().find(x => String(x.c) === String(code));
+  return w ? (w.sec || 0) : 0;
+}
+
+// ---------- v109: «📌 закрепить трейлер» ----------
+// Закреплённые поднимаются в начало сетки «Трейлеры» (поверх сортировки).
+const TPIN_KEY = 'kinoafisha_trailer_pins';
+const getTrailerPins = () => {
+  try { return JSON.parse(localStorage.getItem(TPIN_KEY) || '[]'); }
+  catch (e) { return []; }
+};
+function toggleTrailerPin(code) {
+  const pins = getTrailerPins();
+  const i = pins.indexOf(String(code));
+  let nowPinned = true;
+  if (i >= 0) { pins.splice(i, 1); nowPinned = false; }
+  else pins.unshift(String(code));
+  localStorage.setItem(TPIN_KEY, JSON.stringify(pins));
+  haptic(nowPinned ? 'ok' : 'light');
+  return nowPinned;
+}
+
 // ---------- v60: локальная активность («📊 Моя неделя» в профиле) ----------
 // Счётчики по дням: открытых карточек, просмотренных трейлеров, добавлений в «Моё».
 const WEEK_STATS_KEY = 'kinoafisha_week_stats';
@@ -351,6 +392,59 @@ function removeRating(code) {
 }
 // «вес» фильма во вкусе пользователя: чем выше оценка — тем сильнее сигнал
 const ratingWeight = (r) => 1 + (parseInt(r, 10) || 0) * 1.2;
+
+// ---------- v109: «🔮 Инсайты» — персональные факты из локальной истории ----------
+const HOUR_LOG_KEY = 'kinoafisha_hour_log';
+function bumpHourLog() {
+  try {
+    const h = new Date().getHours();
+    const log = JSON.parse(localStorage.getItem(HOUR_LOG_KEY) || '{}') || {};
+    log[h] = (log[h] || 0) + 1;
+    localStorage.setItem(HOUR_LOG_KEY, JSON.stringify(log));
+  } catch (e) {}
+}
+function buildInsights() {
+  const facts = [];
+  // Любимое время заходов (нужен накопленный лог >= 10 открытий)
+  try {
+    const log = JSON.parse(localStorage.getItem(HOUR_LOG_KEY) || '{}') || {};
+    const total = Object.values(log).reduce((a, b) => a + b, 0);
+    if (total >= 10) {
+      let bestH = 0, bestN = -1;
+      for (let h = 0; h < 24; h++) if ((log[h] || 0) > bestN) { bestN = log[h] || 0; bestH = h; }
+      const label = (bestH >= 6 && bestH < 12) ? 'утро ☀️'
+        : (bestH >= 12 && bestH < 18) ? 'день 🌤'
+        : (bestH >= 18 && bestH < 24) ? 'вечер 🌆' : 'ночь 🌙';
+      facts.push(`🕐 Ты чаще заходишь <b>${label}</b> (в ${String(bestH).padStart(2, '0')}:00)`);
+    }
+  } catch (e) {}
+  // Самый открываемый фильм
+  try {
+    const oc = getOpenCounts();
+    const entries = Object.entries(oc).filter(([, n]) => n >= 2);
+    if (entries.length) {
+      entries.sort((a, b) => b[1] - a[1]);
+      const m = ALL.find(x => String(x.code) === String(entries[0][0]));
+      if (m) facts.push(`👀 Чаще всего открываешь <b>«${esc(m.title)}»</b> — ${entries[0][1]} раз(а)`);
+    }
+  } catch (e) {}
+  // Суммарное время трейлеров
+  try {
+    const secSum = getTrailerWatches().reduce((a, w) => a + (w.sec || 0), 0);
+    if (secSum >= 180) facts.push(`▶️ Посмотрел(а) трейлеров на <b>~${Math.round(secSum / 60)} мин</b>`);
+  } catch (e) {}
+  // Любимый жанр
+  try {
+    const fg = favouriteGenre();
+    if (fg) facts.push(`🌟 Любимый жанр — <b>${esc(fg)}</b>`);
+  } catch (e) {}
+  if (!facts.length) return '';
+  return `
+    <div class="pf-week pf-insights">
+      <div class="pf-ach-head"><span>🔮 Инсайты</span><b>из твоей истории</b></div>
+      ${facts.map(f => `<div class="ins-fact">${f}</div>`).join('')}
+    </div>`;
+}
 
 // ---------- v64: ежедневная серия («🔥 заходим каждый день») ----------
 const DAILY_KEY = 'kinoafisha_daily';
@@ -527,8 +621,19 @@ function initSearchHist(prefix) {
 // ---------- утилиты ----------
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-// Haptic-отклик: вибрация на действиях (нет поддержки — тихо пропускаем)
+// Haptic-отклик: вибрация на действиях (нет поддержки — тихо пропускаем).
+// v109: «🔇 Без вибраций» — глобальный тумблер, хранится в localStorage.
+const NO_HAPTIC_KEY = 'kinoafisha_no_haptic';
+function hapticsEnabled() {
+  try { return localStorage.getItem(NO_HAPTIC_KEY) !== '1'; } catch (e) { return true; }
+}
+function toggleHaptics() {
+  const willBeOff = hapticsEnabled();   // сейчас включены → выключаем
+  localStorage.setItem(NO_HAPTIC_KEY, willBeOff ? '1' : '0');
+  return willBeOff;   // true = вибрации теперь выключены
+}
 function haptic(kind = 'light') {
+  if (!hapticsEnabled()) return;
   try {
     if (kind === 'ok' || kind === 'error') tg.HapticFeedback?.notificationOccurred(kind);
     else tg.HapticFeedback?.impactOccurred(kind);
@@ -911,12 +1016,16 @@ function _levDist(a, b) {
 }
 
 // ---------- ежедневные челленджи: панель на главной ----------
+// v109: панель стала «Целью дня» — сворачивается, помнит состояние,
+// а когда всё выполнено — кнопка забрать баллы в боте.
+const CHALL_COLLAPSE_KEY = 'kinoafisha_chall_collapsed';
 function updateChallPane() {
   const pane = document.getElementById('chall-pane');
   if (!pane) return;
   const c = getChallenges();
   const listEl = document.getElementById('chall-list');
   const countEl = document.getElementById('chall-count');
+  const collapsed = localStorage.getItem(CHALL_COLLAPSE_KEY) === '1';
   const items = CHALLENGE_LIST.map(ch => {
     const ok = c.done.includes(ch.id) || ch.check();
     return `<div class="chall-item ${ok ? 'done' : ''}">
@@ -929,8 +1038,43 @@ function updateChallPane() {
     </div>`;
   }).join('');
   listEl.innerHTML = items;
+  if (collapsed) listEl.classList.add('hidden');
+  else listEl.classList.remove('hidden');
   const doneCount = CHALLENGE_LIST.filter(ch => c.done.includes(ch.id) || ch.check()).length;
   if (countEl) countEl.textContent = `${doneCount}/${CHALLENGE_LIST.length}`;
+  // v109: кнопка награды — видна, когда выполнены все три задания
+  const rewardEl = document.getElementById('chall-reward');
+  if (rewardEl) {
+    const allDone = doneCount === CHALLENGE_LIST.length;
+    rewardEl.classList.toggle('hidden', !allDone);
+    if (allDone && !c.done.includes('reward_sent')) {
+      rewardEl.onclick = () => {
+        haptic('ok');
+        sendOrDeepLink({ action: 'quiz_result', correct: CHALLENGE_LIST.length, total: CHALLENGE_LIST.length });
+        try {
+          const cc = getChallenges();
+          cc.done.push('reward_sent');
+          setChallenges(cc);
+          rewardEl.classList.add('hidden');
+        } catch (e) {}
+      };
+    } else if (allDone) {
+      rewardEl.textContent = '✅ Баллы за цель дня уже забраны';
+      rewardEl.onclick = null;
+    }
+  }
+  // v109: тумблер сворачивания
+  const head = document.getElementById('chall-head');
+  if (head && !head.dataset.wired) {
+    head.dataset.wired = '1';
+    head.addEventListener('click', (e) => {
+      if (e.target.closest('#chall-reward')) return;
+      const nowCollapsed = !(localStorage.getItem(CHALL_COLLAPSE_KEY) === '1');
+      localStorage.setItem(CHALL_COLLAPSE_KEY, nowCollapsed ? '1' : '0');
+      haptic('light');
+      updateChallPane();
+    });
+  }
   pane.classList.remove('hidden');
   // после показа — если все сделаны, добавим поздравление
   if (doneCount === CHALLENGE_LIST.length && !c.done.includes('all_done')) {
@@ -1045,8 +1189,8 @@ function renderHero() {
   wireFavQuick(shelf);
 }
 
-// v102: полка «🆕 Новые коды» — последние добавленные фильмы. Сортировка по added_at,
-// чтобы игроки сразу видели свежие коды канала.
+// v102: полка «🆕 Новинки недели» — последние добавленные фильмы. Сортировка по added_at,
+// чтобы игроки сразу видели свежие коды канала. v109: бейдж давности «N дн.».
 function renderNewCodes() {
   const shelf = document.getElementById('new-codes-shelf');
   if (!shelf) return;
@@ -1055,17 +1199,21 @@ function renderNewCodes() {
     .sort((a, b) => new Date(b.added_at).getTime() - new Date(a.added_at).getTime())
     .slice(0, 8);
   if (items.length < 3 || !shelf) { shelf.classList.add('hidden'); return; }
+  const daysAgo = (m) => Math.max(0, Math.floor((Date.now() - new Date(m.added_at).getTime()) / 86400000));
   const row = document.getElementById('new-codes-row');
-  row.innerHTML = items.map(m => `
+  row.innerHTML = items.map(m => {
+    const d = daysAgo(m);
+    const fresh = d <= 1 ? '🔥 сегодня' : (d <= 7 ? `🕒 ${d} дн. назад` : '');
+    return `
     <div class="hero-card" data-code="${esc(m.code)}">
       ${posterHtmlQuick(m)}
       <span class="hero-rank">🔑 ${esc(String(m.code))}</span>
-      ${isNew(m) ? '<span class="new-badge">🔥 Новинка</span>' : ''}
+      ${fresh ? `<span class="new-badge">${fresh}</span>` : ''}
       <div class="hero-overlay">
         <h3>${esc(m.title)}</h3>
         ${ratingBadge(m)}
       </div>
-    </div>`).join('');
+    </div>`}).join('');
   shelf.classList.remove('hidden');
   shelf.querySelectorAll('.hero-card').forEach(el =>
     el.addEventListener('click', () => openDetail(el.dataset.code)));
@@ -1188,15 +1336,21 @@ function renderTrailerShelf() {
     .filter(m => m.trailer_yt || m.trailer_file_id);
   if (!items.length) { shelf.classList.add('hidden'); return; }
   const row = shelf.querySelector('#continue-row');
-  row.innerHTML = items.map(m => `
+  row.innerHTML = items.map((m, i) => {
+    // v109: мини-прогресс просмотра (секунды), если трейлер реально смотрели
+    const x = tw[i];
+    const sec = (x && x.sec) || watchProgress(m.code);
+    const bar = sec >= 3 ? `<span class="watch-bar" style="width:${Math.min(100, Math.round(100 * sec / 180))}%"></span>` : '';
+    return `
     <div class="hero-card" data-code="${esc(m.code)}">
       ${posterHtmlQuick(m)}
-      <span class="continue-chip">▶️ продолжить</span>
+      <span class="continue-chip">▶️ ${sec >= 60 ? 'посмотрел(а) ' + Math.round(sec / 60) + ' мин' : (sec >= 3 ? 'смотрел(а) ' + sec + ' сек' : 'продолжить')}</span>
+      ${bar}
       <div class="hero-overlay">
         <h3>${esc(m.title)}</h3>
         <span class="rating">${ratingBadge(m)}</span>
       </div>
-    </div>`).join('');
+    </div>`}).join('');
   shelf.classList.remove('hidden');
   row.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => {
     const m = ALL.find(x => String(x.code) === String(el.dataset.code));
@@ -2124,6 +2278,7 @@ function renderProfile() {
         Синхронизируй — и они появятся здесь.</p>
         ${tasteLine()}
         ${weekBlock}
+        ${buildInsights()}
         <button class="btn-primary" id="pf-sync">🔁 Синхронизировать с ботом</button>
         <button class="btn-secondary pf-invite" id="pf-invite">📣 Пригласить друга</button>
       </div>`;
@@ -2205,6 +2360,7 @@ function renderProfile() {
       </div>
       ${achBlock}
       ${weekBlock}
+      ${buildInsights()}
       ${favouriteGenre() ? `<div class="pf-favgenre">🌟 Любимый жанр: <b>${esc(favouriteGenre())}</b></div>` : ''}
       ${tasteLine()}
       ${wgBlock}
@@ -2460,6 +2616,7 @@ function renderTrailers() {
   if (trailerGenre) list = list.filter(m => (m.genres || []).includes(trailerGenre));
   if (qRaw) {
     // v64: ё-нормализация + все слова запроса + код (если запрос целиком число)
+    // v109: ищем и по актёрам/режиссёру — как в афише
     const q = qRaw.replace(/ё/g, 'е');
     const isCode = /^\d+$/.test(q.replace(/\s+/g, ''));
     const digits = q.replace(/\D/g, '');
@@ -2468,7 +2625,10 @@ function renderTrailers() {
     list = list.filter(m => {
       if (isCode && digits && String(m.code || '').includes(digits)) return true;
       const t = norm(m.title);
-      return tks.every(w => t.includes(w));
+      if (tks.every(w => t.includes(w))) return true;
+      const people = [...(m.actors || []), ...(m.director ? [m.director] : [])].map(norm).join(' ');
+      if (people && tks.every(w => people.includes(w))) return true;
+      return (m.genres || []).some(g => norm(g).includes(q));
     });
   }
   list.sort((a, b) => {
@@ -2480,6 +2640,15 @@ function renderTrailers() {
     }
     return (a.title || '').localeCompare(b.title || '', 'ru');
   });
+  // v109: закреплённые (📌) трейлеры всегда первыми
+  const pins = getTrailerPins();
+  if (pins.length) {
+    list.sort((a, b) => {
+      const pa = pins.includes(String(a.code)) ? 0 : 1;
+      const pb = pins.includes(String(b.code)) ? 0 : 1;
+      return pa - pb;
+    });
+  }
   if (!list.length) {
     c.innerHTML = '<p class="error">Нет трейлеров по запросу 🎬</p>';
     return;
@@ -2508,6 +2677,7 @@ function renderTrailers() {
         })()}
         <span class="trailer-play">▶️</span>
         ${(!m.trailer_yt && m.trailer_file_id) ? '<span class="trailer-local">📥</span>' : ''}
+        <button class="trailer-pin${getTrailerPins().includes(String(m.code)) ? ' pinned' : ''}" data-pin="${esc(m.code)}" title="Закрепить наверху">📌</button>
       </div>
       <div class="trailer-info">
         <h3>${esc(m.title)}</h3>
@@ -2518,11 +2688,23 @@ function renderTrailers() {
       </div>
     </div>`).join('')}</div>${pager}`;
   c.querySelectorAll('.trailer-card').forEach(el => {
-    el.addEventListener('click', () => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.trailer-pin')) return;   // не открываем по клику на 📌
       const m = ALL.find(x => x.code === el.dataset.code);
       if (m) openTrailer(m);
     });
   });
+  c.querySelectorAll('.trailer-pin').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const pinned = toggleTrailerPin(b.dataset.pin);
+    b.classList.toggle('pinned', pinned);
+    try {
+      tg.showPopup({ type: 'ok',
+        title: pinned ? '📌 Закреплён' : '📌 Откреплён',
+        message: pinned ? 'Этот трейлер всегда будет первым в списке.' : 'Трейлер вернулся в обычный порядок.' });
+    } catch (_) {}
+    setTimeout(() => renderTrailers(), 250);   // перерисуем сетку с учётом пина
+  }));
   c.querySelectorAll('.pg-btn').forEach(b => b.addEventListener('click', () => {
     const v = b.dataset.pg;
     if (v === 'prev') _trailerPage = Math.max(1, _trailerPage - 1);
@@ -2737,6 +2919,81 @@ function copyBackup() {
     navigator.clipboard.writeText(text).then(done).catch(done);
   } else done();
 }
+
+// v109: «🖼 Поделиться картинкой» — красивая картинка всех «хочу посмотреть».
+// Клепаем canvas с постерами (до 24), названиями и брендом, выводим в модалку
+// sharecard-modal (переиспользуем её) — можно скачать и кинуть в чат.
+function shareFavsPoster() {
+  haptic('light');
+  const favs = getFavs().filter(c => ALL.some(m => String(m.code) === String(c)));
+  if (!favs.length) return;
+  const modal = document.getElementById('sharecard-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const prev = document.getElementById('sharecard-preview');
+  prev.innerHTML = '<p class="modal-muted">🎨 Собираем постеры…</p>';
+  const items = favs.slice(0, 24).map(c => ALL.find(m => String(m.code) === String(c))).filter(Boolean);
+  const COLS = 4, CELL_W = 120, CELL_H = 200, PAD = 10, HEAD_H = 64, FOOT_H = 40;
+  const rows = Math.ceil(items.length / COLS);
+  const W = PAD * 2 + COLS * CELL_W;
+  const H = PAD * 2 + HEAD_H + rows * CELL_H + FOOT_H;
+  let cv, ctx;
+  try {
+    cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    ctx = cv.getContext('2d');
+  } catch (e) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; return; }
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#1b2340'); g.addColorStop(1, '#0a0d1a');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(255,193,7,.85)';
+  ctx.font = 'bold 22px Manrope, Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(`МОЙ СПИСОК «ХОЧУ ПОСМОТРЕТЬ» — ${items.length}`, W / 2, 40);
+  const loaded = [];   // подсчёт загруженных, рисуем по мере поступления
+  items.forEach((m, i) => {
+    const r = Math.floor(i / COLS), c = i % COLS;
+    const x = PAD + c * CELL_W, y = PAD + HEAD_H + r * CELL_H;
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    ctx.fillRect(x, y, CELL_W, CELL_H);
+    const tag = document.createElement('img');
+    tag.crossOrigin = 'anonymous';
+    const paint = (img) => {
+      try {
+        const ar = img.naturalWidth && img.naturalHeight ? img.naturalHeight / img.naturalWidth : 1.5;
+        const h = Math.min(CELL_H, CELL_W * ar);
+        const w = h / ar;
+        const dx = x + (CELL_W - w) / 2, dy = y + (CELL_H - h) / 2;
+        ctx.drawImage(img, dx, dy, w, h);
+      } catch (e) {}
+      loaded.push(1);
+      if (loaded.length === items.length) finish();
+    };
+    tag.onload = () => paint(tag);
+    tag.onerror = () => { loaded.push(1); if (loaded.length === items.length) finish(); };
+    tag.src = m.poster;
+  });
+  const finish = () => {
+    ctx.fillStyle = 'rgba(255,255,255,.6)';
+    ctx.font = 'bold 13px Manrope, Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('🎬 КАПИТАН КИНО — разгадывай коды и смотри кино', W / 2, H - 14);
+    try {
+      const url = cv.toDataURL ? cv.toDataURL('image/png') : '';
+      if (!url) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; return; }
+      prev.innerHTML = `<img src="${url}" alt="Мой список «Хочу посмотреть»"/>`;
+      const dl = document.getElementById('btn-sharecard-download');
+      if (dl) dl.onclick = () => {
+        try {
+          const a = document.createElement('a');
+          a.href = url; a.download = 'kinokod_favs.png'; a.click();
+        } catch (e) { window.open(url, '_blank'); }
+      };
+    } catch (e) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; }
+  };
+  // страховка: если какой-то постер завис, всё равно рисуем
+  setTimeout(() => { if (loaded.length < items.length) { loaded.length = items.length; finish(); } }, 6000);
+}
 function importBackup() {
   haptic('light');
   try {
@@ -2783,6 +3040,7 @@ function backupFavsNotice() {
             : 'Список пуст — нажми ❤️ на любом фильме.'}</p>
         </div>
         ${favs.length ? '<button class="btn-secondary" id="btn-copy-list">📋 Скопировать список</button>' : ''}
+        ${favs.length ? '<button class="btn-secondary" id="btn-share-posters">🖼 Поделиться картинкой</button>' : ''}
         ${favs.length ? '<button class="btn-secondary" id="btn-backup">💾 Сохранить в боте</button>' : ''}
         ${favs.length ? '<button class="btn-secondary" id="btn-copy-backup">📱💾 Копия для другого устройства</button>' : ''}
         ${favs.length ? '<button class="btn-secondary" id="btn-import-backup">📥 Восстановить здесь</button>' : ''}
@@ -3441,6 +3699,8 @@ function renderGrid() {
     wireFavMode();
     const cbE = document.getElementById('btn-copy-backup');
     if (cbE) cbE.onclick = copyBackup;
+    const spE = document.getElementById('btn-share-posters');
+    if (spE) spE.onclick = shareFavsPoster;
     const ibE = document.getElementById('btn-import-backup');
     if (ibE) ibE.onclick = importBackup;
     const rbE = document.getElementById('btn-restore-bot');
@@ -3479,6 +3739,8 @@ function renderGrid() {
   if (b) b.onclick = () => sendOrDeepLink({ action: 'save_favs', codes: getFavs() });
   const bc = document.getElementById('btn-copy-list');
   if (bc) bc.onclick = copyFavsList;
+  const sp2 = document.getElementById('btn-share-posters');
+  if (sp2) sp2.onclick = shareFavsPoster;
   const cb2 = document.getElementById('btn-copy-backup');
   if (cb2) cb2.onclick = copyBackup;
   const ib2 = document.getElementById('btn-import-backup');
@@ -4443,6 +4705,26 @@ btnTop.addEventListener('click', () => {
 // ---------- переключатель темы ----------
 document.getElementById('btn-theme').addEventListener('click', toggleTheme);
 
+// ---------- v109: «🔇 без вибраций» ----------
+(() => {
+  const btn = document.getElementById('btn-mute');
+  if (!btn) return;
+  const sync = () => { btn.textContent = hapticsEnabled() ? '🔔' : '🔇'; };
+  btn.addEventListener('click', () => {
+    const off = toggleHaptics();
+    sync();
+    if (!off) haptic('light');   // при включении вибраций сразу подтверждаем
+    try {
+      tg.showPopup({
+        type: 'ok',
+        title: off ? '🔇 Вибрации выключены' : '🔔 Вибрации включены',
+        message: off ? 'Приложение больше не вибрирует на действиях.' : 'Тактильный отклик вернулся.',
+      });
+    } catch (e) {}
+  });
+  sync();
+})();
+
 // ---------- «О боте» ----------
 document.getElementById('btn-info').addEventListener('click', () => {
   haptic('light');
@@ -4728,6 +5010,7 @@ function openTrailer(m) {
     frame.src = 'https://www.youtube.com/embed/' + m.trailer_yt +
                 '?autoplay=1&rel=0&playsinline=1&fs=1';
     modal.classList.remove('hidden');
+    startWatchSession(m.code);   // v109: считаем время просмотра
     _requestFs(modal);
     return;
   }
@@ -4771,6 +5054,7 @@ function openTrailer(m) {
 
 function closeTrailer() {
   _exitFs();
+  endWatchSession();            // v109: фиксируем реальное время просмотра
   const modal = document.getElementById('trailer-modal');
   const frame = document.getElementById('trailer-frame');
   const video = document.getElementById('trailer-video');
