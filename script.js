@@ -160,6 +160,23 @@ const setNote = (code, text) => {
   localStorage.setItem(NOTES_KEY, JSON.stringify(n));
 };
 
+// ---------- v106: свои подборки (локально) ----------
+// Пользователь собирает собственные коллекции фильмов. Хранятся на устройстве.
+const MYCOLS_KEY = 'kinoafisha_mycols';
+const getMyCols = () => JSON.parse(localStorage.getItem(MYCOLS_KEY) || '[]');
+const setMyCols = (a) => localStorage.setItem(MYCOLS_KEY, JSON.stringify(a));
+function newMyCol(title) {
+  const cols = getMyCols();
+  const id = 'mc' + Date.now().toString(36);
+  cols.push({ id, title: (title || '').trim() || 'Моя подборка', codes: [] });
+  setMyCols(cols);
+  return id;
+}
+function myColById(id) { return getMyCols().find(c => c.id === id); }
+function updateMyCol(id, fn) {
+  setMyCols(getMyCols().map(c => c.id === id ? fn(c) : c));
+}
+
 // ---------- компактный режим афиши (2/3/4 колонки) ----------
 const GRID_COLS_KEY = 'kinoafisha_grid_cols';
 const getGridCols = () => {
@@ -1731,6 +1748,181 @@ function renderCols() {
     }));
 }
 
+// ---------- v106: свои подборки ----------
+let _curMyCol = null;  // id открытой подборки (для детального вида)
+function renderMyCols() {
+  const c = document.getElementById('mycols-container');
+  if (!c) return;
+  const cols = getMyCols();
+  const head = `<div class="mycols-head"><h2>🗂 Мои подборки</h2></div>`;
+  if (!cols.length) {
+    c.innerHTML = head + `
+      <div class="mycols-empty">
+        <p>Собери свою коллекцию: выбери название, добавь фильмы — и подборка всегда под рукой.</p>
+        <button class="btn-primary" id="btn-mc-create">➕ Создать подборку</button>
+      </div>`;
+    document.getElementById('btn-mc-create').onclick = promptNewMyCol;
+    return;
+  }
+  c.innerHTML = head + cols.map(col => {
+    const posters = col.codes
+      .map(cd => ALL.find(m => m.code === cd))
+      .filter(m => m && m.poster)
+      .slice(0, 3);
+    const fan = posters.length
+      ? `<div class="col-fan">${posters.map((p, i) =>
+          `<img src="${esc(p.poster)}" alt="" style="z-index:${3 - i};transform:rotate(${(i - 1) * 6}deg) translateX(${(i - 1) * 8}px)" loading="lazy"/>`
+        ).join('')}</div>`
+      : `<span class="col-emoji">🗂</span>`;
+    return `
+    <div class="col-card" data-mc="${esc(col.id)}">
+      ${fan}
+      <div class="col-body">
+        <h3>🗂 ${esc(col.title)}</h3>
+        <p>${col.codes.length} фильм(ов) · моя</p>
+      </div>
+      <button class="btn-share-sm" data-mcshare="${esc(col.id)}" title="Поделиться">📤</button>
+    </div>`;
+  }).join('') + `
+    <button class="btn-secondary" id="btn-mc-create" style="width:100%;margin-top:10px">➕ Создать подборку</button>`;
+  document.getElementById('btn-mc-create').onclick = promptNewMyCol;
+  c.querySelectorAll('.col-card').forEach(el =>
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-share-sm')) return;
+      _curMyCol = el.dataset.mc;
+      view = 'mycol-detail';
+      showView('mycol-detail');
+      renderMyColDetail();
+    }));
+  c.querySelectorAll('.btn-share-sm').forEach(b =>
+    b.addEventListener('click', () => {
+      const col = myColById(b.dataset.mcshare);
+      if (!col) return;
+      const ms = col.codes.map(cd => ALL.find(m => m.code === cd)).filter(Boolean);
+      const top = ms.slice(0, 3).map(m => `🎬 «${m.title}»`).join(', ');
+      const text = `🗂 Моя подборка «${col.title}» — ${ms.length} фильмов: ${top}… Собери свою в «Киноафише» Капитана Кино!`;
+      tg.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') + '&text=' + encodeURIComponent(text));
+    }));
+}
+
+function promptNewMyCol() {
+  try {
+    tg.showPopup({
+      type: 'prompt',
+      title: '➕ Новая подборка',
+      message: 'Придумай название своей коллекции.',
+      placeholder: 'Например: «Кино на вечер», «Ужасы 90-х»…',
+      text: '',
+      callback: (btnId, value) => {
+        if (btnId === 'ok' && value && value.trim()) {
+          newMyCol(value.trim());
+          haptic('ok');
+          renderMyCols();
+        }
+      }
+    });
+  } catch (e) {
+    const name = prompt('Название подборки:');
+    if (name && name.trim()) { newMyCol(name.trim()); renderMyCols(); }
+  }
+}
+
+// Детальный вид своей подборки: список фильмов, добавление и удаление
+function renderMyColDetail() {
+  const box = document.getElementById('view-mycol-detail');
+  if (!box) return;
+  const col = myColById(_curMyCol);
+  if (!col) { view = 'mycols'; showView('mycols'); renderMyCols(); return; }
+  const list = ALL.filter(m => col.codes.includes(m.code) || col.codes.includes(String(m.code)));
+  const addBtn = `<button class="btn-secondary" id="btn-mc-add" style="width:100%">➕ Добавить фильм</button>`;
+  const delBtn = `<button class="btn-secondary danger" id="btn-mc-del">🗑 Удалить подборку</button>`;
+  box.innerHTML = `
+    <div class="mycol-detail-head">
+      <button class="btn-back" id="btn-mc-back">◀️ Все подборки</button>
+      <h2>🗂 ${esc(col.title)}</h2>
+    </div>
+    ${list.length
+      ? `<div class="movies-grid">${list.map(m => `
+          <div class="movie-card" data-code="${esc(m.code)}">
+            ${posterHtml(m)}
+            <div class="movie-info">
+              <h3>${esc(m.title)}</h3>
+              <span class="rating">${ratingBadge(m)}</span>
+            </div>
+          </div>`).join('')}</div>`
+      : `<div class="mycols-empty"><p>Пока пусто. Добавь первые фильмы!</p></div>`}
+    ${addBtn}
+    ${delBtn}`;
+  document.getElementById('btn-mc-back').onclick = () => { view = 'mycols'; showView('mycols'); renderMyCols(); };
+  document.getElementById('btn-mc-add').onclick = () => showMyColAddPanel(col);
+  document.getElementById('btn-mc-del').onclick = () => {
+    try {
+      const confirm = tg.showConfirm || tg.showPopup;
+      confirm(`Удалить подборку «${col.title}»?`, (ok) => {
+        if (ok) {
+          setMyCols(getMyCols().filter(x => x.id !== col.id));
+          haptic('ok');
+          view = 'mycols'; showView('mycols'); renderMyCols();
+        }
+      });
+    } catch (e) {
+      setMyCols(getMyCols().filter(x => x.id !== col.id));
+      view = 'mycols'; showView('mycols'); renderMyCols();
+    }
+  };
+  box.querySelectorAll('.movie-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.code)));
+}
+
+// Панель выбора: поиск + список фильмов с галочкой «есть в подборке»
+function showMyColAddPanel(col) {
+  const box = document.getElementById('view-mycol-detail');
+  if (!box) return;
+  const panel = document.createElement('div');
+  panel.className = 'mycol-add-panel';
+  panel.innerHTML = `
+    <div class="mycol-detail-head"><h2>➕ К «${esc(col.title)}»</h2></div>
+    <input class="mycol-add-input" id="mc-add-q" type="text" placeholder="🔍 Найти фильм…"/>
+    <div class="mycol-add-list" id="mc-add-list"></div>
+    <button class="btn-primary" id="btn-mc-add-done">Готово</button>`;
+  box.prepend(panel);
+  const listEl = document.getElementById('mc-add-list');
+  const inCol = (code) => col.codes.includes(code) || col.codes.includes(String(code));
+  const draw = () => {
+    const q = (document.getElementById('mc-add-q').value || '').toLowerCase().trim();
+    const pool = ALL.filter(m => !q
+      || String(m.title).toLowerCase().includes(q)
+      || String(m.code) === q || String(m.code).includes(q));
+    listEl.innerHTML = (pool.slice(0, 60).map(m => `
+      <button class="mycol-add-item ${inCol(m.code) ? 'in-col' : ''}" data-code="${esc(m.code)}">
+        ${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy"/>` : '<span>🎬</span>'}
+        <span>${esc(m.title)}</span>
+        <span class="add-plus">${inCol(m.code) ? '✓' : '+'}</span>
+      </button>`).join('') || '<p class="mycols-empty">Ничего не нашлось 🤷</p>');
+    listEl.querySelectorAll('.mycol-add-item').forEach(b =>
+      b.addEventListener('click', () => {
+        const code = b.dataset.code;
+        const adding = !inCol(code);
+        updateMyCol(col.id, c => {
+          const s = new Set(c.codes);
+          adding ? s.add(code) : s.delete(code);
+          c.codes = [...s];
+          return c;
+        });
+        haptic(adding ? 'ok' : 'light');
+        draw();
+      }));
+  };
+  const qEl = document.getElementById('mc-add-q');
+  if (qEl) qEl.addEventListener('input', draw);
+  document.getElementById('btn-mc-add-done').onclick = () => {
+    view = 'mycol-detail';
+    showView('mycol-detail');
+    renderMyColDetail();
+  };
+  draw();
+}
+
 // ---------- лента «📰 Новости кино» ----------
 function renderNews() {
   const c = document.getElementById('news-container');
@@ -2702,6 +2894,126 @@ function shareMovie(m) {
   try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
 }
 
+// v106: 🖼 готовая карточка-картинка (canvas) для шеринга в чаты и сторис
+// Рисуем плакат 500×750: градиентный фон, постер, название, рейтинг, бренд.
+const SC_W = 500, SC_H = 750;
+function drawShareCard(m, cb) {
+  let cv = null, cx = null;
+  try {
+    cv = document.createElement('canvas');
+    cv.width = SC_W; cv.height = SC_H;
+    cx = cv.getContext('2d');
+  } catch (e) { cb(null); return; }
+  const g = cx.createLinearGradient(0, 0, 0, SC_H);
+  g.addColorStop(0, '#1b2340');
+  g.addColorStop(0.55, '#12162b');
+  g.addColorStop(1, '#0a0d1a');
+  cx.fillStyle = g;
+  cx.fillRect(0, 0, SC_W, SC_H);
+  cx.strokeStyle = 'rgba(255,193,7,.55)';
+  cx.lineWidth = 3;
+  cx.strokeRect(6, 6, SC_W - 12, SC_H - 12);
+  // финальная отрисовка текста поверх постера
+  const ready = () => {
+    cx.textAlign = 'center';
+    const title = String(m.title || '').replace(/^«|»$/g, '').trim();
+    const lines = _scLines(title, 28);
+    cx.fillStyle = '#ffffff';
+    cx.font = 'bold 30px Manrope, Arial';
+    let ty = 612;
+    lines.forEach(l => { cx.fillText(l, SC_W / 2, ty); ty += 36; });
+    cx.fillStyle = 'rgba(255,193,7,.9)';
+    cx.font = 'bold 15px Manrope, Arial';
+    cx.fillText('🔑 Код ' + m.code, SC_W / 2, m.rating ? 672 : 700);
+    if (m.rating) {
+      cx.fillStyle = 'rgba(255,255,255,.85)';
+      cx.font = '14px Manrope, Arial';
+      cx.fillText('⭐ ' + m.rating + (m.year ? '  ·  ' + m.year : ''), SC_W / 2, 700);
+    }
+    cx.fillStyle = 'rgba(255,255,255,.55)';
+    cx.font = 'bold 12px Manrope, Arial';
+    cx.fillText('🎬 КАПИТАН КИНО', SC_W / 2, 730);
+    cb(cv);
+  };
+  const paintPoster = (img) => {
+    cx.fillStyle = 'rgba(0,0,0,.35)';
+    cx.fillRect((SC_W - 300) / 2 - 8, 82 - 8, 300 + 16, 450 + 16);
+    cx.drawImage(img, (SC_W - 300) / 2, 82, 300, 450);
+    ready();
+  };
+  const paintFallback = () => {
+    cx.fillStyle = '#10131f';
+    cx.fillRect((SC_W - 300) / 2, 82, 300, 450);
+    cx.fillStyle = 'rgba(255,255,255,.85)';
+    cx.font = '38px Manrope, Arial';
+    cx.textAlign = 'center';
+    cx.fillText('🎬', SC_W / 2, 82 + 225);
+    ready();
+  };
+  if (m.poster) {
+    const img = document.createElement('img');
+    img.crossOrigin = 'anonymous';
+    let done = false;
+    img.onload = () => { if (!done) { done = true; paintPoster(img); } };
+    img.onerror = () => { if (!done) { done = true; paintFallback(); } };
+    img.src = m.poster;
+    setTimeout(() => { if (!done) { done = true; paintFallback(); } }, 4000);
+  } else paintFallback();
+}
+
+// перенос названия фиксированными лимитами (без measureText)
+function _scLines(title, maxLen) {
+  const s = String(title);
+  const lines = [];
+  for (let i = 0; i < s.length; i += maxLen) {
+    let end = Math.min(i + maxLen, s.length);
+    if (end < s.length) {
+      const sp = s.lastIndexOf(' ', end);
+      if (sp > i + maxLen / 2) end = sp;
+    }
+    lines.push(s.slice(i, end).trim());
+    if (lines.length >= 3) break;
+  }
+  return lines;
+}
+
+function openShareCard(m) {
+  haptic('light');
+  const modal = document.getElementById('sharecard-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const prev = document.getElementById('sharecard-preview');
+  prev.innerHTML = '<p class="modal-muted">🎨 Рисуем карточку…</p>';
+  drawShareCard(m, (cv) => {
+    if (!cv) { prev.innerHTML = '<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>'; return; }
+    try {
+      // Новый canvas API: toDataURL / toBlob. Фолбэк — dataURL вручную.
+      const makeUrl = (cb2) => {
+        if (cv.toDataURL) cb2(cv.toDataURL('image/png'));
+        else if (cv.toBlob) {
+          const fr = new FileReader();
+          fr.readAsDataURL(cv.toBlob()).then(cb2).catch(() => cb2(null));
+        } else cb2(null);
+      };
+      makeUrl((url) => {
+        if (!url) { prev.innerHTML = '<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>'; return; }
+        prev.innerHTML = `<img src="${url}" alt="Карточка фильма"/>`;
+        const dl = document.getElementById('btn-sharecard-download');
+        if (dl) dl.onclick = () => {
+          try {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'kinokod_' + m.code + '.png';
+            a.click();
+          } catch (e) { window.open(url, '_blank'); }
+        };
+      });
+    } catch (e) {
+      prev.innerHTML = '<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>';
+    }
+  });
+}
+
 // Открываем карточку фильма по прямой ссылке #m=КОД (из шеринга)
 function parseMovieHash() {
   const h = (location.hash || '').replace(/^#/, '');
@@ -3278,6 +3590,7 @@ function openDetail(code) {
           <button class="btn-secondary" id="btn-review">✍️ Отзыв</button>
           <button class="btn-secondary" id="btn-remind">🔔 Напомнить через час</button>
           ${cleanKpTitle(m.title) ? '<button class="btn-secondary" id="btn-kp">⭐ IMDB</button>' : ''}
+          <button class="btn-secondary" id="btn-sharecard">🖼 Карточка</button>
           <button class="btn-secondary" id="btn-share">📤 Поделиться с другом</button>
         </div>
       </div>
@@ -3385,6 +3698,8 @@ function openDetail(code) {
     }
   };
   document.getElementById('btn-share').onclick = () => shareMovie(m);
+  const scBtn = document.getElementById('btn-sharecard');
+  if (scBtn) scBtn.onclick = () => openShareCard(m);
   // Тап по похожему фильму → открываем его карточку
   document.querySelectorAll('#view-detail .similar-card').forEach(el => {
     el.addEventListener('click', () => {
@@ -3511,6 +3826,105 @@ function renderGameEnd() {
   document.getElementById('btn-game-back2').onclick = () => { view = 'grid'; showView('catalog'); renderGrid(); };
 }
 
+// ---------- v106: меню игр + «Угадай по кадру» ----------
+// Раздел «🏋 Тренажёр» теперь открывается меню с тремя режимами:
+// постер (классика), кадр из трейлера (новое), эмодзи-загадки.
+function renderGameMenu() {
+  const emojiReady = !!document.getElementById('view-emoji');
+  document.getElementById('view-game').innerHTML = `
+    <div class="game">
+      <div class="game-end">
+        <h2>🏋 Тренажёр</h2>
+        <p class="game-score">Три режима — выбирай!</p>
+        <button class="btn-primary" id="btn-gm-poster">🖼 Угадай по постеру</button>
+        <button class="btn-primary" id="btn-gm-frame">🎞 Угадай по кадру</button>
+        ${emojiReady ? '<button class="btn-secondary" id="btn-gm-emoji">😀 Угадай по эмодзи</button>' : ''}
+        <button class="btn-back" id="btn-gm-back">◀️ К афише</button>
+      </div>
+    </div>`;
+  document.getElementById('btn-gm-poster').onclick = startGame;
+  document.getElementById('btn-gm-frame').onclick = startFrameGame;
+  const ge = document.getElementById('btn-gm-emoji');
+  if (ge) ge.onclick = () => {
+    // эмодзи-загадки показываются в своём контейнере (оба видны на view-game)
+    document.getElementById('view-game').innerHTML = '';
+    renderEmojiGame();
+  };
+  document.getElementById('btn-gm-back').onclick = () => { view = 'grid'; showView('catalog'); renderGrid(); };
+}
+
+// «Угадай по кадру»: показываем реальный кадр из трейлера (YouTube preview),
+// задаём вопросы на 5 раундов. Кадры — те же, что используются для обложек трейлеров.
+let frameGame = null;
+const frameThumb = (m) => m.trailer_thumb
+  ? m.trailer_thumb
+  : (m.trailer_yt ? 'https://i.ytimg.com/vi/' + m.trailer_yt + '/hqdefault.jpg' : '');
+
+function startFrameGame() {
+  const pool = ALL.filter(m => frameThumb(m) && m.poster);
+  if (pool.length < 6) {
+    document.getElementById('view-game').innerHTML =
+      '<p class="error">Нужно минимум 6 фильмов с кадрами 🎬</p>';
+    return;
+  }
+  const rounds = shuffle(pool).slice(0, 5).map(m => {
+    const wrong = shuffle(ALL.filter(x => x.code !== m.code)).slice(0, 3).map(x => x.title);
+    return { movie: m, options: shuffle([m.title, ...wrong]) };
+  });
+  frameGame = { rounds, i: 0, correct: 0 };
+  renderFrameRound();
+}
+
+function renderFrameRound() {
+  const box = document.getElementById('view-game');
+  const r = frameGame.rounds[frameGame.i];
+  if (!r) return renderFrameEnd();
+  box.innerHTML = `
+    <div class="game">
+      <div class="game-progress">🎞 Раунд ${frameGame.i + 1} / ${frameGame.rounds.length} · Угадано: ${frameGame.correct}</div>
+      <div class="frame-question">
+        <img src="${esc(frameThumb(r.movie))}" alt="Кадр из фильма" onerror="this.parentElement.classList.add('no-thumb')"/>
+      </div>
+      <div class="game-options">
+        ${r.options.map(t => `<button class="btn-option" data-t="${esc(t)}">${esc(t)}</button>`).join('')}
+      </div>
+      <button class="btn-back" id="btn-frame-back">◀️ Выйти</button>
+    </div>`;
+  document.getElementById('btn-frame-back').onclick = () => renderGameMenu();
+  box.querySelectorAll('.btn-option').forEach(b =>
+    b.addEventListener('click', () => answerFrameRound(b, r.movie)));
+}
+
+function answerFrameRound(btn, movie) {
+  const box = document.getElementById('view-game');
+  const right = btn.dataset.t === movie.title;
+  if (right) frameGame.correct++;
+  haptic(right ? 'ok' : 'error');
+  btn.classList.add(right ? 'correct' : 'wrong');
+  box.querySelectorAll('.btn-option').forEach(b => b.disabled = true);
+  box.querySelector('.frame-question').insertAdjacentHTML('beforeend',
+    `<div class="game-reveal">${right ? '✅ Верно!' : `❌ Это «${esc(movie.title)}»`}</div>`);
+  setTimeout(() => { frameGame.i++; renderFrameRound(); }, 1600);
+}
+
+function renderFrameEnd() {
+  const { correct, rounds } = frameGame;
+  document.getElementById('view-game').innerHTML = `
+    <div class="game">
+      <div class="game-end">
+        <h2>${correct === rounds.length ? '🏆 Киносыщик!' : correct >= 3 ? '👍 Хороший глаз!' : '🎬 Тренируемся ещё?'}</h2>
+        <p class="game-score">Угадано ${correct} из ${rounds.length} кадров</p>
+        <button class="btn-primary" id="btn-fr-send">💰 Получить баллы в боте</button>
+        <button class="btn-secondary" id="btn-fr-again">🔁 Ещё раз</button>
+        <button class="btn-back" id="btn-fr-back">◀️ Меню игр</button>
+      </div>
+    </div>`;
+  document.getElementById('btn-fr-send').onclick = () =>
+    sendOrDeepLink({ action: 'quiz_result', correct, total: rounds.length });
+  document.getElementById('btn-fr-again').onclick = startFrameGame;
+  document.getElementById('btn-fr-back').onclick = () => { view = 'game'; showView('game'); renderGameMenu(); };
+}
+
 // ---------- v60: «🔗 Кино-путь» — цепочка человек → фильм → человек ----------
 function buildPersonGraph() {
   const g = new Map();  // ключ (lowercase) -> { display, films:Set(коды) }
@@ -3628,6 +4042,8 @@ function showView(name) {
   toggle('view-year', name === 'year');
   toggle('view-marathon', name === 'marathon');
   toggle('view-tinder', name === 'tinder');
+  toggle('view-mycols', name === 'mycols');          // v106
+  toggle('view-mycol-detail', name === 'mycol-detail');  // v106
   toggle('toolbar', name === 'catalog' || name === 'trailers');
   if (name === 'catalog') renderFilmDay();  // баннер скрываем/возвращаем при смене вьюхи
   const cur = name === 'catalog' ? view : name;
@@ -3635,7 +4051,7 @@ function showView(name) {
     t.classList.toggle('active', t.dataset.view === cur));
   const moreTab = document.getElementById('tab-more');
   if (moreTab) moreTab.classList.toggle('active',
-    ['cols', 'top', 'achievements', 'profile', 'fav', 'game', 'chain', 'year', 'tinder'].includes(cur));
+    ['cols', 'top', 'achievements', 'profile', 'fav', 'game', 'chain', 'year', 'tinder', 'mycols'].includes(cur));
   document.querySelectorAll('.more-item').forEach(b =>
     b.classList.toggle('active', b.dataset.view === cur));
 }
@@ -3860,7 +4276,7 @@ const LAST_VIEW_KEY = 'kinoafisha_last_view';
 function openView(v) {
   view = v;
   try { localStorage.setItem(LAST_VIEW_KEY, v); } catch (e) {}
-  if (v === 'game') { showView('game'); renderEmojiGame(); startGame(); }
+  if (v === 'game') { showView('game'); renderGameMenu(); }
   else if (v === 'cols') { showView('cols'); renderCols(); }
   else if (v === 'news') { showView('news'); renderNews(); }
   else if (v === 'top') { showView('top'); renderLeaderboard(); }
@@ -3871,6 +4287,8 @@ function openView(v) {
   else if (v === 'marathon') { showView('marathon'); renderMarathonView(); }
   else if (v === 'year') { showView('year'); renderYear(); }
   else if (v === 'tinder') { showView('tinder'); renderTinder(); }
+  else if (v === 'mycols') { showView('mycols'); renderMyCols(); }   // v106: свои подборки
+  else if (v === 'mycol-detail') { showView('mycol-detail'); renderMyColDetail(); }
   else { showView('catalog'); renderGrid(); }  // grid | fav
 }
 document.querySelectorAll('.tab[data-view]').forEach(t => t.addEventListener('click', () => openView(t.dataset.view)));
@@ -4422,6 +4840,16 @@ function showChangelog(force = false) {
   if (x) x.onclick = done;
   m.addEventListener('click', (e) => { if (e.target === m) done(); });
 }
+
+// v106: закрытие модалки карточки-шеринга (крестик / клик по фону)
+(() => {
+  const m = document.getElementById('sharecard-modal');
+  if (!m) return;
+  const close = () => { m.classList.add('hidden'); };
+  const x = document.getElementById('btn-sharecard-close');
+  if (x) x.onclick = close;
+  m.addEventListener('click', (e) => { if (e.target === m) close(); });
+})();
 
 parseAccessHash();  // v96: подтверждение подписки (#access=1) — до решения гейт/вход
 if (localStorage.getItem(ACCESS_KEY) === '1') {

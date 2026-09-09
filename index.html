@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=105" />
+  <link rel="stylesheet" href="style.css?v=106" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -75,6 +75,7 @@
       <button class="more-item" data-view="marathon">🎬 Марафон</button>
       <button class="more-item" data-view="year">🏆 Мой год</button>
       <button class="more-item" data-view="tinder">🎴 Тиндер кино</button>
+      <button class="more-item" data-view="mycols">🗂 Мои подборки</button>
       <button class="more-item" id="more-changelog">🎁 Что нового</button>
     </div>
 
@@ -219,6 +220,15 @@
     <!-- Тренажёр + эмодзи-загадки -->
     <div id="view-emoji" class="hidden"></div>
     <div id="view-game" class="hidden"></div>
+    <!-- v106: свои подборки пользователя (локально) -->
+    <div id="view-mycols" class="hidden">
+      <div class="mycols-head">
+        <h2>🗂 Мои подборки</h2>
+      </div>
+      <main id="mycols-container" class="cols-list"></main>
+    </div>
+    <!-- v106: деталь моей подборки -->
+    <div id="view-mycol-detail" class="hidden"></div>
 
     <footer class="footer">
       <button class="kinogod-tile" id="btn-pick">
@@ -447,7 +457,18 @@
     </div>
   </div>
 
-  <script src="script.js?v=105"></script>
+  <!-- v106: готовая карточка-картинка для шеринга (canvas) -->
+  <div id="sharecard-modal" class="modal hidden">
+    <div class="modal-card sharecard-card">
+      <button class="modal-close" id="btn-sharecard-close">✕</button>
+      <h2>🖼 Карточка фильма</h2>
+      <p class="modal-muted">Готовая картинка — скачивается или сохраняется по долгому тапу</p>
+      <div class="sharecard-preview" id="sharecard-preview"></div>
+      <button class="btn-primary" id="btn-sharecard-download">⬇️ Скачать карточку</button>
+    </div>
+  </div>
+
+  <script src="script.js?v=106"></script>
 </body>
 </html>
 

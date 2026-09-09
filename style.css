@@ -2764,6 +2764,27 @@ body.accent-purple .new-badge { background: linear-gradient(90deg, var(--gold), 
 .t-chip:active { transform: scale(.95); }
 .t-chip.active {
   background: linear-gradient(135deg, var(--accent), #ff7a3d);
+/* v106: свои подборки пользователя + карточка-шеринг (canvas) */
+.mycols-head { text-align: center; margin-bottom: 10px; }
+.mycols-head h2 { font-size: 17px; margin: 0 0 4px; }
+.mycols-empty { padding: 22px 16px; text-align: center; }
+.mycols-empty p { font-size: 14px; color: var(--muted); margin: 0 0 12px; }
+.mycol-detail-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.mycol-detail-head h2 { font-size: 17px; margin: 0; }
+.mycol-add-panel { padding: 12px 10px; margin-bottom: 12px; }
+.mycol-add-input { width: 100%; box-sizing: border-box; margin-bottom: 8px; }
+.mycol-add-list { max-height: 300px; overflow-y: auto; margin-top: 6px; padding: 4px 2px; }
+.mycol-add-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 12px; border: 1px solid rgba(127,127,127,.25); background: transparent; color: var(--text); font-size: 13.5px; text-align: left; cursor: pointer; }
+.mycol-add-item img { width: 34px; aspect-ratio: 2/3; object-fit: cover; border-radius: 6px; }
+.mycol-add-item .add-plus { margin-left: auto; color: var(--accent); font-size: 16px; }
+.mycol-add-item.in-col .add-plus { color: var(--green, #22c55e); }
+.sharecard-card { max-width: 420px; }
+.sharecard-preview { margin-top: 8px; text-align: center; max-height: 420px; overflow-y: auto; }
+.sharecard-preview img { display: block; max-width: 100%; margin: 0 auto; border-radius: 14px; box-shadow: 0 4px 18px rgba(0,0,0,.35); }
+#btn-sharecard-download { margin-top: 10px; width: 100%; }
+@media (max-width: 480px) {
+  .sharecard-preview { max-height: 380px; }
+}
   border-color: transparent;
   color: #fff;
   box-shadow: 0 3px 12px rgba(255, 68, 102, .35);
