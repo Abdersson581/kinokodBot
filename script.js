@@ -2693,6 +2693,7 @@ function buildBackupString() {
     ratings: getRatings(),
     watched: getWatched(),
     notes: getNotes(),
+    mycols: getMyCols(),   // v108: свои подборки переезжают вместе с «Моё»
     at: Date.now(),
   });
   return BAK_PREFIX + encodeURIComponent(payload);
@@ -2709,6 +2710,14 @@ function importBackupString(raw) {
     localStorage.setItem(WATCHED_KEY, JSON.stringify(add1(data.watched)));
     localStorage.setItem(RATINGS_KEY, JSON.stringify(add2(data.ratings)));
     localStorage.setItem(NOTES_KEY, JSON.stringify(add2(data.notes)));
+    // v108: подборки — только валидный массив {id,title,codes}; старые бэкапы
+    // без этого поля не трогаем (не очищаем то, что уже есть на устройстве).
+    if (Array.isArray(data.mycols)) {
+      const cols = data.mycols.filter(c => c && typeof c === 'object'
+        && c.id && c.title && Array.isArray(c.codes))
+        .map(c => ({ id: String(c.id), title: String(c.title), codes: add1(c.codes) }));
+      localStorage.setItem(MYCOLS_KEY, JSON.stringify(cols));
+    }
     return 'ok';
   } catch (e) { return 'bad'; }
 }
@@ -2720,7 +2729,7 @@ function copyBackup() {
       tg.showPopup({
         type: 'ok',
         title: '💾 Бэкап скопирован',
-        message: 'Вставь этот текст себе в «Избранное» в Telegram — потом на другом устройстве нажми «📥 Восстановить» и вставь его.',
+        message: 'Вставь этот текст себе в «Избранное» в Telegram. Он включает «Моё», оценки, заметки и «🗂 Мои подборки» — потом перенеси на другой телефон через «📥 Восстановить».',
       });
     } catch (e) { /* пусто */ }
   };
@@ -3179,7 +3188,7 @@ function parseRestoreHash() {
     setTimeout(() => {
       try {
         if (r === 'ok') {
-          tg.showPopup({ type: 'ok', title: '✅ Восстановлено из бота!', message: '«Моё», оценки, просмотренные и заметки перенесены на это устройство.' });
+          tg.showPopup({ type: 'ok', title: '✅ Восстановлено из бота!', message: '«Моё», оценки, просмотренные, заметки и «🗂 Мои подборки» перенесены на это устройство.' });
         } else {
           tg.showPopup({ type: 'alert', title: 'Не удалось', message: 'Бэкап повреждён или устарел. Скопируй строку заново в «❤️ Моё».' });
         }
@@ -4829,7 +4838,7 @@ function showOnboarding() {
 }
 
 // v98: «Что нового» — показываем один раз на версию, только после входа в апп
-const CHANGELOG_V = '98';
+const CHANGELOG_V = '108';
 const CL_KEY = 'kinoafisha_seen_changelog';
 function showChangelog(force = false) {
   // v101: force=true — открываем даже если уже видели («Ещё → Что нового»)
