@@ -3853,12 +3853,19 @@ function renderGameMenu() {
   document.getElementById('btn-gm-back').onclick = () => { view = 'grid'; showView('catalog'); renderGrid(); };
 }
 
-// «Угадай по кадру»: показываем реальный кадр из трейлера (YouTube preview),
-// задаём вопросы на 5 раундов. Кадры — те же, что используются для обложек трейлеров.
+// «Угадай по кадру»: показываем РЕАЛЬНЫЙ кадр из трейлера.
+// Приоритет: frame_pic (локальный кадр из frames/, собран из hq1/hq2/hq3 —
+// сцены без титульных заставок) → онлайн hq1/hq2/hq3 → никогда постер
+// (постер содержит название фильма — игра теряет смысл).
 let frameGame = null;
-const frameThumb = (m) => m.trailer_thumb
-  ? m.trailer_thumb
-  : (m.trailer_yt ? 'https://i.ytimg.com/vi/' + m.trailer_yt + '/hqdefault.jpg' : '');
+const frameThumb = (m) => {
+  if (m.frame_pic) return m.frame_pic;
+  if (m.trailer_yt) {
+    const v = ['hq1', 'hq2', 'hq3'][Math.floor(Math.random() * 3)];
+    return 'https://i.ytimg.com/vi/' + m.trailer_yt + '/' + v + '.jpg';
+  }
+  return '';
+};
 
 function startFrameGame() {
   const pool = ALL.filter(m => frameThumb(m) && m.poster);
