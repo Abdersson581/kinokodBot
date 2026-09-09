@@ -13,11 +13,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=110" />
+  <link rel="stylesheet" href="style.css?v=111" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
   <div id="net-banner" class="net-banner hidden">📴 Нет сети — показаны сохранённые данные</div>
+  <div id="season-banner" class="season-banner hidden"></div>
   <div id="ptr" class="ptr">↓ Тяни вниз</div>
   <button id="btn-top" class="btn-top hidden" title="Наверх" aria-label="Наверх">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l8-8 8 8"/></svg>
@@ -77,6 +78,7 @@
       <button class="more-item" data-view="year">🏆 Мой год</button>
       <button class="more-item" data-view="tinder">🎴 Тиндер кино</button>
       <button class="more-item" data-view="mycols">🗂 Мои подборки</button>
+      <button class="more-item" id="more-catalog">🖼 Постер каталога</button>
       <button class="more-item" id="more-changelog">🎁 Что нового</button>
     </div>
 
@@ -354,11 +356,11 @@
       <button class="modal-close" id="btn-cl-close">✕</button>
       <h2>🎉 Что нового</h2>
       <div class="cl-list">
+        <div class="cl-item"><span>🖼</span><p><b>Постер каталога</b> — вся афиша одной картинкой: «Ещё → Постер каталога»</p></div>
+        <div class="cl-item"><span>🎉</span><p><b>Праздничный режим</b> — в особые даты афиша встречает поздравлением</p></div>
+        <div class="cl-item"><span>🧹</span><p>При переносе «Моё» дубликаты убираются автоматически</p></div>
         <div class="cl-item"><span>🗂</span><p><b>Мои подборки</b> — собирай свои коллекции фильмов и делись ими</p></div>
-        <div class="cl-item"><span>🎞</span><p><b>Угадай по кадру</b> — новый режим тренажёра: узнай фильм по сцене из трейлера</p></div>
-        <div class="cl-item"><span>🖼</span><p><b>Карточка фильма</b> — красивая картинка для шаринга в чаты и сторис</p></div>
-        <div class="cl-item"><span>🏋</span><p><b>Меню игр</b> — тренажёр теперь с выбором: постер / кадр / эмодзи</p></div>
-        <div class="cl-item"><span>💾</span><p>Бэкап переносит и <b>Мои подборки</b> на новое устройство</p></div>
+        <div class="cl-item"><span>🎞</span><p><b>Угадай по кадру</b> — узнай фильм по сцене из трейлера</p></div>
       </div>
       <button class="btn-primary" id="btn-cl-ok">Круто, погнали! 🚀</button>
     </div>
@@ -471,7 +473,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=110"></script>
+  <script src="script.js?v=111"></script>
 </body>
 </html>
 

@@ -2793,6 +2793,36 @@ body.accent-purple .new-badge { background: linear-gradient(90deg, var(--gold), 
 .t-chip:active { transform: scale(.95); }
 .t-chip.active {
   background: linear-gradient(135deg, var(--accent), #ff7a3d);
+/* v111: сезонный баннер (праздники) */
+.season-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 10px 0;
+  padding: 9px 10px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, rgba(255,193,7,.16), rgba(255,68,102,.10));
+  border: 1px solid rgba(255,193,7,.35);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.season-banner .sb-emoji { font-size: 18px; }
+.season-banner .sb-text { flex: 1; min-width: 0; }
+.season-banner .sb-close {
+  background: transparent;
+  border: none;
+  color: inherit;
+  opacity: .6;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.season-banner .sb-close:active { transform: scale(.9); }
+body.light .season-banner {
+  background: linear-gradient(90deg, rgba(255,193,7,.22), rgba(255,68,102,.14));
+  border-color: rgba(180,130,10,.4);
+}
+
 /* v106: свои подборки пользователя + карточка-шеринг (canvas) */
 .mycols-head { text-align: center; margin-bottom: 10px; }
 .mycols-head h2 { font-size: 17px; margin: 0 0 4px; }

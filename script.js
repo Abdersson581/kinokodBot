@@ -1,4 +1,4 @@
-// Telegram Web App
+﻿// Telegram Web App
 const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
@@ -29,6 +29,7 @@ parseMarathonHash(); // v78: «#marathon=…» — запуск марафона
   renderTimeChips();  // v77: чипы длительности
   initShelfArrows();  // v77: стрелки полок (ПК)
   initHeaderScroll(); // v77: стеклянная шапка
+  showSeasonalBanner();  // v111: праздничное приветствие (в сезон)
   loadMovies();
 }
 // ВНИМАНИЕ: запуск (enterApp/showGate) перенесён в САМЫЙ КОНЕЦ файла —
@@ -103,6 +104,36 @@ document.addEventListener('click', (e) => {
   }
 });
 accentPop.querySelectorAll('.ap-swatch').forEach(s => s.addEventListener('click', () => setAccent(s.dataset.a)));
+
+// ---------- v111: сезонный режим — праздничное приветствие в особые даты ----------
+// Новый год / 14 февраля / 8 марта / Хэллоуин: баннер-поздравление над афишей.
+// Закрывается крестиком и больше не показывается в этом сезоне (localStorage).
+function getSeason(d) {
+  const dt = d || new Date();
+  const md = (dt.getMonth() + 1) * 100 + dt.getDate();
+  if (md >= 1225 || md <= 107) return { key: 'ny', emoji: '❄️', text: 'С Новым годом! Пусть все коды разгадаются 🎄' };
+  if (md >= 213 && md <= 215) return { key: 'val', emoji: '💝', text: 'День всех влюблённых — загадай фильм тому, кто дорог 💘' };
+  if (md >= 307 && md <= 309) return { key: 'mar8', emoji: '🌷', text: 'С 8 Марта! Кино и цветы — идеальный вечер 🌷' };
+  if (md >= 1029 && md <= 1031) return { key: 'hal', emoji: '🎃', text: 'Хэллоуин! Ужасы в афише уже ждут 👻' };
+  return null;
+}
+function showSeasonalBanner() {
+  const el = document.getElementById('season-banner');
+  if (!el) return;
+  const s = getSeason();
+  if (!s) { el.classList.add('hidden'); return; }
+  try {
+    if (localStorage.getItem('kinoafisha_season_seen_' + s.key) === '1') { el.classList.add('hidden'); return; }
+  } catch (e) {}
+  el.innerHTML = `<span class="sb-emoji">${s.emoji}</span><span class="sb-text">${esc(s.text)}</span>` +
+    `<button class="sb-close" aria-label="Закрыть">✕</button>`;
+  el.classList.remove('hidden');
+  const close = () => {
+    el.classList.add('hidden');
+    try { localStorage.setItem('kinoafisha_season_seen_' + s.key, '1'); } catch (e) {}
+  };
+  el.querySelector('.sb-close').addEventListener('click', close);
+}
 
 // ---------- состояние ----------
 let ALL = [];                       // все фильмы
@@ -2949,8 +2980,17 @@ function importBackupString(raw) {
     if (!data || typeof data !== 'object') return 'bad';
     const add1 = (v) => Array.isArray(v) ? v.filter(x => x !== null && x !== '').map(String) : [];
     const add2 = (v) => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
-    localStorage.setItem(FAV_KEY, JSON.stringify(add1(data.favs)));
-    localStorage.setItem(WATCHED_KEY, JSON.stringify(add1(data.watched)));
+    // v111: дедупликация — при переносе на новое устройство в списках и
+    // подборках могут быть дубликаты (несколько раз сохраняли/восстанавливали).
+    let dupes = 0;
+    const uniq = (arr) => {
+      const before = arr.length;
+      const out = [...new Set(arr)];
+      dupes += before - out.length;
+      return out;
+    };
+    localStorage.setItem(FAV_KEY, JSON.stringify(uniq(add1(data.favs))));
+    localStorage.setItem(WATCHED_KEY, JSON.stringify(uniq(add1(data.watched))));
     localStorage.setItem(RATINGS_KEY, JSON.stringify(add2(data.ratings)));
     localStorage.setItem(NOTES_KEY, JSON.stringify(add2(data.notes)));
     // v108: подборки — только валидный массив {id,title,codes}; старые бэкапы
@@ -2958,9 +2998,10 @@ function importBackupString(raw) {
     if (Array.isArray(data.mycols)) {
       const cols = data.mycols.filter(c => c && typeof c === 'object'
         && c.id && c.title && Array.isArray(c.codes))
-        .map(c => ({ id: String(c.id), title: String(c.title), codes: add1(c.codes) }));
+        .map(c => ({ id: String(c.id), title: String(c.title), codes: uniq(add1(c.codes)) }));
       localStorage.setItem(MYCOLS_KEY, JSON.stringify(cols));
     }
+    window._lastRestoreDupes = dupes;
     return 'ok';
   } catch (e) { return 'bad'; }
 }
@@ -3069,7 +3110,8 @@ function importBackup() {
         const r = importBackupString(value || '');
         if (r === 'ok') {
           haptic('ok');
-          try { tg.showPopup({ type: 'ok', title: '✅ Восстановлено!', message: 'Данные перенесены с другого устройства.' }); } catch (e) {}
+          const dupes = window._lastRestoreDupes || 0;
+          try { tg.showPopup({ type: 'ok', title: '✅ Восстановлено!', message: 'Данные перенесены с другого устройства.' + (dupes > 0 ? `\n🧹 Дубликаты убраны: ${dupes}.` : '') }); } catch (e) {}
           renderGrid();
           renderRecoShelf();
         } else if (r === 'not_backup') {
@@ -3220,6 +3262,100 @@ function shareMovie(m) {
     `Угадывай фильмы по кодам и смотри кино в «Киноафише» 👇`;
   const url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text);
   try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+}
+
+// v111: «🖼 Постер каталога» — вся афиша одной картинкой (сетка постеров с кодами).
+// Удобно кинуть в чат: витрина канала в одном посте. Рисуем на canvas, показываем
+// в модалке карточки (sharecard-modal) с кнопкой скачивания.
+function shareCatalogPoster() {
+  haptic('light');
+  if (!ALL.length) return;
+  const modal = document.getElementById('sharecard-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const prev = document.getElementById('sharecard-preview');
+  prev.innerHTML = '<p class="modal-muted">🎨 Собираем витрину…</p>';
+  const items = ALL.filter(m => m.poster).slice(0, 64);
+  if (!items.length) { prev.innerHTML = '<p class="modal-muted">Постеры ещё не загрузились — попробуй чуть позже</p>'; return; }
+  const COLS = 4, CELL_W = 120, CELL_H = 218, PAD = 12, HEAD_H = 78, FOOT_H = 46;
+  const rows = Math.ceil(items.length / COLS);
+  const W = PAD * 2 + COLS * CELL_W;
+  const H = PAD * 2 + HEAD_H + rows * CELL_H + FOOT_H;
+  let cv, ctx;
+  try {
+    cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    ctx = cv.getContext('2d');
+  } catch (e) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; return; }
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#1b2340'); g.addColorStop(1, '#0a0d1a');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(255,193,7,.5)'; ctx.lineWidth = 3;
+  ctx.strokeRect(5, 5, W - 10, H - 10);
+  ctx.fillStyle = 'rgba(255,193,7,.95)';
+  ctx.font = 'bold 22px Manrope, Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('🎬 КАПИТАН КИНО', W / 2, 40);
+  ctx.fillStyle = 'rgba(255,255,255,.75)';
+  ctx.font = '14px Manrope, Arial';
+  ctx.fillText(`${ALL.length} фильмов · угадывай коды — открывай кино`, W / 2, 64);
+  const loaded = [];
+  const finish = () => {
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.font = 'bold 12px Manrope, Arial';
+    ctx.fillText('Открой афишу в Telegram → @kapitan_kino_bot', W / 2, H - 16);
+    try {
+      const url = cv.toDataURL ? cv.toDataURL('image/png') : '';
+      if (!url) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; return; }
+      prev.innerHTML = `<img src="${url}" alt="Каталог фильмов"/>`;
+      const dl = document.getElementById('btn-sharecard-download');
+      if (dl) dl.onclick = () => {
+        try {
+          const a = document.createElement('a');
+          a.href = url; a.download = 'kinokod_catalog.png'; a.click();
+        } catch (e) { window.open(url, '_blank'); }
+      };
+    } catch (e) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; }
+  };
+  items.forEach((m, i) => {
+    const r = Math.floor(i / COLS), c = i % COLS;
+    const x = PAD + c * CELL_W, y = PAD + HEAD_H + r * CELL_H;
+    // рамка-ячейка
+    ctx.fillStyle = 'rgba(0,0,0,.32)';
+    ctx.fillRect(x, y, CELL_W, CELL_H - 26);
+    const img = document.createElement('img');
+    img.crossOrigin = 'anonymous';
+    const paint = () => {
+      try {
+        const ar = img.naturalHeight && img.naturalWidth ? img.naturalHeight / img.naturalWidth : 1.5;
+        const ph = CELL_H - 26, pw = CELL_W;
+        const h = Math.min(ph, pw * ar), w = h / ar;
+        ctx.drawImage(img, x + (pw - w) / 2, y + (ph - h) / 2, w, h);
+      } catch (e) {}
+      // плашка с кодом
+      ctx.fillStyle = 'rgba(255,193,7,.9)';
+      ctx.font = 'bold 13px Manrope, Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🔑 ' + m.code, x + CELL_W / 2, y + CELL_H - 8);
+      loaded.push(1);
+      if (loaded.length === items.length) finish();
+    };
+    img.onload = paint;
+    img.onerror = () => {
+      ctx.fillStyle = 'rgba(255,255,255,.75)';
+      ctx.font = '24px Manrope, Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🎬', x + CELL_W / 2, y + (CELL_H - 26) / 2 + 8);
+      ctx.fillStyle = 'rgba(255,193,7,.9)';
+      ctx.font = 'bold 13px Manrope, Arial';
+      ctx.fillText('🔑 ' + m.code, x + CELL_W / 2, y + CELL_H - 8);
+      loaded.push(1);
+      if (loaded.length === items.length) finish();
+    };
+    img.src = m.poster;
+  });
+  // страховка: если часть постеров зависла — всё равно отдаём витрину
+  setTimeout(() => { if (loaded.length < items.length) { loaded.length = items.length; finish(); } }, 8000);
 }
 
 // v106: 🖼 готовая карточка-картинка (canvas) для шеринга в чаты и сторис
@@ -3526,7 +3662,8 @@ function parseRestoreHash() {
     setTimeout(() => {
       try {
         if (r === 'ok') {
-          tg.showPopup({ type: 'ok', title: '✅ Восстановлено из бота!', message: '«Моё», оценки, просмотренные, заметки и «🗂 Мои подборки» перенесены на это устройство.' });
+          const dupes = window._lastRestoreDupes || 0;
+          tg.showPopup({ type: 'ok', title: '✅ Восстановлено из бота!', message: '«Моё», оценки, просмотренные, заметки и «🗂 Мои подборки» перенесены на это устройство.' + (dupes > 0 ? `\n🧹 Дубликаты убраны: ${dupes}.` : '') });
         } else {
           tg.showPopup({ type: 'alert', title: 'Не удалось', message: 'Бэкап повреждён или устарел. Скопируй строку заново в «❤️ Моё».' });
         }
@@ -4711,6 +4848,7 @@ if (moreTab && moreMenu) {
   document.querySelectorAll('.more-item').forEach(b => b.addEventListener('click', () => {
     closeMoreMenu();
     if (b.id === 'more-changelog') { showChangelog(true); return; }  // v101: открываемый инфоблок
+    if (b.id === 'more-catalog') { shareCatalogPoster(); return; }   // v111: витрина одной картинкой
     openView(b.dataset.view);
   }));
 }
@@ -5205,7 +5343,7 @@ function showOnboarding() {
 }
 
 // v98: «Что нового» — показываем один раз на версию, только после входа в апп
-const CHANGELOG_V = '108';
+const CHANGELOG_V = '111';
 const CL_KEY = 'kinoafisha_seen_changelog';
 function showChangelog(force = false) {
   // v101: force=true — открываем даже если уже видели («Ещё → Что нового»)
