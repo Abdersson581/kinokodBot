@@ -5216,6 +5216,36 @@ function _exitFs() {
   } catch (e) { /* пусто */ }
 }
 
+// v117: кнопка-постоянная «⛶» в трейлере + следим за реальным fullscreen.
+(function () {
+  const fsBtn = document.getElementById('btn-trailer-fs');
+  if (!fsBtn) return;
+  const frame = document.getElementById('trailer-frame');
+  const modal = document.getElementById('trailer-modal');
+  const syncFs = () => {
+    if (!fsBtn || !modal) return;
+    const inFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+    fsBtn.textContent = inFs ? '⤢' : '⛶';
+    fsBtn.title = inFs ? 'Свернуть' : 'На весь экран';
+    // Когда fullscreen активен — прячем кнопку на 2с, чтобы не мешала в плеере,
+    // появляется при тапе (pointermove по модалке).
+    if (inFs) { fsBtn.classList.add('hidden'); } else { fsBtn.classList.remove('hidden'); }
+  };
+  fsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    haptic('light');
+    const inFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+    if (inFs) { _exitFs(); return; }
+    // полноэкранный для iframe/обёртки; если не выйдет — хотя бы модалка
+    const target = frame && !frame.classList.contains('hidden') ? frame : (modal || undefined);
+    _requestFs(target);
+  });
+  document.addEventListener('fullscreenchange', syncFs);
+  document.addEventListener('webkitfullscreenchange', syncFs);
+  document.addEventListener('MSFullscreenChange', syncFs);
+  syncFs();
+})();
+
 function openTrailer(m) {
   if (!m) return;
   window._challTrailerWatched = (window._challTrailerWatched || 0) + 1;
@@ -5246,7 +5276,11 @@ function openTrailer(m) {
                 '?autoplay=1&rel=0&playsinline=1&fs=1';
     modal.classList.remove('hidden');
     startWatchSession(m.code);   // v109: считаем время просмотра
-    _requestFs(modal);
+    // v117: не выпрашиваем fullscreen автоматически в WebView Telegram (на iOS
+    // этот вызов тихо игнорируется и может сломать отображение). Вместо этого
+    // пользователь жмёт кнопку «⛶» — и мы разворачиваем именно iframe/обёртку.
+    const fsBtn = document.getElementById('btn-trailer-fs');
+    if (fsBtn) fsBtn.classList.remove('hidden');
     return;
   }
   if (m.trailer_file_id) {
