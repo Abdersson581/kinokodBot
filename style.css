@@ -1658,6 +1658,8 @@ body.light #err-banner { background: #dc2626; }
   bottom: 0;
   height: 3px;
   background: linear-gradient(90deg, rgba(255,193,7,.9), rgba(255,68,102,.8));
+  border-radius: 0 0 12px 12px;
+}
 .trailer-info {
   padding: 8px 10px;
 }

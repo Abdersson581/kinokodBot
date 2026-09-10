@@ -2626,10 +2626,12 @@ function drawYearCard(cb) {
   ctx.font = 'bold 26px Manrope, Arial';
   ctx.textAlign = 'center';
   ctx.fillText('МОЙ КИНО-ГОД', W / 2, 54);
+  const _ys = getYearStats();
+  const _ysv = (f) => Object.values(_ys).reduce((a, m) => a + ((m && m[f]) || 0), 0);
   const sums = {
-    открытий: getYearStats().reduce((a, m) => a + ((m && m.open) || 0), 0),
-    трейлеров: getYearStats().reduce((a, m) => a + ((m && m.trailers) || 0), 0),
-    оценок: getYearStats().reduce((a, m) => a + ((m && m.rated) || 0), 0),
+    открытий: _ysv('open'),
+    трейлеров: _ysv('trailers'),
+    оценок: _ysv('rated'),
   };
   ctx.fillStyle = 'rgba(255,255,255,.85)';
   ctx.font = 'bold 16px Manrope, Arial';
