@@ -224,24 +224,33 @@ body.light .header.scrolled { box-shadow: 0 8px 26px rgba(30, 40, 80, .14); }
 }
 /* ===== v41: раскрывающееся подменю «Ещё» ===== */
 .tab-more { flex: 0 1 auto; padding: 9px 14px; position: relative; }
-/* v114: бейдж-кружок на «Ещё» удалён — больше не показываем */
-.more-arrow {
-  display: inline-block;
-  font-size: 11px;
-  transition: transform .2s ease;
-}
-.tab-more[aria-expanded="true"] .more-arrow { transform: rotate(180deg); }
+/* v115: меню выпадает из sticky-табов и всегда видно под ними при скролле */
 .more-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 60;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-top: 8px;
   padding: 10px;
   background: var(--card);
   border: 1px solid rgba(255,255,255,.08);
   border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.55);
   animation: fadeUp .25s ease;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
 }
+.more-menu.hidden { display: none; }
+.more-arrow {
+  display: inline-block;
+  font-size: 11px;
+  margin-left: 2px;
+  transition: transform .2s ease;
+}
+.tab-more[aria-expanded="true"] .more-arrow { transform: rotate(180deg); }
 .more-item {
   font-family: inherit;
   background: rgba(255,255,255,.05);
