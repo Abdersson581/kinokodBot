@@ -3277,9 +3277,11 @@ function shareCatalogPoster() {
   modal.classList.remove('hidden');
   const prev = document.getElementById('sharecard-preview');
   prev.innerHTML = '<p class="modal-muted">🎨 Собираем витрину…</p>';
-  const items = ALL.filter(m => m.poster).slice(0, 64);
+  const items = ALL.filter(m => m.poster).slice(0, 48);
   if (!items.length) { prev.innerHTML = '<p class="modal-muted">Постеры ещё не загрузились — попробуй чуть позже</p>'; return; }
-  const COLS = 4, CELL_W = 120, CELL_H = 218, PAD = 12, HEAD_H = 78, FOOT_H = 46;
+  // v114: компактная витрина 6×8 (пропорции ячейки = постера 2:3), чтобы
+  // картинка не была вытянутым прямоугольником и целиком помещалась в превью.
+  const COLS = 6, CELL_W = 80, CELL_H = 120, PAD = 10, HEAD_H = 64, FOOT_H = 40;
   const rows = Math.ceil(items.length / COLS);
   const W = PAD * 2 + COLS * CELL_W;
   const H = PAD * 2 + HEAD_H + rows * CELL_H + FOOT_H;
@@ -3322,35 +3324,39 @@ function shareCatalogPoster() {
   items.forEach((m, i) => {
     const r = Math.floor(i / COLS), c = i % COLS;
     const x = PAD + c * CELL_W, y = PAD + HEAD_H + r * CELL_H;
-    // рамка-ячейка
+    // подложка-ячейка
     ctx.fillStyle = 'rgba(0,0,0,.32)';
-    ctx.fillRect(x, y, CELL_W, CELL_H - 26);
+    ctx.fillRect(x, y, CELL_W, CELL_H - 20);
     const img = document.createElement('img');
     img.crossOrigin = 'anonymous';
     const paint = () => {
       try {
-        const ar = img.naturalHeight && img.naturalWidth ? img.naturalHeight / img.naturalWidth : 1.5;
-        const ph = CELL_H - 26, pw = CELL_W;
-        const h = Math.min(ph, pw * ar), w = h / ar;
+        const iw = img.naturalWidth || 1, ih = img.naturalHeight || 1;
+        const ar = ih / iw;
+        const ph = CELL_H - 20, pw = CELL_W;
+        // cover-филл: постер заполняет ячейку полностью (кроп сверху/снизу)
+        let w, h;
+        if (ar >= ph / pw) { h = ph; w = h / ar; }
+        else { w = pw; h = w * ar; }
         ctx.drawImage(img, x + (pw - w) / 2, y + (ph - h) / 2, w, h);
       } catch (e) {}
       // плашка с кодом
       ctx.fillStyle = 'rgba(255,193,7,.9)';
-      ctx.font = 'bold 13px Manrope, Arial';
+      ctx.font = 'bold 10px Manrope, Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('🔑 ' + m.code, x + CELL_W / 2, y + CELL_H - 8);
+      ctx.fillText('🔑 ' + m.code, x + CELL_W / 2, y + CELL_H - 7);
       loaded.push(1);
       if (loaded.length === items.length) finish();
     };
     img.onload = paint;
     img.onerror = () => {
       ctx.fillStyle = 'rgba(255,255,255,.75)';
-      ctx.font = '24px Manrope, Arial';
+      ctx.font = '22px Manrope, Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('🎬', x + CELL_W / 2, y + (CELL_H - 26) / 2 + 8);
+      ctx.fillText('🎬', x + CELL_W / 2, y + (CELL_H - 20) / 2 + 7);
       ctx.fillStyle = 'rgba(255,193,7,.9)';
-      ctx.font = 'bold 13px Manrope, Arial';
-      ctx.fillText('🔑 ' + m.code, x + CELL_W / 2, y + CELL_H - 8);
+      ctx.font = 'bold 10px Manrope, Arial';
+      ctx.fillText('🔑 ' + m.code, x + CELL_W / 2, y + CELL_H - 7);
       loaded.push(1);
       if (loaded.length === items.length) finish();
     };
