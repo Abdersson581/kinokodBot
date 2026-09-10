@@ -5,8 +5,8 @@
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 14,
-   "total": 64
+   "unlocks": 17,
+   "total": 67
   },
   {
    "rank": 2,
@@ -20,8 +20,8 @@
   },
   {
    "rank": 4,
-   "unlocks": 6,
-   "total": 6
+   "unlocks": 8,
+   "total": 8
   },
   {
    "rank": 5,
@@ -60,51 +60,44 @@
    "emoji": "🐁⚡🧑‍🦱💚",
    "answer": "Зеленая миля",
    "options": [
-    "Звук свободы",
-    "Скрытые фигуры",
     "Зеленая миля",
-    "Легенда Багера Ванса"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "answer": "Начало",
-   "options": [
-    "Расплата",
-    "Бандит",
-    "Начало",
-    "Истина и измена"
+    "Иллюзионист",
+    "Опасная игра Слоун",
+    "Проклятый путь"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "answer": "Хатико: Самый верный друг",
    "options": [
+    "Бездна",
     "Хатико: Самый верный друг",
-    "Того",
-    "Девушка и море",
-    "Освобождение"
+    "Игры разума",
+    "Богемская рапсодия"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "answer": "Начало",
+   "options": [
+    "Интерстеллар",
+    "Начало",
+    "Ветреная река",
+    "Место встречи"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "answer": "Побег из Шоушенка",
    "options": [
-    "Опасная игра Слоун",
+    "Ветреная река",
     "Побег из Шоушенка",
-    "Иллюзионист",
-    "Уличный кот по кличке Боб"
+    "Человек божий",
+    "Старый Генри"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Натали Портман родила ребенка в 45 лет",
-   "link": "https://www.kinonews.ru/news_142985/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg142985.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1788628811.4291475
-  },
   {
    "title": "На Венецианском кинофестивале опять не хватило женщин",
    "link": "https://www.kinonews.ru/article_142984/",
@@ -167,6 +160,13 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143066.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1788976345.1511946
+  },
+  {
+   "title": "Саша Барон Коэн сыграет у Квентина Тарантино",
+   "link": "https://www.kinonews.ru/news_143085/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143085.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1789062781.524103
   }
  ],
  "premieres": [
