@@ -1,11 +1,11 @@
 {
- "code_of_day": "454",
- "code_of_day_date": "2026-09-09",
- "updated_at": "2026-09-09",
+ "code_of_day": "452",
+ "code_of_day_date": "2026-09-10",
+ "updated_at": "2026-09-10",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 16,
+   "unlocks": 14,
    "total": 64
   },
   {
@@ -15,7 +15,7 @@
   },
   {
    "rank": 3,
-   "unlocks": 10,
+   "unlocks": 8,
    "total": 123
   },
   {
@@ -57,13 +57,23 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🪨🔨🌧️🎵",
-   "answer": "Побег из Шоушенка",
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "answer": "Зеленая миля",
    "options": [
-    "Константин: Повелитель тьмы",
-    "Титаник",
+    "Звук свободы",
+    "Скрытые фигуры",
+    "Зеленая миля",
+    "Легенда Багера Ванса"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "answer": "Начало",
+   "options": [
+    "Расплата",
     "Бандит",
-    "Побег из Шоушенка"
+    "Начало",
+    "Истина и измена"
    ]
   },
   {
@@ -71,29 +81,19 @@
    "answer": "Хатико: Самый верный друг",
    "options": [
     "Хатико: Самый верный друг",
-    "Борьба со льдом",
-    "Меняющие реальность",
-    "Эдди \"Орёл\""
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "answer": "Начало",
-   "options": [
-    "Начало",
     "Того",
-    "Всевидящее око",
-    "В конце туннеля"
+    "Девушка и море",
+    "Освобождение"
    ]
   },
   {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "answer": "Зеленая миля",
+   "emoji": "🪨🔨🌧️🎵",
+   "answer": "Побег из Шоушенка",
    "options": [
-    "Зеленая миля",
-    "Напоминание о нём",
-    "За пивом",
-    "Игры разума"
+    "Опасная игра Слоун",
+    "Побег из Шоушенка",
+    "Иллюзионист",
+    "Уличный кот по кличке Боб"
    ]
   }
  ],
@@ -171,11 +171,6 @@
  ],
  "premieres": [
   {
-   "title": "TheatreHD: Григорий Соколов. Концерт в Экс-ан-Провансе",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13729544.jpg",
-   "ru_date": "2026-09-09"
-  },
-  {
    "title": "Затмение",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/59123.jpg",
    "ru_date": "2026-09-10"
@@ -228,6 +223,11 @@
   {
    "title": "Позывной «Аскет»",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10193558.jpg",
+   "ru_date": "2026-09-10"
+  },
+  {
+   "title": "Мой пёс Гохан",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12901531.jpg",
    "ru_date": "2026-09-10"
   }
  ]
