@@ -3151,3 +3151,28 @@ body.light.tabs-stuck .tabs {
 .tm-name { font-size: 10.5px; margin-top: 4px; line-height: 1.25; }
 .tinder-finish-actions { margin-top: 4px; }
 
+
+
+/* ===== v113: бейдж «Ещё» — заметная точка, не «странный кружок» ===== */
+.more-badge {
+  top: 4px;
+  right: 5px;
+  width: 9px;
+  height: 9px;
+  background: #ff3b5c;
+  box-shadow: 0 0 0 2px rgba(10, 13, 26, .9), 0 0 8px rgba(255, 59, 92, .6);
+}
+/* Пока пользователь в меню «Ещё» — точка не нужна */
+.tab-more.active .more-badge,
+.tab-more[aria-expanded="true"] .more-badge { display: none; }
+
+/* ===== v113: постер каталога / карточки — всегда целиком по ширине экрана ===== */
+.sharecard-card { max-width: min(420px, calc(100vw - 20px)); }
+.sharecard-preview { max-height: min(62vh, 520px); }
+.sharecard-preview img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+}

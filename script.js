@@ -1,4 +1,4 @@
-﻿// Telegram Web App
+// Telegram Web App
 const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
@@ -29,7 +29,7 @@ parseMarathonHash(); // v78: «#marathon=…» — запуск марафона
   renderTimeChips();  // v77: чипы длительности
   initShelfArrows();  // v77: стрелки полок (ПК)
   initHeaderScroll(); // v77: стеклянная шапка
-  showSeasonalBanner();  // v111: праздничное приветствие (в сезон)
+  showSeasonalBanner();  // v113: праздничное приветствие (в сезон)
   loadMovies();
 }
 // ВНИМАНИЕ: запуск (enterApp/showGate) перенесён в САМЫЙ КОНЕЦ файла —
@@ -105,7 +105,7 @@ document.addEventListener('click', (e) => {
 });
 accentPop.querySelectorAll('.ap-swatch').forEach(s => s.addEventListener('click', () => setAccent(s.dataset.a)));
 
-// ---------- v111: сезонный режим — праздничное приветствие в особые даты ----------
+// ---------- v113: сезонный режим — праздничное приветствие в особые даты ----------
 // Новый год / 14 февраля / 8 марта / Хэллоуин: баннер-поздравление над афишей.
 // Закрывается крестиком и больше не показывается в этом сезоне (localStorage).
 function getSeason(d) {
@@ -2982,7 +2982,7 @@ function importBackupString(raw) {
     if (!data || typeof data !== 'object') return 'bad';
     const add1 = (v) => Array.isArray(v) ? v.filter(x => x !== null && x !== '').map(String) : [];
     const add2 = (v) => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
-    // v111: дедупликация — при переносе на новое устройство в списках и
+    // v113: дедупликация — при переносе на новое устройство в списках и
     // подборках могут быть дубликаты (несколько раз сохраняли/восстанавливали).
     let dupes = 0;
     const uniq = (arr) => {
@@ -3266,7 +3266,7 @@ function shareMovie(m) {
   try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
 }
 
-// v111: «🖼 Постер каталога» — вся афиша одной картинкой (сетка постеров с кодами).
+// v113: «🖼 Постер каталога» — вся афиша одной картинкой (сетка постеров с кодами).
 // Удобно кинуть в чат: витрина канала в одном посте. Рисуем на canvas, показываем
 // в модалке карточки (sharecard-modal) с кнопкой скачивания.
 function shareCatalogPoster() {
@@ -4850,7 +4850,7 @@ if (moreTab && moreMenu) {
   document.querySelectorAll('.more-item').forEach(b => b.addEventListener('click', () => {
     closeMoreMenu();
     if (b.id === 'more-changelog') { showChangelog(true); return; }  // v101: открываемый инфоблок
-    if (b.id === 'more-catalog') { shareCatalogPoster(); return; }   // v111: витрина одной картинкой
+    if (b.id === 'more-catalog') { shareCatalogPoster(); return; }   // v113: витрина одной картинкой
     openView(b.dataset.view);
   }));
 }
