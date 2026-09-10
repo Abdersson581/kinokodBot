@@ -638,6 +638,22 @@ body.light .skel {
 .col-body { flex: 1; }
 .col-body h3 { margin: 0 0 2px; font-size: 15px; }
 .col-body p { margin: 0; color: var(--muted); font-size: 12px; }
+/* v116: прогресс сбора подборки — разгадано/в «Моём» */
+.col-progress {
+  height: 6px;
+  background: rgba(255, 255, 255, .08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 7px;
+}
+.col-progress i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--gold, #ffd166));
+  border-radius: 999px;
+  transition: width .3s ease;
+}
+.col-progress-label { margin: 5px 0 0 !important; font-size: 11.5px !important; }
 .movies-grid .cols-list { grid-column: 1 / -1; }
 .backup-card { cursor: default; align-items: flex-start; flex-wrap: wrap; gap: 8px; }
 .backup-card .btn-secondary { flex-shrink: 0; margin-left: auto; }

@@ -1885,12 +1885,18 @@ function renderCols() {
           `<img src="${esc(p.poster)}" alt="" style="z-index:${3 - i};transform:rotate(${(i - 1) * 6}deg) translateX(${(i - 1) * 8}px)" loading="lazy"/>`
         ).join('')}</div>`
       : `<span class="col-emoji">${esc(col.emoji || '📚')}</span>`;
+    // v116: прогресс сбора подборки — разгаданные коды + «Моё»
+    const codesStr = col.codes.map(String);
+    const owned = codesStr.filter(cd => getUnlocked().includes(cd) || getFavs().includes(cd)).length;
+    const pct = codesStr.length ? Math.round(100 * owned / codesStr.length) : 0;
     return `
     <div class="col-card" data-col="${esc(col.code)}">
       ${fan}
       <div class="col-body">
         <h3>${esc(col.emoji || '📚')} ${esc(col.title)}</h3>
         <p>${col.codes.length} фильм(ов)</p>
+        <div class="col-progress"><i style="width:${pct}%"></i></div>
+        <p class="col-progress-label">🔓 ${owned}/${col.codes.length} в коллекции</p>
       </div>
       <button class="btn-share-sm" data-share="${esc(col.code)}" title="Поделиться">📤</button>
     </div>`;
@@ -5351,7 +5357,7 @@ function showOnboarding() {
 }
 
 // v98: «Что нового» — показываем один раз на версию, только после входа в апп
-const CHANGELOG_V = '111';
+const CHANGELOG_V = '116';
 const CL_KEY = 'kinoafisha_seen_changelog';
 function showChangelog(force = false) {
   // v101: force=true — открываем даже если уже видели («Ещё → Что нового»)
