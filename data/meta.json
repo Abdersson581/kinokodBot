@@ -1,11 +1,11 @@
 {
- "code_of_day": "452",
- "code_of_day_date": "2026-09-10",
- "updated_at": "2026-09-10",
+ "code_of_day": "465",
+ "code_of_day_date": "2026-09-11",
+ "updated_at": "2026-09-11",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 17,
+   "unlocks": 15,
    "total": 67
   },
   {
@@ -15,18 +15,18 @@
   },
   {
    "rank": 3,
-   "unlocks": 8,
-   "total": 123
-  },
-  {
-   "rank": 4,
-   "unlocks": 8,
+   "unlocks": 7,
    "total": 8
   },
   {
-   "rank": 5,
+   "rank": 4,
    "unlocks": 5,
    "total": 5
+  },
+  {
+   "rank": 5,
+   "unlocks": 4,
+   "total": 123
   },
   {
    "rank": 6,
@@ -50,8 +50,8 @@
   },
   {
    "rank": 10,
-   "unlocks": 4,
-   "total": 4
+   "unlocks": 3,
+   "total": 3
   }
  ],
  "leaderboard_kind": "week",
@@ -60,40 +60,40 @@
    "emoji": "🪨🔨🌧️🎵",
    "answer": "Побег из Шоушенка",
    "options": [
-    "Уличный кот по кличке Боб",
-    "Меч короля",
+    "Первый день моей жизни",
     "Побег из Шоушенка",
-    "Два ствола"
+    "Спасти рядового Райана",
+    "Меч короля"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "answer": "Зеленая миля",
    "options": [
-    "Зеленая миля",
-    "На цепи",
-    "Старый Генри",
-    "Не говори никому"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "answer": "Начало",
-   "options": [
-    "Опасная игра Слоун",
-    "Ночная смена",
+    "Водный мир",
+    "Расплата",
     "Начало",
-    "Расплата"
+    "Зеленая миля"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "answer": "Хатико: Самый верный друг",
    "options": [
-    "На цепи",
-    "Опасная игра Слоун",
     "Хатико: Самый верный друг",
-    "Борьба со льдом"
+    "Суррогаты",
+    "Интерстеллар",
+    "Богемская рапсодия"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "answer": "Начало",
+   "options": [
+    "Того",
+    "Начало",
+    "Исходный код",
+    "Хатико: Самый верный друг"
    ]
   }
  ],
@@ -171,64 +171,64 @@
  ],
  "premieres": [
   {
-   "title": "Затмение",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/59123.jpg",
-   "ru_date": "2026-09-10"
+   "title": "TheatreHD: Берлинская опера: Трубадур",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/858022.jpg",
+   "ru_date": "2026-09-11"
   },
   {
-   "title": "Космос как предчувствие",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/103737.jpg",
-   "ru_date": "2026-09-10"
+   "title": "Сумерки",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/401177.jpg",
+   "ru_date": "2026-09-17"
   },
   {
-   "title": "Хитрый койот",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/572477.jpg",
-   "ru_date": "2026-09-10"
+   "title": "Как Иван в сказку попал",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9949096.jpg",
+   "ru_date": "2026-09-17"
   },
   {
-   "title": "Надежда",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5230825.jpg",
-   "ru_date": "2026-09-10"
+   "title": "Курьер",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7178187.jpg",
+   "ru_date": "2026-09-17"
   },
   {
-   "title": "Восставший",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8005532.jpg",
-   "ru_date": "2026-09-10"
+   "title": "Натиск",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5595288.jpg",
+   "ru_date": "2026-09-17"
   },
   {
-   "title": "Охота на императора",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5364876.jpg",
-   "ru_date": "2026-09-10"
+   "title": "Мой Север",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6135551.jpg",
+   "ru_date": "2026-09-17"
   },
   {
-   "title": "Между нами, девочками",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9251086.jpg",
-   "ru_date": "2026-09-10"
+   "title": "Дом мёртвых",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11592065.jpg",
+   "ru_date": "2026-09-17"
   },
   {
-   "title": "Край чудес",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5366078.jpg",
-   "ru_date": "2026-09-10"
+   "title": "Пункт назначения. Рука смерти",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13620929.jpg",
+   "ru_date": "2026-09-17"
   },
   {
-   "title": "Соавторы",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6037947.jpg",
-   "ru_date": "2026-09-10"
+   "title": "Девятая планета",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5426247.jpg",
+   "ru_date": "2026-09-24"
   },
   {
-   "title": "Чужой звонок",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8721540.jpg",
-   "ru_date": "2026-09-10"
+   "title": "Вышка 2",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5610132.jpg",
+   "ru_date": "2026-09-24"
   },
   {
-   "title": "Позывной «Аскет»",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10193558.jpg",
-   "ru_date": "2026-09-10"
+   "title": "Романовы: преданность и предательство",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5426284.jpg",
+   "ru_date": "2026-09-24"
   },
   {
-   "title": "Мой пёс Гохан",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12901531.jpg",
-   "ru_date": "2026-09-10"
+   "title": "Дочь",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7939989.jpg",
+   "ru_date": "2026-09-24"
   }
  ]
 }
