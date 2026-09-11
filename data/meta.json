@@ -5,8 +5,8 @@
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 15,
-   "total": 67
+   "unlocks": 17,
+   "total": 69
   },
   {
    "rank": 2,
@@ -57,54 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🪨🔨🌧️🎵",
-   "answer": "Побег из Шоушенка",
-   "options": [
-    "Первый день моей жизни",
-    "Побег из Шоушенка",
-    "Спасти рядового Райана",
-    "Меч короля"
-   ]
-  },
-  {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "answer": "Зеленая миля",
-   "options": [
-    "Водный мир",
-    "Расплата",
-    "Начало",
-    "Зеленая миля"
-   ]
-  },
-  {
    "emoji": "🐕🚉⏳💔",
    "answer": "Хатико: Самый верный друг",
    "options": [
     "Хатико: Самый верный друг",
-    "Суррогаты",
-    "Интерстеллар",
-    "Богемская рапсодия"
+    "Ночная смена",
+    "За пивом",
+    "Интерстеллар"
+   ]
+  },
+  {
+   "emoji": "🪨🔨🌧️🎵",
+   "answer": "Побег из Шоушенка",
+   "options": [
+    "Ночная смена",
+    "Старый Генри",
+    "Борьба со льдом",
+    "Побег из Шоушенка"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "answer": "Начало",
    "options": [
-    "Того",
+    "Старый Генри",
+    "Костюм",
     "Начало",
-    "Исходный код",
-    "Хатико: Самый верный друг"
+    "Легенда Багера Ванса"
+   ]
+  },
+  {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "answer": "Зеленая миля",
+   "options": [
+    "Последний самурай",
+    "Богемская рапсодия",
+    "Зеленая миля",
+    "Первый день моей жизни"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Претендентам на роль Джеймса Бонда разослали контракты",
-   "link": "https://www.kinonews.ru/news_142997/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg142997.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1788715488.4015281
-  },
   {
    "title": "О легендарной группе The Rolling Stones снимут фильм",
    "link": "https://www.kinonews.ru/news_142996/",
@@ -167,6 +160,13 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143074.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1789062804.893248
+  },
+  {
+   "title": "Новой \"Обители зла\" прогнозируют внушительный старт",
+   "link": "https://www.kinonews.ru/news_143100/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143100.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1789149747.5555813
   }
  ],
  "premieres": [
