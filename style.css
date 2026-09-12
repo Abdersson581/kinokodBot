@@ -90,6 +90,13 @@ body.light .header.scrolled { box-shadow: 0 8px 26px rgba(30, 40, 80, .14); }
 /* v79: служебные строки (полоска «просмотрено», подсказка 🧠, режимы «Моё»)
    должны занимать всю ширину сетки, а не одну ячейку рядом с карточкой */
 .movies-grid > :not(.movie-card) { grid-column: 1 / -1; }
+/* v118: строка «Афиша обновлена: …» в самом низу сетки */
+.fresh-line {
+  text-align: center;
+  font-size: 11.5px;
+  opacity: .55;
+  padding: 12px 0 18px;
+}
 .movie-card {
   background: var(--card);
   border-radius: 12px;

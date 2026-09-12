@@ -923,6 +923,27 @@ function openMood(k) {
 // ---------- загрузка ----------
 const DATA_CACHE_KEY = 'kinoafisha_data_cache';
 
+// ---------- v118: свежесть афиши — когда последний раз тянули данные с сервера ----------
+function getSyncedAt() {
+  try {
+    const c = JSON.parse(localStorage.getItem(DATA_CACHE_KEY) || 'null');
+    return (c && c.synced_at) || 0;
+  } catch (e) { return 0; }
+}
+function freshLineHtml() {
+  const ts = getSyncedAt();
+  if (!ts) return '';
+  const mins = Math.round((Date.now() - ts) / 60000);
+  let txt;
+  if (mins <= 2) txt = 'только что';
+  else if (mins < 60) txt = mins + ' мин назад';
+  else if (mins < 60 * 24) txt = Math.floor(mins / 60) + ' ч назад';
+  else if (mins < 60 * 48) txt = 'вчера';
+  else txt = Math.floor(mins / 1440) + ' дн. назад';
+  const off = (navigator.onLine === false) ? ' · 📴 офлайн' : '';
+  return `<div class="fresh-line">🔄 Афиша обновлена: ${esc(txt)}${off}</div>`;
+}
+
 // Применяем порцию данных (из кэша или сети) ко всему интерфейсу
 function applyData(data) {
   // v69: нормализация полей — старый кэш/синк мог отдать actors/genres/countries строкой
@@ -981,7 +1002,7 @@ async function loadMovies() {
       cols: rc ? await rc.json() : [],
       meta: rm ? await rm.json() : {},
     };
-    try { localStorage.setItem(DATA_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+    try { localStorage.setItem(DATA_CACHE_KEY, JSON.stringify({ ...data, synced_at: Date.now() })); } catch (e) {}
     applyData(data);
     // Бейдж новых достижений на кнопке «Ещё» + восстановление последнего
     // открытого раздела (пусто/«grid» — обычная афиша).
@@ -3926,7 +3947,7 @@ function renderGrid() {
       <div class="empty-emoji">${emptyEmoji}</div>
       <p>${emptyText}</p>
       <button class="btn-secondary" id="btn-empty-lucky">🎲 Мне повезёт</button>
-    </div>`;
+    </div>` + (view === 'grid' ? freshLineHtml() : '');
     wireFavMode();
     const cbE = document.getElementById('btn-copy-backup');
     if (cbE) cbE.onclick = copyBackup;
@@ -3965,7 +3986,7 @@ function renderGrid() {
         <span class="rating">${ratingBadge(m)}${myR ? `<span class="my-stars">${'★'.repeat(myR)}</span>` : ''}${durOf(m) ? `<span class="dur-chip">⏱ ${durOf(m)} мин</span>` : ''}</span>
       </div>
     </div>`;
-  }).join('')) + showMoreBtn;
+  }).join('')) + showMoreBtn + (view === 'grid' ? freshLineHtml() : '');
   const b = document.getElementById('btn-backup');
   if (b) b.onclick = () => sendOrDeepLink({ action: 'save_favs', codes: getFavs() });
   const bc = document.getElementById('btn-copy-list');
