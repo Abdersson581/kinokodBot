@@ -31,6 +31,21 @@ parseMarathonHash(); // v78: «#marathon=…» — запуск марафона
   initHeaderScroll(); // v77: стеклянная шапка
   showSeasonalBanner();  // v113: праздничное приветствие (в сезон)
   loadMovies();
+  // v121: облачный профиль — новое устройство подтягивает «Моё» само
+  restoreProfileFromCloud().then((r) => {
+    if (!r) return;
+    try { renderGrid(); } catch (e) {}
+    try { updateHeaderProgress(); } catch (e) {}
+    if (r.wasEmpty) {
+      try {
+        tg.showPopup({
+          type: 'ok',
+          title: '☁️ Профиль восстановлен',
+          message: 'Твой список, оценки и заметки подтянулись из облака Telegram — они теперь с тобой на любом устройстве.',
+        });
+      } catch (e) { /* пусто */ }
+    }
+  });
 }
 // ВНИМАНИЕ: запуск (enterApp/showGate) перенесён в САМЫЙ КОНЕЦ файла —
 // раньше он выполнялся здесь, до объявления ALL/COLLS/обработчиков, и любое
@@ -157,7 +172,10 @@ let trailerGenre = '';              // жанр-фильтр для трейле
 const FAV_KEY = 'kinoafisha_favs';
 const FAV_MODE_KEY = 'kinoafisha_fav_mode';  // «Моё»: fav = хочу посмотреть | done = разгаданные
 const getFavs = () => JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
-const setFavs = (a) => localStorage.setItem(FAV_KEY, JSON.stringify([...a]));
+const setFavs = (a) => {
+  localStorage.setItem(FAV_KEY, JSON.stringify([...a]));
+  scheduleCloudSync();   // v121: облачный профиль
+};
 const toggleFav = (code) => {
   const f = new Set(getFavs());
   const adding = !f.has(code);
@@ -172,7 +190,10 @@ const toggleFav = (code) => {
 // а рекомендации и статистика станут точнее.
 const WATCHED_KEY = 'kinoafisha_watched';
 const getWatched = () => JSON.parse(localStorage.getItem(WATCHED_KEY) || '[]');
-const setWatched = (a) => localStorage.setItem(WATCHED_KEY, JSON.stringify([...a]));
+const setWatched = (a) => {
+  localStorage.setItem(WATCHED_KEY, JSON.stringify([...a]));
+  scheduleCloudSync();   // v121: облачный профиль
+};
 const toggleWatched = (code) => {
   const w = new Set(getWatched());
   w.has(code) ? w.delete(code) : w.add(code);
@@ -190,13 +211,17 @@ const setNote = (code, text) => {
   const t = (text || '').trim();
   if (t) n[code] = t; else delete n[code];
   localStorage.setItem(NOTES_KEY, JSON.stringify(n));
+  scheduleCloudSync();   // v121: облачный профиль
 };
 
 // ---------- v106: свои подборки (локально) ----------
 // Пользователь собирает собственные коллекции фильмов. Хранятся на устройстве.
 const MYCOLS_KEY = 'kinoafisha_mycols';
 const getMyCols = () => JSON.parse(localStorage.getItem(MYCOLS_KEY) || '[]');
-const setMyCols = (a) => localStorage.setItem(MYCOLS_KEY, JSON.stringify(a));
+const setMyCols = (a) => {
+  localStorage.setItem(MYCOLS_KEY, JSON.stringify(a));
+  scheduleCloudSync();   // v121: облачный профиль
+};
 function newMyCol(title) {
   const cols = getMyCols();
   const id = 'mc' + Date.now().toString(36);
@@ -415,12 +440,14 @@ function setRating(code, r) {
   localStorage.setItem(RATINGS_KEY, JSON.stringify(all));
   haptic(r ? 'ok' : 'light');
   if (r) bumpWeekStat('rated');
+  scheduleCloudSync();   // v121: облачный профиль
 }
 function removeRating(code) {
   const all = getRatings();
   delete all[String(code)];
   localStorage.setItem(RATINGS_KEY, JSON.stringify(all));
   haptic('light');
+  scheduleCloudSync();   // v121: облачный профиль
 }
 // «вес» фильма во вкусе пользователя: чем выше оценка — тем сильнее сигнал
 const ratingWeight = (r) => 1 + (parseInt(r, 10) || 0) * 1.2;
@@ -3027,6 +3054,84 @@ function buildBackupString() {
     at: Date.now(),
   });
   return BAK_PREFIX + encodeURIComponent(payload);
+}
+
+// ---------- v121: облачный профиль — Telegram CloudStorage ----------
+// «Моё» (избранное, оценки, просмотры, заметки, подборки) автоматически живёт
+// в личном облаке Telegram: CloudStorage привязан к пользователю и боту,
+// работает при любом способе запуска и переживает смену устройства.
+// Новое устройство само подтягивает профиль при старте; изменения на устройстве
+// дописываются в облако с debounce (последняя запись = самая свежая).
+// Лимит CloudStorage — до 1024 символов на значение, поэтому пишем чанками по 900.
+function csOk() {
+  try { return !!(tg.CloudStorage && typeof tg.CloudStorage.getItem === 'function'); }
+  catch (e) { return false; }
+}
+function csGet(key) {
+  return new Promise((res) => {
+    try { tg.CloudStorage.getItem(key, (err, val) => res(err ? null : (val == null ? null : String(val)))); }
+    catch (e) { res(null); }
+  });
+}
+function csSet(key, val) {
+  return new Promise((res) => {
+    try { tg.CloudStorage.setItem(key, String(val), () => res(true)); }
+    catch (e) { res(false); }
+  });
+}
+const CS_META = 'kk_prof_meta';  // {n, at} — коммит-маркер, пишется последним
+const CS_CHUNK = 'kk_prof';      // kk_prof0, kk_prof1, …
+const CS_TS_KEY = 'kinoafisha_cloud_ts';
+let _csTimer = null;
+function scheduleCloudSync(delayMs) {
+  if (!csOk()) return;
+  clearTimeout(_csTimer);
+  _csTimer = setTimeout(saveProfileToCloud, delayMs || 20000);
+}
+function profileSnapshot() {
+  return JSON.stringify({
+    favs: getFavs(), ratings: getRatings(), watched: getWatched(),
+    notes: getNotes(), mycols: getMyCols(), at: Date.now(),
+  });
+}
+async function saveProfileToCloud() {
+  if (!csOk()) return;
+  try {
+    const payload = profileSnapshot();
+    const chunks = [];
+    for (let i = 0; i < payload.length && chunks.length < 14; i += 900) {
+      chunks.push(payload.slice(i, i + 900));
+    }
+    for (let i = 0; i < chunks.length; i++) {
+      if (!(await csSet(CS_CHUNK + i, chunks[i]))) return;  // облако не приняло
+    }
+    await csSet(CS_META, JSON.stringify({ n: chunks.length, at: Date.now() }));
+  } catch (e) { /* пусто */ }
+}
+function profileLocallyEmpty() {
+  return !getFavs().length && !getWatched().length && !getMyCols().length
+    && !Object.keys(getRatings()).length && !Object.keys(getNotes()).length;
+}
+async function restoreProfileFromCloud() {
+  if (!csOk()) return null;
+  try {
+    const metaRaw = await csGet(CS_META);
+    if (!metaRaw) return null;
+    const meta = JSON.parse(metaRaw);
+    if (!meta || !meta.n) return null;
+    const wasEmpty = profileLocallyEmpty();
+    const localAt = Number(localStorage.getItem(CS_TS_KEY) || 0);
+    // Локально пусто → всегда восстанавливаем (новое устройство). Иначе — только
+    // когда облако свежее последнего переноса (смена телефона «в обе стороны»).
+    if (!wasEmpty && (meta.at || 0) <= localAt) return null;
+    let payload = '';
+    for (let i = 0; i < meta.n; i++) payload += (await csGet(CS_CHUNK + i)) || '';
+    if (!payload) return null;
+    const res = importBackupString(BAK_PREFIX + encodeURIComponent(payload));
+    if (res !== 'ok') return null;
+    localStorage.setItem(CS_TS_KEY, String(meta.at || Date.now()));
+    return { wasEmpty };
+  } catch (e) { return null; }
 }
 function importBackupString(raw) {
   try {
