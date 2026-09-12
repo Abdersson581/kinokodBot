@@ -683,6 +683,7 @@ function sendOrDeepLink(data) {
   let start = 'afisha';
   if (data.action === 'open_movie') start = 'movie_' + data.code;
   else if (data.action === 'remind_movie') start = 'remind_' + data.code;
+  else if (data.action === 'remind_premiere') start = 'prem_' + data.iso + '_' + data.fid;  // v120
   else if (data.action === 'subscribe_code_day') start = 'code_day_on';
   else if (data.action === 'save_favs') start = 'save_favs';
   else if (data.action === 'access_check') start = 'check_sub';
@@ -1499,7 +1500,8 @@ function premiereForTitle(title) {
   const days = Math.round((d - today) / 86400000);
   const dd = String(d.getDate()).padStart(2, '0'), mm = String(d.getMonth() + 1).padStart(2, '0');
   const human = days === 0 ? 'сегодня' : days === 1 ? 'завтра' : days <= 4 ? `через ${days} дня` : `через ${days} дней`;
-  return { date: `${dd}.${mm}`, days, human };
+  // v120: iso — для диплинка напоминания, fid — film_id КП (бот по нему найдёт название)
+  return { date: `${dd}.${mm}`, iso: String(p.ru_date).slice(0, 10), fid: p.film_id ? String(p.film_id) : '', days, human };
 }
 
 function renderPremieres(meta) {
@@ -1520,7 +1522,7 @@ function renderPremieres(meta) {
     const dateText = pi ? `${pi.date} · 🎬 ${pi.human}`
       : (p.ru_date ? String(p.ru_date).slice(0, 10) : (p.date || ''));
     return `
-    <div class="hero-card" data-title="${esc(title)}">
+    <div class="hero-card" data-title="${esc(title)}" data-fid="${esc(p.film_id ? String(p.film_id) : '')}" data-iso="${p.ru_date ? esc(String(p.ru_date).slice(0, 10)) : ''}">
       ${p.poster
         ? `<img src="${esc(p.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
         : `<div class="poster-placeholder"><span>🍿</span></div>`}
@@ -1536,6 +1538,10 @@ function renderPremieres(meta) {
     const title = (el.dataset.title || '').toLowerCase().replace(/ё/g, 'е');
     const m = ALL.find(x => (x.title || '').toLowerCase().replace(/ё/g, 'е') === title);
     if (m) openDetail(m.code);
+    else if (el.dataset.fid && el.dataset.iso) {
+      // v120: премьеры ещё нет в афише — самое полезное действие: напомнить о ней
+      sendOrDeepLink({ action: 'remind_premiere', iso: el.dataset.iso, fid: el.dataset.fid });
+    }
     else { haptic('light'); tg.showPopup({ type: 'ok', title: '🍿 Скоро в кино', message: 'Фильм ещё не в афише — следи за постами канала!' }); }
   }));
 }
@@ -4136,6 +4142,7 @@ function openDetail(code) {
           <button class="btn-secondary" id="btn-riddle-reveal-share">🎭 Загадать с ответом</button>
           <button class="btn-secondary" id="btn-review">✍️ Отзыв</button>
           <button class="btn-secondary" id="btn-remind">🔔 Напомнить через час</button>
+          ${prem && prem.fid ? '<button class="btn-secondary" id="btn-prem-remind">💌 Напомнить о премьере</button>' : ''}
           ${cleanKpTitle(m.title) ? '<button class="btn-secondary" id="btn-kp">⭐ IMDB</button>' : ''}
           <button class="btn-secondary" id="btn-sharecard">🖼 Карточка</button>
           <button class="btn-secondary" id="btn-share">📤 Поделиться с другом</button>
@@ -4223,6 +4230,10 @@ function openDetail(code) {
   };
   document.getElementById('btn-remind').onclick = () =>
     sendOrDeepLink({ action: 'remind_movie', code });
+  // v120: «💌 Напомнить о премьере» — бот пришлёт ЛС за день до релиза
+  const premRemindBtn = document.getElementById('btn-prem-remind');
+  if (premRemindBtn) premRemindBtn.onclick = () =>
+    sendOrDeepLink({ action: 'remind_premiere', iso: prem.iso, fid: prem.fid });
   const trailerBtn = document.getElementById('btn-trailer');
   if (trailerBtn) trailerBtn.onclick = () => openTrailer(m);
   document.getElementById('btn-review').onclick = () => {

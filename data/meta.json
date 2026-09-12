@@ -173,62 +173,74 @@
   {
    "title": "Сумерки",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/401177.jpg",
-   "ru_date": "2026-09-17"
+   "ru_date": "2026-09-17",
+   "film_id": 401177
   },
   {
    "title": "Как Иван в сказку попал",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9949096.jpg",
-   "ru_date": "2026-09-17"
+   "ru_date": "2026-09-17",
+   "film_id": 9949096
   },
   {
    "title": "Курьер",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7178187.jpg",
-   "ru_date": "2026-09-17"
+   "ru_date": "2026-09-17",
+   "film_id": 7178187
   },
   {
    "title": "Натиск",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5595288.jpg",
-   "ru_date": "2026-09-17"
+   "ru_date": "2026-09-17",
+   "film_id": 5595288
   },
   {
    "title": "Мой Север",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6135551.jpg",
-   "ru_date": "2026-09-17"
+   "ru_date": "2026-09-17",
+   "film_id": 6135551
   },
   {
    "title": "Дом мёртвых",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11592065.jpg",
-   "ru_date": "2026-09-17"
+   "ru_date": "2026-09-17",
+   "film_id": 11592065
   },
   {
    "title": "Пункт назначения. Рука смерти",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13620929.jpg",
-   "ru_date": "2026-09-17"
+   "ru_date": "2026-09-17",
+   "film_id": 13620929
   },
   {
    "title": "Девятая планета",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5426247.jpg",
-   "ru_date": "2026-09-24"
+   "ru_date": "2026-09-24",
+   "film_id": 5426247
   },
   {
    "title": "Вышка 2",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5610132.jpg",
-   "ru_date": "2026-09-24"
+   "ru_date": "2026-09-24",
+   "film_id": 5610132
   },
   {
    "title": "Романовы: преданность и предательство",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5426284.jpg",
-   "ru_date": "2026-09-24"
+   "ru_date": "2026-09-24",
+   "film_id": 5426284
   },
   {
    "title": "Дочь",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7939989.jpg",
-   "ru_date": "2026-09-24"
+   "ru_date": "2026-09-24",
+   "film_id": 7939989
   },
   {
    "title": "Джуманджи: Тёмный уровень",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11816563.jpg",
-   "ru_date": "2026-09-24"
+   "ru_date": "2026-09-24",
+   "film_id": 11816563
   }
  ]
 }

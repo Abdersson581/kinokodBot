@@ -1,5 +1,5 @@
 /* ===== Service Worker — оффлайн-кэш и мгновенные повторные загрузки ===== */
-const SW_CACHE = 'kinokod-v119';
+const SW_CACHE = 'kinokod-v120';
 const SW_SHELL = ['./', './index.html', './style.css', './script.js'];
 const SW_DATA = ['./data/movies.json', './data/meta.json', './data/collections.json'];
 
