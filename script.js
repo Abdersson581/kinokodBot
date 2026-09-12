@@ -36,6 +36,9 @@ parseMarathonHash(); // v78: «#marathon=…» — запуск марафона
     if (!r) return;
     try { renderGrid(); } catch (e) {}
     try { updateHeaderProgress(); } catch (e) {}
+    try { renderStreakStrip(); } catch (e) {}
+    try { updateChallPane(); } catch (e) {}
+    if (PROFILE && view === 'profile') { try { renderProfile(); } catch (e) {} }
     if (r.wasEmpty) {
       try {
         tg.showPopup({
@@ -3089,9 +3092,25 @@ function scheduleCloudSync(delayMs) {
   _csTimer = setTimeout(saveProfileToCloud, delayMs || 20000);
 }
 function profileSnapshot() {
+  // A2/v124: помимо «Моё» переносим и активность — стрик, «Моя неделя», «Мой год»,
+  // челленджи дня, прогресс марафона, трейлер-историю, недавние, счётчики открытий,
+  // закреплённые трейлеры и разгаданные коды (тот же транспорт, что и бэкап).
+  let chall = null, mar = null;
+  try { chall = JSON.parse(localStorage.getItem(CHALL_KEY) || 'null'); } catch (e) { chall = null; }
+  try {
+    mar = {
+      seen: JSON.parse(localStorage.getItem(MAR_SEEN_KEY) || '[]'),
+      resume: localStorage.getItem(MAR_RESUME_KEY) || '',
+      ach: JSON.parse(localStorage.getItem(MAR_ACH_KEY) || '[]'),
+    };
+  } catch (e) { mar = null; }
   return JSON.stringify({
     favs: getFavs(), ratings: getRatings(), watched: getWatched(),
-    notes: getNotes(), mycols: getMyCols(), at: Date.now(),
+    notes: getNotes(), mycols: getMyCols(),
+    streak: dailyState(), week: getWeekStats(), year: getYearStats(),
+    chall, mar, tw: getTrailerWatches(), recent: getRecent(),
+    open: getOpenCounts(), unlocked: getUnlocked(), pins: getTrailerPins(),
+    at: Date.now(),
   });
 }
 async function saveProfileToCloud() {
@@ -3162,6 +3181,31 @@ function importBackupString(raw) {
         .map(c => ({ id: String(c.id), title: String(c.title), codes: uniq(add1(c.codes)) }));
       localStorage.setItem(MYCOLS_KEY, JSON.stringify(cols));
     }
+    // A2/v124: активность и настройки — только если поле есть в бэкапе/облаке
+    // (старые версии не содержат их — тогда ничего не трогаем).
+    if (data.streak && typeof data.streak === 'object') {
+      localStorage.setItem(DAILY_KEY, JSON.stringify({
+        last: String(data.streak.last || ''),
+        series: Number(data.streak.series) || 0,
+        best: Number(data.streak.best) || 0,
+        done: Array.isArray(data.streak.done) ? data.streak.done.map(Number).filter(Boolean) : [],
+      }));
+    }
+    if (add2(data.week) && Object.keys(data.week || {}).length) localStorage.setItem(WEEK_STATS_KEY, JSON.stringify(data.week));
+    if (add2(data.year) && Object.keys(data.year || {}).length) localStorage.setItem(YEAR_LOG_KEY, JSON.stringify(data.year));
+    if (data.chall && typeof data.chall === 'object' && data.chall.date) localStorage.setItem(CHALL_KEY, JSON.stringify(data.chall));
+    if (data.mar && typeof data.mar === 'object') {
+      if (Array.isArray(data.mar.seen)) localStorage.setItem(MAR_SEEN_KEY, JSON.stringify(data.mar.seen.map(String)));
+      if (data.mar.resume) localStorage.setItem(MAR_RESUME_KEY, String(data.mar.resume));
+      if (Array.isArray(data.mar.ach)) localStorage.setItem(MAR_ACH_KEY, JSON.stringify(data.mar.ach));
+    }
+    if (Array.isArray(data.tw)) localStorage.setItem(TW_KEY, JSON.stringify(data.tw.slice(0, MAX_TW)));
+    if (Array.isArray(data.recent)) localStorage.setItem(RECENT_KEY, JSON.stringify(data.recent.slice(0, MAX_RECENT)));
+    if (data.open && typeof data.open === 'object') localStorage.setItem(OPEN_COUNT_KEY, JSON.stringify(data.open));
+    if (Array.isArray(data.unlocked) && data.unlocked.length) {
+      localStorage.setItem(UNLOCKED_KEY, JSON.stringify([...new Set(data.unlocked.map(String))]));
+    }
+    if (Array.isArray(data.pins)) localStorage.setItem(TPIN_KEY, JSON.stringify(data.pins));
     window._lastRestoreDupes = dupes;
     return 'ok';
   } catch (e) { return 'bad'; }
