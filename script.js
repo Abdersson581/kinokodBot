@@ -3413,10 +3413,14 @@ const COUNTRY_FLAGS = {
 };
 const flagOf = (ct) => COUNTRY_FLAGS[String(ct || '').toLowerCase().trim()] || '🌍';
 
-// Красивый шаринг фильма: эмодзи-текст + ссылка #m=КОД (откроет карточку в приложении)
+// Красивый шаринг фильма: эмодзи-текст + ссылка на ПУБЛИЧНУЮ страницу фильма
+// (v122, B1): страница movie/<code>.html содержит OG-теги — в превью чата
+// Telegram и других мессенджеров показывается постер, оценка и название.
+// Со страницы одна кнопка возвращает в «Киноафишу» (#movie=КОД).
 function shareMovie(m) {
   haptic('light');
-  const link = location.href.split('#')[0] + '#m=' + encodeURIComponent(m.code);
+  const base = location.href.split('#')[0].replace(/index\.html$/, '');
+  const link = base + 'movie/' + encodeURIComponent(m.code) + '.html';
   const g = (m.genres || []).slice(0, 2).join(' · ');
   const text = `🎬 «${m.title}»${m.year ? ' (' + m.year + ')' : ''}\n` +
     `⭐ ${m.rating || '—'}${g ? ' · ' + g : ''}\n\n` +
