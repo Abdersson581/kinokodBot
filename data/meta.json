@@ -1,11 +1,11 @@
 {
- "code_of_day": "465",
- "code_of_day_date": "2026-09-11",
- "updated_at": "2026-09-11",
+ "code_of_day": "447",
+ "code_of_day_date": "2026-09-12",
+ "updated_at": "2026-09-12",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 17,
+   "unlocks": 15,
    "total": 69
   },
   {
@@ -15,23 +15,23 @@
   },
   {
    "rank": 3,
-   "unlocks": 7,
-   "total": 8
+   "unlocks": 8,
+   "total": 9
   },
   {
    "rank": 4,
-   "unlocks": 5,
+   "unlocks": 4,
    "total": 5
   },
   {
    "rank": 5,
    "unlocks": 4,
-   "total": 123
+   "total": 5
   },
   {
    "rank": 6,
    "unlocks": 4,
-   "total": 5
+   "total": 4
   },
   {
    "rank": 7,
@@ -40,13 +40,13 @@
   },
   {
    "rank": 8,
-   "unlocks": 4,
-   "total": 4
+   "unlocks": 3,
+   "total": 3
   },
   {
    "rank": 9,
-   "unlocks": 4,
-   "total": 4
+   "unlocks": 3,
+   "total": 3
   },
   {
    "rank": 10,
@@ -57,42 +57,42 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🪨🔨🌧️🎵",
-   "answer": "Побег из Шоушенка",
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "answer": "Зеленая миля",
    "options": [
-    "Интерстеллар",
-    "Побег из Шоушенка",
-    "Меняющие реальность",
-    "Послезавтра"
+    "Дом у озера",
+    "Зеленая миля",
+    "Первый день моей жизни",
+    "Два ствола"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "answer": "Начало",
    "options": [
-    "Страсти Христовы",
-    "Константин: Повелитель тьмы",
+    "Старый Генри",
+    "Послезавтра",
     "Начало",
-    "«Также известный» (AKA, 2023)"
+    "Люди в черном"
    ]
   },
   {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "answer": "Зеленая миля",
+   "emoji": "🪨🔨🌧️🎵",
+   "answer": "Побег из Шоушенка",
    "options": [
-    "Зеленая миля",
-    "Ночная смена",
-    "Не говори никому",
-    "Последний самурай"
+    "Побег из Шоушенка",
+    "В конце туннеля",
+    "Меняющие реальность",
+    "Суррогаты"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "answer": "Хатико: Самый верный друг",
    "options": [
-    "Миссия Сиренити",
-    "Эдди \"Орёл\"",
-    "Последний самурай",
+    "Охотники за головами",
+    "Константин: Повелитель тьмы",
+    "Исходный код",
     "Хатико: Самый верный друг"
    ]
   }
@@ -171,11 +171,6 @@
  ],
  "premieres": [
   {
-   "title": "TheatreHD: Берлинская опера: Трубадур",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/858022.jpg",
-   "ru_date": "2026-09-11"
-  },
-  {
    "title": "Сумерки",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/401177.jpg",
    "ru_date": "2026-09-17"
@@ -228,6 +223,11 @@
   {
    "title": "Дочь",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7939989.jpg",
+   "ru_date": "2026-09-24"
+  },
+  {
+   "title": "Джуманджи: Тёмный уровень",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11816563.jpg",
    "ru_date": "2026-09-24"
   }
  ]
