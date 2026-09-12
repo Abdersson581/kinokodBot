@@ -139,6 +139,7 @@ function showSeasonalBanner() {
 let ALL = [];                       // все фильмы
 let COLLS = [];                     // подборки
 let NEWS = [];                      // последние новости кино
+let PREMIERES = [];                 // v119: «Скоро в кино» — даты премьер из meta.json
 let LEADERBOARD = [];               // топ игроков сезона
 let LEADERBOARD_KIND = 'week';      // week | total — по чему ранжируем
 let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game | news | top | profile | trailers | achievements
@@ -960,6 +961,7 @@ function applyData(data) {
   const meta = data.meta || {};
   EMOJI_RIDDLES = Array.isArray(meta.emoji_riddles) ? meta.emoji_riddles : [];
   NEWS = Array.isArray(meta.recent_news) ? meta.recent_news : [];
+  PREMIERES = Array.isArray(meta.premieres) ? meta.premieres : [];  // v119
   LEADERBOARD = Array.isArray(meta.leaderboard) ? meta.leaderboard : [];
   LEADERBOARD_KIND = meta.leaderboard_kind === 'total' ? 'total' : 'week';
   updateSubtitle();
@@ -1484,6 +1486,22 @@ function renderRecoShelf() {
   });
 }
 
+// ---------- v119: счётчик дней до премьеры («через 5 дней», «завтра») ----------
+const _normTitle = (t) => (t || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9]+/gi, ' ').trim();
+function premiereForTitle(title) {
+  const q = _normTitle(title);
+  if (!q) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const p = (PREMIERES || []).find(x => _normTitle(x.title) === q);
+  if (!p || !p.ru_date) return null;
+  const d = new Date(String(p.ru_date).slice(0, 10) + 'T00:00:00');
+  if (isNaN(d) || d < today) return null;  // прошлое/сегодня в прошлом — не премьера
+  const days = Math.round((d - today) / 86400000);
+  const dd = String(d.getDate()).padStart(2, '0'), mm = String(d.getMonth() + 1).padStart(2, '0');
+  const human = days === 0 ? 'сегодня' : days === 1 ? 'завтра' : days <= 4 ? `через ${days} дня` : `через ${days} дней`;
+  return { date: `${dd}.${mm}`, days, human };
+}
+
 function renderPremieres(meta) {
   const shelf = document.getElementById('premieres-shelf');
   if (!shelf) return;
@@ -1497,7 +1515,10 @@ function renderPremieres(meta) {
   if (pending.length < 2) { shelf.classList.add('hidden'); return; }
   document.getElementById('premieres-row').innerHTML = pending.map(p => {
     const title = p.title || '';
-    const dateText = p.ru_date ? String(p.ru_date).slice(0, 10) : (p.date || '');
+    // v119: «17.09 · через 5 дней» вместо сырой даты
+    const pi = premiereForTitle(title);
+    const dateText = pi ? `${pi.date} · 🎬 ${pi.human}`
+      : (p.ru_date ? String(p.ru_date).slice(0, 10) : (p.date || ''));
     return `
     <div class="hero-card" data-title="${esc(title)}">
       ${p.poster
@@ -4076,6 +4097,7 @@ function openDetail(code) {
     ...(m.genres || []).map(g =>
       `<button class="chip chip-genre${activeGenre === g ? ' active' : ''}" data-g="${esc(g)}" title="Фильмы этого жанра">${esc(g)}</button>`),
   ].filter(Boolean).join('');
+  const prem = premiereForTitle(m.title);  // v119: фильм скоро в кино?
   document.getElementById('view-detail').innerHTML = `
     <button class="btn-back" id="btn-back">◀️ Назад</button>
     <div class="detail">
@@ -4083,6 +4105,7 @@ function openDetail(code) {
       <div class="detail-info">
         <h2>${esc(m.title)}</h2>
         <span class="rating">${ratingBadge(m)}</span>
+        ${prem ? `<p class="premiere-note">🍿 В кино с ${prem.date} — ${prem.human}!</p>` : ''}
         ${(() => {
           const myR = myRating(code);
           const stars = [1, 2, 3, 4, 5].map(i =>

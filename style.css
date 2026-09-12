@@ -97,6 +97,13 @@ body.light .header.scrolled { box-shadow: 0 8px 26px rgba(30, 40, 80, .14); }
   opacity: .55;
   padding: 12px 0 18px;
 }
+/* v119: «🍿 В кино с 17.09 — через 5 дней!» в карточке фильма */
+.premiere-note {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--gold);
+}
 .movie-card {
   background: var(--card);
   border-radius: 12px;
