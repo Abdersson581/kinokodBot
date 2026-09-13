@@ -2497,6 +2497,24 @@ function renderProfile() {
     </div>`;
   }
 
+// D3/v128: лента «👥 Друзья угадали» — последние разгадки друзей
+  // (тех, кто пришёл по реферальной ссылке). Приезжает в p.fa из синхронизации.
+  const faN = (Array.isArray(p.fa) && p.fa.length) ? p.fa : [];
+  const friendsList = faN.length ? `
+    <div class="pf-friends">
+      <div class="pf-friends-head">
+        <span>👥 Друзья угадали</span>
+        <b>${Math.min(5, faN.length)}</b>
+      </div>
+      <div class="pf-friends-list">
+        ${faN.slice(0, 5).map(f => {
+          const d = String(f.date || '').replace(/-/g, '.');
+          const t = esc(String(f.title || 'фильм'));
+          return `<a class="pf-friend" data-code="${esc(String(f.code))}">📅 ${d} · ${t}</a>`;
+        }).join('')}
+      </div>
+      <p class="pf-friends-hint">Твои друзья уже разгадывают коды — открывай и ты!</p>
+    </div>` : '';
   c.innerHTML = `
     <div class="profile-card">
       <div class="pf-ava">${esc(levelEmoji(p.lvl))}</div>
@@ -2516,6 +2534,7 @@ function renderProfile() {
       ${achBlock}
       ${weekBlock}
       ${refBlock}
+      ${friendsList}
       ${buildInsights()}
       ${favouriteGenre() ? `<div class="pf-favgenre">🌟 Любимый жанр: <b>${esc(favouriteGenre())}</b></div>` : ''}
       ${tasteLine()}
@@ -2530,6 +2549,14 @@ function renderProfile() {
   document.getElementById('pf-sync2').onclick = () => sendOrDeepLink({ action: 'sync_unlocked' });
   const inv = document.getElementById('pf-invite');
   if (inv) inv.onclick = _inviteFriend;
+  // D3/v128: тап по фильму в ленте друзей — открываем карточку фильма
+  document.querySelectorAll('.pf-friends-list .pf-friend').forEach(a => {
+    a.addEventListener('click', () => {
+      haptic('light');
+      openDetail(a.dataset.code);
+      showView('detail');
+    });
+  });
   document.getElementById('pf-bot').onclick = () => {
     haptic('light');
     try { tg.openTelegramLink('https://t.me/kapitan_kino_bot'); }
