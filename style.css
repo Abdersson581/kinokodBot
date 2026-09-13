@@ -1510,7 +1510,7 @@ body.light #err-banner { background: #dc2626; }
   margin-bottom: 6px;
   font-weight: 600;
 }
-.pf-ach, .pf-wg {
+.pf-ach, .pf-wg, .pf-ref {
   margin-top: 14px;
   text-align: left;
   background: rgba(255,255,255,.04);
@@ -1518,7 +1518,7 @@ body.light #err-banner { background: #dc2626; }
   border-radius: 12px;
   padding: 12px;
 }
-.pf-ach-head, .pf-wg-head {
+.pf-ach-head, .pf-wg-head, .pf-ref-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1526,7 +1526,7 @@ body.light #err-banner { background: #dc2626; }
   font-weight: 700;
   margin-bottom: 6px;
 }
-.pf-ach-head b, .pf-wg-head b {
+.pf-ach-head b, .pf-wg-head b, .pf-ref-head b {
   color: var(--gold);
   font-size: 14px;
 }
@@ -1544,7 +1544,7 @@ body.light #err-banner { background: #dc2626; }
   border-radius: 3px;
   background: linear-gradient(135deg, #2e8b57, #5ad49a);
 }
-.pf-ach-hint, .pf-wg-hint {
+.pf-ach-hint, .pf-wg-hint, .pf-ref-hint {
   font-size: 11px;
   color: var(--muted);
   margin: 4px 0 0;

@@ -2459,6 +2459,44 @@ function renderProfile() {
       <span class="pf-opt-pill">🏆 Показывать меня в общем топе</span>
     </label>`;
 
+  // D2/v127: «Реферальные бонусы» — прогресс до следующего 🎁/👑 за друзей
+  const refuN = parseInt(p.refu ?? 0, 10) || 0;   // накоплено бесплатных открытий
+  const refnN = parseInt(p.refn ?? -1, 10);       // ещё N друзей до следующего 🎁
+  const refvN = p.refv;                           // {at, left} до VIP или null
+  const _fw = n => {
+    const m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return 'друга';
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return 'друзей';
+    return 'друзей';
+  };
+  let refBlock = '';
+  if (refnN >= 0 || refuN > 0 || refvN) {
+    const refBar = (refnN > 0) ? Math.round(100 * Math.min(1, (3 - refnN) / 3)) : 100;
+    let refBody = '';
+    if (refnN === 0) {
+      refBody += `<p class="pf-ref-hint">🎁 Следующее открытие уже можно получить — позови ещё ${_fw(1)}!</p>`;
+    } else if (refnN > 0) {
+      refBody += `<p class="pf-ref-hint">🎁 Ещё ${refnN} ${_fw(refnN)} — и получишь бесплатное открытие кода.</p>`;
+    }
+    refBody += refuN > 0
+      ? `<p class="pf-ref-hint">🎟 Готовые открытия: <b>${refuN}</b> — они применятся сами при вводе следующего кода.</p>`
+      : '';
+    if (refvN) {
+      refBody += refvN.left > 0
+        ? `<p class="pf-ref-hint">👑 Ещё ${refvN.left} ${_fw(refvN.left)} — и получишь VIP (${refvN.at}+ друзей) на 2-10 дней!</p>`
+        : `<p class="pf-ref-hint">👑 Порог VIP (${refvN.at}+ друзей) достигнут — награда уже начислена ботом!</p>`;
+    }
+    refBlock = `
+    <div class="pf-ref">
+      <div class="pf-ref-head">
+        <span>🎁 Реферальные бонусы</span>
+        <b>${refuN > 0 ? '+🎟' + refuN : (refnN >= 0 ? refnN + ' до 🎁' : '')}</b>
+      </div>
+      <div class="pf-progress pf-progress-sm"><i style="width:${refBar}%"></i></div>
+      ${refBody}
+    </div>`;
+  }
+
   c.innerHTML = `
     <div class="profile-card">
       <div class="pf-ava">${esc(levelEmoji(p.lvl))}</div>
@@ -2477,6 +2515,7 @@ function renderProfile() {
       </div>
       ${achBlock}
       ${weekBlock}
+      ${refBlock}
       ${buildInsights()}
       ${favouriteGenre() ? `<div class="pf-favgenre">🌟 Любимый жанр: <b>${esc(favouriteGenre())}</b></div>` : ''}
       ${tasteLine()}
