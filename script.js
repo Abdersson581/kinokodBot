@@ -2409,6 +2409,7 @@ function renderProfile() {
     ? '👑 Максимальный уровень!'
     : `Ещё ${p.lvl_next} код(ов) до следующего уровня`;
   const rank = parseInt(p.rank, 10) || 0;
+  const refc = parseInt(p.refc ?? 0, 10) || 0;   // D1/v126: приведено друзей
 
   // VIP-бейдж
   const vipBadge = p.vip
@@ -2470,6 +2471,7 @@ function renderProfile() {
         <div class="pf-stat"><b>💰 ${esc(String(p.pts ?? 0))}</b><span>кинобаллов</span></div>
         <div class="pf-stat"><b>🔥 ${esc(String(p.str ?? 0))}</b><span>стрик · рекорд ${esc(String(p.bst ?? 0))}</span></div>
         <div class="pf-stat"><b>🔓 ${esc(String(unl))}</b><span>из ${esc(String(p.tot ?? ALL.length))} фильмов</span></div>
+        <div class="pf-stat"><b>🤝 ${esc(String(refc))}</b><span>приглашено друзей</span></div>
         <div class="pf-stat"><b>👁 ${esc(String(getWatched().length))}</b><span>просмотрено</span></div>
         <div class="pf-stat"><b>${rank ? '🏆 №' + rank : '🏆 —'}</b><span>${rank ? 'в общем топе' : 'ещё не в топе'}</span></div>
       </div>
