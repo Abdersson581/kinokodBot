@@ -5,13 +5,13 @@
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 11,
-   "total": 69
+   "unlocks": 12,
+   "total": 70
   },
   {
    "rank": 2,
-   "unlocks": 8,
-   "total": 11
+   "unlocks": 9,
+   "total": 12
   },
   {
    "rank": 3,
@@ -20,33 +20,33 @@
   },
   {
    "rank": 4,
+   "unlocks": 6,
+   "total": 7
+  },
+  {
+   "rank": 5,
+   "unlocks": 6,
+   "total": 7
+  },
+  {
+   "rank": 6,
+   "unlocks": 6,
+   "total": 6
+  },
+  {
+   "rank": 7,
    "unlocks": 4,
    "total": 5
   },
   {
-   "rank": 5,
-   "unlocks": 4,
-   "total": 4
-  },
-  {
-   "rank": 6,
-   "unlocks": 4,
-   "total": 4
-  },
-  {
-   "rank": 7,
-   "unlocks": 3,
-   "total": 4
-  },
-  {
    "rank": 8,
-   "unlocks": 3,
+   "unlocks": 4,
    "total": 4
   },
   {
    "rank": 9,
-   "unlocks": 3,
-   "total": 3
+   "unlocks": 4,
+   "total": 4
   },
   {
    "rank": 10,
@@ -57,22 +57,12 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "answer": "Зеленая миля",
-   "options": [
-    "Начало",
-    "Зеленая миля",
-    "Бандит",
-    "Война миров Z"
-   ]
-  },
-  {
    "emoji": "🪨🔨🌧️🎵",
    "answer": "Побег из Шоушенка",
    "options": [
-    "Скрытые фигуры",
-    "Враг государства",
     "Расплата",
+    "Последний самурай",
+    "Не говори никому",
     "Побег из Шоушенка"
    ]
   },
@@ -80,10 +70,10 @@
    "emoji": "🐕🚉⏳💔",
    "answer": "Хатико: Самый верный друг",
    "options": [
-    "По соображениям совести",
-    "Давление",
+    "Человек божий",
+    "Два ствола",
     "Хатико: Самый верный друг",
-    "Зеленая миля"
+    "Послезавтра"
    ]
   },
   {
@@ -91,20 +81,23 @@
    "answer": "Начало",
    "options": [
     "Начало",
-    "Иллюзионист",
-    "Меч короля",
-    "Место встречи"
+    "История рыцаря",
+    "Расплата",
+    "Уличный кот по кличке Боб"
+   ]
+  },
+  {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "answer": "Зеленая миля",
+   "options": [
+    "Зеленая миля",
+    "Звук свободы",
+    "Скрытые фигуры",
+    "Война миров Z"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Гоша Куценко снимается в детективе \"Повар под прикрытием\"",
-   "link": "https://www.kinonews.ru/news_143040/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143040.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1788889429.467155
-  },
   {
    "title": "Дубровский стал Зорро в тизере экранизации произведения Пушкина",
    "link": "https://www.kinonews.ru/news_143038/",
@@ -167,6 +160,13 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143128.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1789319842.5358014
+  },
+  {
+   "title": "Съемки сериала о Скуби-Ду с настоящим немецким догом завершены",
+   "link": "https://www.kinonews.ru/news_143151/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143151.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1789406938.2170808
   }
  ],
  "premieres": [
