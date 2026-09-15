@@ -1,5 +1,13 @@
-/* ===== Service Worker — оффлайн-кэш и мгновенные повторные загрузки ===== */
-const SW_CACHE = 'kinokod-v130';
+﻿/* ===== Service Worker — оффлайн-кэш и мгновенные повторные загрузки ===== */
+/* v131: ОТКАТ к стратегии «кэш в первую очередь» (stale-while-revalidate).
+   Две недели приложение открывалось мгновенно из кэша, а обновлялось в фоне —
+   это переживало любые сетевые капризы. Сегодняшние v129/v130 перевели шэлл
+   на network-first («свежесть важнее»): каждое открытие обязано успешно
+   сходить в сеть, и во встроенном браузере Telegram Desktop это падало
+   ERR_FAILED, хотя сайт был жив. Возвращаем проверенную схему: открытие —
+   мгновенно из любого кэша, обновление — в фоне. Предыдущие версии кэша
+   остаются страховкой. */
+const SW_CACHE = 'kinokod-v131';
 const SW_SHELL = ['./', './index.html', './style.css', './script.js'];
 const SW_DATA = ['./data/movies.json', './data/meta.json', './data/collections.json'];
 
@@ -20,9 +28,8 @@ self.addEventListener('activate', (e) => {
       .map(k => ({ k, v: Number(k.slice('kinokod-v'.length)) }))
       .sort((a, b) => b.v - a.v);
     const curV = Number(SW_CACHE.match(/\d+$/)[0]);
-    // v130: текущий кэш + ПРЕДЫДУЩАЯ версия остаются как страховка от
-    // ERR_FAILED (если Pages в момент деплоя кратковременно отдаёт ошибку —
-    // откроется предыдущая версия). Более старые версии и чужие кэши чистим.
+    // Текущий кэш + ПРЕДЫДУЩАЯ версия остаются как страховка: если сеть
+    // недоступна, страница откроется из копии прошлой версии.
     const keep = new Set([SW_CACHE]);
     const prev = kinokod.find(x => x.v < curV);
     if (prev) keep.add(prev.k);
@@ -30,17 +37,6 @@ self.addEventListener('activate', (e) => {
     self.clients.claim();
   })());
 });
-
-// v130: падение сети или небо-ответ (404/5xx во время пересборки Pages) для
-// html/css/js — отдаём последнюю живую копию из ЛЮБОГО кэша (включая кэш
-// предыдущей версии). Response.error() из SW = ERR_FAILED в Telegram —
-// больше не допускаем для шэлла приложения.
-async function shellFallback(req, resp) {
-  if (resp && resp.ok) return resp;
-  const any = await caches.match(req);
-  if (any) return any;
-  return resp || Response.error();
-}
 
 self.addEventListener('fetch', (e) => {
   const req = e.request;
@@ -65,51 +61,23 @@ self.addEventListener('fetch', (e) => {
     })());
     return;
   }
-  // Данные: network-first — свежесть важнее, при отсутствии сети отдаём кэш
-  if (path.includes('/data/') && path.endsWith('.json')) {
-    e.respondWith((async () => {
+  // Всё остальное (html/css/js/data-json): SWR — отдаём кэш мгновенно,
+  // свежую копию тянем в фоне для следующего открытия. Если кэша ещё нет
+  // (самое первое открытие) — идём в сеть напрямую.
+  e.respondWith((async () => {
+    const cached = await caches.match(req);
+    const fetchAndCache = (async () => {
       const cache = await caches.open(SW_CACHE);
       try {
         const resp = await fetch(req, { cache: 'no-cache' });
         if (resp.ok) cache.put(req, resp.clone());
         return resp;
       } catch (err) {
-        const cached = await cache.match(req);
-        if (cached) return cached;
-        throw err;
+        return null; // сеть недоступна — живём на кэше
       }
-    })());
-    return;
-  }
-  // v76: index.html — network-first. Раньше был stale-while-revalidate, из-за
-  // чего обновления приложения применялись только СО ВТОРОГО открытия (пользователь
-  // видел старую версию из кэша). Теперь свежий html всегда с сети, кэш — запасной.
-  if (path === '/' || path.endsWith('/index.html')) {
-    e.respondWith((async () => {
-      const cache = await caches.open(SW_CACHE);
-      try {
-        const resp = await fetch(req, { cache: 'no-cache' });
-        if (resp.ok) { cache.put(req, resp.clone()); return resp; }
-        return await shellFallback(req, resp);
-      } catch (err) {
-        return await shellFallback(req, null);
-      }
-    })());
-    return;
-  }
-  // v129: css/js — тоже network-first, как index.html. Раньше для шэлла был
-  // stale-while-revalidate: после деплоя пользователь в рамках одной сессии
-  // мог получить свежий HTML со СТАРЫМ script.js (кэш ещё не провалидировался)
-  // — редкие «странные» баги и рассинхрон версий. Свежесть важнее мгновенного
-  // показа: разница — одна сетевая задержка на открытие.
-  e.respondWith((async () => {
-    const cache = await caches.open(SW_CACHE);
-    try {
-      const resp = await fetch(req, { cache: 'no-cache' });
-      if (resp.ok) { cache.put(req, resp.clone()); return resp; }
-      return await shellFallback(req, resp);
-    } catch (err) {
-      return await shellFallback(req, null);
-    }
-  }));
+    })();
+    e.waitUntil(fetchAndCache);
+    if (cached) return cached;
+    return (await fetchAndCache) || Response.error();
+  })());
 });
