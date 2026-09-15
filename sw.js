@@ -1,5 +1,5 @@
 /* ===== Service Worker — оффлайн-кэш и мгновенные повторные загрузки ===== */
-const SW_CACHE = 'kinokod-v129';
+const SW_CACHE = 'kinokod-v130';
 const SW_SHELL = ['./', './index.html', './style.css', './script.js'];
 const SW_DATA = ['./data/movies.json', './data/meta.json', './data/collections.json'];
 
@@ -15,10 +15,32 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k !== SW_CACHE).map(k => caches.delete(k)));
+    const kinokod = keys
+      .filter(k => /^kinokod-v\d+$/.test(k))
+      .map(k => ({ k, v: Number(k.slice('kinokod-v'.length)) }))
+      .sort((a, b) => b.v - a.v);
+    const curV = Number(SW_CACHE.match(/\d+$/)[0]);
+    // v130: текущий кэш + ПРЕДЫДУЩАЯ версия остаются как страховка от
+    // ERR_FAILED (если Pages в момент деплоя кратковременно отдаёт ошибку —
+    // откроется предыдущая версия). Более старые версии и чужие кэши чистим.
+    const keep = new Set([SW_CACHE]);
+    const prev = kinokod.find(x => x.v < curV);
+    if (prev) keep.add(prev.k);
+    await Promise.all(keys.filter(k => !keep.has(k)).map(k => caches.delete(k)));
     self.clients.claim();
   })());
 });
+
+// v130: падение сети или небо-ответ (404/5xx во время пересборки Pages) для
+// html/css/js — отдаём последнюю живую копию из ЛЮБОГО кэша (включая кэш
+// предыдущей версии). Response.error() из SW = ERR_FAILED в Telegram —
+// больше не допускаем для шэлла приложения.
+async function shellFallback(req, resp) {
+  if (resp && resp.ok) return resp;
+  const any = await caches.match(req);
+  if (any) return any;
+  return resp || Response.error();
+}
 
 self.addEventListener('fetch', (e) => {
   const req = e.request;
@@ -67,12 +89,10 @@ self.addEventListener('fetch', (e) => {
       const cache = await caches.open(SW_CACHE);
       try {
         const resp = await fetch(req, { cache: 'no-cache' });
-        if (resp.ok) cache.put(req, resp.clone());
-        return resp;
+        if (resp.ok) { cache.put(req, resp.clone()); return resp; }
+        return await shellFallback(req, resp);
       } catch (err) {
-        const cached = await cache.match(req);
-        if (cached) return cached;
-        throw err;
+        return await shellFallback(req, null);
       }
     })());
     return;
@@ -86,12 +106,10 @@ self.addEventListener('fetch', (e) => {
     const cache = await caches.open(SW_CACHE);
     try {
       const resp = await fetch(req, { cache: 'no-cache' });
-      if (resp.ok) cache.put(req, resp.clone());
-      return resp;
+      if (resp.ok) { cache.put(req, resp.clone()); return resp; }
+      return await shellFallback(req, resp);
     } catch (err) {
-      const cached = await cache.match(req);
-      if (cached) return cached;
-      throw err;
+      return await shellFallback(req, null);
     }
   }));
 });
