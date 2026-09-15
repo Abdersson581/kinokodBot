@@ -1,5 +1,5 @@
 /* ===== Service Worker — оффлайн-кэш и мгновенные повторные загрузки ===== */
-const SW_CACHE = 'kinokod-v128';
+const SW_CACHE = 'kinokod-v129';
 const SW_SHELL = ['./', './index.html', './style.css', './script.js'];
 const SW_DATA = ['./data/movies.json', './data/meta.json', './data/collections.json'];
 
@@ -77,15 +77,21 @@ self.addEventListener('fetch', (e) => {
     })());
     return;
   }
-  // Шэлл (css/js): stale-while-revalidate — мгновенный показ + фоновое обновление
+  // v129: css/js — тоже network-first, как index.html. Раньше для шэлла был
+  // stale-while-revalidate: после деплоя пользователь в рамках одной сессии
+  // мог получить свежий HTML со СТАРЫМ script.js (кэш ещё не провалидировался)
+  // — редкие «странные» баги и рассинхрон версий. Свежесть важнее мгновенного
+  // показа: разница — одна сетевая задержка на открытие.
   e.respondWith((async () => {
     const cache = await caches.open(SW_CACHE);
-    const cached = await cache.match(req);
-    const refresh = fetch(req, { cache: 'no-cache' })
-      .then(resp => { if (resp.ok) cache.put(req, resp.clone()); return resp; })
-      .catch(() => null);
-    if (cached) { e.waitUntil(refresh); return cached; }
-    const resp = await refresh;
-    return resp || Response.error();
-  })());
+    try {
+      const resp = await fetch(req, { cache: 'no-cache' });
+      if (resp.ok) cache.put(req, resp.clone());
+      return resp;
+    } catch (err) {
+      const cached = await cache.match(req);
+      if (cached) return cached;
+      throw err;
+    }
+  }));
 });
