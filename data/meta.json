@@ -5,8 +5,8 @@
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 8,
-   "total": 70
+   "unlocks": 9,
+   "total": 71
   },
   {
    "rank": 2,
@@ -57,61 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🪨🔨🌧️🎵",
-   "answer": "Побег из Шоушенка",
+   "emoji": "🌀🍰⏰🧠",
+   "answer": "Начало",
    "options": [
-    "Первый день моей жизни",
-    "По соображениям совести",
-    "Побег из Шоушенка",
-    "Дело храбрых"
+    "Начало",
+    "О чем говорят незнакомцы",
+    "Миссия Сиренити",
+    "Того"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "answer": "Зеленая миля",
    "options": [
-    "Начало",
-    "Артур, ты король",
-    "Ветреная река",
-    "Зеленая миля"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "answer": "Начало",
-   "options": [
-    "Начало",
-    "Страсти Христовы",
-    "За пивом",
-    "На цепи"
+    "Богемская рапсодия",
+    "Зеленая миля",
+    "Освобождение",
+    "О чем говорят незнакомцы"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "answer": "Хатико: Самый верный друг",
    "options": [
-    "Начало",
+    "Ночная смена",
+    "Страсти Христовы",
     "Хатико: Самый верный друг",
-    "Истина и измена",
-    "Проклятый путь"
+    "Истина и измена"
+   ]
+  },
+  {
+   "emoji": "🪨🔨🌧️🎵",
+   "answer": "Побег из Шоушенка",
+   "options": [
+    "Зеленая книга",
+    "Послезавтра",
+    "Побег из Шоушенка",
+    "Место встречи"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Саша Барон Коэн сыграет у Квентина Тарантино",
-   "link": "https://www.kinonews.ru/news_143085/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143085.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789062781.524103
-  },
-  {
-   "title": "За месяцы до премьеры \"Мстители\" собрали внушительную кассу",
-   "link": "https://www.kinonews.ru/news_143074/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143074.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789062804.893248
-  },
   {
    "title": "Новой \"Обители зла\" прогнозируют внушительный старт",
    "link": "https://www.kinonews.ru/news_143100/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143166.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1789494367.4257307
+  },
+  {
+   "title": "Аманда Сайфред рассталась с мужем после девяти лет брака",
+   "link": "https://www.kinonews.ru/news_143190/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143190.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1789580898.242686
+  },
+  {
+   "title": "Шпионский сериал \"Медленные лошади\" продлен на восьмой сезон",
+   "link": "https://www.kinonews.ru/news_143187/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143187.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1789580952.8323112
   }
  ],
  "premieres": [
