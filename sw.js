@@ -7,7 +7,7 @@
    ERR_FAILED, хотя сайт был жив. Возвращаем проверенную схему: открытие —
    мгновенно из любого кэша, обновление — в фоне. Предыдущие версии кэша
    остаются страховкой. */
-const SW_CACHE = 'kinokod-v132';
+const SW_CACHE = 'kinokod-v133';
 const SW_SHELL = ['./', './index.html', './style.css', './script.js'];
 const SW_DATA = ['./data/movies.json', './data/meta.json', './data/collections.json'];
 
