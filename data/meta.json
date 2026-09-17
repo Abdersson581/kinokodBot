@@ -5,23 +5,23 @@
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 7,
-   "total": 71
+   "unlocks": 8,
+   "total": 14
   },
   {
    "rank": 2,
    "unlocks": 7,
-   "total": 8
+   "total": 71
   },
   {
    "rank": 3,
    "unlocks": 7,
-   "total": 7
+   "total": 8
   },
   {
    "rank": 4,
-   "unlocks": 6,
-   "total": 12
+   "unlocks": 7,
+   "total": 7
   },
   {
    "rank": 5,
@@ -51,67 +51,53 @@
   {
    "rank": 10,
    "unlocks": 2,
-   "total": 3
+   "total": 4
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🌀🍰⏰🧠",
+   "answer": "Начало",
+   "options": [
+    "Богемская рапсодия",
+    "Побег из Шоушенка",
+    "Титаник",
+    "Начало"
+   ]
+  },
+  {
    "emoji": "🐕🚉⏳💔",
    "answer": "Хатико: Самый верный друг",
    "options": [
+    "Дом у озера",
     "Хатико: Самый верный друг",
-    "Ночная смена",
-    "Тетрис",
-    "Суррогаты"
+    "Миссия Сиренити",
+    "Костюм"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "answer": "Зеленая миля",
    "options": [
-    "Истина и измена",
-    "Зеленая миля",
-    "Иллюзионист",
-    "Давление"
+    "Напоминание о нём",
+    "Охотники за головами",
+    "Проклятый путь",
+    "Зеленая миля"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "answer": "Побег из Шоушенка",
    "options": [
-    "На цепи",
     "Побег из Шоушенка",
-    "Место встречи",
-    "Первый день моей жизни"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "answer": "Начало",
-   "options": [
-    "«Также известный» (AKA, 2023)",
-    "В конце туннеля",
-    "По соображениям совести",
-    "Начало"
+    "Дом у озера",
+    "Зеленая миля",
+    "«Также известный» (AKA, 2023)"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Новой \"Обители зла\" прогнозируют внушительный старт",
-   "link": "https://www.kinonews.ru/news_143100/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143100.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789149747.5555813
-  },
-  {
-   "title": "Режиссер \"Человека-паука 4\" выбрал свой следующий проект",
-   "link": "https://www.kinonews.ru/news_143094/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143094.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789149778.5056913
-  },
   {
    "title": "\"Практическая магия 2\" Warner Bros. стартовала хуже прогнозов",
    "link": "https://www.kinonews.ru/news_143131/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143187.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1789580952.8323112
+  },
+  {
+   "title": "Зак Снайдер: Warner Bros. боролась со мной",
+   "link": "https://www.kinonews.ru/article_143206/",
+   "image": "https://www.kinonews.ru/insimgs/2026/artimg/big/artimg143206.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1789667371.679242
+  },
+  {
+   "title": "Гай Пирс снимется в мрачном ирландском триллере \"Бутылка\"",
+   "link": "https://www.kinonews.ru/news_143205/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143205.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1789667397.3754795
   }
  ],
  "premieres": [
