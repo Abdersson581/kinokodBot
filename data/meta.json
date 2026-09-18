@@ -57,61 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🪨🔨🌧️🎵",
-   "answer": "Побег из Шоушенка",
+   "emoji": "🐕🚉⏳💔",
+   "answer": "Хатико: Самый верный друг",
    "options": [
-    "По соображениям совести",
-    "Побег из Шоушенка",
-    "«Холоп 3» (2026)",
-    "Последний самурай"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "answer": "Начало",
-   "options": [
-    "Между нами горы",
-    "Титаник",
-    "О чем говорят незнакомцы",
-    "Начало"
+    "Проклятый путь",
+    "Зеленая книга",
+    "Хатико: Самый верный друг",
+    "Константин: Повелитель тьмы"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "answer": "Зеленая миля",
    "options": [
-    "1+1",
+    "Артур, ты король",
     "Зеленая миля",
-    "Слова",
-    "Богемская рапсодия"
+    "«Майкл» (Michael, 2026)",
+    "Охотники за головами"
    ]
   },
   {
-   "emoji": "🐕🚉⏳💔",
-   "answer": "Хатико: Самый верный друг",
+   "emoji": "🌀🍰⏰🧠",
+   "answer": "Начало",
    "options": [
-    "Хатико: Самый верный друг",
-    "«Майкл» (Michael, 2026)",
-    "Ангел-А",
-    "Не говори никому"
+    "Уличный кот по кличке Боб",
+    "Опасная игра Слоун",
+    "Начало",
+    "Место встречи"
+   ]
+  },
+  {
+   "emoji": "🪨🔨🌧️🎵",
+   "answer": "Побег из Шоушенка",
+   "options": [
+    "Ночная сова",
+    "Титаник",
+    "Побег из Шоушенка",
+    "Зеленая книга"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "\"Практическая магия 2\" Warner Bros. стартовала хуже прогнозов",
-   "link": "https://www.kinonews.ru/news_143131/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143131.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789319818.7705798
-  },
-  {
-   "title": "Уход Paramount из Калифорнии станет катастрофой для штата",
-   "link": "https://www.kinonews.ru/news_143128/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143128.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789319842.5358014
-  },
   {
    "title": "Съемки сериала о Скуби-Ду с настоящим немецким догом завершены",
    "link": "https://www.kinonews.ru/news_143151/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143205.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1789667397.3754795
+  },
+  {
+   "title": "Студия 20th Century экранизирует видеоигру \"99 ночей в лесу\"",
+   "link": "https://www.kinonews.ru/news_143224/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143224.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1789754218.2012136
+  },
+  {
+   "title": "Аслан останется самцом с голосом Мэрил Стрип в \"Хрониках Нарнии\"",
+   "link": "https://www.kinonews.ru/news_143223/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143223.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1789754229.9113886
   }
  ],
  "premieres": [
