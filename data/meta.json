@@ -1,32 +1,32 @@
 {
- "code_of_day": "466",
- "code_of_day_date": "2026-09-17",
- "updated_at": "2026-09-17",
+ "code_of_day": "482",
+ "code_of_day_date": "2026-09-18",
+ "updated_at": "2026-09-18",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 8,
-   "total": 14
-  },
-  {
-   "rank": 2,
-   "unlocks": 7,
-   "total": 71
-  },
-  {
-   "rank": 3,
-   "unlocks": 7,
-   "total": 8
-  },
-  {
-   "rank": 4,
    "unlocks": 7,
    "total": 7
   },
   {
-   "rank": 5,
+   "rank": 2,
+   "unlocks": 6,
+   "total": 14
+  },
+  {
+   "rank": 3,
+   "unlocks": 6,
+   "total": 8
+  },
+  {
+   "rank": 4,
    "unlocks": 6,
    "total": 6
+  },
+  {
+   "rank": 5,
+   "unlocks": 5,
+   "total": 72
   },
   {
    "rank": 6,
@@ -57,43 +57,43 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🪨🔨🌧️🎵",
+   "answer": "Побег из Шоушенка",
+   "options": [
+    "По соображениям совести",
+    "Побег из Шоушенка",
+    "«Холоп 3» (2026)",
+    "Последний самурай"
+   ]
+  },
+  {
    "emoji": "🌀🍰⏰🧠",
    "answer": "Начало",
    "options": [
-    "Костюм",
-    "Начало",
-    "Остров проклятых",
-    "Уличный кот по кличке Боб"
+    "Между нами горы",
+    "Титаник",
+    "О чем говорят незнакомцы",
+    "Начало"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "answer": "Зеленая миля",
    "options": [
+    "1+1",
     "Зеленая миля",
-    "Страсти Христовы",
-    "Ночная сова",
-    "Гран Торино"
-   ]
-  },
-  {
-   "emoji": "🪨🔨🌧️🎵",
-   "answer": "Побег из Шоушенка",
-   "options": [
-    "Побег из Шоушенка",
-    "Константин: Повелитель тьмы",
-    "Скрытые фигуры",
-    "В конце туннеля"
+    "Слова",
+    "Богемская рапсодия"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "answer": "Хатико: Самый верный друг",
    "options": [
-    "Место встречи",
-    "Два ствола",
-    "Люди в черном",
-    "Хатико: Самый верный друг"
+    "Хатико: Самый верный друг",
+    "«Майкл» (Michael, 2026)",
+    "Ангел-А",
+    "Не говори никому"
    ]
   }
  ],
@@ -171,48 +171,6 @@
  ],
  "premieres": [
   {
-   "title": "Сумерки",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/401177.jpg",
-   "ru_date": "2026-09-17",
-   "film_id": 401177
-  },
-  {
-   "title": "Как Иван в сказку попал",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9949096.jpg",
-   "ru_date": "2026-09-17",
-   "film_id": 9949096
-  },
-  {
-   "title": "Курьер",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7178187.jpg",
-   "ru_date": "2026-09-17",
-   "film_id": 7178187
-  },
-  {
-   "title": "Натиск",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5595288.jpg",
-   "ru_date": "2026-09-17",
-   "film_id": 5595288
-  },
-  {
-   "title": "Мой Север",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6135551.jpg",
-   "ru_date": "2026-09-17",
-   "film_id": 6135551
-  },
-  {
-   "title": "Дом мёртвых",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11592065.jpg",
-   "ru_date": "2026-09-17",
-   "film_id": 11592065
-  },
-  {
-   "title": "Пункт назначения. Рука смерти",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13620929.jpg",
-   "ru_date": "2026-09-17",
-   "film_id": 13620929
-  },
-  {
    "title": "Девятая планета",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5426247.jpg",
    "ru_date": "2026-09-24",
@@ -241,6 +199,48 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11816563.jpg",
    "ru_date": "2026-09-24",
    "film_id": 11816563
+  },
+  {
+   "title": "Капитан Невельской и земли Чёрного дракона",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5396269.jpg",
+   "ru_date": "2026-09-24",
+   "film_id": 5396269
+  },
+  {
+   "title": "Девочки учатся бриться",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9018826.jpg",
+   "ru_date": "2026-09-24",
+   "film_id": 9018826
+  },
+  {
+   "title": "Флорист",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11440665.jpg",
+   "ru_date": "2026-09-24",
+   "film_id": 11440665
+  },
+  {
+   "title": "Твигги",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5212271.jpg",
+   "ru_date": "2026-09-24",
+   "film_id": 5212271
+  },
+  {
+   "title": "На деревню к дедушке. Супермиссия",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13514191.jpg",
+   "ru_date": "2026-09-24",
+   "film_id": 13514191
+  },
+  {
+   "title": "Italian Best Shorts 9. Крутые повороты",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9918438.jpg",
+   "ru_date": "2026-09-24",
+   "film_id": 9918438
+  },
+  {
+   "title": "TheatreHD: Курентзис: Кармен",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13939771.jpg",
+   "ru_date": "2026-09-25",
+   "film_id": 13939771
   }
  ]
 }
