@@ -6,12 +6,12 @@
   {
    "rank": 1,
    "unlocks": 6,
-   "total": 6
+   "total": 75
   },
   {
    "rank": 2,
-   "unlocks": 5,
-   "total": 74
+   "unlocks": 6,
+   "total": 6
   },
   {
    "rank": 3,
@@ -30,8 +30,8 @@
   },
   {
    "rank": 6,
-   "unlocks": 4,
-   "total": 6
+   "unlocks": 5,
+   "total": 7
   },
   {
    "rank": 7,
@@ -50,8 +50,8 @@
   },
   {
    "rank": 10,
-   "unlocks": 1,
-   "total": 7
+   "unlocks": 2,
+   "total": 3
   }
  ],
  "leaderboard_kind": "week",
@@ -60,58 +60,44 @@
    "emoji": "🐁⚡🧑‍🦱💚",
    "answer": "Зеленая миля",
    "options": [
+    "Освобождение",
+    "Ангел-А",
     "Зеленая миля",
-    "Звук свободы",
-    "Два ствола",
-    "Бездна"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "answer": "Начало",
-   "options": [
-    "Зеленая миля",
-    "Начало",
-    "Бездна",
-    "Дело храбрых"
-   ]
-  },
-  {
-   "emoji": "🐕🚉⏳💔",
-   "answer": "Хатико: Самый верный друг",
-   "options": [
-    "Суррогаты",
-    "Бездна",
-    "Страсти Христовы",
-    "Хатико: Самый верный друг"
+    "Напоминание о нём"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "answer": "Побег из Шоушенка",
    "options": [
+    "Человек божий",
     "Побег из Шоушенка",
-    "Скрытые фигуры",
-    "Расплата",
-    "Ночная смена"
+    "Меч короля",
+    "«Одиссея» (The Odyssey, 2026)"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "answer": "Начало",
+   "options": [
+    "Бездна",
+    "Зеленая книга",
+    "Начало",
+    "В конце туннеля"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "answer": "Хатико: Самый верный друг",
+   "options": [
+    "Хатико: Самый верный друг",
+    "На цепи",
+    "Первый день моей жизни",
+    "Война миров Z"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Съемки сериала о Скуби-Ду с настоящим немецким догом завершены",
-   "link": "https://www.kinonews.ru/news_143151/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143151.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789406938.2170808
-  },
-  {
-   "title": "74-летний Лиам Нисон вывел в свет молодую возлюбленную",
-   "link": "https://www.kinonews.ru/news_143152/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143152.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789407005.009174
-  },
   {
    "title": "Принц Уильям с супругой посетят премьеру фильма с Томом Крузом",
    "link": "https://www.kinonews.ru/news_143167/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143223.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1789754229.9113886
+  },
+  {
+   "title": "Кейт Бекинсейл опубликовала загадочные посты в соцсетях",
+   "link": "https://www.kinonews.ru/news_143253/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143253.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1789924450.6974237
+  },
+  {
+   "title": "Сериал \"До гробовой доски\" закрыт после первого сезона",
+   "link": "https://www.kinonews.ru/news_143248/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143248.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1789924469.1938462
   }
  ],
  "premieres": [
