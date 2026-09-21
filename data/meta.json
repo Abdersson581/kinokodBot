@@ -5,8 +5,8 @@
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 6,
-   "total": 75
+   "unlocks": 8,
+   "total": 77
   },
   {
    "rank": 2,
@@ -57,61 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🪨🔨🌧️🎵",
+   "answer": "Побег из Шоушенка",
+   "options": [
+    "Крушение",
+    "«Охота на императора» (2026)",
+    "Первый день моей жизни",
+    "Побег из Шоушенка"
+   ]
+  },
+  {
    "emoji": "🐁⚡🧑‍🦱💚",
    "answer": "Зеленая миля",
    "options": [
-    "Последний самурай",
-    "Ночная смена",
-    "Побег из Шоушенка",
-    "Зеленая миля"
+    "Зеленая миля",
+    "Интерстеллар",
+    "Звук свободы",
+    "Первый день моей жизни"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "answer": "Начало",
    "options": [
-    "Эдди \"Орёл\"",
-    "Суррогаты",
-    "Крушение",
-    "Начало"
-   ]
-  },
-  {
-   "emoji": "🪨🔨🌧️🎵",
-   "answer": "Побег из Шоушенка",
-   "options": [
-    "Побег из Шоушенка",
-    "Люди в черном",
-    "Крушение",
-    "Бандит"
+    "Зеленая книга",
+    "Старый Генри",
+    "Начало",
+    "«Охота на императора» (2026)"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "answer": "Хатико: Самый верный друг",
    "options": [
-    "За пивом",
-    "Того",
     "Хатико: Самый верный друг",
-    "Титаник"
+    "Проклятый путь",
+    "Бандит",
+    "Охотники за головами"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Принц Уильям с супругой посетят премьеру фильма с Томом Крузом",
-   "link": "https://www.kinonews.ru/news_143167/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143167.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789494354.665486
-  },
-  {
-   "title": "Джиллиан Андерсон рассказала о своей сексуальности",
-   "link": "https://www.kinonews.ru/news_143166/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143166.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789494367.4257307
-  },
   {
    "title": "Аманда Сайфред рассталась с мужем после девяти лет брака",
    "link": "https://www.kinonews.ru/news_143190/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143248.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1789924469.1938462
+  },
+  {
+   "title": "Режиссер Дункан Джонс объявил о конце эпохи авторского кино Netflix",
+   "link": "https://www.kinonews.ru/news_143270/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143270.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790011725.5477252
+  },
+  {
+   "title": "Paramount договорилась со всеми штатами о поглощении Warner Bros.",
+   "link": "https://www.kinonews.ru/news_143267/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143267.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790011749.336507
   }
  ],
  "premieres": [
