@@ -5,8 +5,8 @@
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 7,
-   "total": 77
+   "unlocks": 9,
+   "total": 79
   },
   {
    "rank": 2,
@@ -57,13 +57,13 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐕🚉⏳💔",
-   "answer": "Хатико: Самый верный друг",
+   "emoji": "🪨🔨🌧️🎵",
+   "answer": "Побег из Шоушенка",
    "options": [
-    "Зеленая книга",
-    "Хатико: Самый верный друг",
-    "Истина и измена",
-    "Титаник"
+    "Бандит",
+    "Артур, ты король",
+    "Того",
+    "Побег из Шоушенка"
    ]
   },
   {
@@ -71,47 +71,33 @@
    "answer": "Зеленая миля",
    "options": [
     "Зеленая миля",
-    "Скрытые фигуры",
-    "Два ствола",
-    "Страсти Христовы"
+    "Страсти Христовы",
+    "Бандит",
+    "Враг государства"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "answer": "Хатико: Самый верный друг",
+   "options": [
+    "Хатико: Самый верный друг",
+    "Место встречи",
+    "Побег из Шоушенка",
+    "Дело храбрых"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "answer": "Начало",
    "options": [
+    "Водный мир",
+    "1+1",
     "Начало",
-    "Напоминание о нём",
-    "Ночная смена",
-    "Легенда Багера Ванса"
-   ]
-  },
-  {
-   "emoji": "🪨🔨🌧️🎵",
-   "answer": "Побег из Шоушенка",
-   "options": [
-    "Побег из Шоушенка",
-    "Проклятый путь",
-    "За пивом",
-    "Не говори никому"
+    "Девушка и море"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Аманда Сайфред рассталась с мужем после девяти лет брака",
-   "link": "https://www.kinonews.ru/news_143190/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143190.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789580898.242686
-  },
-  {
-   "title": "Шпионский сериал \"Медленные лошади\" продлен на восьмой сезон",
-   "link": "https://www.kinonews.ru/news_143187/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143187.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789580952.8323112
-  },
   {
    "title": "Зак Снайдер: Warner Bros. боролась со мной",
    "link": "https://www.kinonews.ru/article_143206/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143267.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1790011749.336507
+  },
+  {
+   "title": "Объявлена причина смерти актрисы Хайден Панеттьери",
+   "link": "https://www.kinonews.ru/news_143295/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143295.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790098769.3041577
+  },
+  {
+   "title": "\"Сумерки\" вновь возглавили российский прокат",
+   "link": "https://www.kinonews.ru/news_143291/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143291.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790098775.0391974
   }
  ],
  "premieres": [
