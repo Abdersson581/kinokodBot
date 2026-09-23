@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=135" />
+  <link rel="stylesheet" href="style.css?v=136" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -473,7 +473,125 @@
     </div>
   </div>
 
-  <script src="script.js?v=135"></script>
+  <!-- v135: СТОРОЖ ЗАПУСКА. Обработчик ошибок живёт ВНУТРИ бандла, поэтому при
+       SyntaxError в script.js / 404 / офлайне не выполнялось вообще ничего, и
+       приложение открывалось чёрным экраном (инцидент 23.09.2026 — «на телефоне
+       чёрный экран, на ПК норм»). Этот блок работает без бандла и без style.css:
+       только vanilla JS и inline-стили. Никаких зависимостей — если его сломать,
+       приложение всё равно продолжит работать как раньше. -->
+  <script id="boot-guard">
+  (function () {
+    'use strict';
+    var BOOT_MS = 10000;        // сколько ждём запуск бандла
+    var WATCH_MS = 120000;      // сколько следим за поздним запуском
+    var UPDATE_MS = 12000;      // когда после запуска проверяем новую сборку
+    var UPDATE_THROTTLE = 6 * 3600 * 1000;
+    var UPDATE_KEY = 'kinoafisha_update_check';
+
+    function booted() {
+      if (window.__kinoBooted) return true;
+      var app = document.getElementById('app');
+      var gate = document.getElementById('gate');
+      return !!((app && !app.classList.contains('hidden')) ||
+                (gate && !gate.classList.contains('hidden')));
+    }
+    function card(id, text, withReload) {
+      if (document.getElementById(id)) return;   // такой уже висит — не дублируем
+      var box = document.createElement('div');
+      box.id = id;
+      box.setAttribute('style',
+        'position:fixed;left:12px;right:12px;bottom:12px;z-index:99999;' +
+        'background:#1b2340;color:#f2f2f7;border:1px solid rgba(255,193,7,.45);' +
+        'border-radius:14px;padding:14px 16px;' +
+        'font:14px/1.45 -apple-system,Manrope,Arial,sans-serif;' +
+        'box-shadow:0 12px 30px rgba(0,0,0,.55)');
+      var msg = document.createElement('div');
+      msg.textContent = text;
+      box.appendChild(msg);
+      if (withReload) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = '🔄 Обновить';
+        btn.setAttribute('style',
+          'margin-top:10px;width:100%;padding:11px 14px;border:0;border-radius:10px;' +
+          'background:linear-gradient(135deg,#ffd166,#ff4466);color:#191c2c;' +
+          'font-weight:700;font-size:15px');
+        btn.addEventListener('click', function () { location.reload(); });
+        box.appendChild(btn);
+      }
+      (document.body || document.documentElement).appendChild(box);
+    }
+    // «Приложение не открылось» — только если оно действительно не поднялось.
+    function banner(text, withReload) {
+      if (booted()) return;
+      card('boot-fail', text, withReload);
+    }
+    // «Вышло обновление» — наоборот, только когда приложение РАБОТАЕТ.
+    function notice(text) {
+      if (!booted()) return;
+      card('boot-update', text, true);
+    }
+    function hideBanner() {
+      var box = document.getElementById('boot-fail');
+      if (box && box.parentNode) box.parentNode.removeChild(box);
+    }
+    // Ошибки самого окна и загрузки СКРИПТОВ. Ошибки картинок/шрифтов игнорируем:
+    // они не мешают приложению и случаются постоянно.
+    window.addEventListener('error', function (e) {
+      var t = e && e.target;
+      if (t && t !== window && t.tagName !== 'SCRIPT') return;
+      banner('⚠️ Не удалось загрузить приложение. Проверь соединение и попробуй ещё раз.', true);
+    }, true);
+    window.addEventListener('unhandledrejection', function () {
+      if (!booted()) banner('⚠️ Не удалось загрузить приложение.', true);
+    });
+    // Бандл так и не запустился (10 с) — молчать нельзя: это и был «чёрный экран».
+    setTimeout(function () {
+      banner('⚠️ Приложение не открылось. Обнови страницу.', true);
+    }, BOOT_MS);
+    // Поздний запуск (медленная сеть) — убираем сообщение, приложение важнее.
+    var watch = setInterval(function () {
+      if (!booted()) return;
+      hideBanner();
+      clearInterval(watch);
+    }, 2000);
+    setTimeout(function () { clearInterval(watch); }, WATCH_MS);
+
+    // SW отдаёт страницу по stale-while-revalidate: после деплоя телефон может
+    // ещё раз открыть ПРОШЛУЮ сборку. Это не поломка, но новая версия не видна —
+    // тихо подсказываем обновиться (не чаще раза в 6 ч и только когда всё уже
+    // загрузилось, чтобы не мешать).
+    function runningVersion() {
+      var tag = document.querySelector('script[src*="script.js?v="]');
+      var m = tag && /[?&]v=(\d+)/.exec(tag.getAttribute('src') || '');
+      return m ? m[1] : '';
+    }
+    function checkUpdate() {
+      var cur = runningVersion();
+      if (!cur || typeof fetch !== 'function') return;
+      try {
+        var last = Number(localStorage.getItem(UPDATE_KEY) || 0);
+        if (Date.now() - last < UPDATE_THROTTLE) return;
+      } catch (e) { /* приватный режим — просто проверяем */ }
+      fetch('./index.html?boot=' + Date.now(), { cache: 'no-store' })
+        .then(function (r) { return r && r.ok ? r.text() : ''; })
+        .then(function (html) {
+          var m = /script\.js\?v=(\d+)/.exec(html || '');
+          if (!m) return;
+          try { localStorage.setItem(UPDATE_KEY, String(Date.now())); } catch (e) {}
+          if (Number(m[1]) > Number(cur)) {
+            notice('🔄 Вышло обновление (' + cur + ' → ' + m[1] + '). Обнови, чтобы увидеть новое.');
+          }
+        })['catch'](function () { /* нет сети — не наша забота */ });
+    }
+    setTimeout(function () {
+      if (!booted()) return;
+      try { checkUpdate(); } catch (e) { /* сторож не должен мешать запуску */ }
+    }, UPDATE_MS);
+  })();
+  </script>
+
+  <script src="script.js?v=136"></script>
 </body>
 </html>
 

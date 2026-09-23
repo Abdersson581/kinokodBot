@@ -7,14 +7,27 @@
    ERR_FAILED, хотя сайт был жив. Возвращаем проверенную схему: открытие —
    мгновенно из любого кэша, обновление — в фоне. Предыдущие версии кэша
    остаются страховкой. */
-const SW_CACHE = 'kinokod-v135';
-const SW_SHELL = ['./', './index.html', './style.css', './script.js'];
+const SW_CACHE = 'kinokod-v136';
+// Список данных неизменен; shell собирается в install — версии берём из index.html.
 const SW_DATA = ['./data/movies.json', './data/meta.json', './data/collections.json'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
     const cache = await caches.open(SW_CACHE);
-    await Promise.all([...SW_SHELL, ...SW_DATA].map(u =>
+    // v135: версии берём ИЗ index.html. Раньше здесь лежали './script.js' и
+    // './style.css' БЕЗ ?v=, а страница запрашивает их с версией — такие записи
+    // не использовались никогда (URL не совпадал), зато первый показ после
+    // деплоя тянул прошлый бандл из кэша. Исправление «доезжало» только со
+    // второго открытия, а сломанный бандл (инцидент «чёрный экран» 23.09.2026)
+    // так и оставался на экране.
+    let ver = '';
+    try {
+      const html = await (await fetch('./index.html', { cache: 'no-cache' })).text();
+      const m = html.match(/script\.js\?v=(\d+)/);
+      if (m) ver = '?v=' + m[1];
+    } catch (err) { /* нет сети — precache без версии */ }
+    const shell = ['./', './index.html', './script.js' + ver, './style.css' + ver];
+    await Promise.all([...shell, ...SW_DATA].map(u =>
       cache.add(new Request(u, { cache: 'no-cache' })).catch(() => {})));
     self.skipWaiting();
   })());
