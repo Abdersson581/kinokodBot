@@ -5037,26 +5037,29 @@ function renderEmojiGame() {
       <h2 class="emoji-title">😀 Угадай по эмодзи</h2>
       <div class="emoji-q">${esc(r.emoji)}</div>
       <div class="game-options">
-        ${r.options.map(t => `<button class="btn-option" data-t="${esc(t)}" data-a="${esc(r.answer)}">${esc(t)}</button>`).join('')}
+                ${r.options.map(t => `<button class="btn-option" data-t="${esc(t)}" data-code="${r.code}">${esc(t)}</button>`).join('')}
       </div>
       <button class="btn-back" id="emoji-next">🎲 Другая загадка</button>
     </div>`;
   box.querySelectorAll('.btn-option').forEach(b => b.addEventListener('click', () => {
     if (box.dataset.locked === '1') return;
     box.dataset.locked = '1';
-    const right = b.dataset.t === b.dataset.a;
+        // v130: ответ ищем через code, а не через data-a (который больше не раскрывает title)
+    const movie = ALL.find(m => String(m.code) === String(b.dataset.code));
+    const right = movie ? b.dataset.t === movie.title : false;
     haptic(right ? 'ok' : 'error');
     b.classList.add(right ? 'correct' : 'wrong');
     box.querySelectorAll('.btn-option').forEach(x => {
-      if (x.dataset.t === x.dataset.a) x.classList.add('correct');
+            if (movie && x.dataset.t === movie.title) x.classList.add('correct');
       x.disabled = true;
     });
-    const code = (ALL.find(m => m.title === r.answer) || {}).code;
+        const movie = ALL.find(m => String(m.code) === String(r.code)) || {};
+    const code = movie.code;
     if (code) {
       const open = document.createElement('button');
       open.className = 'btn-primary';
       open.style.marginTop = '10px';
-      open.textContent = `🔓 Открыть код «${r.answer}»`;
+            open.textContent = `🔓 Открыть код «${movie.title || ''}»`;
       open.onclick = () => sendOrDeepLink({ action: 'open_movie', code });
       box.querySelector('.emoji-game').appendChild(open);
     }

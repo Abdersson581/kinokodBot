@@ -5,23 +5,23 @@
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 9,
-   "total": 79
+   "unlocks": 10,
+   "total": 80
   },
   {
    "rank": 2,
-   "unlocks": 4,
-   "total": 7
+   "unlocks": 5,
+   "total": 17
   },
   {
    "rank": 3,
    "unlocks": 4,
-   "total": 4
+   "total": 7
   },
   {
    "rank": 4,
-   "unlocks": 3,
-   "total": 15
+   "unlocks": 4,
+   "total": 4
   },
   {
    "rank": 5,
@@ -35,83 +35,69 @@
   },
   {
    "rank": 7,
+   "unlocks": 2,
+   "total": 3
+  },
+  {
+   "rank": 8,
    "unlocks": 1,
    "total": 8
   },
   {
-   "rank": 8,
+   "rank": 9,
    "unlocks": 0,
    "total": 126
   },
   {
-   "rank": 9,
-   "unlocks": 0,
-   "total": 14
-  },
-  {
    "rank": 10,
    "unlocks": 0,
-   "total": 12
+   "total": 14
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
    "emoji": "🌀🍰⏰🧠",
-   "answer": "Начало",
+   "code": "467",
    "options": [
-    "Хитмен. Последнее дело",
-    "Война миров Z",
+    "Бандит",
+    "Меняющие реальность",
     "Начало",
-    "Проклятый путь"
-   ]
-  },
-  {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "answer": "Зеленая миля",
-   "options": [
-    "Зеленая миля",
-    "Эдди \"Орёл\"",
-    "Миссия Сиренити",
-    "Первый день моей жизни"
-   ]
-  },
-  {
-   "emoji": "🐕🚉⏳💔",
-   "answer": "Хатико: Самый верный друг",
-   "options": [
-    "Всевидящее око",
-    "О чем говорят незнакомцы",
-    "Хатико: Самый верный друг",
-    "Девушка и море"
+    "Ночная сова"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
-   "answer": "Побег из Шоушенка",
+   "code": "461",
    "options": [
-    "Ночная сова",
-    "1+1",
-    "Человек божий",
+    "Остров проклятых",
+    "Слова",
+    "Меняющие реальность",
     "Побег из Шоушенка"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Слова",
+    "Богемская рапсодия",
+    "Легенда Багера Ванса",
+    "Хатико: Самый верный друг"
+   ]
+  },
+  {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
+   "options": [
+    "Зеленая книга",
+    "Уличный кот по кличке Боб",
+    "Легенда Багера Ванса",
+    "Зеленая миля"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Зак Снайдер: Warner Bros. боролась со мной",
-   "link": "https://www.kinonews.ru/article_143206/",
-   "image": "https://www.kinonews.ru/insimgs/2026/artimg/big/artimg143206.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789667371.679242
-  },
-  {
-   "title": "Гай Пирс снимется в мрачном ирландском триллере \"Бутылка\"",
-   "link": "https://www.kinonews.ru/news_143205/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143205.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789667397.3754795
-  },
   {
    "title": "Студия 20th Century экранизирует видеоигру \"99 ночей в лесу\"",
    "link": "https://www.kinonews.ru/news_143224/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143291.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1790098775.0391974
+  },
+  {
+   "title": "Харви Вайнштейну дали еще 15 лет тюрьмы за сексуальное насилие",
+   "link": "https://www.kinonews.ru/news_143315/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143315.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790186365.342629
+  },
+  {
+   "title": "Создатель \"Рататуя\" представил трейлер нового проекта - \"Рэй Ганн\"",
+   "link": "https://www.kinonews.ru/news_143313/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143313.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790186416.3339717
   }
  ],
  "premieres": [

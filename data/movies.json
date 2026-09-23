@@ -2567,5 +2567,32 @@
   ],
   "kinopoisk_id": 394619,
   "link": "https://kinogo.ec/20564--jeddi-orel.html"
+ },
+ {
+  "code": "486",
+  "title": "пассажиры",
+  "rating": "7.2",
+  "poster": "posters/486.jpg",
+  "description": "Механик Джим Престон просыпается в капсуле гибернации космического корабля, который летит на Обитель, новую родину человечества. Его радостно приветствуют голограммы и роботы, но проблема в том, что из-за сбоя Джим проснулся один, а до пункта назначения…",
+  "genres": [],
+  "duration": 0,
+  "countries": [],
+  "year": "2016",
+  "added_at": "",
+  "trailer": "https://widgets.kinopoisk.ru/discovery/trailer/135052?onlyPlayer=1&autoplay=1&cover=1",
+  "trailer_yt": "",
+  "trailer_file_id": "",
+  "trailer_thumb": "",
+  "frame_pic": "frames/486.jpg",
+  "director": "Мортен Тильдум",
+  "actors": [
+   "Крис Пратт",
+   "Дженнифер Лоуренс",
+   "Майкл Шин",
+   "Лоренс Фишбёрн",
+   "Энди Гарсиа"
+  ],
+  "kinopoisk_id": "",
+  "link": "https://kinogo.ec/28252-passazhiry.html"
  }
 ]
