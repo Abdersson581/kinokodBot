@@ -1,593 +1,4887 @@
-var U,K;const tg=window.Telegram.WebApp;tg.ready(),tg.expand();const ACCESS_KEY="kinoafisha_access",CHANNEL_URL="https://t.me/capitanKino1";function showGate(){document.getElementById("gate").classList.remove("hidden"),document.getElementById("app").classList.add("hidden"),document.getElementById("btn-gate-channel").onclick=()=>tg.openTelegramLink(CHANNEL_URL),document.getElementById("btn-gate-check").onclick=()=>sendOrDeepLink({action:"access_check"})}function enterApp(){localStorage.setItem(ACCESS_KEY,"1"),document.getElementById("gate").classList.add("hidden"),document.getElementById("app").classList.remove("hidden"),parseProfileHash(),parseUnlockedHash(),parseRestoreHash(),parseMarathonHash(),bumpDaily(),initHideToggle(),applyGridCols(),initSearchHist(),renderTimeChips(),initShelfArrows(),initHeaderScroll(),showSeasonalBanner(),loadMovies(),restoreProfileFromCloud().then(t=>{if(t){try{renderGrid()}catch(e){}try{updateHeaderProgress()}catch(e){}try{renderStreakStrip()}catch(e){}try{updateChallPane()}catch(e){}if(PROFILE&&view==="profile")try{renderProfile()}catch(e){}if(t.wasEmpty)try{tg.showPopup({type:"ok",title:"☁️ Профиль восстановлен",message:"Твой список, оценки и заметки подтянулись из облака Telegram — они теперь с тобой на любом устройстве."})}catch(e){}}})}const THEME_KEY="kinoafisha_theme";function applyTheme(){let e=localStorage.getItem(THEME_KEY);if(!e){const n=new Date().getHours();e=n>=8&&n<20?"light":"dark"}document.body.classList.toggle("light",e==="light")}function toggleTheme(){const t=document.body.classList.toggle("light");localStorage.setItem(THEME_KEY,t?"light":"dark"),haptic("light")}function manualTheme(){localStorage.getItem(THEME_KEY)&&localStorage.removeItem(THEME_KEY),applyTheme(),haptic("light")}applyTheme(),tg.onEvent("themeChanged",()=>{localStorage.getItem(THEME_KEY)||applyTheme()});const ACCENT_KEY="kinoafisha_accent",ACCENTS=["classic","ocean","emerald","purple","neon","gold"],ACCENT_ICONS={classic:"🎨",ocean:"🌊",emerald:"🌿",purple:"🔮",neon:"💠",gold:"✨"};function applyAccent(){const t=localStorage.getItem(ACCENT_KEY)||"classic";document.body.classList.remove(...ACCENTS.filter(n=>n!=="classic").map(n=>"accent-"+n)),t!=="classic"&&document.body.classList.add("accent-"+t);const e=document.getElementById("btn-accent");e&&(e.textContent=ACCENT_ICONS[t]||"🎨"),document.querySelectorAll(".ap-swatch").forEach(n=>n.classList.toggle("active",n.dataset.a===t))}function setAccent(t){localStorage.setItem(ACCENT_KEY,ACCENTS.includes(t)?t:"classic"),applyAccent(),haptic("light")}applyAccent();const accentPop=document.getElementById("accent-pop");document.getElementById("btn-accent").addEventListener("click",t=>{t.stopPropagation();const e=accentPop.classList.contains("hidden");accentPop.classList.toggle("hidden"),e&&haptic("light")}),document.addEventListener("click",t=>{accentPop&&!accentPop.classList.contains("hidden")&&!accentPop.contains(t.target)&&t.target.id!=="btn-accent"&&accentPop.classList.add("hidden")}),accentPop.querySelectorAll(".ap-swatch").forEach(t=>t.addEventListener("click",()=>setAccent(t.dataset.a)));function getSeason(t){const e=t||new Date,n=(e.getMonth()+1)*100+e.getDate();return n>=1225||n<=107?{key:"ny",emoji:"❄️",text:"С Новым годом! Пусть все коды разгадаются 🎄"}:n>=213&&n<=215?{key:"val",emoji:"💝",text:"День всех влюблённых — загадай фильм тому, кто дорог 💘"}:n>=307&&n<=309?{key:"mar8",emoji:"🌷",text:"С 8 Марта! Кино и цветы — идеальный вечер 🌷"}:n>=1029&&n<=1031?{key:"hal",emoji:"🎃",text:"Хэллоуин! Ужасы в афише уже ждут 👻"}:null}function showSeasonalBanner(){const t=document.getElementById("season-banner");if(!t)return;const e=getSeason();if(!e){t.classList.add("hidden");return}try{if(localStorage.getItem("kinoafisha_season_seen_"+e.key)==="1"){t.classList.add("hidden");return}}catch(s){}t.innerHTML=`<span class="sb-emoji">${e.emoji}</span><span class="sb-text">${esc(e.text)}</span><button class="sb-close" aria-label="Закрыть">✕</button>`,t.classList.remove("hidden");const n=()=>{t.classList.add("hidden");try{localStorage.setItem("kinoafisha_season_seen_"+e.key,"1")}catch(s){}};t.querySelector(".sb-close").addEventListener("click",n)}let ALL=[],COLLS=[],NEWS=[],PREMIERES=[],LEADERBOARD=[],LEADERBOARD_KIND="week",view="grid",activeGenre="",activeCountry="",onlyTrailer=!1,onlyOnline=!1;const GRID_PAGE_SIZE=30;let gridPage=1,_gridFilterKey="";const LAYOUT_KEY="kinoafisha_layout";let gridLayout=(localStorage.getItem(LAYOUT_KEY)||"grid")==="list"?"list":"grid",trailerGenre="";const FAV_KEY="kinoafisha_favs",FAV_MODE_KEY="kinoafisha_fav_mode",getFavs=()=>JSON.parse(localStorage.getItem(FAV_KEY)||"[]"),setFavs=t=>{localStorage.setItem(FAV_KEY,JSON.stringify([...t])),scheduleCloudSync()},toggleFav=t=>{const e=new Set(getFavs()),n=!e.has(t);e.has(t)?e.delete(t):e.add(t),setFavs(e),haptic(n?"ok":"light"),n&&(challDone("add_fav"),bumpWeekStat("favs"))},WATCHED_KEY="kinoafisha_watched",getWatched=()=>JSON.parse(localStorage.getItem(WATCHED_KEY)||"[]"),setWatched=t=>{localStorage.setItem(WATCHED_KEY,JSON.stringify([...t])),scheduleCloudSync()},toggleWatched=t=>{const e=new Set(getWatched());return e.has(t)?e.delete(t):e.add(t),setWatched(e),haptic(e.has(t)?"ok":"light"),e.has(t)},NOTES_KEY="kinoafisha_notes",getNotes=()=>JSON.parse(localStorage.getItem(NOTES_KEY)||"{}"),setNote=(t,e)=>{const n=getNotes(),s=(e||"").trim();s?n[t]=s:delete n[t],localStorage.setItem(NOTES_KEY,JSON.stringify(n)),scheduleCloudSync()},MYCOLS_KEY="kinoafisha_mycols",getMyCols=()=>JSON.parse(localStorage.getItem(MYCOLS_KEY)||"[]"),setMyCols=t=>{localStorage.setItem(MYCOLS_KEY,JSON.stringify(t)),scheduleCloudSync()};function newMyCol(t){const e=getMyCols(),n="mc"+Date.now().toString(36);return e.push({id:n,title:(t||"").trim()||"Моя подборка",codes:[]}),setMyCols(e),n}function myColById(t){return getMyCols().find(e=>e.id===t)}function updateMyCol(t,e){setMyCols(getMyCols().map(n=>n.id===t?e(n):n))}const GRID_COLS_KEY="kinoafisha_grid_cols",getGridCols=()=>{const t=parseInt(localStorage.getItem(GRID_COLS_KEY)||"0",10);return[2,3,4].includes(t)?t:0},SEARCH_HIST_KEY="kinoafisha_search_hist",MAX_SEARCH_HIST=6,getSearchHist=()=>JSON.parse(localStorage.getItem(SEARCH_HIST_KEY)||"[]"),addSearchHist=t=>{if(!t)return;const e=getSearchHist().filter(n=>n.toLowerCase()!==t.toLowerCase());e.unshift(t),localStorage.setItem(SEARCH_HIST_KEY,JSON.stringify(e.slice(0,MAX_SEARCH_HIST)))},CHALL_KEY="kinoafisha_challenges",CHALLENGE_LIST=[{id:"watch_trailer",emoji:"🎥",name:"Глянь трейлер",desc:"Открой любой трейлер длиннее 2 минут",check:()=>(window._challTrailerWatched||0)>=1},{id:"open_movie",emoji:"🔍",name:"Открой карточку",desc:"Загляни в карточку любого фильма",check:()=>getRecent().length>=1},{id:"add_fav",emoji:"❤️",name:"Пополни «Моё»",desc:"Добавь фильм в «Хочу посмотреть»",check:()=>getFavs().length>=1}];function challDateKey(){const t=new Date;return`${t.getFullYear()}-${t.getMonth()+1}-${t.getDate()}`}function getChallenges(){try{const t=JSON.parse(localStorage.getItem(CHALL_KEY)||"null");if(t&&t.date===challDateKey())return t}catch(t){}return{date:challDateKey(),done:[]}}function setChallenges(t){localStorage.setItem(CHALL_KEY,JSON.stringify(t))}function challDone(t){const e=getChallenges();e.done.includes(t)||(e.done.push(t),setChallenges(e),updateChallPane())}const RECENT_KEY="kinoafisha_recent",MAX_RECENT=12,getRecent=()=>JSON.parse(localStorage.getItem(RECENT_KEY)||"[]"),addRecent=t=>{const e=getRecent().filter(n=>n!==t);e.unshift(t),localStorage.setItem(RECENT_KEY,JSON.stringify(e.slice(0,MAX_RECENT)))},OPEN_COUNT_KEY="kinoafisha_open_count",getOpenCounts=()=>{try{return JSON.parse(localStorage.getItem(OPEN_COUNT_KEY)||"{}")||{}}catch(t){return{}}};function bumpOpenCount(t){const e=getOpenCounts(),n=String(t);e[n]=(e[n]||0)+1;try{localStorage.setItem(OPEN_COUNT_KEY,JSON.stringify(e))}catch(s){}return e[n]}const TW_KEY="kinoafisha_trailer_watch",MAX_TW=12,getTrailerWatches=()=>{try{return JSON.parse(localStorage.getItem(TW_KEY)||"[]")}catch(t){return[]}};function pushTrailerWatch(t){const e=Date.now();let n=getTrailerWatches().filter(s=>String(s.c)!==String(t));n.unshift({c:String(t),t:e}),n=n.slice(0,MAX_TW),localStorage.setItem(TW_KEY,JSON.stringify(n))}const SESSION_KEY="kinoafisha_watch_session";function startWatchSession(t){localStorage.setItem(SESSION_KEY,JSON.stringify({c:String(t),t:Date.now()}))}function endWatchSession(){try{const t=JSON.parse(localStorage.getItem(SESSION_KEY)||"null");if(!t)return;localStorage.removeItem(SESSION_KEY);const e=Math.round((Date.now()-t.t)/1e3);if(e<2)return;let n=getTrailerWatches().filter(s=>String(s.c)!==t.c);n.unshift({c:t.c,t:Date.now(),sec:e}),localStorage.setItem(TW_KEY,JSON.stringify(n.slice(0,MAX_TW)))}catch(t){localStorage.removeItem(SESSION_KEY)}}function watchProgress(t){const e=getTrailerWatches().find(n=>String(n.c)===String(t));return e&&e.sec||0}const TPIN_KEY="kinoafisha_trailer_pins",getTrailerPins=()=>{try{return JSON.parse(localStorage.getItem(TPIN_KEY)||"[]")}catch(t){return[]}};function toggleTrailerPin(t){const e=getTrailerPins(),n=e.indexOf(String(t));let s=!0;return n>=0?(e.splice(n,1),s=!1):e.unshift(String(t)),localStorage.setItem(TPIN_KEY,JSON.stringify(e)),haptic(s?"ok":"light"),s}const WEEK_STATS_KEY="kinoafisha_week_stats",_wdayKey=(t=new Date)=>`${t.getFullYear()}-${t.getMonth()+1}-${t.getDate()}`,getWeekStats=()=>{try{return JSON.parse(localStorage.getItem(WEEK_STATS_KEY)||"{}")||{}}catch(t){return{}}};function bumpWeekStat(t,e=1){const n=getWeekStats(),s=_wdayKey();n[s]||(n[s]={open:0,trailers:0,favs:0}),n[s][t]=(n[s][t]||0)+e;const o=Object.keys(n).sort();for(;o.length>14;)delete n[o.shift()];localStorage.setItem(WEEK_STATS_KEY,JSON.stringify(n)),bumpYearStat(t)}const YEAR_LOG_KEY="kinoafisha_year_stats",_ymKey=(t=new Date)=>`${t.getFullYear()}-${t.getMonth()+1}`,getYearStats=()=>{try{return JSON.parse(localStorage.getItem(YEAR_LOG_KEY)||"{}")||{}}catch(t){return{}}};function bumpYearStat(t,e=1){const n=getYearStats(),s=_ymKey();n[s]||(n[s]={open:0,trailers:0,favs:0,rated:0}),n[s][t]=(n[s][t]||0)+e;const o=Object.keys(n).sort();for(;o.length>24;)delete n[o.shift()];localStorage.setItem(YEAR_LOG_KEY,JSON.stringify(n))}function week7(){const t=getWeekStats(),e=[];for(let n=6;n>=0;n--){const s=new Date;s.setDate(s.getDate()-n);const o=_wdayKey(s),a=t[o]||{};e.push({date:s,open:a.open||0,trailers:a.trailers||0,favs:a.favs||0})}return e}const RECO_KEY="kinoafisha_reco",getRecoHide=()=>JSON.parse(localStorage.getItem(RECO_KEY)||"[]"),setRecoHide=t=>localStorage.setItem(RECO_KEY,JSON.stringify([...t])),RATINGS_KEY="kinoafisha_ratings",getRatings=()=>{try{return JSON.parse(localStorage.getItem(RATINGS_KEY)||"{}")||{}}catch(t){return{}}},myRating=t=>getRatings()[String(t)]||0;function setRating(t,e){const n=getRatings(),s=String(t);e&&n[s]===e?delete n[s]:e?n[s]=e:delete n[s],localStorage.setItem(RATINGS_KEY,JSON.stringify(n)),haptic(e?"ok":"light"),e&&bumpWeekStat("rated"),scheduleCloudSync()}function removeRating(t){const e=getRatings();delete e[String(t)],localStorage.setItem(RATINGS_KEY,JSON.stringify(e)),haptic("light"),scheduleCloudSync()}const ratingWeight=t=>1+(parseInt(t,10)||0)*1.2,HOUR_LOG_KEY="kinoafisha_hour_log";function bumpHourLog(){try{const t=new Date().getHours(),e=JSON.parse(localStorage.getItem(HOUR_LOG_KEY)||"{}")||{};e[t]=(e[t]||0)+1,localStorage.setItem(HOUR_LOG_KEY,JSON.stringify(e))}catch(t){}}function buildInsights(){const t=[];try{const e=JSON.parse(localStorage.getItem(HOUR_LOG_KEY)||"{}")||{};if(Object.values(e).reduce((s,o)=>s+o,0)>=10){let s=0,o=-1;for(let i=0;i<24;i++)(e[i]||0)>o&&(o=e[i]||0,s=i);const a=s>=6&&s<12?"утро ☀️":s>=12&&s<18?"день 🌤":s>=18&&s<24?"вечер 🌆":"ночь 🌙";t.push(`🕐 Ты чаще заходишь <b>${a}</b> (в ${String(s).padStart(2,"0")}:00)`)}}catch(e){}try{const e=getOpenCounts(),n=Object.entries(e).filter(([,s])=>s>=2);if(n.length){n.sort((o,a)=>a[1]-o[1]);const s=ALL.find(o=>String(o.code)===String(n[0][0]));s&&t.push(`👀 Чаще всего открываешь <b>«${esc(s.title)}»</b> — ${n[0][1]} раз(а)`)}}catch(e){}try{const e=getTrailerWatches().reduce((n,s)=>n+(s.sec||0),0);e>=180&&t.push(`▶️ Посмотрел(а) трейлеров на <b>~${Math.round(e/60)} мин</b>`)}catch(e){}try{const e=favouriteGenre();e&&t.push(`🌟 Любимый жанр — <b>${esc(e)}</b>`)}catch(e){}return t.length?`
+// Telegram Web App
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+// ---------- доступ: мягкие ворота подписки ----------
+const ACCESS_KEY = 'kinoafisha_access';
+const CHANNEL_URL = 'https://t.me/capitanKino1';
+
+function showGate() {
+  document.getElementById('gate').classList.remove('hidden');
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('btn-gate-channel').onclick = () => tg.openTelegramLink(CHANNEL_URL);
+  document.getElementById('btn-gate-check').onclick = () =>
+    sendOrDeepLink({ action: 'access_check' });
+}
+function enterApp() {
+  localStorage.setItem(ACCESS_KEY, '1');
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  parseProfileHash();  // до parseUnlockedHash: тот очищает location.hash
+  parseUnlockedHash();
+  parseRestoreHash();  // v76: «☁️ Восстановить из бота» — до очистки хэша другими
+parseMarathonHash(); // v78: «#marathon=…» — запуск марафона по ссылке от друга
+  bumpDaily();         // v64: ежедневная серия заходит
+  initHideToggle();
+  applyGridCols();
+  initSearchHist();
+  renderTimeChips();  // v77: чипы длительности
+  initShelfArrows();  // v77: стрелки полок (ПК)
+  initHeaderScroll(); // v77: стеклянная шапка
+  showSeasonalBanner();  // v113: праздничное приветствие (в сезон)
+  loadMovies();
+  // v121: облачный профиль — новое устройство подтягивает «Моё» само
+  restoreProfileFromCloud().then((r) => {
+    if (!r) return;
+    try { renderGrid(); } catch (e) {}
+    try { updateHeaderProgress(); } catch (e) {}
+    try { renderStreakStrip(); } catch (e) {}
+    try { updateChallPane(); } catch (e) {}
+    if (PROFILE && view === 'profile') { try { renderProfile(); } catch (e) {} }
+    if (r.wasEmpty) {
+      try {
+        tg.showPopup({
+          type: 'ok',
+          title: '☁️ Профиль восстановлен',
+          message: 'Твой список, оценки и заметки подтянулись из облака Telegram — они теперь с тобой на любом устройстве.',
+        });
+      } catch (e) { /* пусто */ }
+    }
+  });
+}
+// ВНИМАНИЕ: запуск (enterApp/showGate) перенесён в САМЫЙ КОНЕЦ файла —
+// раньше он выполнялся здесь, до объявления ALL/COLLS/обработчиков, и любое
+// падение верхнеуровневого кода оставляло приложение пустым (TDZ-гонка с fetch).
+
+// ---------- тема: авто из Telegram + ручной переключатель ----------
+const THEME_KEY = 'kinoafisha_theme';
+function applyTheme() {
+  // Ручной переключатель имеет приоритет над авто-темой
+  const saved = localStorage.getItem(THEME_KEY);
+  let scheme = saved;
+  if (!scheme) {
+    // v94: авто-тема по времени суток, пока пользователь не выбрал вручную
+    const h = new Date().getHours();
+    scheme = (h >= 8 && h < 20) ? 'light' : 'dark';
+  }
+  document.body.classList.toggle('light', scheme === 'light');
+}
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
+  haptic('light');
+}
+function manualTheme() {
+  // При ручном переключении сохраняем выбор и отключаем авто-подхват
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved) {
+    localStorage.removeItem(THEME_KEY);  // возвращаем авто-тему из Telegram
+  }
+  applyTheme();
+  haptic('light');
+}
+applyTheme();
+tg.onEvent('themeChanged', () => {
+  // Авто-тема меняет только если пользователь не выбрал вручную
+  if (!localStorage.getItem(THEME_KEY)) applyTheme();
+});
+
+// ---------- акцент-пресеты (classic / ocean / emerald / purple / neon / gold) ----------
+// Наборы цвета оформления; стили описаны в style.css через body.accent-*.
+const ACCENT_KEY = 'kinoafisha_accent';
+const ACCENTS = ['classic', 'ocean', 'emerald', 'purple', 'neon', 'gold'];
+const ACCENT_ICONS = { classic: '🎨', ocean: '🌊', emerald: '🌿', purple: '🔮', neon: '💠', gold: '✨' };
+function applyAccent() {
+  const cur = localStorage.getItem(ACCENT_KEY) || 'classic';
+  document.body.classList.remove(...ACCENTS.filter(a => a !== 'classic').map(a => 'accent-' + a));
+  if (cur !== 'classic') document.body.classList.add('accent-' + cur);
+  const btn = document.getElementById('btn-accent');
+  if (btn) btn.textContent = ACCENT_ICONS[cur] || '🎨';
+  // подсветка выбранного кружка в панели
+  document.querySelectorAll('.ap-swatch').forEach(s => s.classList.toggle('active', s.dataset.a === cur));
+}
+function setAccent(name) {
+  localStorage.setItem(ACCENT_KEY, ACCENTS.includes(name) ? name : 'classic');
+  applyAccent();
+  haptic('light');
+}
+applyAccent();
+// v74: кнопка 🎨 открывает панель выбора цвета (переключение кликом по кружку)
+const accentPop = document.getElementById('accent-pop');
+document.getElementById('btn-accent').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const show = accentPop.classList.contains('hidden');
+  accentPop.classList.toggle('hidden');
+  if (show) haptic('light');
+});
+document.addEventListener('click', (e) => {
+  if (accentPop && !accentPop.classList.contains('hidden') &&
+      !accentPop.contains(e.target) && e.target.id !== 'btn-accent') {
+    accentPop.classList.add('hidden');
+  }
+});
+accentPop.querySelectorAll('.ap-swatch').forEach(s => s.addEventListener('click', () => setAccent(s.dataset.a)));
+
+// ---------- v113: сезонный режим — праздничное приветствие в особые даты ----------
+// Новый год / 14 февраля / 8 марта / Хэллоуин: баннер-поздравление над афишей.
+// Закрывается крестиком и больше не показывается в этом сезоне (localStorage).
+function getSeason(d) {
+  const dt = d || new Date();
+  const md = (dt.getMonth() + 1) * 100 + dt.getDate();
+  if (md >= 1225 || md <= 107) return { key: 'ny', emoji: '❄️', text: 'С Новым годом! Пусть все коды разгадаются 🎄' };
+  if (md >= 213 && md <= 215) return { key: 'val', emoji: '💝', text: 'День всех влюблённых — загадай фильм тому, кто дорог 💘' };
+  if (md >= 307 && md <= 309) return { key: 'mar8', emoji: '🌷', text: 'С 8 Марта! Кино и цветы — идеальный вечер 🌷' };
+  if (md >= 1029 && md <= 1031) return { key: 'hal', emoji: '🎃', text: 'Хэллоуин! Ужасы в афише уже ждут 👻' };
+  return null;
+}
+function showSeasonalBanner() {
+  const el = document.getElementById('season-banner');
+  if (!el) return;
+  const s = getSeason();
+  if (!s) { el.classList.add('hidden'); return; }
+  try {
+    if (localStorage.getItem('kinoafisha_season_seen_' + s.key) === '1') { el.classList.add('hidden'); return; }
+  } catch (e) {}
+  el.innerHTML = `<span class="sb-emoji">${s.emoji}</span><span class="sb-text">${esc(s.text)}</span>` +
+    `<button class="sb-close" aria-label="Закрыть">✕</button>`;
+  el.classList.remove('hidden');
+  const close = () => {
+    el.classList.add('hidden');
+    try { localStorage.setItem('kinoafisha_season_seen_' + s.key, '1'); } catch (e) {}
+  };
+  el.querySelector('.sb-close').addEventListener('click', close);
+}
+
+// ---------- состояние ----------
+let ALL = [];                       // все фильмы
+let COLLS = [];                     // подборки
+let NEWS = [];                      // последние новости кино
+let PREMIERES = [];                 // v119: «Скоро в кино» — даты премьер из meta.json
+let LEADERBOARD = [];               // топ игроков сезона
+let LEADERBOARD_KIND = 'week';      // week | total — по чему ранжируем
+let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game | news | top | profile | trailers | achievements
+let activeGenre = '';               // выбранный жанр-фильтр ('' = все)
+let activeCountry = '';             // v89: выбранная страна-фильтр ('' = все)
+let onlyTrailer = false;            // v90: показывать только фильмы с трейлером
+let onlyOnline = false;             // v91: только фильмы с прямой ссылкой на просмотр
+const GRID_PAGE_SIZE = 30;          // v93: афиша по 30 карточек + «Показать ещё»
+let gridPage = 1;
+let _gridFilterKey = '';            // ключ текущих фильтров — при смене сбрасываем страницу
+// v94: режим афиши «Сетка» (по умолчанию) / «Список» — компактные строки
+const LAYOUT_KEY = 'kinoafisha_layout';
+let gridLayout = (localStorage.getItem(LAYOUT_KEY) || 'grid') === 'list' ? 'list' : 'grid';
+let trailerGenre = '';              // жанр-фильтр для трейлеров
+const FAV_KEY = 'kinoafisha_favs';
+const FAV_MODE_KEY = 'kinoafisha_fav_mode';  // «Моё»: fav = хочу посмотреть | done = разгаданные
+const getFavs = () => JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+const setFavs = (a) => {
+  localStorage.setItem(FAV_KEY, JSON.stringify([...a]));
+  scheduleCloudSync();   // v121: облачный профиль
+};
+const toggleFav = (code) => {
+  const f = new Set(getFavs());
+  const adding = !f.has(code);
+  f.has(code) ? f.delete(code) : f.add(code);
+  setFavs(f);
+  haptic(adding ? 'ok' : 'light');
+  if (adding) { challDone('add_fav'); bumpWeekStat('favs'); }
+};
+
+// ---------- «Я смотрел» (локальный список просмотренных) ----------
+// Помечай фильм как просмотренный — список покажется в «Моё» третьим режимом,
+// а рекомендации и статистика станут точнее.
+const WATCHED_KEY = 'kinoafisha_watched';
+const getWatched = () => JSON.parse(localStorage.getItem(WATCHED_KEY) || '[]');
+const setWatched = (a) => {
+  localStorage.setItem(WATCHED_KEY, JSON.stringify([...a]));
+  scheduleCloudSync();   // v121: облачный профиль
+};
+const toggleWatched = (code) => {
+  const w = new Set(getWatched());
+  w.has(code) ? w.delete(code) : w.add(code);
+  setWatched(w);
+  haptic(w.has(code) ? 'ok' : 'light');
+  return w.has(code);
+};
+
+// ---------- заметки на фильмах (локально) ----------
+// Короткая заметка на карточке: сохраняется состояние прямо в приложении.
+const NOTES_KEY = 'kinoafisha_notes';
+const getNotes = () => JSON.parse(localStorage.getItem(NOTES_KEY) || '{}');
+const setNote = (code, text) => {
+  const n = getNotes();
+  const t = (text || '').trim();
+  if (t) n[code] = t; else delete n[code];
+  localStorage.setItem(NOTES_KEY, JSON.stringify(n));
+  scheduleCloudSync();   // v121: облачный профиль
+};
+
+// ---------- v106: свои подборки (локально) ----------
+// Пользователь собирает собственные коллекции фильмов. Хранятся на устройстве.
+const MYCOLS_KEY = 'kinoafisha_mycols';
+const getMyCols = () => JSON.parse(localStorage.getItem(MYCOLS_KEY) || '[]');
+const setMyCols = (a) => {
+  localStorage.setItem(MYCOLS_KEY, JSON.stringify(a));
+  scheduleCloudSync();   // v121: облачный профиль
+};
+function newMyCol(title) {
+  const cols = getMyCols();
+  const id = 'mc' + Date.now().toString(36);
+  cols.push({ id, title: (title || '').trim() || 'Моя подборка', codes: [] });
+  setMyCols(cols);
+  return id;
+}
+function myColById(id) { return getMyCols().find(c => c.id === id); }
+function updateMyCol(id, fn) {
+  setMyCols(getMyCols().map(c => c.id === id ? fn(c) : c));
+}
+
+// ---------- компактный режим афиши (2/3/4 колонки) ----------
+const GRID_COLS_KEY = 'kinoafisha_grid_cols';
+const getGridCols = () => {
+  const v = parseInt(localStorage.getItem(GRID_COLS_KEY) || '0', 10);
+  return [2, 3, 4].includes(v) ? v : 0;  // 0 = авто
+};
+
+// ---------- история поиска ----------
+const SEARCH_HIST_KEY = 'kinoafisha_search_hist';
+const MAX_SEARCH_HIST = 6;
+const getSearchHist = () => JSON.parse(localStorage.getItem(SEARCH_HIST_KEY) || '[]');
+const addSearchHist = (q) => {
+  if (!q) return;
+  const h = getSearchHist().filter(x => x.toLowerCase() !== q.toLowerCase());
+  h.unshift(q);
+  localStorage.setItem(SEARCH_HIST_KEY, JSON.stringify(h.slice(0, MAX_SEARCH_HIST)));
+};
+
+// ---------- ежедневные кино-челленджи (локальные, меняются каждый день) ----------
+// Три задания на день, выполняются собственными действиями в приложении.
+// Прогресс хранится локально и автоматически сбрасывается на новый день.
+const CHALL_KEY = 'kinoafisha_challenges';
+const CHALLENGE_LIST = [
+  { id: 'watch_trailer', emoji: '🎥', name: 'Глянь трейлер', desc: 'Открой любой трейлер длиннее 2 минут', check: () => ((window._challTrailerWatched || 0) >= 1) },
+  { id: 'open_movie', emoji: '🔍', name: 'Открой карточку', desc: 'Загляни в карточку любого фильма', check: () => (getRecent().length >= 1) },
+  { id: 'add_fav', emoji: '❤️', name: 'Пополни «Моё»', desc: 'Добавь фильм в «Хочу посмотреть»', check: () => (getFavs().length >= 1) },
+];
+function challDateKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+function getChallenges() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CHALL_KEY) || 'null');
+    if (raw && raw.date === challDateKey()) return raw;
+  } catch (e) {}
+  return { date: challDateKey(), done: [] };
+}
+function setChallenges(c) { localStorage.setItem(CHALL_KEY, JSON.stringify(c)); }
+function challDone(id) {
+  const c = getChallenges();
+  if (c.done.includes(id)) return;
+  c.done.push(id);
+  setChallenges(c);
+  updateChallPane();
+}
+
+// ---------- история просмотров (для «🕘 Недавно смотрели») ----------
+// Локальная история последних открытых карточек (макс 12). Используется
+// в полке на главной — без сервера, как «Моё».
+const RECENT_KEY = 'kinoafisha_recent';
+const MAX_RECENT = 12;
+const getRecent = () => JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+const addRecent = (code) => {
+  const r = getRecent().filter(c => c !== code);
+  r.unshift(code);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(r.slice(0, MAX_RECENT)));
+};
+
+// ---------- v93: счётчик открытий карточки ----------
+// Показывает «👀 Открывал(а) N раз» в карточке фильма — приятная «память» приложения.
+const OPEN_COUNT_KEY = 'kinoafisha_open_count';
+const getOpenCounts = () => {
+  try { return JSON.parse(localStorage.getItem(OPEN_COUNT_KEY) || '{}') || {}; }
+  catch (e) { return {}; }
+};
+function bumpOpenCount(code) {
+  const c = getOpenCounts();
+  const k = String(code);
+  c[k] = (c[k] || 0) + 1;
+  try { localStorage.setItem(OPEN_COUNT_KEY, JSON.stringify(c)); } catch (e) {}
+  return c[k];
+}
+
+// ---------- v74: история просмотренных трейлеров («Продолжить смотреть») ----------
+// Отдельно от «Недавно смотрели» — здесь только те фильмы, чей трейлер реально
+// открывали. Полка на главной позволяет продолжить с места остановки.
+const TW_KEY = 'kinoafisha_trailer_watch';
+const MAX_TW = 12;
+const getTrailerWatches = () => {
+  try { return JSON.parse(localStorage.getItem(TW_KEY) || '[]'); }
+  catch (e) { return []; }
+};
+function pushTrailerWatch(code) {
+  const now = Date.now();
+  let w = getTrailerWatches().filter(x => String(x.c) !== String(code));
+  w.unshift({ c: String(code), t: now });
+  w = w.slice(0, MAX_TW);
+  localStorage.setItem(TW_KEY, JSON.stringify(w));
+}
+
+// ---------- v109: «🎬 Смотрю сейчас» — прогресс просмотра трейлеров ----------
+// Те же данные, что у «Продолжить смотреть», но с длительностью сессии:
+// когда пользователь открывает трейлер, засекаем время; при закрытии пишем,
+// сколько секунд реально смотрел. На главной полка показывает мини-прогресс.
+const SESSION_KEY = 'kinoafisha_watch_session';
+function startWatchSession(code) { localStorage.setItem(SESSION_KEY, JSON.stringify({ c: String(code), t: Date.now() })); }
+function endWatchSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+    if (!s) return;
+    localStorage.removeItem(SESSION_KEY);
+    const sec = Math.round((Date.now() - s.t) / 1000);
+    if (sec < 2) return;                       // случайный клик — не считаем
+    let w = getTrailerWatches().filter(x => String(x.c) !== s.c);
+    w.unshift({ c: s.c, t: Date.now(), sec });
+    localStorage.setItem(TW_KEY, JSON.stringify(w.slice(0, MAX_TW)));
+  } catch (e) { localStorage.removeItem(SESSION_KEY); }
+}
+function watchProgress(code) {
+  const w = getTrailerWatches().find(x => String(x.c) === String(code));
+  return w ? (w.sec || 0) : 0;
+}
+
+// ---------- v109: «📌 закрепить трейлер» ----------
+// Закреплённые поднимаются в начало сетки «Трейлеры» (поверх сортировки).
+const TPIN_KEY = 'kinoafisha_trailer_pins';
+const getTrailerPins = () => {
+  try { return JSON.parse(localStorage.getItem(TPIN_KEY) || '[]'); }
+  catch (e) { return []; }
+};
+function toggleTrailerPin(code) {
+  const pins = getTrailerPins();
+  const i = pins.indexOf(String(code));
+  let nowPinned = true;
+  if (i >= 0) { pins.splice(i, 1); nowPinned = false; }
+  else pins.unshift(String(code));
+  localStorage.setItem(TPIN_KEY, JSON.stringify(pins));
+  haptic(nowPinned ? 'ok' : 'light');
+  return nowPinned;
+}
+
+// ---------- v60: локальная активность («📊 Моя неделя» в профиле) ----------
+// Счётчики по дням: открытых карточек, просмотренных трейлеров, добавлений в «Моё».
+const WEEK_STATS_KEY = 'kinoafisha_week_stats';
+const _wdayKey = (d = new Date()) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+const getWeekStats = () => {
+  try { return JSON.parse(localStorage.getItem(WEEK_STATS_KEY) || '{}') || {}; }
+  catch (e) { return {}; }
+};
+function bumpWeekStat(field, n = 1) {
+  const s = getWeekStats();
+  const k = _wdayKey();
+  if (!s[k]) s[k] = { open: 0, trailers: 0, favs: 0 };
+  s[k][field] = (s[k][field] || 0) + n;
+  // храним только последние 14 дней
+  const keys = Object.keys(s).sort();
+  while (keys.length > 14) delete s[keys.shift()];
+  localStorage.setItem(WEEK_STATS_KEY, JSON.stringify(s));
+  bumpYearStat(field);   // v74: параллельно ведём «Мой кино-год»
+}
+
+// ---------- v74: «Мой кино-год» — помесячный журнал активности ----------
+const YEAR_LOG_KEY = 'kinoafisha_year_stats';
+const _ymKey = (d = new Date()) => `${d.getFullYear()}-${d.getMonth() + 1}`;
+const getYearStats = () => {
+  try { return JSON.parse(localStorage.getItem(YEAR_LOG_KEY) || '{}') || {}; }
+  catch (e) { return {}; }
+};
+function bumpYearStat(field, n = 1) {
+  const s = getYearStats();
+  const k = _ymKey();
+  if (!s[k]) s[k] = { open: 0, trailers: 0, favs: 0, rated: 0 };
+  s[k][field] = (s[k][field] || 0) + n;
+  // храним только последние 24 месяца
+  const keys = Object.keys(s).sort();
+  while (keys.length > 24) delete s[keys.shift()];
+  localStorage.setItem(YEAR_LOG_KEY, JSON.stringify(s));
+}
+function week7() {
+  // последние 7 дней по порядку: старые → свежие
+  const s = getWeekStats();
+  const out = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const k = _wdayKey(d);
+    const v = s[k] || {};
+    out.push({ date: d, open: v.open || 0, trailers: v.trailers || 0, favs: v.favs || 0 });
+  }
+  return out;
+}
+
+// ---------- рекомендации («💫 Советуем вам») ----------
+// Локально: на основе жанров из «Моё» и разгаданных выбираем похожие фильмы,
+// которые пользователь ещё не смотрел и не сохранял.
+const RECO_KEY = 'kinoafisha_reco';
+const getRecoHide = () => JSON.parse(localStorage.getItem(RECO_KEY) || '[]');
+const setRecoHide = (a) => localStorage.setItem(RECO_KEY, JSON.stringify([...a]));
+
+// ---------- v64: мои оценки — прямо в приложении, без выброса в бота ----------
+const RATINGS_KEY = 'kinoafisha_ratings';
+const getRatings = () => {
+  try { return JSON.parse(localStorage.getItem(RATINGS_KEY) || '{}') || {}; }
+  catch (e) { return {}; }
+};
+const myRating = (code) => getRatings()[String(code)] || 0;
+function setRating(code, r) {
+  const all = getRatings();
+  const k = String(code);
+  if (r && all[k] === r) delete all[k];   // повторный тап по той же звезде — снять
+  else if (r) all[k] = r;
+  else delete all[k];
+  localStorage.setItem(RATINGS_KEY, JSON.stringify(all));
+  haptic(r ? 'ok' : 'light');
+  if (r) bumpWeekStat('rated');
+  scheduleCloudSync();   // v121: облачный профиль
+}
+function removeRating(code) {
+  const all = getRatings();
+  delete all[String(code)];
+  localStorage.setItem(RATINGS_KEY, JSON.stringify(all));
+  haptic('light');
+  scheduleCloudSync();   // v121: облачный профиль
+}
+// «вес» фильма во вкусе пользователя: чем выше оценка — тем сильнее сигнал
+const ratingWeight = (r) => 1 + (parseInt(r, 10) || 0) * 1.2;
+
+// ---------- v109: «🔮 Инсайты» — персональные факты из локальной истории ----------
+const HOUR_LOG_KEY = 'kinoafisha_hour_log';
+function bumpHourLog() {
+  try {
+    const h = new Date().getHours();
+    const log = JSON.parse(localStorage.getItem(HOUR_LOG_KEY) || '{}') || {};
+    log[h] = (log[h] || 0) + 1;
+    localStorage.setItem(HOUR_LOG_KEY, JSON.stringify(log));
+  } catch (e) {}
+}
+function buildInsights() {
+  const facts = [];
+  // Любимое время заходов (нужен накопленный лог >= 10 открытий)
+  try {
+    const log = JSON.parse(localStorage.getItem(HOUR_LOG_KEY) || '{}') || {};
+    const total = Object.values(log).reduce((a, b) => a + b, 0);
+    if (total >= 10) {
+      let bestH = 0, bestN = -1;
+      for (let h = 0; h < 24; h++) if ((log[h] || 0) > bestN) { bestN = log[h] || 0; bestH = h; }
+      const label = (bestH >= 6 && bestH < 12) ? 'утро ☀️'
+        : (bestH >= 12 && bestH < 18) ? 'день 🌤'
+        : (bestH >= 18 && bestH < 24) ? 'вечер 🌆' : 'ночь 🌙';
+      facts.push(`🕐 Ты чаще заходишь <b>${label}</b> (в ${String(bestH).padStart(2, '0')}:00)`);
+    }
+  } catch (e) {}
+  // Самый открываемый фильм
+  try {
+    const oc = getOpenCounts();
+    const entries = Object.entries(oc).filter(([, n]) => n >= 2);
+    if (entries.length) {
+      entries.sort((a, b) => b[1] - a[1]);
+      const m = ALL.find(x => String(x.code) === String(entries[0][0]));
+      if (m) facts.push(`👀 Чаще всего открываешь <b>«${esc(m.title)}»</b> — ${entries[0][1]} раз(а)`);
+    }
+  } catch (e) {}
+  // Суммарное время трейлеров
+  try {
+    const secSum = getTrailerWatches().reduce((a, w) => a + (w.sec || 0), 0);
+    if (secSum >= 180) facts.push(`▶️ Посмотрел(а) трейлеров на <b>~${Math.round(secSum / 60)} мин</b>`);
+  } catch (e) {}
+  // Любимый жанр
+  try {
+    const fg = favouriteGenre();
+    if (fg) facts.push(`🌟 Любимый жанр — <b>${esc(fg)}</b>`);
+  } catch (e) {}
+  if (!facts.length) return '';
+  return `
     <div class="pf-week pf-insights">
       <div class="pf-ach-head"><span>🔮 Инсайты</span><b>из твоей истории</b></div>
-      ${t.map(e=>`<div class="ins-fact">${e}</div>`).join("")}
-    </div>`:""}const DAILY_KEY="kinoafisha_daily",DAILY_MILESTONES=[3,7,14,30,60,100],_daysWord=t=>t%10===1&&t%100!==11?"день":[2,3,4].includes(t%10)&&(t%100<10||t%100>=20)?"дня":"дней";function dailyState(){try{const t=JSON.parse(localStorage.getItem(DAILY_KEY)||"null")||{};return{last:t.last||"",series:t.series||0,best:t.best||0,done:t.done||[]}}catch(t){return{last:"",series:0,best:0,done:[]}}}function bumpDaily(){const t=dailyState(),e=_wdayKey();if(t.last===e)return t;const n=new Date;n.setDate(n.getDate()-1),t.series=t.last===_wdayKey(n)?t.series+1:1,t.best=Math.max(t.best||0,t.series),t.last=e;const s=DAILY_MILESTONES.find(o=>t.series>=o&&!t.done.includes(o));return s&&(t.done.push(s),setTimeout(()=>{haptic("ok");try{tg.showPopup({type:"ok",title:`🔥 Серия ${s} ${_daysWord(s)}!`,message:`Ты заходишь в «Киноафишу» ${s} ${_daysWord(s)} подряд — так держать! Заходи завтра, чтобы не потерять серию.`})}catch(o){}},900)),localStorage.setItem(DAILY_KEY,JSON.stringify(t)),t}function renderStreakStrip(){const t=document.getElementById("streak-strip");if(!t)return;const e=dailyState();if(!e.series){t.classList.add("hidden");return}const n=DAILY_MILESTONES.find(s=>s>e.series);t.classList.remove("hidden"),t.innerHTML=`<span class="streak-flame">🔥</span><span class="streak-num">${e.series}</span><span class="streak-label">${_daysWord(e.series)} подряд</span>`+(n?`<span class="streak-next">до ${n} 🔥 — ещё ${n-e.series}</span>`:'<span class="streak-next">легенда афиши 🏆</span>')+`<span class="streak-best" title="Твой рекорд">🏅 ${e.best}</span>`}const UNLOCKED_KEY="kinoafisha_unlocked",HIDE_KEY="kinoafisha_hide_unlocked",getUnlocked=()=>JSON.parse(localStorage.getItem(UNLOCKED_KEY)||"[]"),PROFILE_KEY="kinoafisha_profile";let PROFILE=null;function parseProfileHash(){try{const e=new URLSearchParams((location.hash||"").replace(/^#/,"")).get("profile");e&&(PROFILE=JSON.parse(e),localStorage.setItem(PROFILE_KEY,JSON.stringify(PROFILE)))}catch(t){}if(!PROFILE)try{PROFILE=JSON.parse(localStorage.getItem(PROFILE_KEY)||"null")}catch(t){PROFILE=null}PROFILE&&view==="profile"&&renderProfile(),updateHeaderProgress()}function parseUnlockedHash(){try{const e=new URLSearchParams((location.hash||"").replace(/^#/,"")).get("unlocked");if(!e)return;const n=e.split(",").map(s=>s.trim()).filter(Boolean);if(n.length){localStorage.setItem(UNLOCKED_KEY,JSON.stringify([...new Set(n)]));const s="kinoafisha_speedrun",o=new Date().toISOString().slice(0,10);let a={};try{a=JSON.parse(localStorage.getItem(s)||"{}")}catch(i){a={}}a=a.d===o?a:{d:o,n:0},a.n=a.n+1;try{localStorage.setItem(s,JSON.stringify(a))}catch(i){}if(a.n>=5){try{tg.showPopup({type:"ok",title:"⚡ Спидраннер!",message:"5+ кодов за день — ты разгадываешь их как профессионал! 🔥"})}catch(i){}try{localStorage.setItem(s,JSON.stringify({d:o,n:999}))}catch(i){}}history.replaceState(null,"",location.pathname)}}catch(t){}}function initHideToggle(){const t=document.getElementById("hide-unlocked");if(!t)return;const e=document.getElementById("hide-toggle-wrap"),n=()=>{e&&e.classList.toggle("on",t.checked)};t.checked=localStorage.getItem(HIDE_KEY)==="1",n(),t.addEventListener("change",()=>{localStorage.setItem(HIDE_KEY,t.checked?"1":""),n(),haptic("light"),renderGrid()});const s=document.getElementById("btn-sync");s&&s.addEventListener("click",()=>{haptic("light"),sendOrDeepLink({action:"sync_unlocked"})});const o=document.getElementById("btn-grid-cols");o&&o.addEventListener("click",()=>{const a=getGridCols(),i=a===0?2:a===2?3:a===3?4:0;localStorage.setItem(GRID_COLS_KEY,i?String(i):"0"),applyGridCols(),haptic("light"),renderGrid()})}function applyGridCols(){const t=document.getElementById("movies-container");if(!t)return;const e=getGridCols();t.classList.toggle("grid-cols-2",e===2),t.classList.toggle("grid-cols-3",e===3),t.classList.toggle("grid-cols-4",e===4)}function initSearchHist(t){const e=document.getElementById("search-hist");if(!e)return;const n=(t||"").trim().toLowerCase(),s=getSearchHist().filter(o=>!n||o.toLowerCase().includes(n));if(!s.length){e.classList.add("hidden");return}e.innerHTML=s.map(o=>`<button class="sh-chip" data-q="${esc(o)}">${esc(o)} ✕</button>`).join(""),e.classList.remove("hidden"),e.querySelectorAll(".sh-chip").forEach(o=>{o.addEventListener("click",()=>{const a=o.dataset.q,i=document.getElementById("search");i&&(i.value=a);const r=getSearchHist().filter(c=>c.toLowerCase()!==a.toLowerCase());localStorage.setItem(SEARCH_HIST_KEY,JSON.stringify(r)),initSearchHist(""),renderGrid(),haptic("light")})})}const esc=t=>String(t!=null?t:"").replace(/[&<>"]/g,e=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[e]),NO_HAPTIC_KEY="kinoafisha_no_haptic";function hapticsEnabled(){try{return localStorage.getItem(NO_HAPTIC_KEY)!=="1"}catch(t){return!0}}function toggleHaptics(){const t=hapticsEnabled();return localStorage.setItem(NO_HAPTIC_KEY,t?"1":"0"),t}function haptic(t="light"){var e,n;if(hapticsEnabled())try{t==="ok"||t==="error"?(e=tg.HapticFeedback)==null||e.notificationOccurred(t):(n=tg.HapticFeedback)==null||n.impactOccurred(t)}catch(s){}}function sendOrDeepLink(t){let e="afisha";t.action==="open_movie"?e="movie_"+t.code:t.action==="remind_movie"?e="remind_"+t.code:t.action==="remind_premiere"?e="prem_"+t.iso+"_"+t.fid:t.action==="subscribe_code_day"?e="code_day_on":t.action==="save_favs"?e="save_favs":t.action==="access_check"?e="check_sub":t.action==="quiz_result"?e="quiz_"+t.correct+"_"+t.total:t.action==="rate_movie"?e="rate_"+t.code:t.action==="review_movie"?e="review_"+t.code:t.action==="trailer_movie"||t.action==="trailer"?e="trailer_"+t.code:t.action==="sync_unlocked"?e="sync_unlocked":t.action==="restore_backup"?e="restore_backup":t.action==="kinogod"?e="kinogod":t.action==="toggle_optin"?e=t.on?"optin_on":"optin_off":t.action==="set_theme"&&(e="theme_"+t.theme),haptic("light");try{tg.openTelegramLink("https://t.me/kapitan_kino_bot?start="+e)}catch(n){window.open("https://t.me/kapitan_kino_bot?start="+e,"_blank")}setTimeout(()=>{try{tg.close()}catch(n){}},300)}const ratingBadge=t=>{const e=parseFloat(t.rating);return e?e>=9?'<span class="badge-top">🔥 ⭐ '+e+"</span>":e>=8?'<span class="rating-chip good">⭐ '+e+"</span>":'<span class="rating-chip neutral">⭐ '+e+"</span>":'<span class="rating-chip neutral">⭐ —</span>'},isNew=t=>!!t.added_at&&Date.now()-new Date(t.added_at).getTime()<720*3600*1e3,dimStyle=t=>{const e=parseFloat(t&&t.pb);return!e||e>=70?"":` style="filter:brightness(${Math.min(1.5,1+(70-e)/70).toFixed(2)})"`},FADE=`class="ld" onload="this.classList.add('ld-on')"`;function posterHtml(t){const e=getFavs().includes(t.code);return`<div class="poster-wrap">
-    ${t.poster?`<img src="${esc(t.poster)}" alt="${esc(t.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(t)}
-           onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`:`<div class="poster-placeholder"><span>🎬</span><em>${esc(t.title)}</em></div>`}
-    <span class="code-badge">🔑 ${esc(String(t.code))}</span>
-    ${isNew(t)?'<span class="new-badge">🔥 Новинка</span>':""}
-    ${getNotes()[t.code]?'<span class="note-badge" title="Заметка">📝</span>':""}
-    ${e?'<span class="fav-badge">❤️</span>':""}
-  </div>`}function posterHtmlQuick(t){const e=getFavs().includes(t.code),n=getWatched().includes(String(t.code)),s=!!getNotes()[t.code];return`<div class="poster-wrap">
-    ${t.poster?`<img src="${esc(t.poster)}" alt="${esc(t.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(t)}
-           onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`:`<div class="poster-placeholder"><span>🎬</span><em>${esc(t.title)}</em></div>`}
-    <span class="code-badge">🔑 ${esc(String(t.code))}</span>
-    ${isNew(t)?'<span class="new-badge">🔥 Новинка</span>':""}
-    ${n?'<span class="watched-badge" title="Просмотрено">👁</span>':""}
-    ${s?'<span class="note-badge" title="Заметка">📝</span>':""}
-    <button class="fav-quick ${e?"active":""}" data-code="${esc(t.code)}" aria-label="Моё" title="В «Моё»">${e?"♥︎":"♡"}</button>
-    ${t.link?`<button class="watch-quick" data-code="${esc(t.code)}" aria-label="Смотреть" title="Смотреть фильм"></button>`:""}
-  </div>`}function listRowHtml(t,e){const n=getFavs().includes(t.code),s=getRatings()[String(t.code)]||0,o=[t.year,(t.genres||[]).slice(0,3).join(" · "),durOf(t)?`⏱ ${durOf(t)} мин`:""].filter(Boolean).join(" · "),a=t.poster?`<img src="${esc(t.poster)}" alt="" loading="lazy" decoding="async" ${FADE}${dimStyle(t)}
-         onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`:'<div class="poster-placeholder"><span>🎬</span></div>';return`<div class="movie-row" data-code="${esc(t.code)}">
+      ${facts.map(f => `<div class="ins-fact">${f}</div>`).join('')}
+    </div>`;
+}
+
+// ---------- v64: ежедневная серия («🔥 заходим каждый день») ----------
+const DAILY_KEY = 'kinoafisha_daily';
+const DAILY_MILESTONES = [3, 7, 14, 30, 60, 100];
+const _daysWord = (n) => (n % 10 === 1 && n % 100 !== 11) ? 'день'
+  : ([2, 3, 4].includes(n % 10) && (n % 100 < 10 || n % 100 >= 20)) ? 'дня' : 'дней';
+function dailyState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(DAILY_KEY) || 'null') || {};
+    return { last: s.last || '', series: s.series || 0, best: s.best || 0, done: s.done || [] };
+  } catch (e) { return { last: '', series: 0, best: 0, done: [] }; }
+}
+function bumpDaily() {
+  const s = dailyState();
+  const today = _wdayKey();
+  if (s.last === today) return s;                 // сегодня уже засчитали
+  const yest = new Date(); yest.setDate(yest.getDate() - 1);
+  s.series = (s.last === _wdayKey(yest)) ? s.series + 1 : 1;   // вчера был — серия живёт
+  s.best = Math.max(s.best || 0, s.series);
+  s.last = today;
+  const reached = DAILY_MILESTONES.find(x => s.series >= x && !s.done.includes(x));
+  if (reached) {
+    s.done.push(reached);
+    setTimeout(() => {
+      haptic('ok');
+      try {
+        tg.showPopup({ type: 'ok', title: `🔥 Серия ${reached} ${_daysWord(reached)}!`,
+          message: `Ты заходишь в «Киноафишу» ${reached} ${_daysWord(reached)} подряд — так держать! Заходи завтра, чтобы не потерять серию.` });
+      } catch (e) {}
+    }, 900);
+  }
+  localStorage.setItem(DAILY_KEY, JSON.stringify(s));
+  return s;
+}
+function renderStreakStrip() {
+  const el = document.getElementById('streak-strip');
+  if (!el) return;
+  const s = dailyState();
+  if (!s.series) { el.classList.add('hidden'); return; }
+  const next = DAILY_MILESTONES.find(x => x > s.series);
+  el.classList.remove('hidden');
+  el.innerHTML = `<span class="streak-flame">🔥</span>` +
+    `<span class="streak-num">${s.series}</span>` +
+    `<span class="streak-label">${_daysWord(s.series)} подряд</span>` +
+    (next ? `<span class="streak-next">до ${next} 🔥 — ещё ${next - s.series}</span>` : `<span class="streak-next">легенда афиши 🏆</span>`) +
+    `<span class="streak-best" title="Твой рекорд">🏅 ${s.best}</span>`;
+}
+
+// ---------- разгаданные коды (для «🙈 Скрыть разгаданные») ----------
+// Синхронизируются с ботом кнопкой 🔁: бот присылает сообщение с web_app
+// кнопкой, у которой в URL хэш `#unlocked=код,код,…`. Здесь мы читаем этот
+// хэш, сохраняем в localStorage и по чекбоксу прячем разгаданные карточки.
+const UNLOCKED_KEY = 'kinoafisha_unlocked';
+const HIDE_KEY = 'kinoafisha_hide_unlocked';
+const getUnlocked = () => JSON.parse(localStorage.getItem(UNLOCKED_KEY) || '[]');
+
+// ---------- профиль игрока (уровень/баллы/стрик) ----------
+// Приезжает тем же хэшем от кнопки 🔁: `&profile=<urlencoded json>` — снимок
+// из бота (storage.build_tma_profile): уровень, прогресс, баллы, стрик,
+// разгадано кодов, место в топе. Храним в localStorage, показываем на вкладке
+// «👤 Профиль».
+const PROFILE_KEY = 'kinoafisha_profile';
+let PROFILE = null;
+
+function parseProfileHash() {
+  // ВАЖНО: вызывается ДО parseUnlockedHash() — тот очищает location.hash.
+  try {
+    const params = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const raw = params.get('profile');
+    if (raw) {
+      PROFILE = JSON.parse(raw);
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(PROFILE));
+    }
+  } catch (e) { /* битый json — оставляем старый профиль */ }
+  if (!PROFILE) {
+    try { PROFILE = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null'); }
+    catch (e) { PROFILE = null; }
+  }
+  if (PROFILE && view === 'profile') renderProfile();
+  updateHeaderProgress();
+}
+
+function parseUnlockedHash() {
+  try {
+    const params = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const raw = params.get('unlocked');
+    if (!raw) return;
+    const codes = raw.split(',').map(s => s.trim()).filter(Boolean);
+    if (codes.length) {
+      localStorage.setItem(UNLOCKED_KEY, JSON.stringify([...new Set(codes)]));
+      // v102: «⚡ Спидраннер» — разгадал 5+ кодов за один день (счётчик локальный)
+      const SPEED_KEY = 'kinoafisha_speedrun';
+      const today = new Date().toISOString().slice(0, 10);
+      let sp = {};
+      try { sp = JSON.parse(localStorage.getItem(SPEED_KEY) || '{}'); } catch (e) { sp = {}; }
+      sp = sp.d === today ? sp : { d: today, n: 0 };
+      sp.n = sp.n + 1;
+      try { localStorage.setItem(SPEED_KEY, JSON.stringify(sp)); } catch (e) {}
+      if (sp.n >= 5) {
+        try {
+          tg.showPopup({ type: 'ok', title: '⚡ Спидраннер!', message: '5+ кодов за день — ты разгадываешь их как профессионал! 🔥' });
+        } catch (e) { /* пусто */ }
+        try { localStorage.setItem(SPEED_KEY, JSON.stringify({ d: today, n: 999 })); } catch (e) {}
+      }
+      // очищаем хэш, чтобы повторные открытия не переписывали старым списком
+      history.replaceState(null, '', location.pathname);
+    }
+  } catch (e) { /* пусто */ }
+}
+
+function initHideToggle() {
+  const box = document.getElementById('hide-unlocked');
+  if (!box) return;
+  const wrap = document.getElementById('hide-toggle-wrap');
+  const syncCls = () => { if (wrap) wrap.classList.toggle('on', box.checked); };
+  box.checked = localStorage.getItem(HIDE_KEY) === '1';
+  syncCls();
+  box.addEventListener('change', () => {
+    localStorage.setItem(HIDE_KEY, box.checked ? '1' : '');
+    syncCls();
+    haptic('light');
+    renderGrid();
+  });
+  const btn = document.getElementById('btn-sync');
+  if (btn) btn.addEventListener('click', () => {
+    haptic('light');
+    sendOrDeepLink({ action: 'sync_unlocked' });
+  });
+  // Компактность сетки: цикл 0 (авто) → 2 → 3 → 4 колонки
+  const gridBtn = document.getElementById('btn-grid-cols');
+  if (gridBtn) gridBtn.addEventListener('click', () => {
+    const cur = getGridCols();
+    const next = cur === 0 ? 2 : cur === 2 ? 3 : cur === 3 ? 4 : 0;
+    localStorage.setItem(GRID_COLS_KEY, next ? String(next) : '0');
+    applyGridCols();
+    haptic('light');
+    renderGrid();
+  });
+}
+
+// Применяет класс колонок к контейнеру афиши
+function applyGridCols() {
+  const mc = document.getElementById('movies-container');
+  if (!mc) return;
+  const cur = getGridCols();
+  mc.classList.toggle('grid-cols-2', cur === 2);
+  mc.classList.toggle('grid-cols-3', cur === 3);
+  mc.classList.toggle('grid-cols-4', cur === 4);
+}
+
+// ---------- история поиска: чипы под поиском (с автодополнением по вводу) ----------
+function initSearchHist(prefix) {
+  const chips = document.getElementById('search-hist');
+  if (!chips) return;
+  const p = (prefix || '').trim().toLowerCase();
+  const hist = getSearchHist().filter(q => !p || q.toLowerCase().includes(p));
+  if (!hist.length) { chips.classList.add('hidden'); return; }
+  chips.innerHTML = hist.map(q => `<button class="sh-chip" data-q="${esc(q)}">${esc(q)} ✕</button>`).join('');
+  chips.classList.remove('hidden');
+  chips.querySelectorAll('.sh-chip').forEach(b => {
+    b.addEventListener('click', () => {
+      const q = b.dataset.q;
+      const inp = document.getElementById('search');
+      if (inp) inp.value = q;
+      const hist2 = getSearchHist().filter(x => x.toLowerCase() !== q.toLowerCase());
+      localStorage.setItem(SEARCH_HIST_KEY, JSON.stringify(hist2));
+      initSearchHist('');
+      renderGrid();
+      haptic('light');
+    });
+  });
+}
+
+// ---------- утилиты ----------
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// Haptic-отклик: вибрация на действиях (нет поддержки — тихо пропускаем).
+// v109: «🔇 Без вибраций» — глобальный тумблер, хранится в localStorage.
+const NO_HAPTIC_KEY = 'kinoafisha_no_haptic';
+function hapticsEnabled() {
+  try { return localStorage.getItem(NO_HAPTIC_KEY) !== '1'; } catch (e) { return true; }
+}
+function toggleHaptics() {
+  const willBeOff = hapticsEnabled();   // сейчас включены → выключаем
+  localStorage.setItem(NO_HAPTIC_KEY, willBeOff ? '1' : '0');
+  return willBeOff;   // true = вибрации теперь выключены
+}
+function haptic(kind = 'light') {
+  if (!hapticsEnabled()) return;
+  try {
+    if (kind === 'ok' || kind === 'error') tg.HapticFeedback?.notificationOccurred(kind);
+    else tg.HapticFeedback?.impactOccurred(kind);
+  } catch (e) { /* пусто */ }
+}
+
+// ---------- отправка действий боту ----------
+// ВАЖНО: tg.sendData() работает ТОЛЬКО когда мини-апп запущен через
+// reply-кнопку клавиатуры. При запуске через menu button, inline кнопку
+// или диплинк он МОЛЧА ничего не делает (даже не бросает исключений) —
+// из-за этого кнопки «не работают». Поэтому все действия уводим через
+// ДИПЛИНК: tg.openTelegramLink открывает чат с ботом и отправляет
+// /start с параметром — это работает при любом способе запуска.
+function sendOrDeepLink(data) {
+  let start = 'afisha';
+  if (data.action === 'open_movie') start = 'movie_' + data.code;
+  else if (data.action === 'remind_movie') start = 'remind_' + data.code;
+  else if (data.action === 'remind_premiere') start = 'prem_' + data.iso + '_' + data.fid;  // v120
+  else if (data.action === 'subscribe_code_day') start = 'code_day_on';
+  else if (data.action === 'save_favs') start = 'save_favs';
+  else if (data.action === 'access_check') start = 'check_sub';
+  else if (data.action === 'quiz_result') start = 'quiz_' + data.correct + '_' + data.total;
+  else if (data.action === 'rate_movie') start = 'rate_' + data.code;
+  else if (data.action === 'review_movie') start = 'review_' + data.code;
+  else if (data.action === 'trailer_movie' || data.action === 'trailer') start = 'trailer_' + data.code;
+  else if (data.action === 'sync_unlocked') start = 'sync_unlocked';
+  else if (data.action === 'restore_backup') start = 'restore_backup';
+  else if (data.action === 'kinogod') start = 'kinogod';
+  else if (data.action === 'toggle_optin') start = data.on ? 'optin_on' : 'optin_off';
+  else if (data.action === 'set_theme') start = 'theme_' + data.theme;
+  haptic('light');
+  try {
+    tg.openTelegramLink('https://t.me/kapitan_kino_bot?start=' + start);
+  } catch (e) {
+    // даже openTelegramLink недоступен (открыто вне Telegram) — обычная ссылка
+    window.open('https://t.me/kapitan_kino_bot?start=' + start, '_blank');
+  }
+  // Сворачиваем мини-апп: пользователь сразу видит чат с ботом, куда придёт
+  // трейлер/сообщение (иначе webview висит поверх и ответ бота не виден).
+  // Небольшая задержка — дать openTelegramLink успеть начать переход.
+  setTimeout(() => { try { tg.close(); } catch (e) { /* пусто */ } }, 300);
+}
+
+const ratingBadge = (m) => {
+  const r = parseFloat(m.rating);
+  if (!r) return '<span class="rating-chip neutral">⭐ —</span>';
+  if (r >= 9) return '<span class="badge-top">🔥 ⭐ ' + r + '</span>';
+  if (r >= 8) return '<span class="rating-chip good">⭐ ' + r + '</span>';
+  return '<span class="rating-chip neutral">⭐ ' + r + '</span>';
+};
+
+// «Новинка» — фильм добавлен в базу в последние 30 дней
+const isNew = (m) =>
+  !!m.added_at && (Date.now() - new Date(m.added_at).getTime()) < 30 * 24 * 3600 * 1000;
+
+// Очень тёмные постеры («Гран Торино», «Последний самурай»…) в маленьких
+// карточках выглядят чёрным пятном. Слегка подсвечиваем их через CSS-фильтр:
+// pb — средняя яркость постера 0..255 (считает _fix_thumbs2.py в movies.json).
+const dimStyle = (m) => {
+  const pb = parseFloat(m && m.pb);
+  if (!pb || pb >= 70) return '';
+  return ` style="filter:brightness(${Math.min(1.5, 1 + (70 - pb) / 70).toFixed(2)})"`;
+};
+
+// Картинка появляется мягко (fade-in) — пока грузится, видна shimmer-заглушка,
+// а не «чёрный квадрат».
+const FADE = `class="ld" onload="this.classList.add('ld-on')"`;
+
+
+function posterHtml(m) {
+  const fav = getFavs().includes(m.code);
+  return `<div class="poster-wrap">
+    ${m.poster
+      ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(m)}
+           onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+      : `<div class="poster-placeholder"><span>🎬</span><em>${esc(m.title)}</em></div>`}
+    <span class="code-badge">🔑 ${esc(String(m.code))}</span>
+    ${isNew(m) ? '<span class="new-badge">🔥 Новинка</span>' : ''}
+    ${getNotes()[m.code] ? '<span class="note-badge" title="Заметка">📝</span>' : ''}
+    ${fav ? '<span class="fav-badge">❤️</span>' : ''}
+  </div>`;
+}
+
+// Быстрая кнопка «❤️/🤍» на карточке фильма (в сетке и полках) — без открытия
+function posterHtmlQuick(m) {
+  const fav = getFavs().includes(m.code);
+  const watched = getWatched().includes(String(m.code));
+  const hasNote = !!getNotes()[m.code];
+  return `<div class="poster-wrap">
+    ${m.poster
+      ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(m)}
+           onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+      : `<div class="poster-placeholder"><span>🎬</span><em>${esc(m.title)}</em></div>`}
+    <span class="code-badge">🔑 ${esc(String(m.code))}</span>
+    ${isNew(m) ? '<span class="new-badge">🔥 Новинка</span>' : ''}
+    ${watched ? '<span class="watched-badge" title="Просмотрено">👁</span>' : ''}
+    ${hasNote ? '<span class="note-badge" title="Заметка">📝</span>' : ''}
+    <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '♥\uFE0E' : '♡'}</button>
+    ${m.link ? `<button class="watch-quick" data-code="${esc(m.code)}" aria-label="Смотреть" title="Смотреть фильм"></button>` : ''}
+  </div>`;
+}
+// v94: строка компактного списка — альтернатива карточке-постеру (афиша → «☰ Список»)
+function listRowHtml(m, q) {
+  const fav = getFavs().includes(m.code);
+  const myR = getRatings()[String(m.code)] || 0;
+  const meta = [m.year, (m.genres || []).slice(0, 3).join(' · '),
+    durOf(m) ? `⏱ ${durOf(m)} мин` : ''].filter(Boolean).join(' · ');
+  const poster = m.poster
+    ? `<img src="${esc(m.poster)}" alt="" loading="lazy" decoding="async" ${FADE}${dimStyle(m)}
+         onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+    : `<div class="poster-placeholder"><span>🎬</span></div>`;
+  return `<div class="movie-row" data-code="${esc(m.code)}">
     <div class="row-poster">
-      ${a}
-      <span class="code-badge">🔑 ${esc(String(t.code))}</span>
+      ${poster}
+      <span class="code-badge">🔑 ${esc(String(m.code))}</span>
     </div>
     <div class="row-info">
-      <h3>${hlTitle(t.title,e)}</h3>
-      ${o?`<div class="row-meta">${esc(o)}</div>`:""}
-      <span class="rating">${ratingBadge(t)}${s?`<span class="my-stars">${"★".repeat(s)}</span>`:""}</span>
+      <h3>${hlTitle(m.title, q)}</h3>
+      ${meta ? `<div class="row-meta">${esc(meta)}</div>` : ''}
+      <span class="rating">${ratingBadge(m)}${myR ? `<span class="my-stars">${'★'.repeat(myR)}</span>` : ''}</span>
     </div>
     <div class="row-actions">
-      <button class="fav-quick${n?" active":""}" data-code="${esc(t.code)}" aria-label="Моё" title="В «Моё»">${n?"♥︎":"♡"}</button>
-      ${t.link?`<button class="watch-quick" data-code="${esc(t.code)}" aria-label="Смотреть" title="Смотреть фильм"></button>`:""}
+      <button class="fav-quick${fav ? ' active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '♥\uFE0E' : '♡'}</button>
+      ${m.link ? `<button class="watch-quick" data-code="${esc(m.code)}" aria-label="Смотреть" title="Смотреть фильм"></button>` : ''}
       <span class="row-chev">›</span>
     </div>
-  </div>`}function wireFavQuick(t){t&&(t.querySelectorAll(".fav-quick").forEach(e=>{e.addEventListener("click",n=>{n.stopPropagation(),toggleFav(e.dataset.code);const s=getFavs().includes(e.dataset.code);e.textContent=s?"♥︎":"♡",e.classList.toggle("active",s),e.classList.remove("pop"),e.offsetWidth,e.classList.add("pop"),view==="fav"&&localStorage.getItem(FAV_MODE_KEY)!=="done"&&(renderGrid(),haptic("ok"))})}),t.querySelectorAll(".watch-quick").forEach(e=>{e.addEventListener("click",n=>{n.stopPropagation();const s=ALL.find(o=>String(o.code)===String(e.dataset.code));s&&(haptic("light"),openWatchLink(s))})}))}const _unlockedSet=()=>new Set(getUnlocked());function renderCodeWallet(){const t=document.getElementById("code-wallet");if(!t)return;const e=_unlockedSet(),n=ALL.length,s=ALL.filter(i=>e.has(String(i.code))).length,o=n-s;if(!s){t.classList.add("hidden");return}t.classList.remove("hidden"),t.innerHTML=`<div class="cw-row">
+  </div>`;
+}
+function wireFavQuick(container) {
+  if (!container) return;
+  container.querySelectorAll('.fav-quick').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFav(btn.dataset.code);
+      const fav = getFavs().includes(btn.dataset.code);
+      btn.textContent = fav ? '♥\uFE0E' : '♡';
+      btn.classList.toggle('active', fav);
+      // v59: «взрыв сердечка» — короткая анимация нажатия
+      btn.classList.remove('pop');
+      void btn.offsetWidth;
+      btn.classList.add('pop');
+      // В «Моё» (режим «хочу посмотреть») карточка должна пропасть из списка
+      if (view === 'fav' && localStorage.getItem(FAV_MODE_KEY) !== 'done') {
+        renderGrid();
+        haptic('ok');
+      }
+    });
+  });
+  // v67: быстрая кнопка «▶️ Смотреть» на постере — прямая ссылка на фильм
+  container.querySelectorAll('.watch-quick').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const m = ALL.find(x => String(x.code) === String(btn.dataset.code));
+      if (!m) return;
+      haptic('light');
+      openWatchLink(m);
+    });
+  });
+}
+
+// ---------- v88: «Коллекция кодов» — охота за неразгаданными ----------
+// Показываем прогресс разгаданных кодов (данные приходят от бота кнопкой 🔁).
+// Скрыт, пока не разгадан ни один код.
+const _unlockedSet = () => new Set(getUnlocked());
+function renderCodeWallet() {
+  const c = document.getElementById('code-wallet');
+  if (!c) return;
+  const unlocked = _unlockedSet();
+  const total = ALL.length;
+  const done = ALL.filter(m => unlocked.has(String(m.code))).length;
+  const left = total - done;
+  if (!done) { c.classList.add('hidden'); return; }
+  c.classList.remove('hidden');
+  c.innerHTML = `<div class="cw-row">
       <span class="cw-icon">🗝</span>
-      <div class="cw-info"><b>${s}</b> из ${n} · ${o?"осталось "+o:"все собраны! 🎉"}</div>
-      ${o?'<button class="cw-btn" id="cw-hunt">🎯 Охота</button>':'<button class="cw-btn" id="cw-hunt">🏆 Всё собрано</button>'}
-    </div>`;const a=document.getElementById("cw-hunt");a&&(a.onclick=()=>{const i=document.getElementById("hide-unlocked");i&&(i.checked=!0,localStorage.setItem(HIDE_KEY,"1"),initHideToggle()),haptic("light"),openView("grid")})}const MOODS=[{k:"party",e:"🎉",t:"Праздник",g:["комедия","мультфильм","семейный","музыка"]},{k:"drive",e:"⚡",t:"Драйв",g:["боевик","триллер","фантастика","приключения"]},{k:"sleep",e:"😴",t:"Перед сном",g:["драма","мелодрама","детектив","исторический"]},{k:"light",e:"🍿",t:"Лёгкое",g:["комедия","мелодрама","мультфильм"]},{k:"scary",e:"👻",t:"Щекотка нервов",g:["ужасы","триллер","детектив"]},{k:"epic",e:"⚔️",t:"Эпик на вечер",g:["фантастика","приключения","боевик","драма"]}];function moodPrefScore(t){let e=0;const n=myRating(t.code);return n>=4?e+=3:n>=2&&(e+=1),getFavs().includes(t.code)&&(e+=2),(getWatched().includes(String(t.code))||_unlockedSet().has(String(t.code)))&&(e+=1),e}function whyLine(t){const e=myRating(t.code);if(e>=4)return"⭐ ты оценил похожее (рейтинг "+e+")";if(getFavs().includes(t.code))return"❤️ уже в твоём «Моём»";if(getWatched().includes(String(t.code)))return"👁 ты уже смотрел";const n=(t.genres||[])[0];return n?"совпадает с твоим вкусом ("+n+")":"высокий рейтинг"}function renderEvening(){const t=document.getElementById("evening-panel");t&&(t.classList.remove("hidden"),t.innerHTML=`<div class="evening-head">🌙 <b>Что посмотреть?</b> <span class="evening-sub">по настроению</span></div>
-    <div class="evening-chips">${MOODS.map(e=>`<button class="evening-chip" data-mood="${e.k}">${e.e} ${e.t}</button>`).join("")}</div>`,t.querySelectorAll(".evening-chip").forEach(e=>e.addEventListener("click",()=>openMood(e.dataset.mood))))}function openMood(t){const e=MOODS.find(c=>c.k===t);if(!e)return;const s=ALL.filter(c=>c.genres&&c.genres.some(l=>e.g.includes(String(l).toLowerCase()))).map(c=>({m:c,sc:moodPrefScore(c)+(parseFloat(c.rating)||0)*.3})).sort((c,l)=>l.sc-c.sc).slice(0,4),o=document.getElementById("mood-list"),a=document.getElementById("mood-title"),i=document.getElementById("mood-modal");if(!o||!a||!i)return;a.textContent=e.e+" "+e.t,o.innerHTML=s.length?s.map(({m:c})=>`
-      <div class="ew-item" data-code="${esc(c.code)}">
-        <div class="ew-poster">${c.poster?`<img src="${esc(c.poster)}" alt="" loading="lazy" ${dimStyle(c)} onerror="this.style.display='none'"/>`:'<span class="ew-ph">🎬</span>'}</div>
+      <div class="cw-info"><b>${done}</b> из ${total} · ${left ? 'осталось ' + left : 'все собраны! 🎉'}</div>
+      ${left ? '<button class="cw-btn" id="cw-hunt">🎯 Охота</button>'
+             : '<button class="cw-btn" id="cw-hunt">🏆 Всё собрано</button>'}
+    </div>`;
+  const btn = document.getElementById('cw-hunt');
+  if (btn) btn.onclick = () => {
+    // «Охота» = показать только неразгаданные: включаем «🙈 Разгаданные»
+    const box = document.getElementById('hide-unlocked');
+    if (box) { box.checked = true; localStorage.setItem(HIDE_KEY, '1'); initHideToggle(); }
+    haptic('light');
+    openView('grid');
+  };
+}
+
+// ---------- v88: «Что посмотреть?» — подбор по настроению ----------
+// 6 настроений → 4 фильма под вкус пользователя (оценки/«Моё»/просмотренные)
+// с коротким «почему». Работает полностью на локальных данных.
+const MOODS = [
+  { k: 'party',  e: '🎉', t: 'Праздник',        g: ['комедия', 'мультфильм', 'семейный', 'музыка'] },
+  { k: 'drive',  e: '⚡', t: 'Драйв',           g: ['боевик', 'триллер', 'фантастика', 'приключения'] },
+  { k: 'sleep',  e: '😴', t: 'Перед сном',      g: ['драма', 'мелодрама', 'детектив', 'исторический'] },
+  { k: 'light',  e: '🍿', t: 'Лёгкое',          g: ['комедия', 'мелодрама', 'мультфильм'] },
+  { k: 'scary',  e: '👻', t: 'Щекотка нервов',  g: ['ужасы', 'триллер', 'детектив'] },
+  { k: 'epic',   e: '⚔️', t: 'Эпик на вечер',   g: ['фантастика', 'приключения', 'боевик', 'драма'] },
+];
+function moodPrefScore(m) {
+  let s = 0;
+  const r = myRating(m.code);
+  if (r >= 4) s += 3; else if (r >= 2) s += 1;
+  if (getFavs().includes(m.code)) s += 2;
+  if (getWatched().includes(String(m.code)) || _unlockedSet().has(String(m.code))) s += 1;
+  return s;
+}
+function whyLine(m) {
+  const r = myRating(m.code);
+  if (r >= 4) return '⭐ ты оценил похожее (рейтинг ' + r + ')';
+  if (getFavs().includes(m.code)) return '❤️ уже в твоём «Моём»';
+  if (getWatched().includes(String(m.code))) return '👁 ты уже смотрел';
+  const g = (m.genres || [])[0];
+  return g ? 'совпадает с твоим вкусом (' + g + ')' : 'высокий рейтинг';
+}
+function renderEvening() {
+  const c = document.getElementById('evening-panel');
+  if (!c) return;
+  c.classList.remove('hidden');
+  c.innerHTML = `<div class="evening-head">🌙 <b>Что посмотреть?</b> <span class="evening-sub">по настроению</span></div>
+    <div class="evening-chips">${MOODS.map(mo => `<button class="evening-chip" data-mood="${mo.k}">${mo.e} ${mo.t}</button>`).join('')}</div>`;
+  c.querySelectorAll('.evening-chip').forEach(b =>
+    b.addEventListener('click', () => openMood(b.dataset.mood)));
+}
+function openMood(k) {
+  const mo = MOODS.find(x => x.k === k);
+  if (!mo) return;
+  const pool = ALL.filter(m => m.genres && m.genres.some(g => mo.g.includes(String(g).toLowerCase())));
+  const ranked = pool
+    .map(m => ({ m, sc: moodPrefScore(m) + (parseFloat(m.rating) || 0) * 0.3 }))
+    .sort((a, b) => b.sc - a.sc)
+    .slice(0, 4);
+  const list = document.getElementById('mood-list');
+  const title = document.getElementById('mood-title');
+  const modal = document.getElementById('mood-modal');
+  if (!list || !title || !modal) return;
+  title.textContent = mo.e + ' ' + mo.t;
+  list.innerHTML = ranked.length
+    ? ranked.map(({ m }) => `
+      <div class="ew-item" data-code="${esc(m.code)}">
+        <div class="ew-poster">${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" ${dimStyle(m)} onerror="this.style.display='none'"/>` : `<span class="ew-ph">🎬</span>`}</div>
         <div class="ew-body">
-          <div class="ew-name">${esc(c.title)}</div>
-          <div class="ew-meta">${ratingBadge(c)}${c.duration?" · ⏱ "+esc(fmtDuration(c.duration)):""}</div>
-          <div class="ew-why">${whyLine(c)}</div>
+          <div class="ew-name">${esc(m.title)}</div>
+          <div class="ew-meta">${ratingBadge(m)}${m.duration ? ' · ⏱ ' + esc(fmtDuration(m.duration)) : ''}</div>
+          <div class="ew-why">${whyLine(m)}</div>
         </div>
-      </div>`).join(""):'<div class="ew-empty">Пока нет фильмов под это настроение — скоро добавим!</div>',i.classList.remove("hidden"),i.querySelectorAll(".ew-item").forEach(c=>c.addEventListener("click",()=>{i.classList.add("hidden"),openDetail(c.dataset.code)}));const r=i.querySelector(".modal-close");r&&(r.onclick=()=>i.classList.add("hidden"))}const DATA_CACHE_KEY="kinoafisha_data_cache";function getSyncedAt(){try{const t=JSON.parse(localStorage.getItem(DATA_CACHE_KEY)||"null");return t&&t.synced_at||0}catch(t){return 0}}function freshLineHtml(){const t=getSyncedAt();if(!t)return"";const e=Math.round((Date.now()-t)/6e4);let n;e<=2?n="только что":e<60?n=e+" мин назад":e<1440?n=Math.floor(e/60)+" ч назад":e<2880?n="вчера":n=Math.floor(e/1440)+" дн. назад";const s=navigator.onLine===!1?" · 📴 офлайн":"";return`<div class="fresh-line">🔄 Афиша обновлена: ${esc(n)}${s}</div>`}function applyData(t){const e=s=>Array.isArray(s)?s:typeof s=="string"&&s.trim()?s.split(/\s*[,;]\s*/).filter(Boolean):[];ALL=(t.all||[]).map(s=>(s.actors=e(s.actors),s.genres=e(s.genres),s.countries=e(s.countries),s.director&&typeof s.director!="string"&&(s.director=String(s.director)),s)),COLLS=t.cols||[];const n=t.meta||{};EMOJI_RIDDLES=Array.isArray(n.emoji_riddles)?n.emoji_riddles:[],NEWS=Array.isArray(n.recent_news)?n.recent_news:[],PREMIERES=Array.isArray(n.premieres)?n.premieres:[],LEADERBOARD=Array.isArray(n.leaderboard)?n.leaderboard:[],LEADERBOARD_KIND=n.leaderboard_kind==="total"?"total":"week",updateSubtitle(),renderGenreChips(),renderCountryChips(),showCodeDay(n),renderFilmDay(),renderEvening(),renderCodeWallet(),renderHero(),renderNewCodes(),renderTodayShelf(n),renderRecentShelf(),renderTrailerShelf(),renderRecoShelf(),renderPremieres(n),addMarathonButtons(),renderGrid(),updateChallPane(),updateHeaderProgress(),renderStreakStrip(),parseRiddleHash(),parseMovieHash()}async function loadMovies(){try{const t=JSON.parse(localStorage.getItem(DATA_CACHE_KEY)||"null");t&&Array.isArray(t.all)&&t.all.length&&applyData(t)}catch(t){}try{const[t,e,n]=await Promise.all([fetch("./data/movies.json",{cache:"no-cache"}),fetch("./data/collections.json",{cache:"no-cache"}).catch(()=>null),fetch("./data/meta.json",{cache:"no-cache"}).catch(()=>null)]),s={all:await t.json(),cols:e?await e.json():[],meta:n?await n.json():{}};try{localStorage.setItem(DATA_CACHE_KEY,JSON.stringify({...s,synced_at:Date.now()}))}catch(a){}applyData(s),updateMoreBadge();let o=null;try{o=localStorage.getItem(LAST_VIEW_KEY)}catch(a){}o&&o!=="grid"&&openView(o)}catch(t){if(ALL.length)return;document.getElementById("movies-container").innerHTML='<div class="error-box"><p class="error">Не удалось загрузить афишу 😔</p><button class="btn-secondary" id="btn-retry">🔁 Повторить</button></div>';const e=document.getElementById("btn-retry");e&&(e.onclick=()=>{e.disabled=!0,e.textContent="⏳ Загружаю…",loadMovies()})}}function updateHeaderProgress(){const t=document.getElementById("header-progress");if(!t)return;if(!PROFILE||!PROFILE.lvl){t.classList.add("hidden");return}const e=parseInt(PROFILE.str,10)||0,n=Math.max(0,Math.min(100,parseInt(PROFILE.pct,10)||0)),s=parseInt(PROFILE.lvl_next,10)||0;t.classList.remove("hidden"),t.innerHTML=`<span class="hp-streak">🔥 ${e}</span><span class="hp-level">${esc(PROFILE.lvl)}${s?` · −${s} 🔑`:""}</span><span class="hp-bar"><i style="width:${n}%"></i></span>`}function renderSkeletons(){const t=document.getElementById("movies-container");t.innerHTML=Array.from({length:8},()=>'<div class="movie-card skeleton-card"><div class="skel poster"></div><div class="skel line"></div><div class="skel line short"></div></div>').join("")}renderSkeletons();function _levDist(t,e){if(t=String(t),e=String(e),t===e)return 0;if(!t.length)return e.length;if(!e.length)return t.length;const n=new Array(e.length+1),s=new Array(e.length+1);for(let o=0;o<=e.length;o++)n[o]=o;for(let o=1;o<=t.length;o++){s[0]=o;for(let a=1;a<=e.length;a++){const i=t[o-1]===e[a-1]?0:1;s[a]=Math.min(n[a]+1,s[a-1]+1,n[a-1]+i)}for(let a=0;a<=e.length;a++)n[a]=s[a]}return n[e.length]}const CHALL_COLLAPSE_KEY="kinoafisha_chall_collapsed";function updateChallPane(){const t=document.getElementById("chall-pane");if(!t)return;const e=getChallenges(),n=document.getElementById("chall-list"),s=document.getElementById("chall-count"),o=localStorage.getItem(CHALL_COLLAPSE_KEY)==="1",a=CHALLENGE_LIST.map(l=>{const g=e.done.includes(l.id)||l.check();return`<div class="chall-item ${g?"done":""}">
-      <span class="chall-emoji">${l.emoji}</span>
+      </div>`).join('')
+    : '<div class="ew-empty">Пока нет фильмов под это настроение — скоро добавим!</div>';
+  modal.classList.remove('hidden');
+  modal.querySelectorAll('.ew-item').forEach(it =>
+    it.addEventListener('click', () => { modal.classList.add('hidden'); openDetail(it.dataset.code); }));
+  const closeBtn = modal.querySelector('.modal-close');
+  if (closeBtn) closeBtn.onclick = () => modal.classList.add('hidden');
+}
+
+// ---------- загрузка ----------
+const DATA_CACHE_KEY = 'kinoafisha_data_cache';
+
+// ---------- v118: свежесть афиши — когда последний раз тянули данные с сервера ----------
+function getSyncedAt() {
+  try {
+    const c = JSON.parse(localStorage.getItem(DATA_CACHE_KEY) || 'null');
+    return (c && c.synced_at) || 0;
+  } catch (e) { return 0; }
+}
+function freshLineHtml() {
+  const ts = getSyncedAt();
+  if (!ts) return '';
+  const mins = Math.round((Date.now() - ts) / 60000);
+  let txt;
+  if (mins <= 2) txt = 'только что';
+  else if (mins < 60) txt = mins + ' мин назад';
+  else if (mins < 60 * 24) txt = Math.floor(mins / 60) + ' ч назад';
+  else if (mins < 60 * 48) txt = 'вчера';
+  else txt = Math.floor(mins / 1440) + ' дн. назад';
+  const off = (navigator.onLine === false) ? ' · 📴 офлайн' : '';
+  return `<div class="fresh-line">🔄 Афиша обновлена: ${esc(txt)}${off}</div>`;
+}
+
+// Применяем порцию данных (из кэша или сети) ко всему интерфейсу
+function applyData(data) {
+  // v69: нормализация полей — старый кэш/синк мог отдать actors/genres/countries строкой
+  const toArr = (v) => Array.isArray(v) ? v
+    : (typeof v === 'string' && v.trim() ? v.split(/\s*[,;]\s*/).filter(Boolean) : []);
+  ALL = (data.all || []).map(m => {
+    m.actors = toArr(m.actors);
+    m.genres = toArr(m.genres);
+    m.countries = toArr(m.countries);
+    if (m.director && typeof m.director !== 'string') m.director = String(m.director);
+    return m;
+  });
+  COLLS = data.cols || [];
+  const meta = data.meta || {};
+  EMOJI_RIDDLES = Array.isArray(meta.emoji_riddles) ? meta.emoji_riddles : [];
+  NEWS = Array.isArray(meta.recent_news) ? meta.recent_news : [];
+  PREMIERES = Array.isArray(meta.premieres) ? meta.premieres : [];  // v119
+  LEADERBOARD = Array.isArray(meta.leaderboard) ? meta.leaderboard : [];
+  LEADERBOARD_KIND = meta.leaderboard_kind === 'total' ? 'total' : 'week';
+  updateSubtitle();
+  renderGenreChips();
+  renderCountryChips();  // v89: фильтр по стране (флаги)
+  showCodeDay(meta);
+  renderFilmDay();
+  renderEvening();      // v88: «Что посмотреть?» по настроению
+  renderCodeWallet();   // v88: коллекция разгаданных кодов
+  renderHero();
+  renderNewCodes();      // v102: «🆕 Новые коды»
+  renderTodayShelf(meta);
+  renderRecentShelf();
+  renderTrailerShelf();   // v74: «Продолжить смотреть»
+  renderRecoShelf();
+  renderPremieres(meta);
+  addMarathonButtons();   // v74: кнопки «🎬 Марафон» на полках
+  renderGrid();
+  updateChallPane();
+  updateHeaderProgress();
+  renderStreakStrip();
+  parseRiddleHash();
+  parseMovieHash();
+}
+
+async function loadMovies() {
+  // Мгновенный старт: сразу рисуем закэшированные данные, свежак тянем фоном
+  try {
+    const cached = JSON.parse(localStorage.getItem(DATA_CACHE_KEY) || 'null');
+    if (cached && Array.isArray(cached.all) && cached.all.length) applyData(cached);
+  } catch (e) {}
+  try {
+    const [r, rc, rm] = await Promise.all([
+      fetch('./data/movies.json', { cache: 'no-cache' }),
+      fetch('./data/collections.json', { cache: 'no-cache' }).catch(() => null),
+      fetch('./data/meta.json', { cache: 'no-cache' }).catch(() => null)
+    ]);
+    const data = {
+      all: await r.json(),
+      cols: rc ? await rc.json() : [],
+      meta: rm ? await rm.json() : {},
+    };
+    try { localStorage.setItem(DATA_CACHE_KEY, JSON.stringify({ ...data, synced_at: Date.now() })); } catch (e) {}
+    applyData(data);
+    // Бейдж новых достижений на кнопке «Ещё» + восстановление последнего
+    // открытого раздела (пусто/«grid» — обычная афиша).
+    updateMoreBadge();
+    let saved = null;
+    try { saved = localStorage.getItem(LAST_VIEW_KEY); } catch (e) {}
+    if (saved && saved !== 'grid') openView(saved);
+  } catch (e) {
+    if (ALL.length) return; // уже показан кэш — не пугаем ошибкой
+    document.getElementById('movies-container').innerHTML =
+      '<div class="error-box"><p class="error">Не удалось загрузить афишу 😔</p>' +
+      '<button class="btn-secondary" id="btn-retry">🔁 Повторить</button></div>';
+    const rb = document.getElementById('btn-retry');
+    if (rb) rb.onclick = () => {
+      rb.disabled = true;
+      rb.textContent = '⏳ Загружаю…';
+      loadMovies();
+    };
+  }
+}
+
+// Полоска «🔥 стрик · уровень · прогресс» в шапке — после синхронизации с ботом
+function updateHeaderProgress() {
+  const el = document.getElementById('header-progress');
+  if (!el) return;
+  if (!PROFILE || !PROFILE.lvl) { el.classList.add('hidden'); return; }
+  const strk = parseInt(PROFILE.str, 10) || 0;
+  const pct = Math.max(0, Math.min(100, parseInt(PROFILE.pct, 10) || 0));
+  const next = parseInt(PROFILE.lvl_next, 10) || 0;
+  el.classList.remove('hidden');
+  el.innerHTML = `<span class="hp-streak">🔥 ${strk}</span>` +
+    `<span class="hp-level">${esc(PROFILE.lvl)}${next ? ` · −${next} 🔑` : ''}</span>` +
+    `<span class="hp-bar"><i style="width:${pct}%"></i></span>`;
+}
+
+// ---------- скелетоны (заглушки до загрузки данных) ----------
+function renderSkeletons() {
+  const c = document.getElementById('movies-container');
+  c.innerHTML = Array.from({ length: 8 }, () =>
+    '<div class="movie-card skeleton-card"><div class="skel poster"></div><div class="skel line"></div><div class="skel line short"></div></div>'
+  ).join('');
+}
+renderSkeletons();
+
+// Расстояние Левенштейна — для нечёткого поиска по названиям
+function _levDist(a, b) {
+  a = String(a); b = String(b);
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  const prev = new Array(b.length + 1);
+  const cur = new Array(b.length + 1);
+  for (let j = 0; j <= b.length; j++) prev[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    cur[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+    }
+    for (let j = 0; j <= b.length; j++) prev[j] = cur[j];
+  }
+  return prev[b.length];
+}
+
+// ---------- ежедневные челленджи: панель на главной ----------
+// v109: панель стала «Целью дня» — сворачивается, помнит состояние,
+// а когда всё выполнено — кнопка забрать баллы в боте.
+const CHALL_COLLAPSE_KEY = 'kinoafisha_chall_collapsed';
+function updateChallPane() {
+  const pane = document.getElementById('chall-pane');
+  if (!pane) return;
+  const c = getChallenges();
+  const listEl = document.getElementById('chall-list');
+  const countEl = document.getElementById('chall-count');
+  const collapsed = localStorage.getItem(CHALL_COLLAPSE_KEY) === '1';
+  const items = CHALLENGE_LIST.map(ch => {
+    const ok = c.done.includes(ch.id) || ch.check();
+    return `<div class="chall-item ${ok ? 'done' : ''}">
+      <span class="chall-emoji">${ch.emoji}</span>
       <div class="chall-body">
-        <b>${esc(l.name)}</b>
-        <span>${esc(l.desc)}</span>
+        <b>${esc(ch.name)}</b>
+        <span>${esc(ch.desc)}</span>
       </div>
-      <span class="chall-check">${g?"✅":"○"}</span>
-    </div>`}).join("");n.innerHTML=a,o?n.classList.add("hidden"):n.classList.remove("hidden");const i=CHALLENGE_LIST.filter(l=>e.done.includes(l.id)||l.check()).length;s&&(s.textContent=`${i}/${CHALLENGE_LIST.length}`);const r=document.getElementById("chall-reward");if(r){const l=i===CHALLENGE_LIST.length;r.classList.toggle("hidden",!l),l&&!e.done.includes("reward_sent")?r.onclick=()=>{haptic("ok"),sendOrDeepLink({action:"quiz_result",correct:CHALLENGE_LIST.length,total:CHALLENGE_LIST.length});try{const g=getChallenges();g.done.push("reward_sent"),setChallenges(g),r.classList.add("hidden")}catch(g){}}:l&&(r.textContent="✅ Баллы за цель дня уже забраны",r.onclick=null)}const c=document.getElementById("chall-head");c&&!c.dataset.wired&&(c.dataset.wired="1",c.addEventListener("click",l=>{if(l.target.closest("#chall-reward"))return;const g=localStorage.getItem(CHALL_COLLAPSE_KEY)!=="1";localStorage.setItem(CHALL_COLLAPSE_KEY,g?"1":"0"),haptic("light"),updateChallPane()})),t.classList.remove("hidden"),i===CHALLENGE_LIST.length&&!e.done.includes("all_done")&&(e.done.push("all_done"),setChallenges(e))}function renderCodeCollection(){const t=document.getElementById("code-collection");if(!t)return;const e=getUnlocked(),n=new Set(e.map(String)),s=[...ALL].sort((a,i)=>(+a.code||0)-(+i.code||0));if(s.length<2){t.classList.add("hidden");return}const o=s.length?Math.round(100*e.length/s.length):0;t.classList.remove("hidden"),t.innerHTML=`
+      <span class="chall-check">${ok ? '✅' : '○'}</span>
+    </div>`;
+  }).join('');
+  listEl.innerHTML = items;
+  if (collapsed) listEl.classList.add('hidden');
+  else listEl.classList.remove('hidden');
+  const doneCount = CHALLENGE_LIST.filter(ch => c.done.includes(ch.id) || ch.check()).length;
+  if (countEl) countEl.textContent = `${doneCount}/${CHALLENGE_LIST.length}`;
+  // v109: кнопка награды — видна, когда выполнены все три задания
+  const rewardEl = document.getElementById('chall-reward');
+  if (rewardEl) {
+    const allDone = doneCount === CHALLENGE_LIST.length;
+    rewardEl.classList.toggle('hidden', !allDone);
+    if (allDone && !c.done.includes('reward_sent')) {
+      rewardEl.onclick = () => {
+        haptic('ok');
+        sendOrDeepLink({ action: 'quiz_result', correct: CHALLENGE_LIST.length, total: CHALLENGE_LIST.length });
+        try {
+          const cc = getChallenges();
+          cc.done.push('reward_sent');
+          setChallenges(cc);
+          rewardEl.classList.add('hidden');
+        } catch (e) {}
+      };
+    } else if (allDone) {
+      rewardEl.textContent = '✅ Баллы за цель дня уже забраны';
+      rewardEl.onclick = null;
+    }
+  }
+  // v109: тумблер сворачивания
+  const head = document.getElementById('chall-head');
+  if (head && !head.dataset.wired) {
+    head.dataset.wired = '1';
+    head.addEventListener('click', (e) => {
+      if (e.target.closest('#chall-reward')) return;
+      const nowCollapsed = !(localStorage.getItem(CHALL_COLLAPSE_KEY) === '1');
+      localStorage.setItem(CHALL_COLLAPSE_KEY, nowCollapsed ? '1' : '0');
+      haptic('light');
+      updateChallPane();
+    });
+  }
+  pane.classList.remove('hidden');
+  // после показа — если все сделаны, добавим поздравление
+  if (doneCount === CHALLENGE_LIST.length && !c.done.includes('all_done')) {
+    c.done.push('all_done');
+    setChallenges(c);
+  }
+}
+
+// ---------- коллекция кодов (сетка всех кодов в Дастижениях) ----------
+function renderCodeCollection() {
+  const wrap = document.getElementById('code-collection');
+  if (!wrap) return;
+  const unlocked = getUnlocked();
+  const unlockedSet = new Set(unlocked.map(String));
+  const all = [...ALL].sort((a, b) => (+a.code || 0) - (+b.code || 0));
+  if (all.length < 2) { wrap.classList.add('hidden'); return; }
+  const openPct = all.length ? Math.round(100 * unlocked.length / all.length) : 0;
+  wrap.classList.remove('hidden');
+  wrap.innerHTML = `
     <div class="coll-head">
       <h3>🔑 Коллекция кодов</h3>
-      <span>${e.length}/${s.length} · ${o}%</span>
+      <span>${unlocked.length}/${all.length} · ${openPct}%</span>
     </div>
-    <div class="coll-grid">${s.map(a=>{const i=n.has(String(a.code));return`<span class="coll-cell ${i?"on":""}" title="${esc(a.title)}"
-          data-code="${esc(a.code)}">${i?"🎬":"❔"}</span>`}).join("")}</div>`,t.querySelectorAll(".coll-cell.on").forEach(a=>a.addEventListener("click",()=>openDetail(a.dataset.code)))}function updateSubtitle(){const t=document.getElementById("subtitle");if(!t)return;const e=[`Капитан Кино · ${ALL.length} фильм(ов)`];COLLS.length&&e.push(`${COLLS.length} подборок`),t.textContent=e.join(" · ")}let LAST_TOP_GENRES=[];function renderGenreChips(){const t=document.getElementById("genre-chips");if(!t)return;const e=new Map;ALL.forEach(s=>(s.genres||[]).forEach(o=>e.set(o,(e.get(o)||0)+1)));const n=[...e.entries()].filter(([,s])=>s>=3).sort((s,o)=>o[1]-s[1]).slice(0,10);LAST_TOP_GENRES=n.map(([s])=>s),n.length&&(t.innerHTML=`<button class="chip chip-rnd" data-g="__rnd__" title="Случайный жанр">🎲</button><button class="chip${activeGenre===""?" active":""}" data-g="">Все</button>`+n.map(([s,o])=>`<button class="chip${activeGenre===s?" active":""}" data-g="${esc(s)}">${esc(s)} <em>${o}</em></button>`).join(""),t.classList.remove("hidden"),t.querySelectorAll(".chip").forEach(s=>s.addEventListener("click",()=>{if(haptic("light"),s.dataset.g==="__rnd__"){const o=LAST_TOP_GENRES.filter(a=>a!==activeGenre);if(!o.length)return;activeGenre=o[Math.floor(Math.random()*o.length)]}else activeGenre=s.dataset.g;renderGenreChips(),renderGrid()})))}function renderCountryChips(){const t=document.getElementById("country-chips");if(!t)return;const e=new Map;ALL.forEach(s=>(s.countries||[]).forEach(o=>e.set(o,(e.get(o)||0)+1)));const n=[...e.entries()].filter(([,s])=>s>=4).sort((s,o)=>o[1]-s[1]).slice(0,9);if(!n.length){t.classList.add("hidden");return}t.innerHTML=`<button class="chip${activeCountry===""?" active":""}" data-c="">🌍 Все</button>`+n.map(([s,o])=>`<button class="chip${activeCountry===s?" active":""}" data-c="${esc(s)}">${flagOf(s)} ${esc(s)} <em>${o}</em></button>`).join(""),t.classList.remove("hidden"),t.querySelectorAll(".chip").forEach(s=>s.addEventListener("click",()=>{haptic("light"),activeCountry=s.dataset.c||"",renderCountryChips(),renderGrid()}))}function renderHero(){const t=[...ALL].filter(n=>n.poster&&parseFloat(n.rating)).sort((n,s)=>(parseFloat(s.rating)||0)-(parseFloat(n.rating)||0)).slice(0,5),e=document.getElementById("hero-shelf");t.length<3||!e||(document.getElementById("hero-row").innerHTML=t.map((n,s)=>`
-    <div class="hero-card" data-code="${esc(n.code)}">
-      ${posterHtmlQuick(n)}
-      <span class="hero-rank">#${s+1}</span>
+    <div class="coll-grid">${all.map(m => {
+      const ok = unlockedSet.has(String(m.code));
+      return `<span class="coll-cell ${ok ? 'on' : ''}" title="${esc(m.title)}"
+          data-code="${esc(m.code)}">${ok ? '🎬' : '❔'}</span>`;
+    }).join('')}</div>`;
+  wrap.querySelectorAll('.coll-cell.on').forEach(cell =>
+    cell.addEventListener('click', () => openDetail(cell.dataset.code)));
+}
+
+// ---------- hero-полка «Сейчас в тренде» ----------
+// Живая строка статистики в шапке
+function updateSubtitle() {
+  const el = document.getElementById('subtitle');
+  if (!el) return;
+  const parts = [`Капитан Кино · ${ALL.length} фильм(ов)`];
+  if (COLLS.length) parts.push(`${COLLS.length} подборок`);
+  el.textContent = parts.join(' · ');
+}
+
+// Чипы жанров: собираются из витрины, тап — фильтр сетки
+let LAST_TOP_GENRES = [];
+function renderGenreChips() {
+  const wrap = document.getElementById('genre-chips');
+  if (!wrap) return;
+  const counter = new Map();
+  ALL.forEach(m => (m.genres || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1)));
+  const top = [...counter.entries()].filter(([, n]) => n >= 3)
+    .sort((a, b) => b[1] - a[1]).slice(0, 10);
+  LAST_TOP_GENRES = top.map(([g]) => g);
+  if (!top.length) return;
+  wrap.innerHTML = `<button class="chip chip-rnd" data-g="__rnd__" title="Случайный жанр">🎲</button>` +
+    `<button class="chip${activeGenre === '' ? ' active' : ''}" data-g="">Все</button>` +
+    top.map(([g, n]) =>
+      `<button class="chip${activeGenre === g ? ' active' : ''}" data-g="${esc(g)}">${esc(g)} <em>${n}</em></button>`
+    ).join('');
+  wrap.classList.remove('hidden');
+  wrap.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+    haptic('light');
+    if (ch.dataset.g === '__rnd__') {
+      const pool = LAST_TOP_GENRES.filter(g => g !== activeGenre);
+      if (!pool.length) return;
+      activeGenre = pool[Math.floor(Math.random() * pool.length)];
+    } else {
+      activeGenre = ch.dataset.g;
+    }
+    renderGenreChips();
+    renderGrid();
+  }));
+}
+function renderCountryChips() {
+  const wrap = document.getElementById('country-chips');
+  if (!wrap) return;
+  const counter = new Map();
+  ALL.forEach(m => (m.countries || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1)));
+  const top = [...counter.entries()].filter(([, n]) => n >= 4)
+    .sort((a, b) => b[1] - a[1]).slice(0, 9);
+  if (!top.length) { wrap.classList.add('hidden'); return; }
+  wrap.innerHTML = `<button class="chip${activeCountry === '' ? ' active' : ''}" data-c="">🌍 Все</button>` +
+    top.map(([c, n]) =>
+      `<button class="chip${activeCountry === c ? ' active' : ''}" data-c="${esc(c)}">${flagOf(c)} ${esc(c)} <em>${n}</em></button>`
+    ).join('');
+  wrap.classList.remove('hidden');
+  wrap.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+    haptic('light');
+    activeCountry = ch.dataset.c || '';
+    renderCountryChips();
+    renderGrid();
+  }));
+}
+function renderHero() {
+  const top = [...ALL]
+    .filter(m => m.poster && parseFloat(m.rating))
+    .sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0))
+    .slice(0, 5);
+  const shelf = document.getElementById('hero-shelf');
+  if (top.length < 3 || !shelf) return;
+  document.getElementById('hero-row').innerHTML = top.map((m, i) => `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      ${posterHtmlQuick(m)}
+      <span class="hero-rank">#${i + 1}</span>
       <div class="hero-overlay">
-        <h3>${esc(n.title)}</h3>
-        ${ratingBadge(n)}
+        <h3>${esc(m.title)}</h3>
+        ${ratingBadge(m)}
       </div>
-    </div>`).join(""),e.classList.remove("hidden"),e.querySelectorAll(".hero-card").forEach(n=>n.addEventListener("click",()=>openDetail(n.dataset.code))),wireFavQuick(e))}function renderNewCodes(){const t=document.getElementById("new-codes-shelf");if(!t)return;const e=[...ALL].filter(o=>o.added_at).sort((o,a)=>new Date(a.added_at).getTime()-new Date(o.added_at).getTime()).slice(0,8);if(e.length<3||!t){t.classList.add("hidden");return}const n=o=>Math.max(0,Math.floor((Date.now()-new Date(o.added_at).getTime())/864e5)),s=document.getElementById("new-codes-row");s.innerHTML=e.map(o=>{const a=n(o),i=a<=1?"🔥 сегодня":a<=7?`🕒 ${a} дн. назад`:"";return`
-    <div class="hero-card" data-code="${esc(o.code)}">
-      ${posterHtmlQuick(o)}
-      <span class="hero-rank">🔑 ${esc(String(o.code))}</span>
-      ${i?`<span class="new-badge">${i}</span>`:""}
+    </div>`).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.code)));
+  wireFavQuick(shelf);
+}
+
+// v102: полка «🆕 Новинки недели» — последние добавленные фильмы. Сортировка по added_at,
+// чтобы игроки сразу видели свежие коды канала. v109: бейдж давности «N дн.».
+function renderNewCodes() {
+  const shelf = document.getElementById('new-codes-shelf');
+  if (!shelf) return;
+  const items = [...ALL]
+    .filter(m => m.added_at)
+    .sort((a, b) => new Date(b.added_at).getTime() - new Date(a.added_at).getTime())
+    .slice(0, 8);
+  if (items.length < 3 || !shelf) { shelf.classList.add('hidden'); return; }
+  const daysAgo = (m) => Math.max(0, Math.floor((Date.now() - new Date(m.added_at).getTime()) / 86400000));
+  const row = document.getElementById('new-codes-row');
+  row.innerHTML = items.map(m => {
+    const d = daysAgo(m);
+    const fresh = d <= 1 ? '🔥 сегодня' : (d <= 7 ? `🕒 ${d} дн. назад` : '');
+    return `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      ${posterHtmlQuick(m)}
+      <span class="hero-rank">🔑 ${esc(String(m.code))}</span>
+      ${fresh ? `<span class="new-badge">${fresh}</span>` : ''}
       <div class="hero-overlay">
-        <h3>${esc(o.title)}</h3>
-        ${ratingBadge(o)}
+        <h3>${esc(m.title)}</h3>
+        ${ratingBadge(m)}
       </div>
-    </div>`}).join(""),t.classList.remove("hidden"),t.querySelectorAll(".hero-card").forEach(o=>o.addEventListener("click",()=>openDetail(o.dataset.code))),wireFavQuick(t)}function renderTodayShelf(t){const e=document.getElementById("today-shelf");if(!e)return;const n=t&&Array.isArray(t.premieres)?t.premieres:[],s=new Date;s.setHours(0,0,0,0);const o=new Date(s);o.setDate(o.getDate()+1);const a=n.filter(r=>{const c=r.ru_date?new Date(String(r.ru_date).slice(0,10)+"T00:00:00"):null;return c&&(c.getTime()===s.getTime()||c.getTime()===o.getTime())});if(a.length===0){e.classList.add("hidden");return}const i=document.getElementById("today-row");i.innerHTML=a.map(r=>`
-    <div class="hero-card" data-title="${esc(r.title||"")}">
-      ${r.poster?`<img src="${esc(r.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`:'<div class="poster-placeholder"><span>⭐</span></div>'}
+    </div>`}).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.code)));
+  wireFavQuick(shelf);
+}
+
+// Полка «🍿 Скоро в кино» — премьеры текущего месяца от бота/КП
+// «⭐ Сегодня и завтра в кино» — премьеры с датой сегодня/завтра
+function renderTodayShelf(meta) {
+  const shelf = document.getElementById('today-shelf');
+  if (!shelf) return;
+  const items = (meta && Array.isArray(meta.premieres)) ? meta.premieres : [];
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+  const soon = items.filter(p => {
+    const d = p.ru_date ? new Date(String(p.ru_date).slice(0, 10) + 'T00:00:00') : null;
+    return d && (d.getTime() === now.getTime() || d.getTime() === tomorrow.getTime());
+  });
+  if (soon.length === 0) { shelf.classList.add('hidden'); return; }
+  const row = document.getElementById('today-row');
+  row.innerHTML = soon.map(p => `
+    <div class="hero-card" data-title="${esc(p.title || '')}">
+      ${p.poster
+        ? `<img src="${esc(p.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+        : `<div class="poster-placeholder"><span>⭐</span></div>`}
       <span class="hero-rank">⭐</span>
       <div class="hero-overlay">
-        <h3>${esc(r.title||"")}</h3>
-        <span class="rating">📅 ${String(r.ru_date||"").slice(0,10)}</span>
+        <h3>${esc(p.title || '')}</h3>
+        <span class="rating">📅 ${String(p.ru_date || '').slice(0, 10)}</span>
       </div>
-    </div>`).join(""),e.classList.remove("hidden"),i.querySelectorAll(".hero-card").forEach(r=>r.addEventListener("click",()=>{const c=(r.dataset.title||"").toLowerCase().replace(/ё/g,"е"),l=ALL.find(g=>(g.title||"").toLowerCase().replace(/ё/g,"е")===c);l?openDetail(l.code):tg.showPopup({type:"ok",title:"⭐ Сегодня в кино",message:"В кинотеатрах уже идёт! Увидимся на сеансе 🎟"})}))}let _fdManual=null;function filmDayPick(){const t=ALL.filter(s=>(parseFloat(s.rating)||0)>=7.3&&s.poster);if(t.length<5)return null;if(_fdManual&&t.some(s=>s.code===_fdManual)){const s=t.find(o=>o.code===_fdManual);if(s)return s}const e=new Date,n=e.getFullYear()*373+(e.getMonth()+1)*31+e.getDate();return t[n%t.length]}function renderFilmDay(){const t=document.getElementById("filmday-banner");if(!t)return;const e=view==="fav"?null:filmDayPick();if(!e){t.classList.add("hidden");return}const n=getFavs().includes(e.code),s=(e.genres||[]).slice(0,3).join(" · ");t.classList.remove("hidden"),t.innerHTML=`
-    <div class="fd-poster">${e.poster?`<img src="${esc(e.poster)}" alt="" loading="lazy" decoding="async" ${FADE}${dimStyle(e)} onerror="this.style.display='none';this.parentElement.classList.add('fd-noposter')"/>`:'<div class="fd-ph">🎬</div>'}</div>
+    </div>`).join('');
+  shelf.classList.remove('hidden');
+  row.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => {
+    const title = (el.dataset.title || '').toLowerCase().replace(/ё/g, 'е');
+    const m = ALL.find(x => (x.title || '').toLowerCase().replace(/ё/g, 'е') === title);
+    if (m) openDetail(m.code);
+    else tg.showPopup({ type: 'ok', title: '⭐ Сегодня в кино', message: 'В кинотеатрах уже идёт! Увидимся на сеансе 🎟' });
+  }));
+}
+
+// «⭐ Фильм дня» — hero-баннер на главной: детерминированно выбираем фильм
+// по дате (у всех пользователей в один день — один и тот же фильм)
+let _fdManual = null;  // v89: локальная «перебросанная» версия дня (только у этого пользователя)
+function filmDayPick() {
+  const cands = ALL.filter(m => (parseFloat(m.rating) || 0) >= 7.3 && m.poster);
+  if (cands.length < 5) return null;
+  if (_fdManual && cands.some(x => x.code === _fdManual)) {
+    const m = cands.find(x => x.code === _fdManual);
+    if (m) return m;
+  }
+  const d = new Date();
+  const seed = d.getFullYear() * 373 + (d.getMonth() + 1) * 31 + d.getDate();
+  return cands[seed % cands.length];
+}
+function renderFilmDay() {
+  const el = document.getElementById('filmday-banner');
+  if (!el) return;
+  const m = (view === 'fav') ? null : filmDayPick();  // в «Моём» баннер лишний
+  if (!m) { el.classList.add('hidden'); return; }
+  const fav = getFavs().includes(m.code);
+  const genres = (m.genres || []).slice(0, 3).join(' · ');
+  el.classList.remove('hidden');
+  el.innerHTML = `
+    <div class="fd-poster">${m.poster
+      ? `<img src="${esc(m.poster)}" alt="" loading="lazy" decoding="async" ${FADE}${dimStyle(m)} onerror="this.style.display='none';this.parentElement.classList.add('fd-noposter')"/>`
+      : '<div class="fd-ph">🎬</div>'}</div>
     <div class="fd-info">
         <span class="fd-badge">⭐ Фильм дня</span>
-        <div class="fd-title">${esc(e.title)}</div>
-        <div class="fd-meta">${esc(String(e.year||""))}${e.year&&e.rating?" · ":""}⭐ ${esc(String(e.rating||""))}${s?" · "+esc(s):""}</div>
+        <div class="fd-title">${esc(m.title)}</div>
+        <div class="fd-meta">${esc(String(m.year || ''))}${m.year && m.rating ? ' · ' : ''}⭐ ${esc(String(m.rating || ''))}${genres ? ' · ' + esc(genres) : ''}</div>
       </div>
       <button class="fd-roll" id="fd-roll" title="Другой фильм дня">🎲</button>
-      <button class="fav-quick ${n?"active":""}" data-code="${esc(e.code)}" aria-label="Моё" title="В «Моё»">${n?"♥︎":"♡"}</button>`,t.onclick=a=>{a.target.closest("#fd-roll")||a.target.closest(".fav-quick")||openDetail(e.code)};const o=document.getElementById("fd-roll");o&&(o.onclick=a=>{a.stopPropagation(),haptic("light");const i=ALL.filter(r=>(parseFloat(r.rating)||0)>=7.3&&r.poster&&String(r.code)!==String(e.code));i.length&&(_fdManual=i[Math.floor(Math.random()*i.length)].code,renderFilmDay())}),wireFavQuick(t)}function renderRecentShelf(){const t=document.getElementById("recent-shelf");if(!t)return;const e=getRecent().filter(s=>ALL.some(o=>o.code===s));if(e.length<2){t.classList.add("hidden");return}const n=e.slice(0,10).map(s=>ALL.find(o=>o.code===s));t.querySelector("#recent-row").innerHTML=n.map(s=>`
-    <div class="hero-card" data-code="${esc(s.code)}">
-      ${posterHtmlQuick(s)}
+      <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '♥\uFE0E' : '♡'}</button>`;
+  el.onclick = (e) => {
+    if (e.target.closest('#fd-roll')) return;  // кнопка «другой» не открывает карточку
+    if (e.target.closest('.fav-quick')) return;
+    openDetail(m.code);
+  };
+  const rollBtn = document.getElementById('fd-roll');
+  if (rollBtn) rollBtn.onclick = (ev) => {
+    ev.stopPropagation();
+    haptic('light');
+    const cands = ALL.filter(x => (parseFloat(x.rating) || 0) >= 7.3 && x.poster && String(x.code) !== String(m.code));
+    if (!cands.length) return;
+    _fdManual = cands[Math.floor(Math.random() * cands.length)].code;
+    renderFilmDay();
+  };
+  wireFavQuick(el);
+}
+
+// «🕘 Недавно смотрели» — история из localStorage, показываем на главной
+function renderRecentShelf() {
+  const shelf = document.getElementById('recent-shelf');
+  if (!shelf) return;
+  const codes = getRecent().filter(c => ALL.some(x => x.code === c));
+  if (codes.length < 2) { shelf.classList.add('hidden'); return; }
+  const items = codes.slice(0, 10).map(code => ALL.find(x => x.code === code));
+  shelf.querySelector('#recent-row').innerHTML = items.map(m => `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      ${posterHtmlQuick(m)}
       <div class="hero-overlay">
-        <h3>${esc(s.title)}</h3>
-        <span class="rating">${ratingBadge(s)}</span>
+        <h3>${esc(m.title)}</h3>
+        <span class="rating">${ratingBadge(m)}</span>
       </div>
-    </div>`).join(""),t.classList.remove("hidden"),t.querySelectorAll(".hero-card").forEach(s=>s.addEventListener("click",()=>openDetail(s.dataset.code))),wireFavQuick(t)}function renderTrailerShelf(){const t=document.getElementById("continue-shelf");if(!t)return;if(view!=="grid"&&view!=="fav"){t.classList.add("hidden");return}const e=getTrailerWatches().filter(o=>ALL.some(a=>String(a.code)===String(o.c))).slice(0,10);if(e.length<1){t.classList.add("hidden");return}const n=e.map(o=>ALL.find(a=>String(a.code)===String(o.c))).filter(Boolean).filter(o=>o.trailer_yt||o.trailer_file_id);if(!n.length){t.classList.add("hidden");return}const s=t.querySelector("#continue-row");s.innerHTML=n.map((o,a)=>{const i=e[a],r=i&&i.sec||watchProgress(o.code),c=r>=3?`<span class="watch-bar" style="width:${Math.min(100,Math.round(100*r/180))}%"></span>`:"";return`
-    <div class="hero-card" data-code="${esc(o.code)}">
-      ${posterHtmlQuick(o)}
-      <span class="continue-chip">▶️ ${r>=60?"посмотрел(а) "+Math.round(r/60)+" мин":r>=3?"смотрел(а) "+r+" сек":"продолжить"}</span>
-      ${c}
+    </div>`).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => openDetail(el.dataset.code)));
+  wireFavQuick(shelf);
+}
+
+// v74: «🎬 Продолжить смотреть» — последние просмотренные трейлеры.
+// Живая полка: тап по карточке переоткрывает трейлер (с хронологией свежих сверху).
+function renderTrailerShelf() {
+  const shelf = document.getElementById('continue-shelf');
+  if (!shelf) return;
+  if (view !== 'grid' && view !== 'fav') { shelf.classList.add('hidden'); return; }
+  const tw = getTrailerWatches().filter(x => ALL.some(m => String(m.code) === String(x.c))).slice(0, 10);
+  if (tw.length < 1) { shelf.classList.add('hidden'); return; }
+  const items = tw.map(x => ALL.find(m => String(m.code) === String(x.c))).filter(Boolean)
+    .filter(m => m.trailer_yt || m.trailer_file_id);
+  if (!items.length) { shelf.classList.add('hidden'); return; }
+  const row = shelf.querySelector('#continue-row');
+  row.innerHTML = items.map((m, i) => {
+    // v109: мини-прогресс просмотра (секунды), если трейлер реально смотрели
+    const x = tw[i];
+    const sec = (x && x.sec) || watchProgress(m.code);
+    const bar = sec >= 3 ? `<span class="watch-bar" style="width:${Math.min(100, Math.round(100 * sec / 180))}%"></span>` : '';
+    return `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      ${posterHtmlQuick(m)}
+      <span class="continue-chip">▶️ ${sec >= 60 ? 'посмотрел(а) ' + Math.round(sec / 60) + ' мин' : (sec >= 3 ? 'смотрел(а) ' + sec + ' сек' : 'продолжить')}</span>
+      ${bar}
       <div class="hero-overlay">
-        <h3>${esc(o.title)}</h3>
-        <span class="rating">${ratingBadge(o)}</span>
+        <h3>${esc(m.title)}</h3>
+        <span class="rating">${ratingBadge(m)}</span>
       </div>
-    </div>`}).join(""),t.classList.remove("hidden"),s.querySelectorAll(".hero-card").forEach(o=>o.addEventListener("click",()=>{const a=ALL.find(i=>String(i.code)===String(o.dataset.code));a&&openTrailer(a)})),wireFavQuick(t)}function renderRecoShelf(){const t=document.getElementById("reco-shelf");if(!t||view==="profile"||view==="game")return;const e=getFavs(),n=getUnlocked(),s=getWatched(),o=getRatings(),a=new Set([...e,...n,...s,...getRecent().slice(0,4)].map(f=>String(f))),i=new Map,r=new Map,c=(f,y)=>{const v=ALL.find(m=>String(m.code)===String(f));v&&((v.genres||[]).forEach(m=>i.set(m,(i.get(m)||0)+y)),(v.actors||[]).slice(0,5).forEach(m=>r.set(m,(r.get(m)||0)+y*.6)))};Object.entries(o).forEach(([f,y])=>c(f,ratingWeight(y))),e.forEach(f=>c(f,2.2)),n.forEach(f=>c(f,1.8)),s.forEach(f=>c(f,1.2));const l=i.size>0||r.size>0,g=new Set(getRecoHide()),d=ALL.filter(f=>!a.has(String(f.code))&&!g.has(f.code));let p=[];if(l){const f=d.map(y=>{let v=0;return(y.genres||[]).forEach(m=>{v+=i.get(m)||0}),(y.actors||[]).forEach(m=>{v+=(r.get(m)||0)*.8}),v+=Math.max(0,(parseFloat(y.rating)||0)-6.5),{m:y,score:v}});f.sort((y,v)=>v.score-y.score),p=f.slice(0,8).map(y=>y.m)}else p=[...d].sort((f,y)=>(parseFloat(y.rating)||0)-(parseFloat(f.rating)||0)).slice(0,8);const u=t.querySelector(".shelf-title");if(u&&(u.textContent=l?"💫 Подобрано по твоим оценкам":"💫 Лучшее в афише"),p.length<2){t.classList.add("hidden");return}t.querySelector("#reco-row").innerHTML=p.map(f=>`
-    <div class="hero-card" data-code="${esc(f.code)}">
-      ${posterHtmlQuick(f)}
-      ${f.genres&&f.genres.length?`<span class="hero-rank reco-chip">${esc(f.genres[0])}</span>`:""}
-      <button class="reco-hide" data-code="${esc(f.code)}" aria-label="Не рекомендовать" title="Скрыть">✕</button>
+    </div>`}).join('');
+  shelf.classList.remove('hidden');
+  row.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => {
+    const m = ALL.find(x => String(x.code) === String(el.dataset.code));
+    if (m) openTrailer(m);
+  }));
+  wireFavQuick(shelf);
+}
+
+// «💫 Советуем вам» — v64: персональные рекомендации на основе твоих оценок,
+// «Моё», разгаданных и просмотренных (жанры + актёры), без выхода из аппа.
+function renderRecoShelf() {
+  const shelf = document.getElementById('reco-shelf');
+  if (!shelf) return;
+  if (view === 'profile' || view === 'game') return;
+  const favs = getFavs();
+  const unlocked = getUnlocked();
+  const watched = getWatched();
+  const ratings = getRatings();
+  const seen = new Set([...favs, ...unlocked, ...watched, ...getRecent().slice(0, 4)]
+    .map(c => String(c)));
+  // «вкус»: жанры и актёры из того, что ты оценил/сохранил/разгадал.
+  // Высокая оценка — сильный сигнал, низкая — почти нейтральный.
+  const genreScore = new Map(), actorScore = new Map();
+  const feed = (code, w) => {
+    const m = ALL.find(x => String(x.code) === String(code));
+    if (!m) return;
+    (m.genres || []).forEach(g => genreScore.set(g, (genreScore.get(g) || 0) + w));
+    (m.actors || []).slice(0, 5).forEach(a => actorScore.set(a, (actorScore.get(a) || 0) + w * 0.6));
+  };
+  Object.entries(ratings).forEach(([code, r]) => feed(code, ratingWeight(r)));
+  favs.forEach(code => feed(code, 2.2));
+  unlocked.forEach(code => feed(code, 1.8));
+  watched.forEach(code => feed(code, 1.2));
+  const hasTaste = genreScore.size > 0 || actorScore.size > 0;
+  const hidden = new Set(getRecoHide());
+  const cands = ALL.filter(m => !seen.has(String(m.code)) && !hidden.has(m.code));
+  let picks = [];
+  if (hasTaste) {
+    const scored = cands.map(m => {
+      let score = 0;
+      (m.genres || []).forEach(g => { score += genreScore.get(g) || 0; });
+      (m.actors || []).forEach(a => { score += (actorScore.get(a) || 0) * 0.8; });
+      score += Math.max(0, (parseFloat(m.rating) || 0) - 6.5);   // бонус качества
+      return { m, score };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    picks = scored.slice(0, 8).map(x => x.m);
+  } else {
+    // у новичка ещё нет вкуса — показываем лучшее по рейтингу КП
+    picks = [...cands]
+      .sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0))
+      .slice(0, 8);
+  }
+  const title = shelf.querySelector('.shelf-title');
+  if (title) title.textContent = hasTaste ? '💫 Подобрано по твоим оценкам' : '💫 Лучшее в афише';
+  if (picks.length < 2) { shelf.classList.add('hidden'); return; }
+  shelf.querySelector('#reco-row').innerHTML = picks.map(m => `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      ${posterHtmlQuick(m)}
+      ${m.genres && m.genres.length ? `<span class="hero-rank reco-chip">${esc(m.genres[0])}</span>` : ''}
+      <button class="reco-hide" data-code="${esc(m.code)}" aria-label="Не рекомендовать" title="Скрыть">✕</button>
       <div class="hero-overlay">
-        <h3>${esc(f.title)}</h3>
-        <span class="rating">${ratingBadge(f)}</span>
+        <h3>${esc(m.title)}</h3>
+        <span class="rating">${ratingBadge(m)}</span>
       </div>
-    </div>`).join(""),t.classList.remove("hidden"),t.querySelectorAll(".hero-card").forEach(f=>f.addEventListener("click",()=>openDetail(f.dataset.code))),wireFavQuick(t),t.querySelectorAll(".reco-hide").forEach(f=>{f.addEventListener("click",y=>{y.stopPropagation(),haptic("light");const v=new Set(getRecoHide());v.add(f.dataset.code),setRecoHide([...v]),renderRecoShelf()})})}const _normTitle=t=>(t||"").toLowerCase().replace(/ё/g,"е").replace(/[^a-zа-я0-9]+/gi," ").trim();function premiereForTitle(t){const e=_normTitle(t);if(!e)return null;const n=new Date;n.setHours(0,0,0,0);const s=(PREMIERES||[]).find(l=>_normTitle(l.title)===e);if(!s||!s.ru_date)return null;const o=new Date(String(s.ru_date).slice(0,10)+"T00:00:00");if(isNaN(o)||o<n)return null;const a=Math.round((o-n)/864e5),i=String(o.getDate()).padStart(2,"0"),r=String(o.getMonth()+1).padStart(2,"0"),c=a===0?"сегодня":a===1?"завтра":a<=4?`через ${a} дня`:`через ${a} дней`;return{date:`${i}.${r}`,iso:String(s.ru_date).slice(0,10),fid:s.film_id?String(s.film_id):"",days:a,human:c}}function renderPremieres(t){const e=document.getElementById("premieres-shelf");if(!e)return;const n=t&&Array.isArray(t.premieres)?t.premieres:[],s=new Date;s.setHours(0,0,0,0);const o=n.filter(a=>{const i=a.ru_date?new Date(String(a.ru_date).slice(0,10)+"T00:00:00"):null;return!i||i>=s}).slice(0,10);if(o.length<2){e.classList.add("hidden");return}document.getElementById("premieres-row").innerHTML=o.map(a=>{const i=a.title||"",r=premiereForTitle(i),c=r?`${r.date} · 🎬 ${r.human}`:a.ru_date?String(a.ru_date).slice(0,10):a.date||"";return`
-    <div class="hero-card" data-title="${esc(i)}" data-fid="${esc(a.film_id?String(a.film_id):"")}" data-iso="${a.ru_date?esc(String(a.ru_date).slice(0,10)):""}">
-      ${a.poster?`<img src="${esc(a.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`:'<div class="poster-placeholder"><span>🍿</span></div>'}
+    </div>`).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => openDetail(el.dataset.code)));
+  wireFavQuick(shelf);
+  shelf.querySelectorAll('.reco-hide').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      haptic('light');
+      const h = new Set(getRecoHide());
+      h.add(btn.dataset.code);
+      setRecoHide([...h]);
+      renderRecoShelf();
+    });
+  });
+}
+
+// ---------- v119: счётчик дней до премьеры («через 5 дней», «завтра») ----------
+const _normTitle = (t) => (t || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9]+/gi, ' ').trim();
+function premiereForTitle(title) {
+  const q = _normTitle(title);
+  if (!q) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const p = (PREMIERES || []).find(x => _normTitle(x.title) === q);
+  if (!p || !p.ru_date) return null;
+  const d = new Date(String(p.ru_date).slice(0, 10) + 'T00:00:00');
+  if (isNaN(d) || d < today) return null;  // прошлое/сегодня в прошлом — не премьера
+  const days = Math.round((d - today) / 86400000);
+  const dd = String(d.getDate()).padStart(2, '0'), mm = String(d.getMonth() + 1).padStart(2, '0');
+  const human = days === 0 ? 'сегодня' : days === 1 ? 'завтра' : days <= 4 ? `через ${days} дня` : `через ${days} дней`;
+  // v120: iso — для диплинка напоминания, fid — film_id КП (бот по нему найдёт название)
+  return { date: `${dd}.${mm}`, iso: String(p.ru_date).slice(0, 10), fid: p.film_id ? String(p.film_id) : '', days, human };
+}
+
+function renderPremieres(meta) {
+  const shelf = document.getElementById('premieres-shelf');
+  if (!shelf) return;
+  const items = (meta && Array.isArray(meta.premieres)) ? meta.premieres : [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const pending = items.filter(p => {
+    const d = p.ru_date ? new Date(String(p.ru_date).slice(0, 10) + 'T00:00:00') : null;
+    return !d || d >= today;
+  }).slice(0, 10);
+  if (pending.length < 2) { shelf.classList.add('hidden'); return; }
+  document.getElementById('premieres-row').innerHTML = pending.map(p => {
+    const title = p.title || '';
+    // v119: «17.09 · через 5 дней» вместо сырой даты
+    const pi = premiereForTitle(title);
+    const dateText = pi ? `${pi.date} · 🎬 ${pi.human}`
+      : (p.ru_date ? String(p.ru_date).slice(0, 10) : (p.date || ''));
+    return `
+    <div class="hero-card" data-title="${esc(title)}" data-fid="${esc(p.film_id ? String(p.film_id) : '')}" data-iso="${p.ru_date ? esc(String(p.ru_date).slice(0, 10)) : ''}">
+      ${p.poster
+        ? `<img src="${esc(p.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+        : `<div class="poster-placeholder"><span>🍿</span></div>`}
       <span class="hero-rank">🍿</span>
       <div class="hero-overlay">
-        <h3>${esc(i)}</h3>
-        <span class="rating">${esc(c?"📅 "+c:"")}</span>
+        <h3>${esc(title)}</h3>
+        <span class="rating">${esc(dateText ? '📅 ' + dateText : '')}</span>
       </div>
-    </div>`}).join(""),e.classList.remove("hidden"),e.querySelectorAll(".hero-card").forEach(a=>a.addEventListener("click",()=>{const i=(a.dataset.title||"").toLowerCase().replace(/ё/g,"е"),r=ALL.find(c=>(c.title||"").toLowerCase().replace(/ё/g,"е")===i);r?openDetail(r.code):a.dataset.fid&&a.dataset.iso?sendOrDeepLink({action:"remind_premiere",iso:a.dataset.iso,fid:a.dataset.fid}):(haptic("light"),tg.showPopup({type:"ok",title:"🍿 Скоро в кино",message:"Фильм ещё не в афише — следи за постами канала!"}))}))}function showCodeDay(t){const e=t&&t.code_of_day||"",n=document.getElementById("code-day-banner");if(!e||!n)return;const s=ALL.find(a=>a.code===e);n.innerHTML=`
+    </div>`;
+  }).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => {
+    const title = (el.dataset.title || '').toLowerCase().replace(/ё/g, 'е');
+    const m = ALL.find(x => (x.title || '').toLowerCase().replace(/ё/g, 'е') === title);
+    if (m) openDetail(m.code);
+    else if (el.dataset.fid && el.dataset.iso) {
+      // v120: премьеры ещё нет в афише — самое полезное действие: напомнить о ней
+      sendOrDeepLink({ action: 'remind_premiere', iso: el.dataset.iso, fid: el.dataset.fid });
+    }
+    else { haptic('light'); tg.showPopup({ type: 'ok', title: '🍿 Скоро в кино', message: 'Фильм ещё не в афише — следи за постами канала!' }); }
+  }));
+}
+
+function showCodeDay(meta) {
+  const code = (meta && meta.code_of_day) || '';
+  const banner = document.getElementById('code-day-banner');
+  if (!code || !banner) return;
+  const m = ALL.find(x => x.code === code);
+  banner.innerHTML = `
     <div class="code-day-inner">
       <span class="code-day-label">🎁 Код дня</span>
-      <span class="code-day-code">🔑 ${esc(e)}</span>
-      ${s?`<span class="code-day-title"> • ${esc(s.title)}</span>`:""}
+      <span class="code-day-code">🔑 ${esc(code)}</span>
+      ${m ? `<span class="code-day-title"> • ${esc(m.title)}</span>` : ''}
       <button class="kd-open-btn" id="btn-cod-open">Открыть</button>
       <button class="btn-bell" id="btn-cod-bell" title="Напоминать каждый день">🔔</button>
-    </div>`,n.classList.remove("hidden"),document.getElementById("btn-cod-open").onclick=()=>openDetail(e);const o=document.getElementById("btn-cod-bell");o&&(o.onclick=()=>{haptic("ok"),sendOrDeepLink({action:"subscribe_code_day"})})}const MARATHON_SECONDS=120;let _mar={list:[],i:0,paused:!1,timer:null,secLeft:MARATHON_SECONDS};const MAR_SEEN_KEY="kinoafisha_marathon_seen",MAR_RESUME_KEY="kinoafisha_marathon_resume",MAR_ACH_KEY="kinoafisha_marathon_ach",getMarSeen=()=>new Set(JSON.parse(localStorage.getItem(MAR_SEEN_KEY)||"[]").map(String)),MAR_ACHS=[[10,"🏅 Марафонец","10 трейлеров в марафонах"],[25,"🔥 Киноман","25 трейлеров в марафонах"],[50,"👑 Легенда марафона","50 трейлеров в марафонах"]];function _marathonBump(t){let e=[];try{e=JSON.parse(localStorage.getItem(MAR_SEEN_KEY)||"[]")}catch(s){e=[]}e.map(String).includes(String(t))||e.push(t),localStorage.setItem(MAR_SEEN_KEY,JSON.stringify(e));let n=[];try{n=JSON.parse(localStorage.getItem(MAR_ACH_KEY)||"[]")}catch(s){n=[]}MAR_ACHS.forEach(([s,o,a])=>{if(e.length>=s&&!n.includes(s)){n.push(s);try{tg.showPopup({type:"ok",title:o,message:"Ачивка получена: "+a+"! 🎉"})}catch(i){}}}),localStorage.setItem(MAR_ACH_KEY,JSON.stringify(n))}function openMarathon(t,e="",n=0){const s=t.filter(a=>a&&(a.trailer_yt||a.trailer_file_id));if(s.length<1)return;if(s.length<2){openTrailer(s[0]);return}_mar={list:s,i:Math.max(0,Math.min(n|0,s.length-1)),paused:!1,timer:null,secLeft:MARATHON_SECONDS,label:e};const o=document.getElementById("marathon-modal");if(o){o.classList.remove("hidden");try{enterAppFullscreen()}catch(a){}_marathonGo()}}function _marathonGo(){const t=_mar.list[_mar.i];if(!t)return closeMarathon(!1);const e=document.getElementById("marathon-frame"),n=document.getElementById("marathon-name"),s=document.getElementById("marathon-meta"),o=document.getElementById("marathon-count");e&&(t.trailer_yt?(e.classList.remove("hidden"),e.src="https://www.youtube.com/embed/"+t.trailer_yt+"?autoplay=1&rel=0&playsinline=1&fs=1"):(e.classList.add("hidden"),e.src="about:blank",sendOrDeepLink({action:"trailer_movie",code:t.code}))),n&&(n.textContent=t.title||"");const a=(t.genres||[]).slice(0,2).join(" · ");s&&(s.textContent=[t.year,t.rating?"⭐ "+t.rating:"",a].filter(Boolean).join(" · ")),o&&(o.textContent=_mar.i+1+" / "+_mar.list.length);const i=document.getElementById("mar-dots");i&&(_mar.list.length<=20?(i.innerHTML=_mar.list.map((c,l)=>`<span class="mar-dot${l<_mar.i?" done":""}${l===_mar.i?" cur":""}"></span>`).join(""),i.classList.remove("hidden")):i.classList.add("hidden")),pushTrailerWatch(t.code),_marathonBump(t.code),bumpWeekStat("trailers"),_mar.secLeft=MARATHON_SECONDS,_mar.paused=!1;const r=document.getElementById("btn-marathon-pause");r&&(r.textContent="⏸ Пауза"),_marathonTick()}function _marathonTick(){clearTimeout(_mar.timer),_mar.timer=setTimeout(()=>{if(_mar.paused)return;_mar.secLeft--;const t=document.getElementById("mt-bar"),e=document.getElementById("mt-label");if(t&&(t.style.width=Math.max(0,100*_mar.secLeft/MARATHON_SECONDS)+"%"),e&&(e.textContent=_mar.secLeft<=0?"⏭ далее…":_mar.secLeft+" с"),_mar.secLeft<=0){_marathonNext();return}_marathonTick()},1e3)}function _marathonTogglePause(){_mar.paused=!_mar.paused;const t=document.getElementById("btn-marathon-pause");t&&(t.textContent=_mar.paused?"▶️ Продолжить":"⏸ Пауза");const e=document.getElementById("mt-label");e&&(e.textContent=_mar.paused?"⏸ Пауза":_mar.secLeft+" с"),_mar.paused||_marathonTick(),haptic("light")}function _marathonNext(){_mar.i<_mar.list.length-1?(_mar.i++,_marathonGo()):closeMarathon(!0)}function _marathonPrev(){_mar.i>0&&(_mar.i--,_marathonGo())}function closeMarathon(t=!1){clearTimeout(_mar.timer);try{!t&&_mar.list.length>=2&&_mar.i>0&&_mar.i<_mar.list.length-1?localStorage.setItem(MAR_RESUME_KEY,JSON.stringify({codes:_mar.list.map(s=>s.code),i:_mar.i,label:_mar.label||""})):localStorage.removeItem(MAR_RESUME_KEY)}catch(s){}const e=document.getElementById("marathon-modal"),n=document.getElementById("marathon-frame");n&&(n.src="about:blank"),e&&e.classList.add("hidden");try{exitAppFullscreen()}catch(s){}if(t)try{tg.showPopup({type:"ok",title:"🎬 Марафон завершён!",message:"Все трейлеры просмотрены. Запустить ещё раз? ▶️"})}catch(s){}}(()=>{const t=document.getElementById("marathon-modal");if(!t)return;let e=0,n=0,s=!1;t.addEventListener("touchstart",o=>{t.classList.contains("hidden")||(e=o.touches[0].clientX,n=o.touches[0].clientY,s=!0)},{passive:!0}),t.addEventListener("touchend",o=>{if(!s||(s=!1,t.classList.contains("hidden")))return;const a=o.changedTouches[0].clientX-e,i=o.changedTouches[0].clientY-n;Math.abs(a)<70||Math.abs(i)>45||(haptic("light"),a<0?_marathonNext():_marathonPrev())},{passive:!0}),document.addEventListener("keydown",o=>{t.classList.contains("hidden")||o.target&&/^(INPUT|TEXTAREA|SELECT)$/.test(o.target.tagName)||(o.key==="ArrowRight"?(haptic("light"),_marathonNext()):o.key==="ArrowLeft"&&(haptic("light"),_marathonPrev()))})})();function marathonCandidates(){return ALL.filter(t=>t.trailer_yt||t.trailer_file_id)}function renderMarathonView(){const t=document.getElementById("marathon-container");if(!t)return;const e=marathonCandidates(),n={};e.forEach(d=>(d.genres||[]).forEach(p=>{const u=p.trim();u&&(n[u]=n[u]||[]).push(d)}));const s=Object.entries(n).filter(([,d])=>d.length>=2).sort((d,p)=>p[1].length-d[1].length).slice(0,12),o=d=>d.rating_kp||d.rating||0;let a=null;try{const d=JSON.parse(localStorage.getItem(MAR_RESUME_KEY)||"null");if(d&&Array.isArray(d.codes)){const p=d.codes.map(u=>ALL.find(f=>String(f.code)===String(u))).filter(u=>u&&(u.trailer_yt||u.trailer_file_id));p.length>=2&&d.i>0&&d.i<p.length&&(a={list:p,i:Math.min(d.i,p.length-1),label:d.label||""})}}catch(d){}const i=getMarSeen();t.innerHTML=`
+    </div>`;
+  banner.classList.remove('hidden');
+  document.getElementById('btn-cod-open').onclick = () => openDetail(code);
+  const bell = document.getElementById('btn-cod-bell');
+  if (bell) bell.onclick = () => {
+    haptic('ok');
+    sendOrDeepLink({ action: 'subscribe_code_day' });
+  };
+}
+
+// ---------- v74: «🎬 Кино-марафон» — трейлеры подряд ----------
+const MARATHON_SECONDS = 120;              // таймер авто-далее (~2 мин на трейлер)
+let _mar = { list: [], i: 0, paused: false, timer: null, secLeft: MARATHON_SECONDS };
+// v82: прогресс марафона — виденные коды, «досмотреть позже», ачивки-мильстоуны
+const MAR_SEEN_KEY = 'kinoafisha_marathon_seen';
+const MAR_RESUME_KEY = 'kinoafisha_marathon_resume';
+const MAR_ACH_KEY = 'kinoafisha_marathon_ach';
+const getMarSeen = () => new Set(JSON.parse(localStorage.getItem(MAR_SEEN_KEY) || '[]').map(String));
+const MAR_ACHS = [
+  [10, '🏅 Марафонец', '10 трейлеров в марафонах'],
+  [25, '🔥 Киноман', '25 трейлеров в марафонах'],
+  [50, '👑 Легенда марафона', '50 трейлеров в марафонах'],
+];
+function _marathonBump(code) {
+  let seen = [];
+  try { seen = JSON.parse(localStorage.getItem(MAR_SEEN_KEY) || '[]'); } catch (e) { seen = []; }
+  if (!seen.map(String).includes(String(code))) seen.push(code);
+  localStorage.setItem(MAR_SEEN_KEY, JSON.stringify(seen));
+  let achs = [];
+  try { achs = JSON.parse(localStorage.getItem(MAR_ACH_KEY) || '[]'); } catch (e) { achs = []; }
+  MAR_ACHS.forEach(([n, title, sub]) => {
+    if (seen.length >= n && !achs.includes(n)) {
+      achs.push(n);
+      try { tg.showPopup({ type: 'ok', title: title, message: 'Ачивка получена: ' + sub + '! 🎉' }); } catch (e) { /* пусто */ }
+    }
+  });
+  localStorage.setItem(MAR_ACH_KEY, JSON.stringify(achs));
+}
+
+function openMarathon(list, label = '', startIdx = 0) {
+  const items = list.filter(m => m && (m.trailer_yt || m.trailer_file_id));
+  if (items.length < 1) return;
+  if (items.length < 2) { openTrailer(items[0]); return; }
+  _mar = { list: items, i: Math.max(0, Math.min(startIdx | 0, items.length - 1)), paused: false, timer: null, secLeft: MARATHON_SECONDS, label };
+  const modal = document.getElementById('marathon-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  // v132: марафон — это тоже кинорежим, поэтому сразу на весь экран
+  // (внутри section_06 определён enterAppFullscreen; try — на случай порядка
+  // инициализации секций).
+  try { enterAppFullscreen(); } catch (e) { /* пусто */ }
+  _marathonGo();
+}
+
+function _marathonGo() {
+  const m = _mar.list[_mar.i];
+  if (!m) return closeMarathon(false);
+  const frame = document.getElementById('marathon-frame');
+  const name = document.getElementById('marathon-name');
+  const metaEl = document.getElementById('marathon-meta');
+  const count = document.getElementById('marathon-count');
+  if (frame) {
+    if (m.trailer_yt) {
+      frame.classList.remove('hidden');
+      frame.src = 'https://www.youtube.com/embed/' + m.trailer_yt + '?autoplay=1&rel=0&playsinline=1&fs=1';
+    } else {
+      frame.classList.add('hidden');
+      frame.src = 'about:blank';
+      sendOrDeepLink({ action: 'trailer_movie', code: m.code });
+    }
+  }
+  if (name) name.textContent = m.title || '';
+  const g = (m.genres || []).slice(0, 2).join(' · ');
+  if (metaEl) metaEl.textContent = [m.year, m.rating ? '⭐ ' + m.rating : '', g].filter(Boolean).join(' · ');
+  if (count) count.textContent = (_mar.i + 1) + ' / ' + _mar.list.length;
+  // v97: точки-позиции плейлиста (короткие марафоны) — видно, где находишься
+  const dots = document.getElementById('mar-dots');
+  if (dots) {
+    if (_mar.list.length <= 20) {
+      dots.innerHTML = _mar.list.map((_, k) =>
+        `<span class="mar-dot${k < _mar.i ? ' done' : ''}${k === _mar.i ? ' cur' : ''}"></span>`).join('');
+      dots.classList.remove('hidden');
+    } else {
+      dots.classList.add('hidden');
+    }
+  }
+  pushTrailerWatch(m.code);
+  _marathonBump(m.code); // v82: прогресс марафона + ачивки
+  bumpWeekStat('trailers');
+  _mar.secLeft = MARATHON_SECONDS;
+  _mar.paused = false;
+  const p = document.getElementById('btn-marathon-pause');
+  if (p) p.textContent = '⏸ Пауза';
+  _marathonTick();
+}
+
+function _marathonTick() {
+  clearTimeout(_mar.timer);
+  _mar.timer = setTimeout(() => {
+    if (_mar.paused) return;
+    _mar.secLeft--;
+    const bar = document.getElementById('mt-bar');
+    const lab = document.getElementById('mt-label');
+    if (bar) bar.style.width = Math.max(0, 100 * _mar.secLeft / MARATHON_SECONDS) + '%';
+    if (lab) lab.textContent = _mar.secLeft <= 0 ? '⏭ далее…' : (_mar.secLeft + ' с');
+    if (_mar.secLeft <= 0) { _marathonNext(); return; }
+    _marathonTick();
+  }, 1000);
+}
+
+function _marathonTogglePause() {
+  _mar.paused = !_mar.paused;
+  const b = document.getElementById('btn-marathon-pause');
+  if (b) b.textContent = _mar.paused ? '▶️ Продолжить' : '⏸ Пауза';
+  const lab = document.getElementById('mt-label');
+  if (lab) lab.textContent = _mar.paused ? '⏸ Пауза' : (_mar.secLeft + ' с');
+  if (!_mar.paused) _marathonTick();
+  haptic('light');
+}
+
+function _marathonNext() {
+  if (_mar.i < _mar.list.length - 1) { _mar.i++; _marathonGo(); }
+  else closeMarathon(true);
+}
+function _marathonPrev() {
+  if (_mar.i > 0) { _mar.i--; _marathonGo(); }
+}
+function closeMarathon(done = false) {
+  clearTimeout(_mar.timer);
+  // v82: недосмотренный марафон сохраняем — на экране марафона появится «досмотреть позже»
+  try {
+    if (!done && _mar.list.length >= 2 && _mar.i > 0 && _mar.i < _mar.list.length - 1) {
+      localStorage.setItem(MAR_RESUME_KEY, JSON.stringify({
+        codes: _mar.list.map(m => m.code), i: _mar.i, label: _mar.label || '',
+      }));
+    } else {
+      localStorage.removeItem(MAR_RESUME_KEY);
+    }
+  } catch (e) { /* пусто */ }
+  const modal = document.getElementById('marathon-modal');
+  const frame = document.getElementById('marathon-frame');
+  if (frame) frame.src = 'about:blank';
+  if (modal) modal.classList.add('hidden');
+  // v132: вышли из кинорежима — вернуть мини-апп в обычный размер.
+  try { exitAppFullscreen(); } catch (e) { /* пусто */ }
+  if (done) {
+    try {
+      tg.showPopup({ type: 'ok', title: '🎬 Марафон завершён!', message: 'Все трейлеры просмотрены. Запустить ещё раз? ▶️' });
+    } catch (e) { /* пусто */ }
+  }
+}
+
+// ---------- v97: навигация марафона — свайпы на телефоне, стрелки на ПК ----------
+// Свайп влево = следующий трейлер, вправо = предыдущий (в модалке марафона).
+// На ПК то же самое делают клавиши ← и →. Вертикальные жесты не трогаем —
+// свайп вниз по шапке по-прежнему закрывает модалку (универсальный хендлер).
+(() => {
+  const modal = document.getElementById('marathon-modal');
+  if (!modal) return;
+  let sx = 0, sy = 0, on = false;
+  modal.addEventListener('touchstart', (e) => {
+    if (modal.classList.contains('hidden')) return;
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    on = true;
+  }, { passive: true });
+  modal.addEventListener('touchend', (e) => {
+    if (!on) return;
+    on = false;
+    if (modal.classList.contains('hidden')) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > 45) return;
+    haptic('light');
+    if (dx < 0) _marathonNext(); else _marathonPrev();
+  }, { passive: true });
+  document.addEventListener('keydown', (e) => {
+    if (modal.classList.contains('hidden')) return;
+    if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') { haptic('light'); _marathonNext(); }
+    else if (e.key === 'ArrowLeft') { haptic('light'); _marathonPrev(); }
+  });
+})();
+
+// ---------- v78: марафон по жанру + шаринг марафона ----------
+// Чип «жанр · N трейлеров» собирает плейлист из всех фильмов жанра с трейлерами
+// (сортировка по рейтингу), «🎲 Случайный» — вперемешку. Ссылкой можно
+// поделиться: друг откроет афишу и марафон запустится сам (см. parseMarathonHash).
+function marathonCandidates() {
+  return ALL.filter(m => m.trailer_yt || m.trailer_file_id);
+}
+
+function renderMarathonView() {
+  const box = document.getElementById('marathon-container');
+  if (!box) return;
+  const withTr = marathonCandidates();
+  const byGenre = {};
+  withTr.forEach(m => (m.genres || []).forEach(g => {
+    const k = g.trim();
+    if (!k) return;
+    (byGenre[k] = byGenre[k] || []).push(m);
+  }));
+  const rows = Object.entries(byGenre)
+    .filter(([, arr]) => arr.length >= 2)
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, 12);
+  const withR = m => m.rating_kp || m.rating || 0;
+  // v82: «досмотреть позже» + прогресс по жанрам
+  let resume = null;
+  try {
+    const r = JSON.parse(localStorage.getItem(MAR_RESUME_KEY) || 'null');
+    if (r && Array.isArray(r.codes)) {
+      const rl = r.codes.map(c => ALL.find(x => String(x.code) === String(c)))
+        .filter(x => x && (x.trailer_yt || x.trailer_file_id));
+      if (rl.length >= 2 && r.i > 0 && r.i < rl.length) {
+        resume = { list: rl, i: Math.min(r.i, rl.length - 1), label: r.label || '' };
+      }
+    }
+  } catch (e) { /* пусто */ }
+  const seen = getMarSeen();
+  box.innerHTML = `
     <div class="chain-card marathon-intro">
       <h2 class="chain-title">🎬 Кино-марафон</h2>
       <p class="chain-sub">Трейлеры идут подряд сами — как сериал. Выбери жанр или собери случайный набор. Марафоном можно поделиться ссылкой!</p>
-      <p class="chain-sub" style="margin:6px 0 0">🏅 Пройдено в марафонах: <b>${i.size}</b></p>
-      <button class="btn-primary" id="btn-marathon-rnd">🎲 Случайный марафон (${Math.min(5,e.length)})</button>
+      <p class="chain-sub" style="margin:6px 0 0">🏅 Пройдено в марафонах: <b>${seen.size}</b></p>
+      <button class="btn-primary" id="btn-marathon-rnd">🎲 Случайный марафон (${Math.min(5, withTr.length)})</button>
     </div>
-    ${a?`
+    ${resume ? `
     <div class="chain-card mar-resume">
       <h3 class="chain-sub" style="margin:0 0 6px">⏸ Досмотреть позже</h3>
-      <p class="chain-sub" style="margin:0 0 10px">«${esc(a.label)}» — ты остановился на ${a.i+1} из ${a.list.length}</p>
+      <p class="chain-sub" style="margin:0 0 10px">«${esc(resume.label)}» — ты остановился на ${resume.i + 1} из ${resume.list.length}</p>
       <button class="btn-primary" id="btn-marathon-resume">▶️ Продолжить марафон</button>
       <button class="mar-resume-x" id="btn-marathon-resume-x">✕ Убрать</button>
-    </div>`:""}
+    </div>` : ''}
     <div class="chain-card">
       <h3 class="chain-sub" style="margin:0 0 8px">🔥 По жанрам</h3>
       <div class="mar-genre-grid">
-        ${s.map(([d,p])=>{const u=p.filter(f=>i.has(String(f.code))).length;return`
-          <button class="mar-genre" data-g="${esc(d)}">
-            ${u?`<i class="mar-prog" style="width:${Math.round(100*u/p.length)}%"></i>`:""}
-            <b>${esc(d)}</b>
-            <span>${p.length} трейлеров · ⭐ до ${Math.max(...p.map(o)).toFixed(1)}${u?" · ✅ "+u:""}</span>
-          </button>`}).join("")}
+        ${rows.map(([g, arr]) => {
+          const prog = arr.filter(m => seen.has(String(m.code))).length;
+          return `
+          <button class="mar-genre" data-g="${esc(g)}">
+            ${prog ? `<i class="mar-prog" style="width:${Math.round(100 * prog / arr.length)}%"></i>` : ''}
+            <b>${esc(g)}</b>
+            <span>${arr.length} трейлеров · ⭐ до ${Math.max(...arr.map(withR)).toFixed(1)}${prog ? ' · ✅ ' + prog : ''}</span>
+          </button>`;
+        }).join('')}
       </div>
-    </div>`;const r=document.getElementById("btn-marathon-resume");r&&r.addEventListener("click",()=>{haptic("ok"),openMarathon(a.list,a.label,a.i)});const c=document.getElementById("btn-marathon-resume-x");c&&c.addEventListener("click",()=>{localStorage.removeItem(MAR_RESUME_KEY),haptic("light"),renderMarathonView()});const l=d=>{const p=(n[d]||[]).slice().sort((u,f)=>o(f)-o(u));haptic("ok"),openMarathon(p,"Жанр: "+d)};t.querySelectorAll(".mar-genre").forEach(d=>d.addEventListener("click",()=>l(d.dataset.g)));const g=document.getElementById("btn-marathon-rnd");g&&g.addEventListener("click",()=>{const d=e.slice().sort(()=>Math.random()-.5).slice(0,5);haptic("ok"),openMarathon(d,"Случайный набор")})}function shareMarathon(){if(!_mar.list.length)return;const e=location.origin+location.pathname+"#marathon="+_mar.list.map(o=>o.code).join(","),s="🎬 Кино-марафон"+(_mar.label?" «"+_mar.label+"»":"")+" — "+_mar.list.length+" трейлеров подряд! Открой и смотри ▶️";haptic("light");try{tg.openTelegramLink("https://t.me/share/url?url="+encodeURIComponent(e)+"&text="+encodeURIComponent(s))}catch(o){try{navigator.clipboard.writeText(e),tg.showPopup({type:"ok",message:"Ссылка скопирована 📋"})}catch(a){}}}function parseAccessHash(){if(!/(^|[#&])access=1/.test(location.hash||""))return!1;try{localStorage.setItem(ACCESS_KEY,"1")}catch(t){}try{history.replaceState(null,"",location.pathname+location.search)}catch(t){location.hash=""}return!0}function parseMarathonHash(){const t=(location.hash||"").match(/#marathon=([A-Za-z0-9,_-]+)/);if(!t)return;const e=t[1].split(",").map(a=>a.trim()).filter(Boolean);try{history.replaceState(null,"",location.pathname+location.search)}catch(a){location.hash=""}const n=()=>{const a=e.map(i=>ALL.find(r=>String(r.code)===String(i))).filter(Boolean).filter(i=>i.trailer_yt||i.trailer_file_id);a.length>=2&&openMarathon(a,"Марафон друга 🎁")};let s=0;const o=setInterval(()=>{(ALL.length||++s>50)&&(clearInterval(o),n())},300)}function addMarathonButtons(){document.querySelectorAll("#view-catalog .hero-shelf").forEach(t=>{if(!["hero-shelf","recent","reco","today"].some(r=>t.id.includes(r))||t.querySelector(".marathon-sm"))return;const e=t.querySelector(".hero-row");if(!e)return;const s=Array.from(e.querySelectorAll(".hero-card")).map(r=>r.dataset.code).filter(Boolean).filter(r=>{const c=ALL.find(l=>String(l.code)===String(r));return c&&(c.trailer_yt||c.trailer_file_id)});if(s.length<2)return;const o=t.querySelector(".shelf-title");if(!o)return;const a=document.createElement("div");a.className="shelf-title-row",o.parentElement.insertBefore(a,o),a.appendChild(o);const i=document.createElement("button");i.className="marathon-sm",i.textContent="🎬 ▶️ Марафон",i.addEventListener("click",()=>{haptic("light");const r=s.map(c=>ALL.find(l=>String(l.code)===String(c))).filter(Boolean);openMarathon(r,o.textContent)}),a.appendChild(i)})}(function(){const e=document.getElementById("marathon-modal");if(!e)return;e.addEventListener("click",r=>{r.target===e&&closeMarathon(!1)});const n=document.getElementById("btn-marathon-close");n&&n.addEventListener("click",()=>closeMarathon(!1));const s=document.getElementById("btn-marathon-next");s&&s.addEventListener("click",()=>{haptic("light"),_marathonNext()});const o=document.getElementById("btn-marathon-prev");o&&o.addEventListener("click",()=>{haptic("light"),_marathonPrev()});const a=document.getElementById("btn-marathon-pause");a&&a.addEventListener("click",_marathonTogglePause);const i=document.getElementById("btn-marathon-share");i&&i.addEventListener("click",shareMarathon)})();function renderCols(){const t=document.getElementById("cols-container");if(!COLLS.length){t.innerHTML='<p class="error">Подборки появятся скоро 📚</p>';return}t.innerHTML=COLLS.map(e=>{const n=e.codes.map(r=>ALL.find(c=>c.code===r)).filter(r=>r&&r.poster).slice(0,3),s=n.length?`<div class="col-fan">${n.map((r,c)=>`<img src="${esc(r.poster)}" alt="" style="z-index:${3-c};transform:rotate(${(c-1)*6}deg) translateX(${(c-1)*8}px)" loading="lazy"/>`).join("")}</div>`:`<span class="col-emoji">${esc(e.emoji||"📚")}</span>`,o=e.codes.map(String),a=o.filter(r=>getUnlocked().includes(r)||getFavs().includes(r)).length,i=o.length?Math.round(100*a/o.length):0;return`
-    <div class="col-card" data-col="${esc(e.code)}">
-      ${s}
+    </div>`;
+  const rs = document.getElementById('btn-marathon-resume');
+  if (rs) rs.addEventListener('click', () => {
+    haptic('ok');
+    openMarathon(resume.list, resume.label, resume.i);
+  });
+  const rsx = document.getElementById('btn-marathon-resume-x');
+  if (rsx) rsx.addEventListener('click', () => {
+    localStorage.removeItem(MAR_RESUME_KEY);
+    haptic('light');
+    renderMarathonView();
+  });
+  const startGenre = (g) => {
+    const arr = (byGenre[g] || []).slice().sort((a, b) => withR(b) - withR(a));
+    haptic('ok');
+    openMarathon(arr, 'Жанр: ' + g);
+  };
+  box.querySelectorAll('.mar-genre').forEach(b => b.addEventListener('click', () => startGenre(b.dataset.g)));
+  const rnd = document.getElementById('btn-marathon-rnd');
+  if (rnd) rnd.addEventListener('click', () => {
+    const pool = withTr.slice().sort(() => Math.random() - 0.5).slice(0, 5);
+    haptic('ok');
+    openMarathon(pool, 'Случайный набор');
+  });
+}
+
+function shareMarathon() {
+  if (!_mar.list.length) return;
+  const base = location.origin + location.pathname;
+  const url = base + '#marathon=' + _mar.list.map(m => m.code).join(',');
+  const label = _mar.label ? ' «' + _mar.label + '»' : '';
+  const text = '🎬 Кино-марафон' + label + ' — ' + _mar.list.length +
+    ' трейлеров подряд! Открой и смотри ▶️';
+  haptic('light');
+  try {
+    tg.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text));
+  } catch (e) {
+    try { navigator.clipboard.writeText(url); tg.showPopup({ type: 'ok', message: 'Ссылка скопирована 📋' }); }
+    catch (e2) { /* пусто */ }
+  }
+}
+
+// v96: подтверждение подписки от бота — бот после успешной проверки открывает
+// апп с хэшем #access=1, это единственный способ пройти гейт (обход убран).
+function parseAccessHash() {
+  if (!/(^|[#&])access=1/.test(location.hash || '')) return false;
+  try { localStorage.setItem(ACCESS_KEY, '1'); } catch (e) {}
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; }
+  return true;
+}
+
+function parseMarathonHash() {
+  const m = (location.hash || '').match(/#marathon=([A-Za-z0-9,_-]+)/);
+  if (!m) return;
+  const codes = m[1].split(',').map(s => s.trim()).filter(Boolean);
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; }
+  const apply = () => {
+    const list = codes.map(c => ALL.find(x => String(x.code) === String(c))).filter(Boolean)
+      .filter(x => x.trailer_yt || x.trailer_file_id);
+    if (list.length >= 2) openMarathon(list, 'Марафон друга 🎁');
+  };
+  // данных может ещё не быть на момент загрузки — ждём коротким опросом
+  let tries = 0;
+  const t = setInterval(() => {
+    if (ALL.length || ++tries > 50) { clearInterval(t); apply(); }
+  }, 300);
+}
+
+// Кнопка «🎬 Марафон» в шапке каждой живой полки на главной (тренд/сегодня/недавно/рекомендации).
+// Добавляем только если в полке ≥2 фильмов с трейлерами.
+function addMarathonButtons() {
+  document.querySelectorAll('#view-catalog .hero-shelf').forEach(shelf => {
+    if (!['hero-shelf', 'recent', 'reco', 'today'].some(k => shelf.id.includes(k))) return;
+    if (shelf.querySelector('.marathon-sm')) return;
+    const row = shelf.querySelector('.hero-row');
+    if (!row) return;
+    const codes = Array.from(row.querySelectorAll('.hero-card')).map(el => el.dataset.code).filter(Boolean);
+    const withTr = codes.filter(c => {
+      const m = ALL.find(x => String(x.code) === String(c));
+      return m && (m.trailer_yt || m.trailer_file_id);
+    });
+    if (withTr.length < 2) return;
+    const title = shelf.querySelector('.shelf-title');
+    if (!title) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'shelf-title-row';
+    title.parentElement.insertBefore(wrap, title);
+    wrap.appendChild(title);
+    const bt = document.createElement('button');
+    bt.className = 'marathon-sm';
+    bt.textContent = '🎬 ▶️ Марафон';
+    bt.addEventListener('click', () => {
+      haptic('light');
+      const items = withTr.map(c => ALL.find(x => String(x.code) === String(c))).filter(Boolean);
+      openMarathon(items, title.textContent);
+    });
+    wrap.appendChild(bt);
+  });
+}
+
+// ---------- обработчики модалки марафона ----------
+(function initMarathonModal() {
+  const bg = document.getElementById('marathon-modal');
+  if (!bg) return;
+  bg.addEventListener('click', (e) => { if (e.target === bg) closeMarathon(false); });
+  const close = document.getElementById('btn-marathon-close');
+  if (close) close.addEventListener('click', () => closeMarathon(false));
+  const next = document.getElementById('btn-marathon-next');
+  if (next) next.addEventListener('click', () => { haptic('light'); _marathonNext(); });
+  const prev = document.getElementById('btn-marathon-prev');
+  if (prev) prev.addEventListener('click', () => { haptic('light'); _marathonPrev(); });
+  const pause = document.getElementById('btn-marathon-pause');
+  if (pause) pause.addEventListener('click', _marathonTogglePause);
+  const share = document.getElementById('btn-marathon-share');
+  if (share) share.addEventListener('click', shareMarathon);
+})();
+
+// ---------- подборки ----------
+function renderCols() {
+  const c = document.getElementById('cols-container');
+  if (!COLLS.length) {
+    c.innerHTML = `<p class="error">Подборки появятся скоро 📚</p>`;
+    return;
+  }
+  c.innerHTML = COLLS.map(col => {
+    const posters = col.codes
+      .map(cd => ALL.find(m => m.code === cd))
+      .filter(m => m && m.poster)
+      .slice(0, 3);
+    const fan = posters.length
+      ? `<div class="col-fan">${posters.map((p, i) =>
+          `<img src="${esc(p.poster)}" alt="" style="z-index:${3 - i};transform:rotate(${(i - 1) * 6}deg) translateX(${(i - 1) * 8}px)" loading="lazy"/>`
+        ).join('')}</div>`
+      : `<span class="col-emoji">${esc(col.emoji || '📚')}</span>`;
+    // v116: прогресс сбора подборки — разгаданные коды + «Моё»
+    const codesStr = col.codes.map(String);
+    const owned = codesStr.filter(cd => getUnlocked().includes(cd) || getFavs().includes(cd)).length;
+    const pct = codesStr.length ? Math.round(100 * owned / codesStr.length) : 0;
+    return `
+    <div class="col-card" data-col="${esc(col.code)}">
+      ${fan}
       <div class="col-body">
-        <h3>${esc(e.emoji||"📚")} ${esc(e.title)}</h3>
-        <p>${e.codes.length} фильм(ов)</p>
-        <div class="col-progress"><i style="width:${i}%"></i></div>
-        <p class="col-progress-label">🔓 ${a}/${e.codes.length} в коллекции</p>
+        <h3>${esc(col.emoji || '📚')} ${esc(col.title)}</h3>
+        <p>${col.codes.length} фильм(ов)</p>
+        <div class="col-progress"><i style="width:${pct}%"></i></div>
+        <p class="col-progress-label">🔓 ${owned}/${col.codes.length} в коллекции</p>
       </div>
-      <button class="btn-share-sm" data-share="${esc(e.code)}" title="Поделиться">📤</button>
-    </div>`}).join(""),t.querySelectorAll(".col-card").forEach(e=>e.addEventListener("click",n=>{if(n.target.closest(".btn-share-sm"))return;const s=COLLS.find(r=>r.code===e.dataset.col);if(!s)return;view="cols-detail",showView("cols");const o=ALL.filter(r=>s.codes.includes(r.code)),a=o.filter(r=>r.trailer_yt||r.trailer_file_id);t.innerHTML=`
+      <button class="btn-share-sm" data-share="${esc(col.code)}" title="Поделиться">📤</button>
+    </div>`;
+  }).join('');
+  c.querySelectorAll('.col-card').forEach(el =>
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-share-sm')) return;
+      const col = COLLS.find(x => x.code === el.dataset.col);
+      if (!col) return;
+      view = 'cols-detail';
+      showView('cols');
+      const list = ALL.filter(m => col.codes.includes(m.code));
+      const trList = list.filter(m => m.trailer_yt || m.trailer_file_id);
+      c.innerHTML = `
         <button class="btn-back" id="btn-cols-back">◀️ Все подборки</button>
-        ${a.length>=2?`<button class="btn-primary" id="btn-cols-marathon" style="margin-top:8px">🎬 ▶️ Марафон трейлеров (${a.length})</button>`:""}
-        <div class="movies-grid">${o.map(r=>`
-          <div class="movie-card" data-code="${esc(r.code)}">
-            ${posterHtml(r)}
+        ${trList.length >= 2
+          ? `<button class="btn-primary" id="btn-cols-marathon" style="margin-top:8px">🎬 ▶️ Марафон трейлеров (${trList.length})</button>`
+          : ''}
+        <div class="movies-grid">${list.map(m => `
+          <div class="movie-card" data-code="${esc(m.code)}">
+            ${posterHtml(m)}
             <div class="movie-info">
-              <h3>${esc(r.title)}</h3>
-              <span class="rating">${ratingBadge(r)}</span>
+              <h3>${esc(m.title)}</h3>
+              <span class="rating">${ratingBadge(m)}</span>
             </div>
-          </div>`).join("")}
-        </div>`,document.getElementById("btn-cols-back").onclick=()=>{view="cols",renderCols()};const i=document.getElementById("btn-cols-marathon");i&&(i.onclick=()=>openMarathon(a,s.title)),t.querySelectorAll(".movie-card").forEach(r=>r.addEventListener("click",()=>openDetail(r.dataset.code)))})),t.querySelectorAll(".btn-share-sm").forEach(e=>e.addEventListener("click",()=>{const n=COLLS.find(o=>o.code===e.dataset.share);if(!n)return;const s=`У меня в «Киноафише» подборка ${n.emoji||"📚"} «${n.title}» — ${n.codes.length} фильмов! Угадай их по кодам в боте «Капитан Кино» 🎬`;tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent("https://t.me/kapitan_kino_bot")}&text=${encodeURIComponent(s)}`)}))}let _curMyCol=null;function renderMyCols(){const t=document.getElementById("mycols-container");if(!t)return;const e=getMyCols(),n='<div class="mycols-head"><h2>🗂 Мои подборки</h2></div>';if(!e.length){t.innerHTML=n+`
+          </div>`).join('')}
+        </div>`;
+      document.getElementById('btn-cols-back').onclick = () => { view = 'cols'; renderCols(); };
+      const mar = document.getElementById('btn-cols-marathon');
+      if (mar) mar.onclick = () => openMarathon(trList, col.title);
+      c.querySelectorAll('.movie-card').forEach(elc =>
+        elc.addEventListener('click', () => openDetail(elc.dataset.code)));
+    }));
+  c.querySelectorAll('.btn-share-sm').forEach(b =>
+    b.addEventListener('click', () => {
+      const col = COLLS.find(x => x.code === b.dataset.share);
+      if (!col) return;
+      const text = `У меня в «Киноафише» подборка ${col.emoji || '📚'} «${col.title}» — ${col.codes.length} фильмов! Угадай их по кодам в боте «Капитан Кино» 🎬`;
+      tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/kapitan_kino_bot')}&text=${encodeURIComponent(text)}`);
+    }));
+}
+
+// ---------- v106: свои подборки ----------
+let _curMyCol = null;  // id открытой подборки (для детального вида)
+function renderMyCols() {
+  const c = document.getElementById('mycols-container');
+  if (!c) return;
+  const cols = getMyCols();
+  const head = `<div class="mycols-head"><h2>🗂 Мои подборки</h2></div>`;
+  if (!cols.length) {
+    c.innerHTML = head + `
       <div class="mycols-empty">
         <p>Собери свою коллекцию: выбери название, добавь фильмы — и подборка всегда под рукой.</p>
         <button class="btn-primary" id="btn-mc-create">➕ Создать подборку</button>
-      </div>`,document.getElementById("btn-mc-create").onclick=promptNewMyCol;return}t.innerHTML=n+e.map(s=>{const o=s.codes.map(i=>ALL.find(r=>r.code===i)).filter(i=>i&&i.poster).slice(0,3),a=o.length?`<div class="col-fan">${o.map((i,r)=>`<img src="${esc(i.poster)}" alt="" style="z-index:${3-r};transform:rotate(${(r-1)*6}deg) translateX(${(r-1)*8}px)" loading="lazy"/>`).join("")}</div>`:'<span class="col-emoji">🗂</span>';return`
-    <div class="col-card" data-mc="${esc(s.id)}">
-      ${a}
+      </div>`;
+    document.getElementById('btn-mc-create').onclick = promptNewMyCol;
+    return;
+  }
+  c.innerHTML = head + cols.map(col => {
+    const posters = col.codes
+      .map(cd => ALL.find(m => m.code === cd))
+      .filter(m => m && m.poster)
+      .slice(0, 3);
+    const fan = posters.length
+      ? `<div class="col-fan">${posters.map((p, i) =>
+          `<img src="${esc(p.poster)}" alt="" style="z-index:${3 - i};transform:rotate(${(i - 1) * 6}deg) translateX(${(i - 1) * 8}px)" loading="lazy"/>`
+        ).join('')}</div>`
+      : `<span class="col-emoji">🗂</span>`;
+    return `
+    <div class="col-card" data-mc="${esc(col.id)}">
+      ${fan}
       <div class="col-body">
-        <h3>🗂 ${esc(s.title)}</h3>
-        <p>${s.codes.length} фильм(ов) · моя</p>
+        <h3>🗂 ${esc(col.title)}</h3>
+        <p>${col.codes.length} фильм(ов) · моя</p>
       </div>
-      <button class="btn-share-sm" data-mcshare="${esc(s.id)}" title="Поделиться">📤</button>
-    </div>`}).join("")+`
-    <button class="btn-secondary" id="btn-mc-create" style="width:100%;margin-top:10px">➕ Создать подборку</button>`,document.getElementById("btn-mc-create").onclick=promptNewMyCol,t.querySelectorAll(".col-card").forEach(s=>s.addEventListener("click",o=>{o.target.closest(".btn-share-sm")||(_curMyCol=s.dataset.mc,view="mycol-detail",showView("mycol-detail"),renderMyColDetail())})),t.querySelectorAll(".btn-share-sm").forEach(s=>s.addEventListener("click",()=>{const o=myColById(s.dataset.mcshare);if(!o)return;const a=o.codes.map(c=>ALL.find(l=>l.code===c)).filter(Boolean),i=a.slice(0,3).map(c=>`🎬 «${c.title}»`).join(", "),r=`🗂 Моя подборка «${o.title}» — ${a.length} фильмов: ${i}… Собери свою в «Киноафише» Капитана Кино!`;tg.openTelegramLink("https://t.me/share/url?url="+encodeURIComponent("https://t.me/kapitan_kino_bot")+"&text="+encodeURIComponent(r))}))}function promptNewMyCol(){try{tg.showPopup({type:"prompt",title:"➕ Новая подборка",message:"Придумай название своей коллекции.",placeholder:"Например: «Кино на вечер», «Ужасы 90-х»…",text:"",callback:(t,e)=>{t==="ok"&&e&&e.trim()&&(newMyCol(e.trim()),haptic("ok"),renderMyCols())}})}catch(t){const e=prompt("Название подборки:");e&&e.trim()&&(newMyCol(e.trim()),renderMyCols())}}function renderMyColDetail(){const t=document.getElementById("view-mycol-detail");if(!t)return;const e=myColById(_curMyCol);if(!e){view="mycols",showView("mycols"),renderMyCols();return}const n=ALL.filter(a=>e.codes.includes(a.code)||e.codes.includes(String(a.code))),s='<button class="btn-secondary" id="btn-mc-add" style="width:100%">➕ Добавить фильм</button>',o='<button class="btn-secondary danger" id="btn-mc-del">🗑 Удалить подборку</button>';t.innerHTML=`
+      <button class="btn-share-sm" data-mcshare="${esc(col.id)}" title="Поделиться">📤</button>
+    </div>`;
+  }).join('') + `
+    <button class="btn-secondary" id="btn-mc-create" style="width:100%;margin-top:10px">➕ Создать подборку</button>`;
+  document.getElementById('btn-mc-create').onclick = promptNewMyCol;
+  c.querySelectorAll('.col-card').forEach(el =>
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-share-sm')) return;
+      _curMyCol = el.dataset.mc;
+      view = 'mycol-detail';
+      showView('mycol-detail');
+      renderMyColDetail();
+    }));
+  c.querySelectorAll('.btn-share-sm').forEach(b =>
+    b.addEventListener('click', () => {
+      const col = myColById(b.dataset.mcshare);
+      if (!col) return;
+      const ms = col.codes.map(cd => ALL.find(m => m.code === cd)).filter(Boolean);
+      const top = ms.slice(0, 3).map(m => `🎬 «${m.title}»`).join(', ');
+      const text = `🗂 Моя подборка «${col.title}» — ${ms.length} фильмов: ${top}… Собери свою в «Киноафише» Капитана Кино!`;
+      tg.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') + '&text=' + encodeURIComponent(text));
+    }));
+}
+
+function promptNewMyCol() {
+  try {
+    tg.showPopup({
+      type: 'prompt',
+      title: '➕ Новая подборка',
+      message: 'Придумай название своей коллекции.',
+      placeholder: 'Например: «Кино на вечер», «Ужасы 90-х»…',
+      text: '',
+      callback: (btnId, value) => {
+        if (btnId === 'ok' && value && value.trim()) {
+          newMyCol(value.trim());
+          haptic('ok');
+          renderMyCols();
+        }
+      }
+    });
+  } catch (e) {
+    const name = prompt('Название подборки:');
+    if (name && name.trim()) { newMyCol(name.trim()); renderMyCols(); }
+  }
+}
+
+// Детальный вид своей подборки: список фильмов, добавление и удаление
+function renderMyColDetail() {
+  const box = document.getElementById('view-mycol-detail');
+  if (!box) return;
+  const col = myColById(_curMyCol);
+  if (!col) { view = 'mycols'; showView('mycols'); renderMyCols(); return; }
+  const list = ALL.filter(m => col.codes.includes(m.code) || col.codes.includes(String(m.code)));
+  const addBtn = `<button class="btn-secondary" id="btn-mc-add" style="width:100%">➕ Добавить фильм</button>`;
+  const delBtn = `<button class="btn-secondary danger" id="btn-mc-del">🗑 Удалить подборку</button>`;
+  box.innerHTML = `
     <div class="mycol-detail-head">
       <button class="btn-back" id="btn-mc-back">◀️ Все подборки</button>
-      <h2>🗂 ${esc(e.title)}</h2>
+      <h2>🗂 ${esc(col.title)}</h2>
     </div>
-    ${n.length?`<div class="movies-grid">${n.map(a=>`
-          <div class="movie-card" data-code="${esc(a.code)}">
-            ${posterHtml(a)}
+    ${list.length
+      ? `<div class="movies-grid">${list.map(m => `
+          <div class="movie-card" data-code="${esc(m.code)}">
+            ${posterHtml(m)}
             <div class="movie-info">
-              <h3>${esc(a.title)}</h3>
-              <span class="rating">${ratingBadge(a)}</span>
+              <h3>${esc(m.title)}</h3>
+              <span class="rating">${ratingBadge(m)}</span>
             </div>
-          </div>`).join("")}</div>`:'<div class="mycols-empty"><p>Пока пусто. Добавь первые фильмы!</p></div>'}
-    ${s}
-    ${o}`,document.getElementById("btn-mc-back").onclick=()=>{view="mycols",showView("mycols"),renderMyCols()},document.getElementById("btn-mc-add").onclick=()=>showMyColAddPanel(e),document.getElementById("btn-mc-del").onclick=()=>{try{(tg.showConfirm||tg.showPopup)(`Удалить подборку «${e.title}»?`,i=>{i&&(setMyCols(getMyCols().filter(r=>r.id!==e.id)),haptic("ok"),view="mycols",showView("mycols"),renderMyCols())})}catch(a){setMyCols(getMyCols().filter(i=>i.id!==e.id)),view="mycols",showView("mycols"),renderMyCols()}},t.querySelectorAll(".movie-card").forEach(a=>a.addEventListener("click",()=>openDetail(a.dataset.code)))}function showMyColAddPanel(t){const e=document.getElementById("view-mycol-detail");if(!e)return;const n=document.createElement("div");n.className="mycol-add-panel",n.innerHTML=`
-    <div class="mycol-detail-head"><h2>➕ К «${esc(t.title)}»</h2></div>
+          </div>`).join('')}</div>`
+      : `<div class="mycols-empty"><p>Пока пусто. Добавь первые фильмы!</p></div>`}
+    ${addBtn}
+    ${delBtn}`;
+  document.getElementById('btn-mc-back').onclick = () => { view = 'mycols'; showView('mycols'); renderMyCols(); };
+  document.getElementById('btn-mc-add').onclick = () => showMyColAddPanel(col);
+  document.getElementById('btn-mc-del').onclick = () => {
+    try {
+      const confirm = tg.showConfirm || tg.showPopup;
+      confirm(`Удалить подборку «${col.title}»?`, (ok) => {
+        if (ok) {
+          setMyCols(getMyCols().filter(x => x.id !== col.id));
+          haptic('ok');
+          view = 'mycols'; showView('mycols'); renderMyCols();
+        }
+      });
+    } catch (e) {
+      setMyCols(getMyCols().filter(x => x.id !== col.id));
+      view = 'mycols'; showView('mycols'); renderMyCols();
+    }
+  };
+  box.querySelectorAll('.movie-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.code)));
+}
+
+// Панель выбора: поиск + список фильмов с галочкой «есть в подборке»
+function showMyColAddPanel(col) {
+  const box = document.getElementById('view-mycol-detail');
+  if (!box) return;
+  const panel = document.createElement('div');
+  panel.className = 'mycol-add-panel';
+  panel.innerHTML = `
+    <div class="mycol-detail-head"><h2>➕ К «${esc(col.title)}»</h2></div>
     <input class="mycol-add-input" id="mc-add-q" type="text" placeholder="🔍 Найти фильм…"/>
     <div class="mycol-add-list" id="mc-add-list"></div>
-    <button class="btn-primary" id="btn-mc-add-done">Готово</button>`,e.prepend(n);const s=document.getElementById("mc-add-list"),o=r=>t.codes.includes(r)||t.codes.includes(String(r)),a=()=>{const r=(document.getElementById("mc-add-q").value||"").toLowerCase().trim(),c=ALL.filter(l=>!r||String(l.title).toLowerCase().includes(r)||String(l.code)===r||String(l.code).includes(r));s.innerHTML=c.slice(0,60).map(l=>`
-      <button class="mycol-add-item ${o(l.code)?"in-col":""}" data-code="${esc(l.code)}">
-        ${l.poster?`<img src="${esc(l.poster)}" alt="" loading="lazy"/>`:"<span>🎬</span>"}
-        <span>${esc(l.title)}</span>
-        <span class="add-plus">${o(l.code)?"✓":"+"}</span>
-      </button>`).join("")||'<p class="mycols-empty">Ничего не нашлось 🤷</p>',s.querySelectorAll(".mycol-add-item").forEach(l=>l.addEventListener("click",()=>{const g=l.dataset.code,d=!o(g);updateMyCol(t.id,p=>{const u=new Set(p.codes);return d?u.add(g):u.delete(g),p.codes=[...u],p}),haptic(d?"ok":"light"),a()}))},i=document.getElementById("mc-add-q");i&&i.addEventListener("input",a),document.getElementById("btn-mc-add-done").onclick=()=>{view="mycol-detail",showView("mycol-detail"),renderMyColDetail()},a()}function renderNews(){const t=document.getElementById("news-container");if(!t)return;if(!NEWS.length){t.innerHTML='<p class="error">Пока нет новостей — загляните позже 📰</p>';return}const e=[...NEWS].reverse();t.innerHTML=e.map(n=>{const s=n.image?`<img src="${esc(n.image)}" alt="" loading="lazy" onerror="this.style.display='none'"/>`:'<div class="news-thumb news-thumb-ph"><span>📰</span></div>',o=_newsWhen(n.ts),a=n.source?`<span class="news-source">${esc(n.source)}</span>`:"",i=n.link||"";return`
-      <div class="news-card" data-link="${esc(i)}">
-        <div class="news-thumb-wrap">${s}</div>
-        <div class="news-body">
-          <h3>${esc(n.title||"Новость")}</h3>
-          <div class="news-meta">${a}${a?" · ":""}${o}</div>
-        </div>
-      </div>`}).join(""),t.querySelectorAll(".news-card").forEach(n=>{n.addEventListener("click",()=>{const s=n.dataset.link;if(s){haptic("light");try{tg.openLink(s,{try_instant_view:!1})}catch(o){window.open(s,"_blank")}}})});try{localStorage.setItem(NEWS_SEEN_KEY,String(newsMaxTs()))}catch(n){}updateMoreBadge()}function _newsWhen(t){if(!t)return"";const e=Date.now()-t*1e3,n=Math.floor(e/6e4);if(n<1)return"только что";if(n<60)return n+" мин назад";const s=Math.floor(n/60);if(s<24)return s+" ч назад";const o=Math.floor(s/24);return o<7?o+" дн назад":new Date(t*1e3).toLocaleDateString("ru-RU")}function renderLeaderboard(){const t=document.getElementById("top-container");if(!t)return;if(!LEADERBOARD.length){t.innerHTML='<p class="error">Пока нет данных — угадывай фильмы и поднимайся в рейтинге! 🏆</p>';return}const e=["🥇","🥈","🥉"],n=LEADERBOARD_KIND==="week",s=PROFILE&&parseInt(PROFILE.rank,10)||0,o=PROFILE&&parseInt(PROFILE.unl,10)||0,a=i=>n?`${i.unlocks} за 7 дней${i.total?` · всего ${i.total}`:""}`:`${i.unlocks} кодов`;t.innerHTML=`
-    <div class="top-header">
-      <h2>${n?"🏆 Топ недели":"🏆 Топ игроков"}</h2>
-      <p class="top-subtitle">${n?"Кто угадал больше всех за последние 7 дней":"Кто угадал больше всех — тот и лидер!"}</p>
-    </div>
-    ${s>0?`<div class="top-you">📍 Вы — №${s} в общем топе · разгадано ${o}</div>`:""}
-    <div class="top-list">
-      ${LEADERBOARD.map((i,r)=>`
-        <div class="top-row ${r<3?"top-row-gold":""}">
-          <div class="top-rank">${e[r]||r+1}</div>
-          <div class="top-player">
-            <span class="top-name">Игрок №${i.rank}</span>
-            <span class="top-count">${esc(a(i))}</span>
-          </div>
-          ${r===0?'<span class="top-crown">👑</span>':""}
-        </div>`).join("")}
-    </div>`}function _inviteFriend(){haptic("light");const e="https://t.me/kapitan_kino_bot"+(PROFILE&&PROFILE.uid?"?start=ref_"+PROFILE.uid:""),n="https://t.me/share/url?url="+encodeURIComponent(e)+"&text="+encodeURIComponent("🎬 Угадывай фильмы по кодам у «Капитана Кино» — афиша, тренажёр и достижения!");try{tg.openTelegramLink(n)}catch(s){}}function copyFavsList(){haptic("light");const t=(window._favTitlesCache||[]).map(s=>`🔑 ${s}`).join(`
-`),e=`🎬 Мои фильмы (${getFavs().length}):
-${t}
+    <button class="btn-primary" id="btn-mc-add-done">Готово</button>`;
+  box.prepend(panel);
+  const listEl = document.getElementById('mc-add-list');
+  const inCol = (code) => col.codes.includes(code) || col.codes.includes(String(code));
+  const draw = () => {
+    const q = (document.getElementById('mc-add-q').value || '').toLowerCase().trim();
+    const pool = ALL.filter(m => !q
+      || String(m.title).toLowerCase().includes(q)
+      || String(m.code) === q || String(m.code).includes(q));
+    listEl.innerHTML = (pool.slice(0, 60).map(m => `
+      <button class="mycol-add-item ${inCol(m.code) ? 'in-col' : ''}" data-code="${esc(m.code)}">
+        ${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy"/>` : '<span>🎬</span>'}
+        <span>${esc(m.title)}</span>
+        <span class="add-plus">${inCol(m.code) ? '✓' : '+'}</span>
+      </button>`).join('') || '<p class="mycols-empty">Ничего не нашлось 🤷</p>');
+    listEl.querySelectorAll('.mycol-add-item').forEach(b =>
+      b.addEventListener('click', () => {
+        const code = b.dataset.code;
+        const adding = !inCol(code);
+        updateMyCol(col.id, c => {
+          const s = new Set(c.codes);
+          adding ? s.add(code) : s.delete(code);
+          c.codes = [...s];
+          return c;
+        });
+        haptic(adding ? 'ok' : 'light');
+        draw();
+      }));
+  };
+  const qEl = document.getElementById('mc-add-q');
+  if (qEl) qEl.addEventListener('input', draw);
+  document.getElementById('btn-mc-add-done').onclick = () => {
+    view = 'mycol-detail';
+    showView('mycol-detail');
+    renderMyColDetail();
+  };
+  draw();
+}
 
-Угадывай фильмы по кодам у «Капитана Кино»!`,n=()=>{try{tg.HapticFeedback.impactOccurred("light")}catch(s){}tg.showPopup({type:"ok",title:"📋 Список скопирован",message:"Отправь его другу — пусть тоже угадывает фильмы!"})};navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(e).then(n).catch(n):n()}function favouriteGenre(){const t=getFavs(),e=new Map;ALL.forEach(a=>{[...t.includes(a.code)?[a.code]:[]].length&&(a.genres||[]).forEach(r=>e.set(r,(e.get(r)||0)+1))});const n=getUnlocked();ALL.forEach(a=>{n.includes(String(a.code))&&(a.genres||[]).forEach(i=>e.set(i,(e.get(i)||0)+1))});let s="",o=0;return e.forEach((a,i)=>{a>o&&(o=a,s=i)}),o>=2?s:""}function levelEmoji(t){const e=[...String(t||"")][0]||"🎬";return/\p{Extended_Pictographic}/u.test(e)?e:"🎬"}function fmtDuration(t){const e=parseInt(t,10);if(!e||e<1)return"";const n=Math.floor(e/60);return(n?n+" ч":"")+(e%60?(n?" ":"")+e%60+" мин":"")}function tasteLine(){const t=getRatings(),e=Object.values(t).map(Number).filter(i=>i>0);if(!e.length)return"";const n=(e.reduce((i,r)=>i+r,0)/e.length).toFixed(1),s=new Map;Object.entries(t).forEach(([i,r])=>{if(Number(r)<4)return;const c=ALL.find(l=>String(l.code)===String(i));(c&&c.actors||[]).forEach(l=>s.set(l,(s.get(l)||0)+1))});let o="",a=0;return s.forEach((i,r)=>{i>a&&(a=i,o=r)}),`<div class="pf-taste">⭐ Средняя оценка: <b>${n}</b> <span class="pf-taste-sub">(${e.length})</span>`+(o?` · 🌟 Любимый актёр: <b>${esc(o)}</b>`:"")+"</div>"}function renderProfile(){var P,R,b,$,I,w,J;const t=document.getElementById("profile-container");if(!t)return;const e=week7(),n=e.map(L=>(L.open||0)+(L.trailers||0)+(L.favs||0)+(L.rated||0)),s=Math.max(1,...n),o=e.reduce((L,B)=>L+B.open,0),a=e.reduce((L,B)=>L+B.trailers,0),i=e.reduce((L,B)=>L+B.favs,0),r=e.reduce((L,B)=>L+(B.rated||0),0),c=e.map((L,B)=>{const Y=Math.round(6+34*n[B]/s);return`<div class="wk-col" title="${L.date.getDate()}.${L.date.getMonth()+1}: ${n[B]} действий"><i style="height:${Y}px"></i><span>${L.date.getDate()}</span></div>`}).join(""),l=dailyState(),g=`
+// ---------- лента «📰 Новости кино» ----------
+function renderNews() {
+  const c = document.getElementById('news-container');
+  if (!c) return;
+  if (!NEWS.length) {
+    c.innerHTML = '<p class="error">Пока нет новостей — загляните позже 📰</p>';
+    return;
+  }
+  // Новости приходят от новых к старшим — показываем сначала свежие
+  const items = [...NEWS].reverse();
+  c.innerHTML = items.map(n => {
+    const img = n.image
+      ? `<img src="${esc(n.image)}" alt="" loading="lazy" onerror="this.style.display='none'"/>`
+      : `<div class="news-thumb news-thumb-ph"><span>📰</span></div>`;
+    const when = _newsWhen(n.ts);
+    const source = n.source ? `<span class="news-source">${esc(n.source)}</span>` : '';
+    const url = n.link || '';
+    return `
+      <div class="news-card" data-link="${esc(url)}">
+        <div class="news-thumb-wrap">${img}</div>
+        <div class="news-body">
+          <h3>${esc(n.title || 'Новость')}</h3>
+          <div class="news-meta">${source}${source ? ' · ' : ''}${when}</div>
+        </div>
+      </div>`;
+  }).join('');
+  c.querySelectorAll('.news-card').forEach(el => {
+    el.addEventListener('click', () => {
+      const url = el.dataset.link;
+      if (!url) return;
+      haptic('light');
+      try { tg.openLink(url, { try_instant_view: false }); } catch (_) { window.open(url, '_blank'); }
+    });
+  });
+  // Пользователь видел новости — фиксируем и обновляем бейдж на «Ещё»
+  try { localStorage.setItem(NEWS_SEEN_KEY, String(newsMaxTs())); } catch (e) {}
+  updateMoreBadge();
+}
+
+function _newsWhen(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts * 1000;
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return 'только что';
+  if (min < 60) return min + ' мин назад';
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return hr + ' ч назад';
+  const d = Math.floor(hr / 24);
+  if (d < 7) return d + ' дн назад';
+  return new Date(ts * 1000).toLocaleDateString('ru-RU');
+}
+
+// ---------- лидерборд «🏆 Топ» ----------
+function renderLeaderboard() {
+  const c = document.getElementById('top-container');
+  if (!c) return;
+  if (!LEADERBOARD.length) {
+    c.innerHTML = '<p class="error">Пока нет данных — угадывай фильмы и поднимайся в рейтинге! 🏆</p>';
+    return;
+  }
+  const medals = ['🥇', '🥈', '🥉'];
+  const weekly = LEADERBOARD_KIND === 'week';
+  // Место пользователя в общем топе приезжает из профиля бота (PROFILE.rank)
+  const myRank = PROFILE ? (parseInt(PROFILE.rank, 10) || 0) : 0;
+  const myUnl = PROFILE ? (parseInt(PROFILE.unl, 10) || 0) : 0;
+  const countLabel = (p) => weekly
+    ? `${p.unlocks} за 7 дней${p.total ? ` · всего ${p.total}` : ''}`
+    : `${p.unlocks} кодов`;
+  c.innerHTML = `
+    <div class="top-header">
+      <h2>${weekly ? '🏆 Топ недели' : '🏆 Топ игроков'}</h2>
+      <p class="top-subtitle">${weekly
+        ? 'Кто угадал больше всех за последние 7 дней'
+        : 'Кто угадал больше всех — тот и лидер!'}</p>
+    </div>
+    ${myRank > 0 ? `<div class="top-you">📍 Вы — №${myRank} в общем топе · разгадано ${myUnl}</div>` : ''}
+    <div class="top-list">
+      ${LEADERBOARD.map((p, i) => `
+        <div class="top-row ${i < 3 ? 'top-row-gold' : ''}">
+          <div class="top-rank">${medals[i] || (i + 1)}</div>
+          <div class="top-player">
+            <span class="top-name">Игрок №${p.rank}</span>
+            <span class="top-count">${esc(countLabel(p))}</span>
+          </div>
+          ${i === 0 ? '<span class="top-crown">👑</span>' : ''}
+        </div>`).join('')}
+    </div>`;
+}
+
+// ---------- профиль «👤» (уровень/баллы/стрик) ----------
+// Данные приезжают от кнопки 🔁 (хэш &profile=…) — см. parseProfileHash().
+
+// 📣 Пригласить друга — шеринг персональной реф-ссылки на бота:
+// переход друга по ?start=ref_<id> засчитывается в реферальные достижения.
+function _inviteFriend() {
+  haptic('light');
+  const ref = (PROFILE && PROFILE.uid) ? ('?start=ref_' + PROFILE.uid) : '';
+  const botUrl = 'https://t.me/kapitan_kino_bot' + ref;
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(botUrl) +
+    '&text=' + encodeURIComponent('🎬 Угадывай фильмы по кодам у «Капитана Кино» — афиша, тренажёр и достижения!');
+  try { tg.openTelegramLink(url); } catch (e) {}
+}
+
+// 📋 «Скопировать список» из «Моё» — коды+названия в буфер обмена
+function copyFavsList() {
+  haptic('light');
+  const lines = (window._favTitlesCache || []).map(l => `🔑 ${l}`).join('\n');
+  const text = `🎬 Мои фильмы (${getFavs().length}):\n${lines}\n\nУгадывай фильмы по кодам у «Капитана Кино»!`;
+  const done = () => {
+    try { tg.HapticFeedback.impactOccurred('light'); } catch (e) {}
+    tg.showPopup({ type: 'ok', title: '📋 Список скопирован', message: 'Отправь его другу — пусть тоже угадывает фильмы!' });
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(done);
+  } else done();
+}
+
+function favouriteGenre() {
+  // Любимый жанр: берём из разгаданных кодов + избранного
+  const favs = getFavs();
+  const counter = new Map();
+  ALL.forEach(m => {
+    const codes = [...(favs.includes(m.code) ? [m.code] : [])];
+    if (codes.length) (m.genres || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1));
+  });
+  // Из профиля можем взять историю разгадок через unlocked
+  const unlocked = getUnlocked();
+  ALL.forEach(m => {
+    if (unlocked.includes(String(m.code))) {
+      (m.genres || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1));
+    }
+  });
+  let best = '', bestN = 0;
+  counter.forEach((n, g) => { if (n > bestN) { bestN = n; best = g; } });
+  return bestN >= 2 ? best : '';
+}
+function levelEmoji(lvl) {
+  const first = [...String(lvl || '')][0] || '🎬';
+  return /\p{Extended_Pictographic}/u.test(first) ? first : '🎬';
+}
+
+function fmtDuration(mins) {
+  const m = parseInt(mins, 10);
+  if (!m || m < 1) return '';
+  const h = Math.floor(m / 60);
+  return (h ? h + ' ч' : '') + (m % 60 ? (h ? ' ' : '') + (m % 60) + ' мин' : '');
+}
+
+// v90: вкусовая строка профиля — средняя оценка и любимый актёр (по локальным данным)
+function tasteLine() {
+  const ratings = getRatings();
+  const vals = Object.values(ratings).map(Number).filter(v => v > 0);
+  if (!vals.length) return '';
+  const avg = (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
+  const cnt = new Map();
+  Object.entries(ratings).forEach(([code, v]) => {
+    if (Number(v) < 4) return;
+    const m = ALL.find(x => String(x.code) === String(code));
+    ((m && m.actors) || []).forEach(a => cnt.set(a, (cnt.get(a) || 0) + 1));
+  });
+  let actor = '', best = 0;
+  cnt.forEach((n, a) => { if (n > best) { best = n; actor = a; } });
+  return `<div class="pf-taste">⭐ Средняя оценка: <b>${avg}</b> <span class="pf-taste-sub">(${vals.length})</span>`
+    + (actor ? ` · 🌟 Любимый актёр: <b>${esc(actor)}</b>` : '') + `</div>`;
+}
+
+// (функция сброса локальных данных удалена — по запросу пользователя)
+
+function renderProfile() {
+  const c = document.getElementById('profile-container');
+  if (!c) return;
+  // «📊 Моя неделя» — локальная активность за 7 дней (считается в самом аппе,
+  // работает и без синка с ботом)
+  const w7 = week7();
+  const wAct = w7.map(d => (d.open || 0) + (d.trailers || 0) + (d.favs || 0) + (d.rated || 0));
+  const maxAct = Math.max(1, ...wAct);
+  const sumOpen = w7.reduce((a, d) => a + d.open, 0);
+  const sumTr = w7.reduce((a, d) => a + d.trailers, 0);
+  const sumFv = w7.reduce((a, d) => a + d.favs, 0);
+  const sumRt = w7.reduce((a, d) => a + (d.rated || 0), 0);
+  const wkBars = w7.map((d, i) => {
+    const h = Math.round(6 + 34 * wAct[i] / maxAct);
+    return `<div class="wk-col" title="${d.date.getDate()}.${d.date.getMonth() + 1}: ${wAct[i]} действий"><i style="height:${h}px"></i><span>${d.date.getDate()}</span></div>`;
+  }).join('');
+  const dState = dailyState();
+  const weekBlock = `
     <div class="pf-week">
-      <div class="pf-ach-head"><span>📊 Моя неделя</span><b>${o+a+i+r} действий</b></div>
-      <div class="wk-chart">${c}</div>
-      <div class="wk-legend"><span>🔍 ${o}</span><span>▶️ ${a}</span><span>❤️ ${i}</span><span>⭐ ${r}</span></div>
-      <div class="wk-streak">🔥 Серия заходов: <b>${l.series}</b> ${_daysWord(l.series||1)} · рекорд <b>${Math.max(l.best,l.series)}</b></div>
-    </div>`;if(!PROFILE){t.innerHTML=`
+      <div class="pf-ach-head"><span>📊 Моя неделя</span><b>${sumOpen + sumTr + sumFv + sumRt} действий</b></div>
+      <div class="wk-chart">${wkBars}</div>
+      <div class="wk-legend"><span>🔍 ${sumOpen}</span><span>▶️ ${sumTr}</span><span>❤️ ${sumFv}</span><span>⭐ ${sumRt}</span></div>
+      <div class="wk-streak">🔥 Серия заходов: <b>${dState.series}</b> ${_daysWord(dState.series || 1)} · рекорд <b>${Math.max(dState.best, dState.series)}</b></div>
+    </div>`;
+  if (!PROFILE) {
+    c.innerHTML = `
       <div class="profile-card">
         <div class="pf-ava">👤</div>
         <h2>Мой профиль</h2>
         <p class="pf-hint">Уровень, кинобаллы и стрик хранятся в боте.<br/>
         Синхронизируй — и они появятся здесь.</p>
         ${tasteLine()}
-        ${g}
+        ${weekBlock}
         ${buildInsights()}
         <button class="btn-primary" id="pf-sync">🔁 Синхронизировать с ботом</button>
         <button class="btn-secondary pf-invite" id="pf-invite">📣 Пригласить друга</button>
-      </div>`,document.getElementById("pf-sync").onclick=()=>sendOrDeepLink({action:"sync_unlocked"});const L=document.getElementById("pf-invite");L&&(L.onclick=_inviteFriend);return}const d=PROFILE,p=parseInt(d.unl,10)||0,u=Math.max(0,Math.min(100,parseInt(d.pct,10)||0)),f=d.lvl_next==null?"👑 Максимальный уровень!":`Ещё ${d.lvl_next} код(ов) до следующего уровня`,y=parseInt(d.rank,10)||0,v=parseInt((P=d.refc)!=null?P:0,10)||0,m=d.vip?'<span class="pf-vip">⭐ VIP</span>':"",E=d.tit?`<div class="pf-title">🏷 ${esc(String(d.tit))}</div>`:"",S=parseInt(d.ach&&d.ach[0],10)||0,x=parseInt(d.ach&&d.ach[1],10)||0,j=x?Math.round(100*S/x):0,N=`
+      </div>`;
+    document.getElementById('pf-sync').onclick = () => sendOrDeepLink({ action: 'sync_unlocked' });
+    const inv0 = document.getElementById('pf-invite');
+    if (inv0) inv0.onclick = _inviteFriend;
+    return;
+  }
+  const p = PROFILE;
+  const unl = parseInt(p.unl, 10) || 0;
+  const pct = Math.max(0, Math.min(100, parseInt(p.pct, 10) || 0));
+  const nextNote = (p.lvl_next == null)
+    ? '👑 Максимальный уровень!'
+    : `Ещё ${p.lvl_next} код(ов) до следующего уровня`;
+  const rank = parseInt(p.rank, 10) || 0;
+  const refc = parseInt(p.refc ?? 0, 10) || 0;   // D1/v126: приведено друзей
+
+  // VIP-бейдж
+  const vipBadge = p.vip
+    ? '<span class="pf-vip">⭐ VIP</span>' : '';
+
+  // Активный титул
+  const titleLine = p.tit
+    ? `<div class="pf-title">🏷 ${esc(String(p.tit))}</div>` : '';
+
+  // Достижения (ачивки)
+  const achDone = parseInt(p.ach && p.ach[0], 10) || 0;
+  const achTotal = parseInt(p.ach && p.ach[1], 10) || 0;
+  const achPct = achTotal ? Math.round(100 * achDone / achTotal) : 0;
+  const achBlock = `
     <div class="pf-ach">
       <div class="pf-ach-head">
         <span>🏆 Достижения</span>
-        <b>${S}/${x}</b>
+        <b>${achDone}/${achTotal}</b>
       </div>
-      <div class="pf-progress pf-progress-sm"><i style="width:${j}%"></i></div>
-      <p class="pf-ach-hint">${x-S>0?"Осталось "+(x-S)+" — угадывай фильмы, ставь оценки, приглашай друзей!":"Все достижения открыты! 🎉"}</p>
-    </div>`;let C="";if(d.wg&&d.wg.target){const L=Math.min(parseInt(d.wg.done,10)||0,parseInt(d.wg.target,10)),B=parseInt(d.wg.target,10),Y=B?Math.round(100*L/B):0,W=d.wg.genre?` жанра «${esc(d.wg.genre)}»`:"";C=`
+      <div class="pf-progress pf-progress-sm"><i style="width:${achPct}%"></i></div>
+      <p class="pf-ach-hint">${achTotal - achDone > 0 ? 'Осталось ' + (achTotal - achDone) + ' — угадывай фильмы, ставь оценки, приглашай друзей!' : 'Все достижения открыты! 🎉'}</p>
+    </div>`;
+
+  // Недельная цель
+  let wgBlock = '';
+  if (p.wg && p.wg.target) {
+    const wgDone = Math.min(parseInt(p.wg.done, 10) || 0, parseInt(p.wg.target, 10));
+    const wgTarget = parseInt(p.wg.target, 10);
+    const wgPct = wgTarget ? Math.round(100 * wgDone / wgTarget) : 0;
+    const wgGenre = p.wg.genre ? ` жанра «${esc(p.wg.genre)}»` : '';
+    wgBlock = `
       <div class="pf-wg">
         <div class="pf-wg-head">
           <span>🎯 Цель недели</span>
-          <b>${L}/${B}</b>
+          <b>${wgDone}/${wgTarget}</b>
         </div>
-        <div class="pf-progress pf-progress-sm"><i style="width:${Y}%"></i></div>
-        <p class="pf-wg-hint">Разгадай ${B} код(ов)${W} за неделю — получишь +15 💰</p>
-      </div>`}const D=`
+        <div class="pf-progress pf-progress-sm"><i style="width:${wgPct}%"></i></div>
+        <p class="pf-wg-hint">Разгадай ${wgTarget} код(ов)${wgGenre} за неделю — получишь +15 💰</p>
+      </div>`;
+  }
+
+  // Opt-in на публичный топ
+  const optChecked = p.opt ? 'checked' : '';
+  const optBlock = `
     <label class="pf-opt">
-      <input type="checkbox" id="pf-opt-in" ${d.opt?"checked":""}/>
+      <input type="checkbox" id="pf-opt-in" ${optChecked}/>
       <span class="pf-opt-pill">🏆 Показывать меня в общем топе</span>
-    </label>`,_=parseInt((R=d.refu)!=null?R:0,10)||0,M=parseInt((b=d.refn)!=null?b:-1,10),A=d.refv,q=L=>{const B=L%10,Y=L%100;return B===1&&Y!==11?"друга":(B>=2&&B<=4&&(Y<12||Y>14),"друзей")};let F="";if(M>=0||_>0||A){const L=M>0?Math.round(100*Math.min(1,(3-M)/3)):100;let B="";M===0?B+=`<p class="pf-ref-hint">🎁 Следующее открытие уже можно получить — позови ещё ${q(1)}!</p>`:M>0&&(B+=`<p class="pf-ref-hint">🎁 Ещё ${M} ${q(M)} — и получишь бесплатное открытие кода.</p>`),B+=_>0?`<p class="pf-ref-hint">🎟 Готовые открытия: <b>${_}</b> — они применятся сами при вводе следующего кода.</p>`:"",A&&(B+=A.left>0?`<p class="pf-ref-hint">👑 Ещё ${A.left} ${q(A.left)} — и получишь VIP (${A.at}+ друзей) на 2-10 дней!</p>`:`<p class="pf-ref-hint">👑 Порог VIP (${A.at}+ друзей) достигнут — награда уже начислена ботом!</p>`),F=`
+    </label>`;
+
+  // D2/v127: «Реферальные бонусы» — прогресс до следующего 🎁/👑 за друзей
+  const refuN = parseInt(p.refu ?? 0, 10) || 0;   // накоплено бесплатных открытий
+  const refnN = parseInt(p.refn ?? -1, 10);       // ещё N друзей до следующего 🎁
+  const refvN = p.refv;                           // {at, left} до VIP или null
+  const _fw = n => {
+    const m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return 'друга';
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return 'друзей';
+    return 'друзей';
+  };
+  let refBlock = '';
+  if (refnN >= 0 || refuN > 0 || refvN) {
+    const refBar = (refnN > 0) ? Math.round(100 * Math.min(1, (3 - refnN) / 3)) : 100;
+    let refBody = '';
+    if (refnN === 0) {
+      refBody += `<p class="pf-ref-hint">🎁 Следующее открытие уже можно получить — позови ещё ${_fw(1)}!</p>`;
+    } else if (refnN > 0) {
+      refBody += `<p class="pf-ref-hint">🎁 Ещё ${refnN} ${_fw(refnN)} — и получишь бесплатное открытие кода.</p>`;
+    }
+    refBody += refuN > 0
+      ? `<p class="pf-ref-hint">🎟 Готовые открытия: <b>${refuN}</b> — они применятся сами при вводе следующего кода.</p>`
+      : '';
+    if (refvN) {
+      refBody += refvN.left > 0
+        ? `<p class="pf-ref-hint">👑 Ещё ${refvN.left} ${_fw(refvN.left)} — и получишь VIP (${refvN.at}+ друзей) на 2-10 дней!</p>`
+        : `<p class="pf-ref-hint">👑 Порог VIP (${refvN.at}+ друзей) достигнут — награда уже начислена ботом!</p>`;
+    }
+    refBlock = `
     <div class="pf-ref">
       <div class="pf-ref-head">
         <span>🎁 Реферальные бонусы</span>
-        <b>${_>0?"+🎟"+_:M>=0?M+" до 🎁":""}</b>
+        <b>${refuN > 0 ? '+🎟' + refuN : (refnN >= 0 ? refnN + ' до 🎁' : '')}</b>
       </div>
-      <div class="pf-progress pf-progress-sm"><i style="width:${L}%"></i></div>
-      ${B}
-    </div>`}const O=Array.isArray(d.fa)&&d.fa.length?d.fa:[],h=O.length?`
+      <div class="pf-progress pf-progress-sm"><i style="width:${refBar}%"></i></div>
+      ${refBody}
+    </div>`;
+  }
+
+// D3/v128: лента «👥 Друзья угадали» — последние разгадки друзей
+  // (тех, кто пришёл по реферальной ссылке). Приезжает в p.fa из синхронизации.
+  const faN = (Array.isArray(p.fa) && p.fa.length) ? p.fa : [];
+  const friendsList = faN.length ? `
     <div class="pf-friends">
       <div class="pf-friends-head">
         <span>👥 Друзья угадали</span>
-        <b>${Math.min(5,O.length)}</b>
+        <b>${Math.min(5, faN.length)}</b>
       </div>
       <div class="pf-friends-list">
-        ${O.slice(0,5).map(L=>{const B=String(L.date||"").replace(/-/g,"."),Y=esc(String(L.title||"фильм"));return`<a class="pf-friend" data-code="${esc(String(L.code))}">📅 ${B} · ${Y}</a>`}).join("")}
+        ${faN.slice(0, 5).map(f => {
+          const d = String(f.date || '').replace(/-/g, '.');
+          const t = esc(String(f.title || 'фильм'));
+          return `<a class="pf-friend" data-code="${esc(String(f.code))}">📅 ${d} · ${t}</a>`;
+        }).join('')}
       </div>
       <p class="pf-friends-hint">Твои друзья уже разгадывают коды — открывай и ты!</p>
-    </div>`:"";t.innerHTML=`
+    </div>` : '';
+  c.innerHTML = `
     <div class="profile-card">
-      <div class="pf-ava">${esc(levelEmoji(d.lvl))}</div>
-      ${m}
-      <h2>${esc(String(d.lvl||"Игрок"))}</h2>
-      ${E}
-      <div class="pf-progress"><i style="width:${u}%"></i></div>
-      <p class="pf-note">${esc(f)}</p>
+      <div class="pf-ava">${esc(levelEmoji(p.lvl))}</div>
+      ${vipBadge}
+      <h2>${esc(String(p.lvl || 'Игрок'))}</h2>
+      ${titleLine}
+      <div class="pf-progress"><i style="width:${pct}%"></i></div>
+      <p class="pf-note">${esc(nextNote)}</p>
       <div class="pf-stats">
-        <div class="pf-stat"><b>💰 ${esc(String(($=d.pts)!=null?$:0))}</b><span>кинобаллов</span></div>
-        <div class="pf-stat"><b>🔥 ${esc(String((I=d.str)!=null?I:0))}</b><span>стрик · рекорд ${esc(String((w=d.bst)!=null?w:0))}</span></div>
-        <div class="pf-stat"><b>🔓 ${esc(String(p))}</b><span>из ${esc(String((J=d.tot)!=null?J:ALL.length))} фильмов</span></div>
-        <div class="pf-stat"><b>🤝 ${esc(String(v))}</b><span>приглашено друзей</span></div>
+        <div class="pf-stat"><b>💰 ${esc(String(p.pts ?? 0))}</b><span>кинобаллов</span></div>
+        <div class="pf-stat"><b>🔥 ${esc(String(p.str ?? 0))}</b><span>стрик · рекорд ${esc(String(p.bst ?? 0))}</span></div>
+        <div class="pf-stat"><b>🔓 ${esc(String(unl))}</b><span>из ${esc(String(p.tot ?? ALL.length))} фильмов</span></div>
+        <div class="pf-stat"><b>🤝 ${esc(String(refc))}</b><span>приглашено друзей</span></div>
         <div class="pf-stat"><b>👁 ${esc(String(getWatched().length))}</b><span>просмотрено</span></div>
-        <div class="pf-stat"><b>${y?"🏆 №"+y:"🏆 —"}</b><span>${y?"в общем топе":"ещё не в топе"}</span></div>
+        <div class="pf-stat"><b>${rank ? '🏆 №' + rank : '🏆 —'}</b><span>${rank ? 'в общем топе' : 'ещё не в топе'}</span></div>
       </div>
-      ${N}
-      ${g}
-      ${F}
-      ${h}
+      ${achBlock}
+      ${weekBlock}
+      ${refBlock}
+      ${friendsList}
       ${buildInsights()}
-      ${favouriteGenre()?`<div class="pf-favgenre">🌟 Любимый жанр: <b>${esc(favouriteGenre())}</b></div>`:""}
+      ${favouriteGenre() ? `<div class="pf-favgenre">🌟 Любимый жанр: <b>${esc(favouriteGenre())}</b></div>` : ''}
       ${tasteLine()}
-      ${C}
-      ${D}
+      ${wgBlock}
+      ${optBlock}
       <div class="pf-actions">
         <button class="btn-secondary" id="pf-sync2">🔁 Обновить</button>
         <button class="btn-secondary" id="pf-bot">🏅 Профиль в боте</button>
       </div>
       <button class="btn-secondary pf-invite" id="pf-invite">📣 Пригласить друга</button>
-    </div>`,document.getElementById("pf-sync2").onclick=()=>sendOrDeepLink({action:"sync_unlocked"});const k=document.getElementById("pf-invite");k&&(k.onclick=_inviteFriend),document.querySelectorAll(".pf-friends-list .pf-friend").forEach(L=>{L.addEventListener("click",()=>{haptic("light"),openDetail(L.dataset.code),showView("detail")})}),document.getElementById("pf-bot").onclick=()=>{haptic("light");try{tg.openTelegramLink("https://t.me/kapitan_kino_bot")}catch(L){window.open("https://t.me/kapitan_kino_bot","_blank")}};const T=document.getElementById("pf-opt-in");T&&T.addEventListener("change",()=>{haptic("light"),sendOrDeepLink({action:"toggle_optin",on:T.checked})})}const MONTH_NAMES=["","янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];function renderYear(){const t=document.getElementById("year-container");if(!t)return;const e=new Date().getFullYear(),n=humanYearWord(e),s="kinoafisha_year_goal",o=()=>{try{return parseInt(localStorage.getItem(s)||"",10)||0}catch(b){return 0}},a=getYearStats(),i=b=>Object.values(a).reduce(($,I)=>$+(I&&I[b]||0),0),r=i("open"),c=i("trailers"),l=i("favs"),g=i("rated"),d=r+c+l+g,p=getRatings(),u=Object.keys(p).length,f=getWatched().length,y=getFavs().length,v=getUnlocked().length,m=[12,24,36,50],E=o(),S=E?Math.min(100,Math.round(100*v/E)):0,x=E&&v>=E,j=`
-    <div class="yr-goal${x?" done":""}">
+    </div>`;
+  document.getElementById('pf-sync2').onclick = () => sendOrDeepLink({ action: 'sync_unlocked' });
+  const inv = document.getElementById('pf-invite');
+  if (inv) inv.onclick = _inviteFriend;
+  // D3/v128: тап по фильму в ленте друзей — открываем карточку фильма
+  document.querySelectorAll('.pf-friends-list .pf-friend').forEach(a => {
+    a.addEventListener('click', () => {
+      haptic('light');
+      openDetail(a.dataset.code);
+      showView('detail');
+    });
+  });
+  document.getElementById('pf-bot').onclick = () => {
+    haptic('light');
+    try { tg.openTelegramLink('https://t.me/kapitan_kino_bot'); }
+    catch (e) { window.open('https://t.me/kapitan_kino_bot', '_blank'); }
+  };
+  const optIn = document.getElementById('pf-opt-in');
+  if (optIn) {
+    optIn.addEventListener('change', () => {
+      haptic('light');
+      sendOrDeepLink({ action: 'toggle_optin', on: optIn.checked });
+    });
+  }
+}
+
+// ---------- v74: «Мой кино-год» — личный отчёт по активности ----------
+// Считаем по локальным данным: помесячный журнал (open/trailers/favs/rated)
+// + текущие списки (Моё, оценки, просмотренные, разгаданные).
+const MONTH_NAMES = ['', 'янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+function renderYear() {
+  const c = document.getElementById('year-container');
+  if (!c) return;
+  const year = new Date().getFullYear();
+  const fmtYear = humanYearWord(year);
+  // v99: «Цель года» — хранится локально (число кодов: 12/24/36/50)
+  const YEAR_GOAL_KEY = 'kinoafisha_year_goal';
+  const getYearGoal = () => { try { return parseInt(localStorage.getItem(YEAR_GOAL_KEY) || '', 10) || 0; } catch (e) { return 0; } };
+
+  const sm = getYearStats();
+  const sumOf = (f) => Object.values(sm).reduce((a, m) => a + ((m && m[f]) || 0), 0);
+  const totOpen = sumOf('open');
+  const totTr = sumOf('trailers');
+  const totFv = sumOf('favs');
+  const totRt = sumOf('rated');
+  const totAct = totOpen + totTr + totFv + totRt;
+
+  const ratings = getRatings();
+  const ratCount = Object.keys(ratings).length;
+  const watchedCnt = getWatched().length;
+  const favCnt = getFavs().length;
+  const unlCnt = getUnlocked().length;
+
+  // v99: «Цель года» — разгадай N кодов. Локально, прогресс по разгаданным.
+  const GOAL_CHOICES = [12, 24, 36, 50];
+  const goal = getYearGoal();
+  const goalPct = goal ? Math.min(100, Math.round(100 * unlCnt / goal)) : 0;
+  const goalDone = goal && unlCnt >= goal;
+  const goalBlock = `
+    <div class="yr-goal${goalDone ? ' done' : ''}">
       <h3>🎯 Цель года</h3>
-      ${E?x?`<p class="yr-goal-msg">🎉 Цель ${E} выполнена! Разгадано ${v}. Так держать — есть куда расти 😎</p>`:`<div class="yr-goal-bar"><i style="width:${S}%"></i></div>
-               <p class="yr-goal-msg">${v} из ${E} разгадано · осталось ${Math.max(0,E-v)}</p>`:`<p class="yr-goal-msg">Разгадаешь N кодов за ${e} год? Прогресс-бар будет виден здесь.</p>
+      ${goal
+        ? (goalDone
+            ? `<p class="yr-goal-msg">🎉 Цель ${goal} выполнена! Разгадано ${unlCnt}. Так держать — есть куда расти 😎</p>`
+            : `<div class="yr-goal-bar"><i style="width:${goalPct}%"></i></div>
+               <p class="yr-goal-msg">${unlCnt} из ${goal} разгадано · осталось ${Math.max(0, goal - unlCnt)}</p>`)
+        : `<p class="yr-goal-msg">Разгадаешь N кодов за ${year} год? Прогресс-бар будет виден здесь.</p>
            <div class="yr-goal-chips">
-             ${m.map(b=>`<button class="ls-btn" data-g="${b}">${b} кодов</button>`).join("")}
+             ${GOAL_CHOICES.map(n => `<button class="ls-btn" data-g="${n}">${n} кодов</button>`).join('')}
              <button class="ls-btn" data-g="0">Позже</button>
            </div>`}
-      ${E?'<button class="btn-secondary yr-goal-edit" id="yr-goal-edit">Изменить</button>':""}
-    </div>`,N=()=>{t.querySelectorAll(".yr-goal-chips .ls-btn").forEach($=>$.addEventListener("click",()=>{var I;try{localStorage.setItem(s,$.dataset.g)}catch(w){}if(haptic("light"),$.dataset.g==="0"){(I=t.querySelector(".yr-goal"))==null||I.remove();return}renderYear()}));const b=document.getElementById("yr-goal-edit");b&&(b.onclick=()=>{try{localStorage.removeItem(s)}catch($){}renderYear()})},C=new Map,H=(b,$)=>{const I=ALL.find(w=>String(w.code)===String(b));I&&(I.genres||[]).forEach(w=>C.set(w,(C.get(w)||0)+$))};Object.keys(p).forEach(b=>H(b,2)),getFavs().forEach(b=>H(b,1.5)),getWatched().forEach(b=>H(b,1)),getUnlocked().forEach(b=>H(b,1));const D=[...C.entries()].sort((b,$)=>$[1]-b[1]).slice(0,6).map(([b])=>b);let _=null;Object.entries(p).forEach(([b,$])=>{const I=ALL.find(w=>String(w.code)===String(b));I&&(!_||$>_.r||$===_.r&&(parseFloat(I.rating)||0)>(parseFloat(_.m.rating)||0))&&(_={m:I,r:$})});const M=[],A=new Date;for(let b=11;b>=0;b--){const $=new Date(A.getFullYear(),A.getMonth()-b,1),I=$.getFullYear()+"-"+($.getMonth()+1),w=a[I];M.push({label:MONTH_NAMES[$.getMonth()+1]||"",year:$.getFullYear(),act:w?(w.open||0)+(w.trailers||0)+(w.favs||0)+(w.rated||0):0})}const q=Math.max(1,...M.map(b=>b.act)),O=`
+      ${goal ? '<button class="btn-secondary yr-goal-edit" id="yr-goal-edit">Изменить</button>' : ''}
+    </div>`;
+  const wireYearGoal = () => {
+    c.querySelectorAll('.yr-goal-chips .ls-btn').forEach(b => b.addEventListener('click', () => {
+      try { localStorage.setItem(YEAR_GOAL_KEY, b.dataset.g); } catch (e) {}
+      haptic('light');
+      if (b.dataset.g === '0') { c.querySelector('.yr-goal')?.remove(); return; }
+      renderYear();
+    }));
+    const ed = document.getElementById('yr-goal-edit');
+    if (ed) ed.onclick = () => { try { localStorage.removeItem(YEAR_GOAL_KEY); } catch (e) {} renderYear(); };
+  };
+
+  // Любимые жанры: из оценок (вес 2) + «Моё» (вес 1.5) + просмотренных (вес 1) + разгаданных (1)
+  const gScore = new Map();
+  const feedG = (code, w) => {
+    const m = ALL.find(x => String(x.code) === String(code));
+    if (!m) return;
+    (m.genres || []).forEach(g => gScore.set(g, (gScore.get(g) || 0) + w));
+  };
+  Object.keys(ratings).forEach(code => feedG(code, 2));
+  getFavs().forEach(code => feedG(code, 1.5));
+  getWatched().forEach(code => feedG(code, 1));
+  getUnlocked().forEach(code => feedG(code, 1));
+  const topGenres = [...gScore.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([g]) => g);
+
+  // Лучший фильм по моей оценке (при равенстве — выше рейтинг КП)
+  let best = null;
+  Object.entries(ratings).forEach(([code, r]) => {
+    const m = ALL.find(x => String(x.code) === String(code));
+    if (!m) return;
+    if (!best || r > best.r || (r === best.r && (parseFloat(m.rating) || 0) > (parseFloat(best.m.rating) || 0))) {
+      best = { m, r };
+    }
+  });
+
+  // Гистограмма: последние 12 месяцев (включая текущий), считаем активность
+  const months = [];
+  const now = new Date();
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const k = d.getFullYear() + '-' + (d.getMonth() + 1);
+    const m = sm[k];
+    months.push({
+      label: MONTH_NAMES[d.getMonth() + 1] || '', year: d.getFullYear(),
+      act: m ? ((m.open || 0) + (m.trailers || 0) + (m.favs || 0) + (m.rated || 0)) : 0,
+    });
+  }
+  const maxAct = Math.max(1, ...months.map(x => x.act));
+  const chart = months.map(x => {
+    const h = Math.max(3, Math.round(44 * x.act / maxAct));
+    return `<span class="yr-col" title="${x.label} ${x.year}: ${x.act}">` +
+      `<i style="height:${h}px"></i><em>${x.label}</em></span>`;
+  }).join('');
+  const chartBlock = `
     <div class="yr-mnt">
       <h3>📅 Активность по месяцам</h3>
-      <div class="yr-chart">${M.map(b=>{const $=Math.max(3,Math.round(44*b.act/q));return`<span class="yr-col" title="${b.label} ${b.year}: ${b.act}"><i style="height:${$}px"></i><em>${b.label}</em></span>`}).join("")}</div>
-    </div>`,h=_?`<div class="yr-best">
+      <div class="yr-chart">${chart}</div>
+    </div>`;
+  const bestBlock = best
+    ? `<div class="yr-best">
         <h3>⭐ Лучший по твоей оценке</h3>
-        <div class="yr-best-card" data-code="${esc(_.m.code)}">
-          ${_.m.poster?`<img src="${esc(_.m.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none'"/>`:'<span style="font-size:26px">🎬</span>'}
+        <div class="yr-best-card" data-code="${esc(best.m.code)}">
+          ${best.m.poster
+            ? `<img src="${esc(best.m.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none'"/>`
+            : '<span style="font-size:26px">🎬</span>'}
           <div style="flex:1;min-width:0">
-            <b>${esc(_.m.title)}</b>
-            <span>${"★".repeat(_.r)} · ⭐ ${esc(String(_.m.rating||"—"))}</span>
+            <b>${esc(best.m.title)}</b>
+            <span>${'★'.repeat(best.r)} · ⭐ ${esc(String(best.m.rating || '—'))}</span>
           </div>
         </div>
-      </div>`:"",k=d>=5?'<button class="btn-primary yr-share" id="yr-share">📤 Поделиться итогом года</button>':"";if(d===0&&u===0&&f===0){t.innerHTML=`
-      <div class="year-head"><h2>🏆 Мой кино-год — ${e}</h2></div>
+      </div>`
+    : '';
+
+  const shareBtn = totAct >= 5
+    ? `<button class="btn-primary yr-share" id="yr-share">📤 Поделиться итогом года</button>`
+    : '';
+
+  if (totAct === 0 && ratCount === 0 && watchedCnt === 0) {
+    c.innerHTML = `
+      <div class="year-head"><h2>🏆 Мой кино-год — ${year}</h2></div>
       <div class="yr-empty">Здесь будет личный отчёт: сколько фильмов открыл, трейлеров посмотрел, оценок поставил.<br/><br/>
       Статистика начнёт копиться сама — просто пользуйся приложением! 🎬</div>
-      ${j}
-      <button class="btn-primary" style="width:100%;margin-top:10px" id="yr-go">🎬 Перейти в афишу</button>`,document.getElementById("yr-go").onclick=()=>openView("grid"),N();return}t.innerHTML=`
+      ${goalBlock}
+      <button class="btn-primary" style="width:100%;margin-top:10px" id="yr-go">🎬 Перейти в афишу</button>`;
+    document.getElementById('yr-go').onclick = () => openView('grid');
+    wireYearGoal();
+    return;
+  }
+
+  c.innerHTML = `
     <div class="year-head">
-      <h2>🏆 Мой кино-год — ${e}</h2>
-      <p class="year-sub">${n} · ${d} действий · статистика считается на этом устройстве</p>
+      <h2>🏆 Мой кино-год — ${year}</h2>
+      <p class="year-sub">${fmtYear} · ${totAct} действий · статистика считается на этом устройстве</p>
     </div>
-    ${j}
+    ${goalBlock}
     <div class="yr-stats">
-      <div class="yr-stat"><b>🔍 ${r}</b><span>карточек фильмов открыто</span></div>
-      <div class="yr-stat"><b>▶️ ${c}</b><span>трейлеров просмотрено</span></div>
-      <div class="yr-stat"><b>❤️ ${l}</b><span>раз добавлено в «Моё»</span></div>
-      <div class="yr-stat"><b>⭐ ${g}</b><span>оценок поставлено</span></div>
-      <div class="yr-stat"><b>⭐ ${u}</b><span>фильмов оценено</span></div>
-      <div class="yr-stat"><b>👁 ${f}</b><span>отмечено просмотренными</span></div>
-      <div class="yr-stat"><b>🔓 ${v}</b><span>кодов разгадано</span></div>
-      <div class="yr-stat"><b>🔑 ${y}</b><span>в «Хочу посмотреть»</span></div>
+      <div class="yr-stat"><b>🔍 ${totOpen}</b><span>карточек фильмов открыто</span></div>
+      <div class="yr-stat"><b>▶️ ${totTr}</b><span>трейлеров просмотрено</span></div>
+      <div class="yr-stat"><b>❤️ ${totFv}</b><span>раз добавлено в «Моё»</span></div>
+      <div class="yr-stat"><b>⭐ ${totRt}</b><span>оценок поставлено</span></div>
+      <div class="yr-stat"><b>⭐ ${ratCount}</b><span>фильмов оценено</span></div>
+      <div class="yr-stat"><b>👁 ${watchedCnt}</b><span>отмечено просмотренными</span></div>
+      <div class="yr-stat"><b>🔓 ${unlCnt}</b><span>кодов разгадано</span></div>
+      <div class="yr-stat"><b>🔑 ${favCnt}</b><span>в «Хочу посмотреть»</span></div>
     </div>
-    ${O}
-    ${D.length?`<div class="yr-genres">
+    ${chartBlock}
+    ${topGenres.length ? `<div class="yr-genres">
         <h3>🎭 Твои жанры</h3>
-        <div class="yr-tags">${D.map(b=>`<span class="yr-tag">${esc(b)}</span>`).join("")}</div>
-      </div>`:""}
-    ${h}
-    ${k}
-    ${d>=5?'<button class="btn-secondary yr-share" id="yr-card" style="width:100%;margin-top:8px">🖼 Скачать открытку года</button>':""}`;const T=document.querySelector(".yr-best-card");T&&T.addEventListener("click",()=>openDetail(T.dataset.code));const P=document.getElementById("yr-card");P&&(P.onclick=openYearCard),N();const R=document.getElementById("yr-share");R&&(R.onclick=()=>{haptic("light");const b=`🎬 Мой кино-${e} в «Киноафише» Капитана Кино:
-🔍 ${r} открытий · ▶️ ${c} трейлеров · ⭐ ${g} оценок · ❤️ ${l} «Моё»
-Любимые жанры: ${D.slice(0,3).join(", ")||"—"}`,$="https://t.me/share/url?url="+encodeURIComponent("https://t.me/kapitan_kino_bot")+"&text="+encodeURIComponent(b);try{tg.openTelegramLink($)}catch(I){window.open($,"_blank")}})}function humanYearWord(t){const e=t%100;if(e>=11&&e<=14)return`За ${t} год`;const n=e%10;return n===1?`За ${t} год`:n>=2&&n<=4?`За ${t} года`:`За ${t} лет`}function drawYearCard(t){let s,o;try{s=document.createElement("canvas"),s.width=500,s.height=750,o=s.getContext("2d")}catch(g){t(null);return}o.fillStyle="#10131f",o.fillRect(0,0,500,750),o.strokeStyle="rgba(255,193,7,.6)",o.lineWidth=3,o.strokeRect(6,6,488,738),o.fillStyle="rgba(255,193,7,.95)",o.font="bold 26px Manrope, Arial",o.textAlign="center",o.fillText("МОЙ КИНО-ГОД",500/2,54);const a=getYearStats(),i=g=>Object.values(a).reduce((d,p)=>d+(p&&p[g]||0),0),r={открытий:i("open"),трейлеров:i("trailers"),оценок:i("rated")};o.fillStyle="rgba(255,255,255,.85)",o.font="bold 16px Manrope, Arial";const c=Object.keys(r);let l=96;c.forEach(g=>{o.fillText(`🔹 ${g}: ${r[g]}`,500/2,l),l+=32}),o.fillStyle="rgba(255,255,255,.5)",o.font="bold 13px Manrope, Arial",o.fillText("🎬 КАПИТАН КИНО",500/2,736),t(s)}function openYearCard(){const t=document.getElementById("sharecard-modal");if(!t)return;t.classList.remove("hidden");const e=document.getElementById("sharecard-preview");e.innerHTML='<p class="modal-muted">🎨 Рисуем открытку…</p>',drawYearCard(n=>{if(!n){e.innerHTML='<p class="modal-muted">Открытку не удалось собрать</p>';return}try{const s=n.toDataURL?n.toDataURL("image/png"):"";if(!s){e.innerHTML='<p class="modal-muted">Открытку не удалось собрать</p>';return}e.innerHTML=`<img src="${s}" alt="Мой кино-год"/>`;const o=document.getElementById("btn-sharecard-download");o&&(o.onclick=()=>{try{const a=document.createElement("a");a.href=s,a.download="kinokod_year.png",a.click()}catch(a){window.open(s,"_blank")}})}catch(s){e.innerHTML='<p class="modal-muted">Открытку не удалось собрать</p>'}})}let _trailerSearchTimer=null,_trailerPage=1;const TRAILERS_PER_PAGE=20;function renderTrailerGenreChips(){const t=document.getElementById("trailer-genre-chips");if(!t)return;const e=ALL.filter(o=>o.trailer_yt||o.trailer_file_id),n=new Map;e.forEach(o=>(o.genres||[]).forEach(a=>n.set(a,(n.get(a)||0)+1)));const s=[...n.entries()].filter(([,o])=>o>=2).sort((o,a)=>a[1]-o[1]).slice(0,8);if(!s.length){t.classList.add("hidden");return}t.innerHTML=`<button class="chip${trailerGenre===""?" active":""}" data-g="">Все</button>`+s.map(([o,a])=>`<button class="chip${trailerGenre===o?" active":""}" data-g="${esc(o)}">${esc(o)} <em>${a}</em></button>`).join(""),t.classList.remove("hidden"),t.querySelectorAll(".chip").forEach(o=>o.addEventListener("click",()=>{haptic("light"),trailerGenre=o.dataset.g||"",_trailerPage=1,renderTrailerGenreChips(),renderTrailers()}))}function renderTrailers(){const t=document.getElementById("trailers-container");if(!t)return;if(!ALL.length){t.innerHTML=`<div class="trailers-grid">${Array.from({length:6},()=>'<div class="trailer-card skeleton-card"><div class="skel poster"></div><div class="skel line"></div></div>').join("")}</div>`;return}const e=(document.getElementById("trailer-search").value||"").trim().toLowerCase(),n=document.getElementById("trailer-sort").value;let s=ALL.filter(c=>c.trailer_yt||c.trailer_file_id);if(trailerGenre&&(s=s.filter(c=>(c.genres||[]).includes(trailerGenre))),e){const c=e.replace(/ё/g,"е"),l=/^\d+$/.test(c.replace(/\s+/g,"")),g=c.replace(/\D/g,""),d=u=>(u||"").toLowerCase().replace(/ё/g,"е"),p=c.split(/\s+/).filter(Boolean);s=s.filter(u=>{if(l&&g&&String(u.code||"").includes(g))return!0;const f=d(u.title);if(p.every(v=>f.includes(v)))return!0;const y=[...u.actors||[],...u.director?[u.director]:[]].map(d).join(" ");return y&&p.every(v=>y.includes(v))?!0:(u.genres||[]).some(v=>d(v).includes(c))})}s.sort((c,l)=>{if(n==="rating")return(parseFloat(l.rating)||0)-(parseFloat(c.rating)||0);if(n==="new"){const g=new Date(c.added_at||0).getTime();return new Date(l.added_at||0).getTime()-g}return(c.title||"").localeCompare(l.title||"","ru")});const o=getTrailerPins();if(o.length&&s.sort((c,l)=>{const g=o.includes(String(c.code))?0:1,d=o.includes(String(l.code))?0:1;return g-d}),!s.length){t.innerHTML='<p class="error">Нет трейлеров по запросу 🎬</p>';return}const a=Math.max(1,Math.ceil(s.length/TRAILERS_PER_PAGE));_trailerPage>a&&(_trailerPage=a),_trailerPage<1&&(_trailerPage=1);const i=s.slice((_trailerPage-1)*TRAILERS_PER_PAGE,_trailerPage*TRAILERS_PER_PAGE),r=a>1?`<div class="pager">
-      <button class="pg-btn" data-pg="prev" ${_trailerPage===1?"disabled":""} aria-label="Назад">◀</button>
-      ${Array.from({length:a},(c,l)=>`<button class="pg-btn${l+1===_trailerPage?" active":""}" data-pg="${l+1}">${l+1}</button>`).join("")}
-      <button class="pg-btn" data-pg="next" ${_trailerPage===a?"disabled":""} aria-label="Вперёд">▶</button>
-      <span class="pg-info">🎬 ${s.length}</span>
-    </div>`:"";t.innerHTML=`<div class="trailers-grid">${i.map(c=>`
-    <div class="trailer-card" data-code="${esc(c.code)}">
+        <div class="yr-tags">${topGenres.map(g => `<span class="yr-tag">${esc(g)}</span>`).join('')}</div>
+      </div>` : ''}
+    ${bestBlock}
+    ${shareBtn}
+    ${totAct >= 5 ? '<button class="btn-secondary yr-share" id="yr-card" style="width:100%;margin-top:8px">🖼 Скачать открытку года</button>' : ''}`;
+
+  const bestCard = document.querySelector('.yr-best-card');
+  if (bestCard) bestCard.addEventListener('click', () => openDetail(bestCard.dataset.code));
+  const yrCardBtn = document.getElementById('yr-card');
+  if (yrCardBtn) yrCardBtn.onclick = openYearCard;
+  wireYearGoal();
+  const share = document.getElementById('yr-share');
+  if (share) {
+    share.onclick = () => {
+      haptic('light');
+      const text = `🎬 Мой кино-${year} в «Киноафише» Капитана Кино:\n` +
+        `🔍 ${totOpen} открытий · ▶️ ${totTr} трейлеров · ⭐ ${totRt} оценок · ❤️ ${totFv} «Моё»\n` +
+        `Любимые жанры: ${topGenres.slice(0, 3).join(', ') || '—'}`;
+      const url = 'https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') +
+        '&text=' + encodeURIComponent(text);
+      try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+    };
+  }
+}
+function humanYearWord(y) {
+  const r = y % 100;
+  if (r >= 11 && r <= 14) return `За ${y} год`;
+  const d = r % 10;
+  if (d === 1) return `За ${y} год`;
+  if (d >= 2 && d <= 4) return `За ${y} года`;
+  return `За ${y} лет`;
+}
+
+// ---------- v110: «Киногод картинкой» — canvas-открытка года ----------
+function drawYearCard(cb) {
+  const W = 500, H = 750;
+  let cv, ctx;
+  try {
+    cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    ctx = cv.getContext('2d');
+  } catch (e) { cb(null); return; }
+  ctx.fillStyle = '#10131f';
+  ctx.fillRect(0, 0, W, H);
+  // рамка
+  ctx.strokeStyle = 'rgba(255,193,7,.6)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(6, 6, W - 12, H - 12);
+  // заголовок
+  ctx.fillStyle = 'rgba(255,193,7,.95)';
+  ctx.font = 'bold 26px Manrope, Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('МОЙ КИНО-ГОД', W / 2, 54);
+  const _ys = getYearStats();
+  const _ysv = (f) => Object.values(_ys).reduce((a, m) => a + ((m && m[f]) || 0), 0);
+  const sums = {
+    открытий: _ysv('open'),
+    трейлеров: _ysv('trailers'),
+    оценок: _ysv('rated'),
+  };
+  ctx.fillStyle = 'rgba(255,255,255,.85)';
+  ctx.font = 'bold 16px Manrope, Arial';
+  const keys = Object.keys(sums);
+  let y = 96;
+  keys.forEach(k => { ctx.fillText(`🔹 ${k}: ${sums[k]}`, W / 2, y); y += 32; });
+  ctx.fillStyle = 'rgba(255,255,255,.5)';
+  ctx.font = 'bold 13px Manrope, Arial';
+  ctx.fillText('🎬 КАПИТАН КИНО', W / 2, H - 14);
+  cb(cv);
+}
+function openYearCard() {
+  const modal = document.getElementById('sharecard-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const prev = document.getElementById('sharecard-preview');
+  prev.innerHTML = '<p class="modal-muted">🎨 Рисуем открытку…</p>';
+  drawYearCard((cv) => {
+    if (!cv) { prev.innerHTML = '<p class="modal-muted">Открытку не удалось собрать</p>'; return; }
+    try {
+      const url = cv.toDataURL ? cv.toDataURL('image/png') : '';
+      if (!url) { prev.innerHTML = '<p class="modal-muted">Открытку не удалось собрать</p>'; return; }
+      prev.innerHTML = `<img src="${url}" alt="Мой кино-год"/>`;
+      const dl = document.getElementById('btn-sharecard-download');
+      if (dl) dl.onclick = () => {
+        try {
+          const a = document.createElement('a');
+          a.href = url; a.download = 'kinokod_year.png'; a.click();
+        } catch (e) { window.open(url, '_blank'); }
+      };
+    } catch (e) { prev.innerHTML = '<p class="modal-muted">Открытку не удалось собрать</p>'; }
+  });
+}
+// ---------- трейлеры «🎥» ----------
+// Все трейлеры в одном месте — с поиском, сортировкой и фильтром по жанру.
+let _trailerSearchTimer = null;
+let _trailerPage = 1;                 // текущая страница сетки трейлеров
+const TRAILERS_PER_PAGE = 20;         // фильмов на одной странице
+
+function renderTrailerGenreChips() {
+  const wrap = document.getElementById('trailer-genre-chips');
+  if (!wrap) return;
+  const withTrailers = ALL.filter(m => m.trailer_yt || m.trailer_file_id);
+  const counter = new Map();
+  withTrailers.forEach(m => (m.genres || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1)));
+  const top = [...counter.entries()].filter(([, n]) => n >= 2)
+    .sort((a, b) => b[1] - a[1]).slice(0, 8);
+  if (!top.length) { wrap.classList.add('hidden'); return; }
+  wrap.innerHTML = `<button class="chip${trailerGenre === '' ? ' active' : ''}" data-g="">Все</button>` +
+    top.map(([g, n]) =>
+      `<button class="chip${trailerGenre === g ? ' active' : ''}" data-g="${esc(g)}">${esc(g)} <em>${n}</em></button>`
+    ).join('');
+  wrap.classList.remove('hidden');
+  wrap.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+    haptic('light');
+    trailerGenre = ch.dataset.g || '';
+    _trailerPage = 1;
+    renderTrailerGenreChips();
+    renderTrailers();
+  }));
+}
+
+function renderTrailers() {
+  const c = document.getElementById('trailers-container');
+  if (!c) return;
+  if (!ALL.length) {
+    // Первый визит, данные ещё грузятся — скелетоны вместо пустоты
+    c.innerHTML = `<div class="trailers-grid">${Array.from({ length: 6 }, () =>
+      '<div class="trailer-card skeleton-card"><div class="skel poster"></div><div class="skel line"></div></div>'
+    ).join('')}</div>`;
+    return;
+  }
+  const qRaw = (document.getElementById('trailer-search').value || '').trim().toLowerCase();
+  const sort = document.getElementById('trailer-sort').value;
+  let list = ALL.filter(m => m.trailer_yt || m.trailer_file_id);
+  if (trailerGenre) list = list.filter(m => (m.genres || []).includes(trailerGenre));
+  if (qRaw) {
+    // v64: ё-нормализация + все слова запроса + код (если запрос целиком число)
+    // v109: ищем и по актёрам/режиссёру — как в афише
+    const q = qRaw.replace(/ё/g, 'е');
+    const isCode = /^\d+$/.test(q.replace(/\s+/g, ''));
+    const digits = q.replace(/\D/g, '');
+    const norm = (t) => (t || '').toLowerCase().replace(/ё/g, 'е');
+    const tks = q.split(/\s+/).filter(Boolean);
+    list = list.filter(m => {
+      if (isCode && digits && String(m.code || '').includes(digits)) return true;
+      const t = norm(m.title);
+      if (tks.every(w => t.includes(w))) return true;
+      const people = [...(m.actors || []), ...(m.director ? [m.director] : [])].map(norm).join(' ');
+      if (people && tks.every(w => people.includes(w))) return true;
+      return (m.genres || []).some(g => norm(g).includes(q));
+    });
+  }
+  list.sort((a, b) => {
+    if (sort === 'rating') return (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0);
+    if (sort === 'new') {
+      const da = new Date(a.added_at || 0).getTime();
+      const db = new Date(b.added_at || 0).getTime();
+      return db - da;
+    }
+    return (a.title || '').localeCompare(b.title || '', 'ru');
+  });
+  // v109: закреплённые (📌) трейлеры всегда первыми
+  const pins = getTrailerPins();
+  if (pins.length) {
+    list.sort((a, b) => {
+      const pa = pins.includes(String(a.code)) ? 0 : 1;
+      const pb = pins.includes(String(b.code)) ? 0 : 1;
+      return pa - pb;
+    });
+  }
+  if (!list.length) {
+    c.innerHTML = '<p class="error">Нет трейлеров по запросу 🎬</p>';
+    return;
+  }
+  // v54: пагинация — по TRAILERS_PER_PAGE фильмов на страницу
+  const pages = Math.max(1, Math.ceil(list.length / TRAILERS_PER_PAGE));
+  if (_trailerPage > pages) _trailerPage = pages;
+  if (_trailerPage < 1) _trailerPage = 1;
+  const pageItems = list.slice((_trailerPage - 1) * TRAILERS_PER_PAGE, _trailerPage * TRAILERS_PER_PAGE);
+  const pager = pages > 1 ? `<div class="pager">
+      <button class="pg-btn" data-pg="prev" ${_trailerPage === 1 ? 'disabled' : ''} aria-label="Назад">◀</button>
+      ${Array.from({ length: pages }, (_, i) =>
+        `<button class="pg-btn${i + 1 === _trailerPage ? ' active' : ''}" data-pg="${i + 1}">${i + 1}</button>`).join('')}
+      <button class="pg-btn" data-pg="next" ${_trailerPage === pages ? 'disabled' : ''} aria-label="Вперёд">▶</button>
+      <span class="pg-info">🎬 ${list.length}</span>
+    </div>` : '';
+  c.innerHTML = `<div class="trailers-grid">${pageItems.map(m => `
+    <div class="trailer-card" data-code="${esc(m.code)}">
       <div class="trailer-thumb">
-        ${(()=>{const l=c.trailer_thumb||c.poster||(c.trailer_yt?`https://i.ytimg.com/vi/${encodeURIComponent(c.trailer_yt)}/0.jpg`:""),g=c.poster||(c.trailer_yt?`https://i.ytimg.com/vi/${encodeURIComponent(c.trailer_yt)}/hqdefault.jpg`:"");return l?`<div class="thumb-blur" style="background-image:url('${esc(l)}')"></div><img src="${esc(l)}" alt="" loading="lazy" ${FADE}${dimStyle(c)} onerror="const b=this.previousElementSibling;if(!this.dataset.f){this.dataset.f=1;this.src='${esc(g||"")}';if(b)b.style.backgroundImage='url(${esc(g||"")})'}else{this.style.display='none';if(b)b.style.display='none'}"/>`:'<div class="trailer-thumb-ph">🎬</div>'})()}
+        ${(() => {
+          const src = m.trailer_thumb || m.poster || (m.trailer_yt ? `https://i.ytimg.com/vi/${encodeURIComponent(m.trailer_yt)}/0.jpg` : '');
+          const fb = m.poster || (m.trailer_yt ? `https://i.ytimg.com/vi/${encodeURIComponent(m.trailer_yt)}/hqdefault.jpg` : '');
+          return src
+            ? `<div class="thumb-blur" style="background-image:url('${esc(src)}')"></div><img src="${esc(src)}" alt="" loading="lazy" ${FADE}${dimStyle(m)} onerror="const b=this.previousElementSibling;if(!this.dataset.f){this.dataset.f=1;this.src='${esc(fb || '')}';if(b)b.style.backgroundImage='url(${esc(fb || '')})'}else{this.style.display='none';if(b)b.style.display='none'}"/>`
+            : `<div class="trailer-thumb-ph">🎬</div>`;
+        })()}
         <span class="trailer-play">▶️</span>
-        ${!c.trailer_yt&&c.trailer_file_id?'<span class="trailer-local">📥</span>':""}
-        <button class="trailer-pin${getTrailerPins().includes(String(c.code))?" pinned":""}" data-pin="${esc(c.code)}" title="Закрепить наверху">📌</button>
+        ${(!m.trailer_yt && m.trailer_file_id) ? '<span class="trailer-local">📥</span>' : ''}
+        <button class="trailer-pin${getTrailerPins().includes(String(m.code)) ? ' pinned' : ''}" data-pin="${esc(m.code)}" title="Закрепить наверху">📌</button>
       </div>
       <div class="trailer-info">
-        <h3>${esc(c.title)}</h3>
+        <h3>${esc(m.title)}</h3>
         <div class="trailer-meta">
-          ${c.year?`<span>📅 ${esc(String(c.year))}</span>`:""}
-          ${c.rating?`<span>⭐ ${esc(String(c.rating))}</span>`:""}
+          ${m.year ? `<span>📅 ${esc(String(m.year))}</span>` : ''}
+          ${m.rating ? `<span>⭐ ${esc(String(m.rating))}</span>` : ''}
         </div>
       </div>
-    </div>`).join("")}</div>${r}`,t.querySelectorAll(".trailer-card").forEach(c=>{c.addEventListener("click",l=>{if(l.target.closest(".trailer-pin"))return;const g=ALL.find(d=>d.code===c.dataset.code);g&&openTrailer(g)})}),t.querySelectorAll(".trailer-pin").forEach(c=>c.addEventListener("click",l=>{l.stopPropagation();const g=toggleTrailerPin(c.dataset.pin);c.classList.toggle("pinned",g);try{tg.showPopup({type:"ok",title:g?"📌 Закреплён":"📌 Откреплён",message:g?"Этот трейлер всегда будет первым в списке.":"Трейлер вернулся в обычный порядок."})}catch(d){}setTimeout(()=>renderTrailers(),250)})),t.querySelectorAll(".pg-btn").forEach(c=>c.addEventListener("click",()=>{const l=c.dataset.pg;l==="prev"?_trailerPage=Math.max(1,_trailerPage-1):l==="next"?_trailerPage=Math.min(a,_trailerPage+1):_trailerPage=parseInt(l,10)||1,haptic("light"),renderTrailers(),window.scrollTo({top:Math.max(0,t.offsetTop-70),behavior:"smooth"})}))}(function(){const e=document.getElementById("btn-tr-random");e&&e.addEventListener("click",()=>{const n=ALL.filter(s=>s.trailer_yt||s.trailer_file_id);n.length&&(haptic("light"),openTrailer(n[Math.floor(Math.random()*n.length)]))})})();const ACHIEVEMENTS_LIST=[{id:"first_code",emoji:"🔓",name:"Первый код",desc:"Разгадай первый код"},{id:"streak3",emoji:"🔥",name:"Стрик 3",desc:"Разгадай 3 кода подряд без ошибок"},{id:"streak7",emoji:"⚡",name:"Стрик 7",desc:"Разгадай 7 кодов подряд без ошибок"},{id:"codes10",emoji:"🎯",name:"10 кодов",desc:"Разгадай 10 кодов"},{id:"codes25",emoji:"🏅",name:"25 кодов",desc:"Разгадай 25 кодов"},{id:"codes50",emoji:"🏆",name:"50 кодов",desc:"Разгадай 50 кодов"},{id:"genres3",emoji:"🎭",name:"3 жанра",desc:"Разгадай коды из 3 разных жанров"},{id:"genres5",emoji:"🌈",name:"5 жанров",desc:"Разгадай коды из 5 разных жанров"},{id:"reaction",emoji:"👍",name:"Оценка",desc:"Поставь оценку фильму"},{id:"reaction3",emoji:"💬",name:"3 оценки",desc:"Поставь 3 оценки"},{id:"favorite",emoji:"❤️",name:"Избранное",desc:"Добавь фильм в избранное"},{id:"points20",emoji:"💰",name:"20 баллов",desc:"Заработай 20 кинобаллов"},{id:"points50",emoji:"💎",name:"50 баллов",desc:"Заработай 50 кинобаллов"},{id:"secret",emoji:"🕵️",name:"Секрет",desc:"Найди секретный код"},{id:"bingo_line",emoji:"🎰",name:"Линия",desc:"Закрой линию в кино-бинго"},{id:"bingo_full",emoji:"👑",name:"Бинго!",desc:"Закрой всю карточку кино-бинго"},{id:"referral3",emoji:"🤝",name:"3 друга",desc:"Пригласи 3 друзей"}];function computeAchCards(){const t=getFavs(),e=getUnlocked(),n=PROFILE||{},s=parseInt(n.pts,10)||0,o=parseInt(n.str,10)||0,a=e.length;return ACHIEVEMENTS_LIST.map(i=>{let r=!1,c="";switch(i.id){case"first_code":r=a>=1;break;case"streak3":r=o>=3,c=`${Math.min(o,3)}/3`;break;case"streak7":r=o>=7,c=`${Math.min(o,7)}/7`;break;case"codes10":r=a>=10,c=`${Math.min(a,10)}/10`;break;case"codes25":r=a>=25,c=`${Math.min(a,25)}/25`;break;case"codes50":r=a>=50,c=`${Math.min(a,50)}/50`;break;case"favorite":r=t.length>=1,c=`${t.length}/1`;break;case"genres3":{const l=new Set;ALL.forEach(g=>{e.includes(String(g.code))&&(g.genres||[]).forEach(d=>l.add(d))}),r=l.size>=3,c=`${l.size}/3`;break}case"genres5":{const l=new Set;ALL.forEach(g=>{e.includes(String(g.code))&&(g.genres||[]).forEach(d=>l.add(d))}),r=l.size>=5,c=`${l.size}/5`;break}case"reaction":r=(n.reactions||0)>=1,c=`${n.reactions||0}/1`;break;case"reaction3":r=(n.reactions||0)>=3,c=`${n.reactions||0}/3`;break;case"points20":r=s>=20,c=`${Math.min(s,20)}/20`;break;case"points50":r=s>=50,c=`${Math.min(s,50)}/50`;break;case"secret":r=!!n.has_secret;break;case"bingo_line":r=!!n.bingo_line,c=n.bingo_line?"1/1":"0/1";break;case"bingo_full":r=!!n.bingo_full,c=n.bingo_full?"1/1":"0/1";break;case"referral3":r=(n.referrals||0)>=3,c=`${n.referrals||0}/3`;break;default:break}return{...i,done:r,progress:c}})}const ACH_SEEN_KEY="kinoafisha_ach_seen",NEWS_SEEN_KEY="kinoafisha_news_seen_ts";function newsMaxTs(){return NEWS.reduce((t,e)=>e.ts&&e.ts>t?e.ts:t,0)}function updateMoreBadge(){const t=document.getElementById("tab-more");if(!t)return;let e=!1;try{const n=computeAchCards().filter(a=>a.done).length,s=parseInt(localStorage.getItem(ACH_SEEN_KEY),10)||0,o=parseFloat(localStorage.getItem(NEWS_SEEN_KEY))||0;e=n>s||newsMaxTs()>o}catch(n){return}t.classList.toggle("has-badge",e)}function renderAchievements(){const t=document.getElementById("achievements-container");if(!t)return;const e=favouriteGenre(),n=ACHIEVEMENTS_LIST.length,s=computeAchCards(),o=s.filter(r=>r.done).length,a=n?Math.round(100*o/n):0;t.innerHTML=`
+    </div>`).join('')}</div>${pager}`;
+  c.querySelectorAll('.trailer-card').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.trailer-pin')) return;   // не открываем по клику на 📌
+      const m = ALL.find(x => x.code === el.dataset.code);
+      if (m) openTrailer(m);
+    });
+  });
+  c.querySelectorAll('.trailer-pin').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const pinned = toggleTrailerPin(b.dataset.pin);
+    b.classList.toggle('pinned', pinned);
+    try {
+      tg.showPopup({ type: 'ok',
+        title: pinned ? '📌 Закреплён' : '📌 Откреплён',
+        message: pinned ? 'Этот трейлер всегда будет первым в списке.' : 'Трейлер вернулся в обычный порядок.' });
+    } catch (_) {}
+    setTimeout(() => renderTrailers(), 250);   // перерисуем сетку с учётом пина
+  }));
+  c.querySelectorAll('.pg-btn').forEach(b => b.addEventListener('click', () => {
+    const v = b.dataset.pg;
+    if (v === 'prev') _trailerPage = Math.max(1, _trailerPage - 1);
+    else if (v === 'next') _trailerPage = Math.min(pages, _trailerPage + 1);
+    else _trailerPage = parseInt(v, 10) || 1;
+    haptic('light');
+    renderTrailers();
+    window.scrollTo({ top: Math.max(0, c.offsetTop - 70), behavior: 'smooth' });
+  }));
+}
+
+// v92: «🎲 Случайный трейлер» — открывает случайный трейлер в плеере
+(function wireTrailerRandom() {
+  const b = document.getElementById('btn-tr-random');
+  if (!b) return;
+  b.addEventListener('click', () => {
+    const pool = ALL.filter(m => m.trailer_yt || m.trailer_file_id);
+    if (!pool.length) return;
+    haptic('light');
+    openTrailer(pool[Math.floor(Math.random() * pool.length)]);
+  });
+})();
+
+// ---------- достижения «🎖» ----------
+const ACHIEVEMENTS_LIST = [
+  { id: 'first_code', emoji: '🔓', name: 'Первый код', desc: 'Разгадай первый код' },
+  { id: 'streak3', emoji: '🔥', name: 'Стрик 3', desc: 'Разгадай 3 кода подряд без ошибок' },
+  { id: 'streak7', emoji: '⚡', name: 'Стрик 7', desc: 'Разгадай 7 кодов подряд без ошибок' },
+  { id: 'codes10', emoji: '🎯', name: '10 кодов', desc: 'Разгадай 10 кодов' },
+  { id: 'codes25', emoji: '🏅', name: '25 кодов', desc: 'Разгадай 25 кодов' },
+  { id: 'codes50', emoji: '🏆', name: '50 кодов', desc: 'Разгадай 50 кодов' },
+  { id: 'genres3', emoji: '🎭', name: '3 жанра', desc: 'Разгадай коды из 3 разных жанров' },
+  { id: 'genres5', emoji: '🌈', name: '5 жанров', desc: 'Разгадай коды из 5 разных жанров' },
+  { id: 'reaction', emoji: '👍', name: 'Оценка', desc: 'Поставь оценку фильму' },
+  { id: 'reaction3', emoji: '💬', name: '3 оценки', desc: 'Поставь 3 оценки' },
+  { id: 'favorite', emoji: '❤️', name: 'Избранное', desc: 'Добавь фильм в избранное' },
+  { id: 'points20', emoji: '💰', name: '20 баллов', desc: 'Заработай 20 кинобаллов' },
+  { id: 'points50', emoji: '💎', name: '50 баллов', desc: 'Заработай 50 кинобаллов' },
+  { id: 'secret', emoji: '🕵️', name: 'Секрет', desc: 'Найди секретный код' },
+  { id: 'bingo_line', emoji: '🎰', name: 'Линия', desc: 'Закрой линию в кино-бинго' },
+  { id: 'bingo_full', emoji: '👑', name: 'Бинго!', desc: 'Закрой всю карточку кино-бинго' },
+  { id: 'referral3', emoji: '🤝', name: '3 друга', desc: 'Пригласи 3 друзей' },
+];
+
+function computeAchCards() {
+  const favs = getFavs();
+  const unlocked = getUnlocked();
+  // Данные из профиля бота (если синхронизирован)
+  const p = PROFILE || {};
+  const pts = parseInt(p.pts, 10) || 0;
+  const strk = parseInt(p.str, 10) || 0;
+  const unlCount = unlocked.length;
+
+  return ACHIEVEMENTS_LIST.map(a => {
+    let done = false;
+    let progress = '';
+    switch (a.id) {
+      case 'first_code': done = unlCount >= 1; break;
+      case 'streak3': done = strk >= 3; progress = `${Math.min(strk, 3)}/3`; break;
+      case 'streak7': done = strk >= 7; progress = `${Math.min(strk, 7)}/7`; break;
+      case 'codes10': done = unlCount >= 10; progress = `${Math.min(unlCount, 10)}/10`; break;
+      case 'codes25': done = unlCount >= 25; progress = `${Math.min(unlCount, 25)}/25`; break;
+      case 'codes50': done = unlCount >= 50; progress = `${Math.min(unlCount, 50)}/50`; break;
+      case 'favorite': done = favs.length >= 1; progress = `${favs.length}/1`; break;
+      case 'genres3': {
+        const genres = new Set();
+        ALL.forEach(m => { if (unlocked.includes(String(m.code))) (m.genres || []).forEach(g => genres.add(g)); });
+        done = genres.size >= 3; progress = `${genres.size}/3`;
+        break;
+      }
+      case 'genres5': {
+        const genres = new Set();
+        ALL.forEach(m => { if (unlocked.includes(String(m.code))) (m.genres || []).forEach(g => genres.add(g)); });
+        done = genres.size >= 5; progress = `${genres.size}/5`;
+        break;
+      }
+      case 'reaction':
+        done = (p.reactions || 0) >= 1; progress = `${p.reactions || 0}/1`;
+        break;
+      case 'reaction3':
+        done = (p.reactions || 0) >= 3; progress = `${p.reactions || 0}/3`;
+        break;
+      case 'points20':
+        done = pts >= 20; progress = `${Math.min(pts, 20)}/20`;
+        break;
+      case 'points50':
+        done = pts >= 50; progress = `${Math.min(pts, 50)}/50`;
+        break;
+      case 'secret':
+        done = !!p.has_secret;
+        break;
+      case 'bingo_line':
+        done = !!p.bingo_line; progress = p.bingo_line ? '1/1' : '0/1';
+        break;
+      case 'bingo_full':
+        done = !!p.bingo_full; progress = p.bingo_full ? '1/1' : '0/1';
+        break;
+      case 'referral3':
+        done = (p.referrals || 0) >= 3; progress = `${p.referrals || 0}/3`;
+        break;
+      default: break;
+    }
+    return { ...a, done, progress };
+  });
+}
+
+// Бейдж на «Ещё»: точка, когда появились достижения, которых пользователь
+// ещё не видел (открыто больше, чем зафиксировано при последнем просмотре).
+const ACH_SEEN_KEY = 'kinoafisha_ach_seen';
+const NEWS_SEEN_KEY = 'kinoafisha_news_seen_ts';
+function newsMaxTs() {
+  return NEWS.reduce((mx, n) => (n.ts && n.ts > mx ? n.ts : mx), 0);
+}
+function updateMoreBadge() {
+  const moreTab = document.getElementById('tab-more');
+  if (!moreTab) return;
+  let fresh = false;
+  try {
+    const done = computeAchCards().filter(a => a.done).length;
+    const seenAch = parseInt(localStorage.getItem(ACH_SEEN_KEY), 10) || 0;
+    const seenNews = parseFloat(localStorage.getItem(NEWS_SEEN_KEY)) || 0;
+    // Точка на «Ещё»: новые достижения ИЛИ свежие новости
+    fresh = done > seenAch || newsMaxTs() > seenNews;
+  } catch (e) { return; }
+  moreTab.classList.toggle('has-badge', fresh);
+}
+
+function renderAchievements() {
+  const c = document.getElementById('achievements-container');
+  if (!c) return;
+  const favGenre = favouriteGenre();
+  const total = ACHIEVEMENTS_LIST.length;
+  const achCards = computeAchCards();
+  const opened = achCards.filter(a => a.done).length;
+  const pct = total ? Math.round(100 * opened / total) : 0;
+  c.innerHTML = `
     <div class="ach-summary">
       <div class="ach-summary-head">
         <h2>🎖 Достижения</h2>
-        <b>${o}/${n}</b>
+        <b>${opened}/${total}</b>
       </div>
-      <div class="pf-progress"><i style="width:${a}%"></i></div>
-      <p class="ach-hint">${o===n?"Все достижения открыты! 🎉":`Осталось ${n-o} — угадывай фильмы, ставь оценки, приглашай друзей!`}</p>
-      ${e?`<p class="ach-favgenre">🌟 Любимый жанр: <b>${esc(e)}</b></p>`:""}
+      <div class="pf-progress"><i style="width:${pct}%"></i></div>
+      <p class="ach-hint">${opened === total ? 'Все достижения открыты! 🎉' : `Осталось ${total - opened} — угадывай фильмы, ставь оценки, приглашай друзей!`}</p>
+      ${favGenre ? `<p class="ach-favgenre">🌟 Любимый жанр: <b>${esc(favGenre)}</b></p>` : ''}
     </div>
-    <div class="ach-grid">${s.map(r=>`
-      <div class="ach-card ${r.done?"ach-done":""}">
-        <div class="ach-emoji">${r.done?r.emoji:"🔒"}</div>
-        <div class="ach-name">${esc(r.name)}</div>
-        <div class="ach-desc">${esc(r.desc)}</div>
-        ${r.progress?`<div class="ach-progress">${esc(r.progress)}</div>`:""}
-      </div>`).join("")}</div>`;try{localStorage.setItem(ACH_SEEN_KEY,String(o))}catch(r){}const i=document.getElementById("tab-more");i&&i.classList.remove("has-badge"),renderCodeCollection()}const BAK_PREFIX="kinokod:v1:";function buildBackupString(){const t=JSON.stringify({favs:getFavs(),ratings:getRatings(),watched:getWatched(),notes:getNotes(),mycols:getMyCols(),at:Date.now()});return BAK_PREFIX+encodeURIComponent(t)}function csOk(){try{return!!(tg.CloudStorage&&typeof tg.CloudStorage.getItem=="function")}catch(t){return!1}}function csGet(t){return new Promise(e=>{try{tg.CloudStorage.getItem(t,(n,s)=>e(n||s==null?null:String(s)))}catch(n){e(null)}})}function csSet(t,e){return new Promise(n=>{try{tg.CloudStorage.setItem(t,String(e),()=>n(!0))}catch(s){n(!1)}})}const CS_META="kk_prof_meta",CS_CHUNK="kk_prof",CS_TS_KEY="kinoafisha_cloud_ts";let _csTimer=null;function scheduleCloudSync(t){csOk()&&(clearTimeout(_csTimer),_csTimer=setTimeout(saveProfileToCloud,t||2e4))}function profileSnapshot(){let t=null,e=null;try{t=JSON.parse(localStorage.getItem(CHALL_KEY)||"null")}catch(n){t=null}try{e={seen:JSON.parse(localStorage.getItem(MAR_SEEN_KEY)||"[]"),resume:localStorage.getItem(MAR_RESUME_KEY)||"",ach:JSON.parse(localStorage.getItem(MAR_ACH_KEY)||"[]")}}catch(n){e=null}return JSON.stringify({favs:getFavs(),ratings:getRatings(),watched:getWatched(),notes:getNotes(),mycols:getMyCols(),streak:dailyState(),week:getWeekStats(),year:getYearStats(),chall:t,mar:e,tw:getTrailerWatches(),recent:getRecent(),open:getOpenCounts(),unlocked:getUnlocked(),pins:getTrailerPins(),at:Date.now()})}async function saveProfileToCloud(){if(csOk())try{const t=profileSnapshot(),e=[];for(let n=0;n<t.length&&e.length<14;n+=900)e.push(t.slice(n,n+900));for(let n=0;n<e.length;n++)if(!await csSet(CS_CHUNK+n,e[n]))return;await csSet(CS_META,JSON.stringify({n:e.length,at:Date.now()}))}catch(t){}}function profileLocallyEmpty(){return!getFavs().length&&!getWatched().length&&!getMyCols().length&&!Object.keys(getRatings()).length&&!Object.keys(getNotes()).length}async function restoreProfileFromCloud(){if(!csOk())return null;try{const t=await csGet(CS_META);if(!t)return null;const e=JSON.parse(t);if(!e||!e.n)return null;const n=profileLocallyEmpty(),s=Number(localStorage.getItem(CS_TS_KEY)||0);if(!n&&(e.at||0)<=s)return null;let o="";for(let i=0;i<e.n;i++)o+=await csGet(CS_CHUNK+i)||"";return!o||importBackupString(BAK_PREFIX+encodeURIComponent(o))!=="ok"?null:(localStorage.setItem(CS_TS_KEY,String(e.at||Date.now())),{wasEmpty:n})}catch(t){return null}}function importBackupString(t){try{const e=String(t||"").trim();if(!e.startsWith(BAK_PREFIX))return"not_backup";const n=JSON.parse(decodeURIComponent(e.slice(BAK_PREFIX.length)));if(!n||typeof n!="object")return"bad";const s=r=>Array.isArray(r)?r.filter(c=>c!==null&&c!=="").map(String):[],o=r=>r&&typeof r=="object"&&!Array.isArray(r)?r:{};let a=0;const i=r=>{const c=r.length,l=[...new Set(r)];return a+=c-l.length,l};if(localStorage.setItem(FAV_KEY,JSON.stringify(i(s(n.favs)))),localStorage.setItem(WATCHED_KEY,JSON.stringify(i(s(n.watched)))),localStorage.setItem(RATINGS_KEY,JSON.stringify(o(n.ratings))),localStorage.setItem(NOTES_KEY,JSON.stringify(o(n.notes))),Array.isArray(n.mycols)){const r=n.mycols.filter(c=>c&&typeof c=="object"&&c.id&&c.title&&Array.isArray(c.codes)).map(c=>({id:String(c.id),title:String(c.title),codes:i(s(c.codes))}));localStorage.setItem(MYCOLS_KEY,JSON.stringify(r))}return n.streak&&typeof n.streak=="object"&&localStorage.setItem(DAILY_KEY,JSON.stringify({last:String(n.streak.last||""),series:Number(n.streak.series)||0,best:Number(n.streak.best)||0,done:Array.isArray(n.streak.done)?n.streak.done.map(Number).filter(Boolean):[]})),o(n.week)&&Object.keys(n.week||{}).length&&localStorage.setItem(WEEK_STATS_KEY,JSON.stringify(n.week)),o(n.year)&&Object.keys(n.year||{}).length&&localStorage.setItem(YEAR_LOG_KEY,JSON.stringify(n.year)),n.chall&&typeof n.chall=="object"&&n.chall.date&&localStorage.setItem(CHALL_KEY,JSON.stringify(n.chall)),n.mar&&typeof n.mar=="object"&&(Array.isArray(n.mar.seen)&&localStorage.setItem(MAR_SEEN_KEY,JSON.stringify(n.mar.seen.map(String))),n.mar.resume&&localStorage.setItem(MAR_RESUME_KEY,String(n.mar.resume)),Array.isArray(n.mar.ach)&&localStorage.setItem(MAR_ACH_KEY,JSON.stringify(n.mar.ach))),Array.isArray(n.tw)&&localStorage.setItem(TW_KEY,JSON.stringify(n.tw.slice(0,MAX_TW))),Array.isArray(n.recent)&&localStorage.setItem(RECENT_KEY,JSON.stringify(n.recent.slice(0,MAX_RECENT))),n.open&&typeof n.open=="object"&&localStorage.setItem(OPEN_COUNT_KEY,JSON.stringify(n.open)),Array.isArray(n.unlocked)&&n.unlocked.length&&localStorage.setItem(UNLOCKED_KEY,JSON.stringify([...new Set(n.unlocked.map(String))])),Array.isArray(n.pins)&&localStorage.setItem(TPIN_KEY,JSON.stringify(n.pins)),window._lastRestoreDupes=a,"ok"}catch(e){return"bad"}}function copyBackup(){haptic("light");const t=buildBackupString(),e=()=>{try{tg.showPopup({type:"ok",title:"💾 Бэкап скопирован",message:"Вставь этот текст себе в «Избранное» в Telegram. Он включает «Моё», оценки, заметки и «🗂 Мои подборки» — потом перенеси на другой телефон через «📥 Восстановить»."})}catch(n){}};navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t).then(e).catch(e):e()}function shareFavsPoster(){haptic("light");const t=getFavs().filter(E=>ALL.some(S=>String(S.code)===String(E)));if(!t.length)return;const e=document.getElementById("sharecard-modal");if(!e)return;e.classList.remove("hidden");const n=document.getElementById("sharecard-preview");n.innerHTML='<p class="modal-muted">🎨 Собираем постеры…</p>';const s=t.slice(0,24).map(E=>ALL.find(S=>String(S.code)===String(E))).filter(Boolean),o=4,a=120,i=200,r=10,c=64,l=40,g=Math.ceil(s.length/o),d=r*2+o*a,p=r*2+c+g*i+l;let u,f;try{u=document.createElement("canvas"),u.width=d,u.height=p,f=u.getContext("2d")}catch(E){n.innerHTML='<p class="modal-muted">Картинку не удалось собрать</p>';return}const y=f.createLinearGradient(0,0,0,p);y.addColorStop(0,"#1b2340"),y.addColorStop(1,"#0a0d1a"),f.fillStyle=y,f.fillRect(0,0,d,p),f.fillStyle="rgba(255,193,7,.85)",f.font="bold 22px Manrope, Arial",f.textAlign="center",f.fillText(`МОЙ СПИСОК «ХОЧУ ПОСМОТРЕТЬ» — ${s.length}`,d/2,40);const v=[];s.forEach((E,S)=>{const x=Math.floor(S/o),j=S%o,N=r+j*a,C=r+c+x*i;f.fillStyle="rgba(0,0,0,.3)",f.fillRect(N,C,a,i);const H=document.createElement("img");H.crossOrigin="anonymous";const D=_=>{try{const M=_.naturalWidth&&_.naturalHeight?_.naturalHeight/_.naturalWidth:1.5,A=Math.min(i,a*M),q=A/M,F=N+(a-q)/2,O=C+(i-A)/2;f.drawImage(_,F,O,q,A)}catch(M){}v.push(1),v.length===s.length&&m()};H.onload=()=>D(H),H.onerror=()=>{v.push(1),v.length===s.length&&m()},H.src=E.poster});const m=()=>{f.fillStyle="rgba(255,255,255,.6)",f.font="bold 13px Manrope, Arial",f.textAlign="center",f.fillText("🎬 КАПИТАН КИНО — разгадывай коды и смотри кино",d/2,p-14);try{const E=u.toDataURL?u.toDataURL("image/png"):"";if(!E){n.innerHTML='<p class="modal-muted">Картинку не удалось собрать</p>';return}n.innerHTML=`<img src="${E}" alt="Мой список «Хочу посмотреть»"/>`;const S=document.getElementById("btn-sharecard-download");S&&(S.onclick=()=>{try{const x=document.createElement("a");x.href=E,x.download="kinokod_favs.png",x.click()}catch(x){window.open(E,"_blank")}})}catch(E){n.innerHTML='<p class="modal-muted">Картинку не удалось собрать</p>'}};setTimeout(()=>{v.length<s.length&&(v.length=s.length,m())},6e3)}function importBackup(){haptic("light");try{tg.showPopup({type:"prompt",title:"📥 Восстановление из бэкапа",message:"Вставь скопированную строку кинокода и нажми OK. Текущие «Моё», оценки, просмотренные и заметки будут заменены.",placeholder:"kinokod:v1:…",text:"",callback:(t,e)=>{if(t!=="ok")return;const n=importBackupString(e||"");if(n==="ok"){haptic("ok");const s=window._lastRestoreDupes||0;try{tg.showPopup({type:"ok",title:"✅ Восстановлено!",message:"Данные перенесены с другого устройства."+(s>0?`
-🧹 Дубликаты убраны: ${s}.`:"")})}catch(o){}renderGrid(),renderRecoShelf()}else if(n==="not_backup")try{tg.showPopup({type:"alert",title:"Не та строка",message:"Это не бэкап «Киноафиши». Убедись, что вставил строку kinokod:v1:… целиком."})}catch(s){}else try{tg.showPopup({type:"alert",title:"Ошибка",message:"Бэкап повреждён или устарел — восстановить не удалось."})}catch(s){}}})}catch(t){}}function backupFavsNotice(){const t=getFavs(),e=t.map(o=>{const a=ALL.find(i=>String(i.code)===String(o));return a?`${a.code} — ${a.title}`:`${o}`});window._favTitlesCache=e;const n=Object.keys(getRatings()).length,s=getWatched().length;return`
+    <div class="ach-grid">${achCards.map(a => `
+      <div class="ach-card ${a.done ? 'ach-done' : ''}">
+        <div class="ach-emoji">${a.done ? a.emoji : '🔒'}</div>
+        <div class="ach-name">${esc(a.name)}</div>
+        <div class="ach-desc">${esc(a.desc)}</div>
+        ${a.progress ? `<div class="ach-progress">${esc(a.progress)}</div>` : ''}
+      </div>`).join('')}</div>`;
+  // Пользователь открыл раздел — фиксируем, сколько достижений он видел,
+  // и прячем бейдж на «Ещё».
+  try { localStorage.setItem(ACH_SEEN_KEY, String(opened)); } catch (e) {}
+  const moreTab = document.getElementById('tab-more');
+  if (moreTab) moreTab.classList.remove('has-badge');
+  renderCodeCollection();
+}
+
+// ---------- бэкап «Моё»: через бота + переносимый бэкап на другое устройство ----------
+// v74: компактная строка-копия содержит «Моё», оценки, просмотренные и заметки.
+// Её можно вставить в Telegram («Избранное») и восстановить на другом устройстве.
+const BAK_PREFIX = 'kinokod:v1:';
+function buildBackupString() {
+  const payload = JSON.stringify({
+    favs: getFavs(),
+    ratings: getRatings(),
+    watched: getWatched(),
+    notes: getNotes(),
+    mycols: getMyCols(),   // v108: свои подборки переезжают вместе с «Моё»
+    at: Date.now(),
+  });
+  return BAK_PREFIX + encodeURIComponent(payload);
+}
+
+// ---------- v121: облачный профиль — Telegram CloudStorage ----------
+// «Моё» (избранное, оценки, просмотры, заметки, подборки) автоматически живёт
+// в личном облаке Telegram: CloudStorage привязан к пользователю и боту,
+// работает при любом способе запуска и переживает смену устройства.
+// Новое устройство само подтягивает профиль при старте; изменения на устройстве
+// дописываются в облако с debounce (последняя запись = самая свежая).
+// Лимит CloudStorage — до 1024 символов на значение, поэтому пишем чанками по 900.
+function csOk() {
+  try { return !!(tg.CloudStorage && typeof tg.CloudStorage.getItem === 'function'); }
+  catch (e) { return false; }
+}
+function csGet(key) {
+  return new Promise((res) => {
+    try { tg.CloudStorage.getItem(key, (err, val) => res(err ? null : (val == null ? null : String(val)))); }
+    catch (e) { res(null); }
+  });
+}
+function csSet(key, val) {
+  return new Promise((res) => {
+    try { tg.CloudStorage.setItem(key, String(val), () => res(true)); }
+    catch (e) { res(false); }
+  });
+}
+const CS_META = 'kk_prof_meta';  // {n, at} — коммит-маркер, пишется последним
+const CS_CHUNK = 'kk_prof';      // kk_prof0, kk_prof1, …
+const CS_TS_KEY = 'kinoafisha_cloud_ts';
+let _csTimer = null;
+function scheduleCloudSync(delayMs) {
+  if (!csOk()) return;
+  clearTimeout(_csTimer);
+  _csTimer = setTimeout(saveProfileToCloud, delayMs || 20000);
+}
+function profileSnapshot() {
+  // A2/v124: помимо «Моё» переносим и активность — стрик, «Моя неделя», «Мой год»,
+  // челленджи дня, прогресс марафона, трейлер-историю, недавние, счётчики открытий,
+  // закреплённые трейлеры и разгаданные коды (тот же транспорт, что и бэкап).
+  let chall = null, mar = null;
+  try { chall = JSON.parse(localStorage.getItem(CHALL_KEY) || 'null'); } catch (e) { chall = null; }
+  try {
+    mar = {
+      seen: JSON.parse(localStorage.getItem(MAR_SEEN_KEY) || '[]'),
+      resume: localStorage.getItem(MAR_RESUME_KEY) || '',
+      ach: JSON.parse(localStorage.getItem(MAR_ACH_KEY) || '[]'),
+    };
+  } catch (e) { mar = null; }
+  return JSON.stringify({
+    favs: getFavs(), ratings: getRatings(), watched: getWatched(),
+    notes: getNotes(), mycols: getMyCols(),
+    streak: dailyState(), week: getWeekStats(), year: getYearStats(),
+    chall, mar, tw: getTrailerWatches(), recent: getRecent(),
+    open: getOpenCounts(), unlocked: getUnlocked(), pins: getTrailerPins(),
+    at: Date.now(),
+  });
+}
+async function saveProfileToCloud() {
+  if (!csOk()) return;
+  try {
+    const payload = profileSnapshot();
+    const chunks = [];
+    for (let i = 0; i < payload.length && chunks.length < 14; i += 900) {
+      chunks.push(payload.slice(i, i + 900));
+    }
+    for (let i = 0; i < chunks.length; i++) {
+      if (!(await csSet(CS_CHUNK + i, chunks[i]))) return;  // облако не приняло
+    }
+    await csSet(CS_META, JSON.stringify({ n: chunks.length, at: Date.now() }));
+  } catch (e) { /* пусто */ }
+}
+function profileLocallyEmpty() {
+  return !getFavs().length && !getWatched().length && !getMyCols().length
+    && !Object.keys(getRatings()).length && !Object.keys(getNotes()).length;
+}
+async function restoreProfileFromCloud() {
+  if (!csOk()) return null;
+  try {
+    const metaRaw = await csGet(CS_META);
+    if (!metaRaw) return null;
+    const meta = JSON.parse(metaRaw);
+    if (!meta || !meta.n) return null;
+    const wasEmpty = profileLocallyEmpty();
+    const localAt = Number(localStorage.getItem(CS_TS_KEY) || 0);
+    // Локально пусто → всегда восстанавливаем (новое устройство). Иначе — только
+    // когда облако свежее последнего переноса (смена телефона «в обе стороны»).
+    if (!wasEmpty && (meta.at || 0) <= localAt) return null;
+    let payload = '';
+    for (let i = 0; i < meta.n; i++) payload += (await csGet(CS_CHUNK + i)) || '';
+    if (!payload) return null;
+    const res = importBackupString(BAK_PREFIX + encodeURIComponent(payload));
+    if (res !== 'ok') return null;
+    localStorage.setItem(CS_TS_KEY, String(meta.at || Date.now()));
+    return { wasEmpty };
+  } catch (e) { return null; }
+}
+function importBackupString(raw) {
+  try {
+    const s = String(raw || '').trim();
+    if (!s.startsWith(BAK_PREFIX)) return 'not_backup';
+    const data = JSON.parse(decodeURIComponent(s.slice(BAK_PREFIX.length)));
+    if (!data || typeof data !== 'object') return 'bad';
+    const add1 = (v) => Array.isArray(v) ? v.filter(x => x !== null && x !== '').map(String) : [];
+    const add2 = (v) => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+    // v113: дедупликация — при переносе на новое устройство в списках и
+    // подборках могут быть дубликаты (несколько раз сохраняли/восстанавливали).
+    let dupes = 0;
+    const uniq = (arr) => {
+      const before = arr.length;
+      const out = [...new Set(arr)];
+      dupes += before - out.length;
+      return out;
+    };
+    localStorage.setItem(FAV_KEY, JSON.stringify(uniq(add1(data.favs))));
+    localStorage.setItem(WATCHED_KEY, JSON.stringify(uniq(add1(data.watched))));
+    localStorage.setItem(RATINGS_KEY, JSON.stringify(add2(data.ratings)));
+    localStorage.setItem(NOTES_KEY, JSON.stringify(add2(data.notes)));
+    // v108: подборки — только валидный массив {id,title,codes}; старые бэкапы
+    // без этого поля не трогаем (не очищаем то, что уже есть на устройстве).
+    if (Array.isArray(data.mycols)) {
+      const cols = data.mycols.filter(c => c && typeof c === 'object'
+        && c.id && c.title && Array.isArray(c.codes))
+        .map(c => ({ id: String(c.id), title: String(c.title), codes: uniq(add1(c.codes)) }));
+      localStorage.setItem(MYCOLS_KEY, JSON.stringify(cols));
+    }
+    // A2/v124: активность и настройки — только если поле есть в бэкапе/облаке
+    // (старые версии не содержат их — тогда ничего не трогаем).
+    if (data.streak && typeof data.streak === 'object') {
+      localStorage.setItem(DAILY_KEY, JSON.stringify({
+        last: String(data.streak.last || ''),
+        series: Number(data.streak.series) || 0,
+        best: Number(data.streak.best) || 0,
+        done: Array.isArray(data.streak.done) ? data.streak.done.map(Number).filter(Boolean) : [],
+      }));
+    }
+    if (add2(data.week) && Object.keys(data.week || {}).length) localStorage.setItem(WEEK_STATS_KEY, JSON.stringify(data.week));
+    if (add2(data.year) && Object.keys(data.year || {}).length) localStorage.setItem(YEAR_LOG_KEY, JSON.stringify(data.year));
+    if (data.chall && typeof data.chall === 'object' && data.chall.date) localStorage.setItem(CHALL_KEY, JSON.stringify(data.chall));
+    if (data.mar && typeof data.mar === 'object') {
+      if (Array.isArray(data.mar.seen)) localStorage.setItem(MAR_SEEN_KEY, JSON.stringify(data.mar.seen.map(String)));
+      if (data.mar.resume) localStorage.setItem(MAR_RESUME_KEY, String(data.mar.resume));
+      if (Array.isArray(data.mar.ach)) localStorage.setItem(MAR_ACH_KEY, JSON.stringify(data.mar.ach));
+    }
+    if (Array.isArray(data.tw)) localStorage.setItem(TW_KEY, JSON.stringify(data.tw.slice(0, MAX_TW)));
+    if (Array.isArray(data.recent)) localStorage.setItem(RECENT_KEY, JSON.stringify(data.recent.slice(0, MAX_RECENT)));
+    if (data.open && typeof data.open === 'object') localStorage.setItem(OPEN_COUNT_KEY, JSON.stringify(data.open));
+    if (Array.isArray(data.unlocked) && data.unlocked.length) {
+      localStorage.setItem(UNLOCKED_KEY, JSON.stringify([...new Set(data.unlocked.map(String))]));
+    }
+    if (Array.isArray(data.pins)) localStorage.setItem(TPIN_KEY, JSON.stringify(data.pins));
+    window._lastRestoreDupes = dupes;
+    return 'ok';
+  } catch (e) { return 'bad'; }
+}
+function copyBackup() {
+  haptic('light');
+  const text = buildBackupString();
+  const done = () => {
+    try {
+      tg.showPopup({
+        type: 'ok',
+        title: '💾 Бэкап скопирован',
+        message: 'Вставь этот текст себе в «Избранное» в Telegram. Он включает «Моё», оценки, заметки и «🗂 Мои подборки» — потом перенеси на другой телефон через «📥 Восстановить».',
+      });
+    } catch (e) { /* пусто */ }
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(done);
+  } else done();
+}
+
+// v109: «🖼 Поделиться картинкой» — красивая картинка всех «хочу посмотреть».
+// Клепаем canvas с постерами (до 24), названиями и брендом, выводим в модалку
+// sharecard-modal (переиспользуем её) — можно скачать и кинуть в чат.
+function shareFavsPoster() {
+  haptic('light');
+  const favs = getFavs().filter(c => ALL.some(m => String(m.code) === String(c)));
+  if (!favs.length) return;
+  const modal = document.getElementById('sharecard-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const prev = document.getElementById('sharecard-preview');
+  prev.innerHTML = '<p class="modal-muted">🎨 Собираем постеры…</p>';
+  const items = favs.slice(0, 24).map(c => ALL.find(m => String(m.code) === String(c))).filter(Boolean);
+  const COLS = 4, CELL_W = 120, CELL_H = 200, PAD = 10, HEAD_H = 64, FOOT_H = 40;
+  const rows = Math.ceil(items.length / COLS);
+  const W = PAD * 2 + COLS * CELL_W;
+  const H = PAD * 2 + HEAD_H + rows * CELL_H + FOOT_H;
+  let cv, ctx;
+  try {
+    cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    ctx = cv.getContext('2d');
+  } catch (e) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; return; }
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#1b2340'); g.addColorStop(1, '#0a0d1a');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(255,193,7,.85)';
+  ctx.font = 'bold 22px Manrope, Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(`МОЙ СПИСОК «ХОЧУ ПОСМОТРЕТЬ» — ${items.length}`, W / 2, 40);
+  const loaded = [];   // подсчёт загруженных, рисуем по мере поступления
+  items.forEach((m, i) => {
+    const r = Math.floor(i / COLS), c = i % COLS;
+    const x = PAD + c * CELL_W, y = PAD + HEAD_H + r * CELL_H;
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    ctx.fillRect(x, y, CELL_W, CELL_H);
+    const tag = document.createElement('img');
+    tag.crossOrigin = 'anonymous';
+    const paint = (img) => {
+      try {
+        const ar = img.naturalWidth && img.naturalHeight ? img.naturalHeight / img.naturalWidth : 1.5;
+        const h = Math.min(CELL_H, CELL_W * ar);
+        const w = h / ar;
+        const dx = x + (CELL_W - w) / 2, dy = y + (CELL_H - h) / 2;
+        ctx.drawImage(img, dx, dy, w, h);
+      } catch (e) {}
+      loaded.push(1);
+      if (loaded.length === items.length) finish();
+    };
+    tag.onload = () => paint(tag);
+    tag.onerror = () => { loaded.push(1); if (loaded.length === items.length) finish(); };
+    tag.src = m.poster;
+  });
+  const finish = () => {
+    ctx.fillStyle = 'rgba(255,255,255,.6)';
+    ctx.font = 'bold 13px Manrope, Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('🎬 КАПИТАН КИНО — разгадывай коды и смотри кино', W / 2, H - 14);
+    try {
+      const url = cv.toDataURL ? cv.toDataURL('image/png') : '';
+      if (!url) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; return; }
+      prev.innerHTML = `<img src="${url}" alt="Мой список «Хочу посмотреть»"/>`;
+      const dl = document.getElementById('btn-sharecard-download');
+      if (dl) dl.onclick = () => {
+        try {
+          const a = document.createElement('a');
+          a.href = url; a.download = 'kinokod_favs.png'; a.click();
+        } catch (e) { window.open(url, '_blank'); }
+      };
+    } catch (e) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; }
+  };
+  // страховка: если какой-то постер завис, всё равно рисуем
+  setTimeout(() => { if (loaded.length < items.length) { loaded.length = items.length; finish(); } }, 6000);
+}
+function importBackup() {
+  haptic('light');
+  try {
+    tg.showPopup({
+      type: 'prompt',
+      title: '📥 Восстановление из бэкапа',
+      message: 'Вставь скопированную строку кинокода и нажми OK. Текущие «Моё», оценки, просмотренные и заметки будут заменены.',
+      placeholder: 'kinokod:v1:…',
+      text: '',
+      callback: (btnId, value) => {
+        if (btnId !== 'ok') return;
+        const r = importBackupString(value || '');
+        if (r === 'ok') {
+          haptic('ok');
+          const dupes = window._lastRestoreDupes || 0;
+          try { tg.showPopup({ type: 'ok', title: '✅ Восстановлено!', message: 'Данные перенесены с другого устройства.' + (dupes > 0 ? `\n🧹 Дубликаты убраны: ${dupes}.` : '') }); } catch (e) {}
+          renderGrid();
+          renderRecoShelf();
+        } else if (r === 'not_backup') {
+          try { tg.showPopup({ type: 'alert', title: 'Не та строка', message: 'Это не бэкап «Киноафиши». Убедись, что вставил строку kinokod:v1:… целиком.' }); } catch (e) {}
+        } else {
+          try { tg.showPopup({ type: 'alert', title: 'Ошибка', message: 'Бэкап повреждён или устарел — восстановить не удалось.' }); } catch (e) {}
+        }
+      },
+    });
+  } catch (e) { /* пусто */ }
+}
+function backupFavsNotice() {
+  const favs = getFavs();
+  const favTitles = favs.map(code => {
+    const m = ALL.find(x => String(x.code) === String(code));
+    return m ? `${m.code} — ${m.title}` : `${code}`;
+  });
+  // Переменная используется кнопкой «📋 Скопировать список» (см. copyFavsList)
+  window._favTitlesCache = favTitles;
+  const ratN = Object.keys(getRatings()).length;
+  const watN = getWatched().length;
+  return `
     <div class="cols-list">
       <div class="col-card backup-card">
         <div class="col-body">
-          <h3>💾 «Моё» хранится локально${t.length?` (${t.length})`:""}</h3>
-          <p>${t.length||n||s?`❤️ ${t.length} · ⭐ ${n} · 👁 ${s} — переноси на другое устройство`:"Список пуст — нажми ❤️ на любом фильме."}</p>
+          <h3>💾 «Моё» хранится локально${favs.length ? ` (${favs.length})` : ''}</h3>
+          <p>${favs.length || ratN || watN
+            ? `❤️ ${favs.length} · ⭐ ${ratN} · 👁 ${watN} — переноси на другое устройство`
+            : 'Список пуст — нажми ❤️ на любом фильме.'}</p>
         </div>
-        ${t.length?'<button class="btn-secondary" id="btn-copy-list">📋 Скопировать список</button>':""}
-        ${t.length?'<button class="btn-secondary" id="btn-share-posters">🖼 Поделиться картинкой</button>':""}
-        ${t.length?'<button class="btn-secondary" id="btn-backup">💾 Сохранить в боте</button>':""}
-        ${t.length?'<button class="btn-secondary" id="btn-copy-backup">📱💾 Копия для другого устройства</button>':""}
-        ${t.length?'<button class="btn-secondary" id="btn-import-backup">📥 Восстановить здесь</button>':""}
+        ${favs.length ? '<button class="btn-secondary" id="btn-copy-list">📋 Скопировать список</button>' : ''}
+        ${favs.length ? '<button class="btn-secondary" id="btn-share-posters">🖼 Поделиться картинкой</button>' : ''}
+        ${favs.length ? '<button class="btn-secondary" id="btn-backup">💾 Сохранить в боте</button>' : ''}
+        ${favs.length ? '<button class="btn-secondary" id="btn-copy-backup">📱💾 Копия для другого устройства</button>' : ''}
+        ${favs.length ? '<button class="btn-secondary" id="btn-import-backup">📥 Восстановить здесь</button>' : ''}
         <button class="btn-secondary" id="btn-restore-bot">☁️ Восстановить из бота</button>
-        ${t.length?'<button class="btn-watch" id="btn-clear-fav" style="margin-top:8px">🧹 Очистить «Хочу посмотреть»</button>':""}
+        ${favs.length ? '<button class="btn-watch" id="btn-clear-fav" style="margin-top:8px">🧹 Очистить «Хочу посмотреть»</button>' : ''}
       </div>
-    </div>`}function hlTitle(t,e){const n=String(t||"");if(!e)return esc(n);try{const s=new RegExp("("+e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","ig");return n.split(s).map(o=>o.toLowerCase()===e.toLowerCase()?`<mark class="hl">${esc(o)}</mark>`:esc(o)).join("")}catch(s){return esc(n)}}function parseSmartQuery(t){const e=(t||"").toLowerCase().replace(/ё/g,"е");if(!e||e.length>60)return null;const n=[],s={},o=new Map;ALL.forEach(c=>(c.genres||[]).forEach(l=>{const g=String(l).toLowerCase(),d=g.replace(/(ый|ой|ая|ое|ые|а|я|ы|и|е|у|ь)$/,"");d.length>=4&&!o.has(d)&&o.set(d,g)}));for(const[c,l]of o)if(e.includes(c)){s.genre=l,n.push("жанр: "+l);break}const a=e.match(/(\d)(?:[.,](\d))?\s*\+/);a&&(s.minRating=parseFloat(a[1]+"."+(a[2]||"0")),n.push("рейтинг "+s.minRating+"+"));const i=e.match(/(19|20)(\d)0\s*[-–—]?\s*(х|е|ых|ов)/);if(i)s.decade=parseInt(i[1]+i[2]+"0",10),n.push(s.decade+"-е");else{const c=e.match(/\b(19\d{2}|20\d{2})\b/);c&&(s.year=parseInt(c[1],10),n.push(s.year+" год"))}const r=e.match(/до\s*(\d(?:[.,]\d)?)\s*(ч|час)/);return r&&(s.maxMin=Math.round(parseFloat(r[1].replace(",","."))*60),n.push("до "+r[1]+" ч")),/коротк/.test(e)&&(s.maxMin=Math.min(s.maxMin||999,100),n.push("короткие")),/длинн/.test(e)&&(s.minDurMin=120,n.push("длинные")),n.length?(s.parts=n,s):null}function cleanKpTitle(t){let e=String(t||"");const n=e.match(/«([^»]+)»/);return n&&(e=n[1]),e.replace(/\s*\([^)]*\)\s*$/,"").replace(/[«»"]/g,"").trim()}function openUrlLink(t){if(t){haptic("ok");try{tg.openLink(t,{try_instant_view:!1})}catch(e){window.open(t,"_blank")}}}function openWatchLink(t){if(t.link)return openUrlLink(t.link);if(t.link2)return openUrlLink(t.link2);openImdbLink(t)}function openImdbLink(t){const e=cleanKpTitle(t.title);openUrlLink("https://www.imdb.com/find/?q="+encodeURIComponent(e||""))}const COUNTRY_FLAGS={сша:"🇺🇸",россия:"🇷🇺",великобритания:"🇬🇧",франция:"🇫🇷",германия:"🇩🇪",канада:"🇨🇦",япония:"🇯🇵","южная корея":"🇰🇷",китай:"🇨🇳",италия:"🇮🇹",испания:"🇪🇸",индия:"🇮🇳",австралия:"🇦🇺",бразилия:"🇧🇷",мексика:"🇲🇽",швеция:"🇸🇪",дания:"🇩🇰",норвегия:"🇳🇴",ирландия:"🇮🇪","новая зеландия":"🇳🇿",польша:"🇵🇱",украина:"🇺🇦",чехия:"🇨🇿",гонконг:"🇭🇰",нидерланды:"🇳🇱",бельгия:"🇧🇪",швейцария:"🇨🇭",австрия:"🇦🇹",финляндия:"🇫🇮",израиль:"🇮🇱",турция:"🇹🇷",аргентина:"🇦🇷"},flagOf=t=>COUNTRY_FLAGS[String(t||"").toLowerCase().trim()]||"🌍";function shareMovie(t){haptic("light");const n=location.href.split("#")[0].replace(/index\.html$/,"")+"movie/"+encodeURIComponent(t.code)+".html",s=(t.genres||[]).slice(0,2).join(" · "),o=`🎬 «${t.title}»${t.year?" ("+t.year+")":""}
-⭐ ${t.rating||"—"}${s?" · "+s:""}
+    </div>`;
+}
 
-Угадывай фильмы по кодам и смотри кино в «Киноафише» 👇`,a="https://t.me/share/url?url="+encodeURIComponent(n)+"&text="+encodeURIComponent(o);try{tg.openTelegramLink(a)}catch(i){window.open(a,"_blank")}}function shareCatalogPoster(){if(haptic("light"),!ALL.length)return;const t=document.getElementById("sharecard-modal");if(!t)return;t.classList.remove("hidden");const e=document.getElementById("sharecard-preview");e.innerHTML='<p class="modal-muted">🎨 Собираем витрину…</p>';const n=ALL.filter(m=>m.poster).slice(0,48);if(!n.length){e.innerHTML='<p class="modal-muted">Постеры ещё не загрузились — попробуй чуть позже</p>';return}const s=6,o=80,a=120,i=10,r=64,c=40,l=Math.ceil(n.length/s),g=i*2+s*o,d=i*2+r+l*a+c;let p,u;try{p=document.createElement("canvas"),p.width=g,p.height=d,u=p.getContext("2d")}catch(m){e.innerHTML='<p class="modal-muted">Картинку не удалось собрать</p>';return}const f=u.createLinearGradient(0,0,0,d);f.addColorStop(0,"#1b2340"),f.addColorStop(1,"#0a0d1a"),u.fillStyle=f,u.fillRect(0,0,g,d),u.strokeStyle="rgba(255,193,7,.5)",u.lineWidth=3,u.strokeRect(5,5,g-10,d-10),u.fillStyle="rgba(255,193,7,.95)",u.font="bold 22px Manrope, Arial",u.textAlign="center",u.fillText("🎬 КАПИТАН КИНО",g/2,40),u.fillStyle="rgba(255,255,255,.75)",u.font="14px Manrope, Arial",u.fillText(`${ALL.length} фильмов · угадывай коды — открывай кино`,g/2,64);const y=[],v=()=>{u.fillStyle="rgba(255,255,255,.55)",u.font="bold 12px Manrope, Arial",u.fillText("Открой афишу в Telegram → @kapitan_kino_bot",g/2,d-16);try{const m=p.toDataURL?p.toDataURL("image/png"):"";if(!m){e.innerHTML='<p class="modal-muted">Картинку не удалось собрать</p>';return}e.innerHTML=`<img src="${m}" alt="Каталог фильмов"/>`;const E=document.getElementById("btn-sharecard-download");E&&(E.onclick=()=>{try{const S=document.createElement("a");S.href=m,S.download="kinokod_catalog.png",S.click()}catch(S){window.open(m,"_blank")}})}catch(m){e.innerHTML='<p class="modal-muted">Картинку не удалось собрать</p>'}};n.forEach((m,E)=>{const S=Math.floor(E/s),x=E%s,j=i+x*o,N=i+r+S*a;u.fillStyle="rgba(0,0,0,.32)",u.fillRect(j,N,o,a-20);const C=document.createElement("img");C.crossOrigin="anonymous";const H=()=>{try{const D=C.naturalWidth||1,M=(C.naturalHeight||1)/D,A=a-20,q=o;let F,O;M>=A/q?(O=A,F=O/M):(F=q,O=F*M),u.drawImage(C,j+(q-F)/2,N+(A-O)/2,F,O)}catch(D){}u.fillStyle="rgba(255,193,7,.9)",u.font="bold 10px Manrope, Arial",u.textAlign="center",u.fillText("🔑 "+m.code,j+o/2,N+a-7),y.push(1),y.length===n.length&&v()};C.onload=H,C.onerror=()=>{u.fillStyle="rgba(255,255,255,.75)",u.font="22px Manrope, Arial",u.textAlign="center",u.fillText("🎬",j+o/2,N+(a-20)/2+7),u.fillStyle="rgba(255,193,7,.9)",u.font="bold 10px Manrope, Arial",u.fillText("🔑 "+m.code,j+o/2,N+a-7),y.push(1),y.length===n.length&&v()},C.src=m.poster}),setTimeout(()=>{y.length<n.length&&(y.length=n.length,v())},8e3)}const SC_W=500,SC_H=750;function drawShareCard(t,e){let n=null,s=null;try{n=document.createElement("canvas"),n.width=SC_W,n.height=SC_H,s=n.getContext("2d")}catch(c){e(null);return}const o=s.createLinearGradient(0,0,0,SC_H);o.addColorStop(0,"#1b2340"),o.addColorStop(.55,"#12162b"),o.addColorStop(1,"#0a0d1a"),s.fillStyle=o,s.fillRect(0,0,SC_W,SC_H),s.strokeStyle="rgba(255,193,7,.55)",s.lineWidth=3,s.strokeRect(6,6,SC_W-12,SC_H-12);const a=()=>{s.textAlign="center";const c=String(t.title||"").replace(/^«|»$/g,"").trim(),l=_scLines(c,28);s.fillStyle="#ffffff",s.font="bold 30px Manrope, Arial";let g=612;l.forEach(d=>{s.fillText(d,SC_W/2,g),g+=36}),s.fillStyle="rgba(255,193,7,.9)",s.font="bold 15px Manrope, Arial",s.fillText("🔑 Код "+t.code,SC_W/2,t.rating?672:700),t.rating&&(s.fillStyle="rgba(255,255,255,.85)",s.font="14px Manrope, Arial",s.fillText("⭐ "+t.rating+(t.year?"  ·  "+t.year:""),SC_W/2,700)),s.fillStyle="rgba(255,255,255,.55)",s.font="bold 12px Manrope, Arial",s.fillText("🎬 КАПИТАН КИНО",SC_W/2,730),e(n)},i=c=>{s.fillStyle="rgba(0,0,0,.35)",s.fillRect((SC_W-300)/2-8,74,316,466),s.drawImage(c,(SC_W-300)/2,82,300,450),a()},r=()=>{s.fillStyle="#10131f",s.fillRect((SC_W-300)/2,82,300,450),s.fillStyle="rgba(255,255,255,.85)",s.font="38px Manrope, Arial",s.textAlign="center",s.fillText("🎬",SC_W/2,307),a()};if(t.poster){const c=document.createElement("img");c.crossOrigin="anonymous";let l=!1;c.onload=()=>{l||(l=!0,i(c))},c.onerror=()=>{l||(l=!0,r())},c.src=t.poster,setTimeout(()=>{l||(l=!0,r())},4e3)}else r()}function _scLines(t,e){const n=String(t),s=[];for(let o=0;o<n.length;o+=e){let a=Math.min(o+e,n.length);if(a<n.length){const i=n.lastIndexOf(" ",a);i>o+e/2&&(a=i)}if(s.push(n.slice(o,a).trim()),s.length>=3)break}return s}function openShareCard(t){haptic("light");const e=document.getElementById("sharecard-modal");if(!e)return;e.classList.remove("hidden");const n=document.getElementById("sharecard-preview");n.innerHTML='<p class="modal-muted">🎨 Рисуем карточку…</p>',drawShareCard(t,s=>{if(!s){n.innerHTML='<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>';return}try{(a=>{s.toDataURL?a(s.toDataURL("image/png")):s.toBlob?new FileReader().readAsDataURL(s.toBlob()).then(a).catch(()=>a(null)):a(null)})(a=>{if(!a){n.innerHTML='<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>';return}n.innerHTML=`<img src="${a}" alt="Карточка фильма"/>`;const i=document.getElementById("btn-sharecard-download");i&&(i.onclick=()=>{try{const r=document.createElement("a");r.href=a,r.download="kinokod_"+t.code+".png",r.click()}catch(r){window.open(a,"_blank")}})})}catch(o){n.innerHTML='<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>'}})}function parseMovieHash(){const t=(location.hash||"").replace(/^#/,"");if(!/^m=[^&]+/.test(t))return;const e=decodeURIComponent(t.slice(2));e&&ALL.some(n=>String(n.code)===e)&&(history.replaceState(null,"",location.pathname+location.search),setTimeout(()=>openDetail(e),250))}let _recentRandom=[];function pickRandomMovie(){if(!ALL.length)return null;let t=ALL.filter(n=>n.poster&&!_recentRandom.includes(String(n.code)));t.length||(t=ALL.filter(n=>!_recentRandom.includes(String(n.code)))),t.length||(_recentRandom=[],t=ALL.slice());const e=t[Math.floor(Math.random()*t.length)];return _recentRandom.push(String(e.code)),_recentRandom.length>5&&(_recentRandom=_recentRandom.slice(-5)),e}function _renderRandomCard(t){const e=document.getElementById("random-body");if(!t||!e)return;const n=(t.countries||[]).slice(0,2).map(flagOf).join(" ");e.innerHTML=`
-    <div class="rm-card" data-code="${esc(t.code)}">
-      ${t.poster?`<img src="${esc(t.poster)}" alt="" loading="lazy" decoding="async" ${FADE}${dimStyle(t)}/>`:'<div class="rm-ph">🎬</div>'}
+// ---------- сетка (афиша + моё) ----------
+// Подсветка совпадения поиска в названии (esc обеих частей!)
+function hlTitle(title, q) {
+  const t = String(title || '');
+  if (!q) return esc(t);
+  try {
+    const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+    return t.split(re).map(part =>
+      part.toLowerCase() === q.toLowerCase() ? `<mark class="hl">${esc(part)}</mark>` : esc(part)
+    ).join('');
+  } catch (e) { return esc(t); }
+}
+
+// ---------- v60: умный поиск-фраза ----------
+// Разбираем «драмы 8+», «триллеры 2010-х», «боевик до 2 часов» на фильтры.
+function parseSmartQuery(raw) {
+  const q = (raw || '').toLowerCase().replace(/ё/g, 'е');
+  if (!q || q.length > 60) return null;
+  const parts = [];
+  const out = {};
+
+  // жанр: слово во фразе совпадает с началом известного жанра из базы
+  const genreMap = new Map();
+  ALL.forEach(m => (m.genres || []).forEach(g => {
+    const gl = String(g).toLowerCase();
+    const stem = gl.replace(/(ый|ой|ая|ое|ые|а|я|ы|и|е|у|ь)$/, '');
+    if (stem.length >= 4 && !genreMap.has(stem)) genreMap.set(stem, gl);
+  }));
+  for (const [stem, gl] of genreMap) {
+    if (q.includes(stem)) { out.genre = gl; parts.push('жанр: ' + gl); break; }
+  }
+
+  const rm = q.match(/(\d)(?:[.,](\d))?\s*\+/);          // «8+», «7.5+»
+  if (rm) {
+    out.minRating = parseFloat(rm[1] + '.' + (rm[2] || '0'));
+    parts.push('рейтинг ' + out.minRating + '+');
+  }
+
+  const dm = q.match(/(19|20)(\d)0\s*[-–—]?\s*(х|е|ых|ов)/);  // «2010-х», «2000-е»
+  if (dm) {
+    out.decade = parseInt(dm[1] + dm[2] + '0', 10);
+    parts.push(out.decade + '-е');
+  } else {
+    const ym = q.match(/\b(19\d{2}|20\d{2})\b/);              // точный год
+    if (ym) { out.year = parseInt(ym[1], 10); parts.push(out.year + ' год'); }
+  }
+
+  const dmax = q.match(/до\s*(\d(?:[.,]\d)?)\s*(ч|час)/);     // «до 2 часов»
+  if (dmax) {
+    out.maxMin = Math.round(parseFloat(dmax[1].replace(',', '.')) * 60);
+    parts.push('до ' + dmax[1] + ' ч');
+  }
+  if (/коротк/.test(q)) { out.maxMin = Math.min(out.maxMin || 999, 100); parts.push('короткие'); }
+  if (/длинн/.test(q)) { out.minDurMin = 120; parts.push('длинные'); }
+
+  if (!parts.length) return null;
+  out.parts = parts;   // v65: parts нужен рендеру подсказки «🧠 …» — раньше был undefined и рендер падал
+  return out;
+}
+
+// ---------- v62: «Смотреть фильм» ----------
+// Просмотр — по прямой ссылке на kinogo.ec (доступен и в РФ, и в Украине).
+// Справочная страница о фильме — IMDB (работает без ограничений по стране),
+// Кинопоиск запрещён в UI: он недоступен части аудитории канала.
+// Название чистим для поиска: «На грани» (Man on a Ledge, 2012) -> «На грани»
+function cleanKpTitle(raw) {
+  let s = String(raw || '');
+  const qm = s.match(/«([^»]+)»/);
+  if (qm) s = qm[1];
+  return s.replace(/\s*\([^)]*\)\s*$/, '').replace(/[«»"]/g, '').trim();
+}
+function openUrlLink(url) {
+  if (!url) return;
+  haptic('ok');
+  try { tg.openLink(url, { try_instant_view: false }); } catch (_) { window.open(url, '_blank'); }
+}
+function openWatchLink(m) {
+  if (m.link) return openUrlLink(m.link);   // прямая ссылка на просмотр (kinogo.ec)
+  if (m.link2) return openUrlLink(m.link2); // v72: запасное зеркало
+  openImdbLink(m);                          // иначе — страница о фильме на IMDB
+}
+function openImdbLink(m) {
+  const q = cleanKpTitle(m.title);
+  openUrlLink('https://www.imdb.com/find/?q=' + encodeURIComponent(q || ''));
+}
+
+// ---------- v72: флаги стран, красивый шаринг, «Случайный фильм», #m=КОД ----------
+const COUNTRY_FLAGS = {
+  'сша': '🇺🇸', 'россия': '🇷🇺', 'великобритания': '🇬🇧', 'франция': '🇫🇷',
+  'германия': '🇩🇪', 'канада': '🇨🇦', 'япония': '🇯🇵', 'южная корея': '🇰🇷',
+  'китай': '🇨🇳', 'италия': '🇮🇹', 'испания': '🇪🇸', 'индия': '🇮🇳',
+  'австралия': '🇦🇺', 'бразилия': '🇧🇷', 'мексика': '🇲🇽', 'швеция': '🇸🇪',
+  'дания': '🇩🇰', 'норвегия': '🇳🇴', 'ирландия': '🇮🇪', 'новая зеландия': '🇳🇿',
+  'польша': '🇵🇱', 'украина': '🇺🇦', 'чехия': '🇨🇿', 'гонконг': '🇭🇰',
+  'нидерланды': '🇳🇱', 'бельгия': '🇧🇪', 'швейцария': '🇨🇭', 'австрия': '🇦🇹',
+  'финляндия': '🇫🇮', 'израиль': '🇮🇱', 'турция': '🇹🇷', 'аргентина': '🇦🇷',
+};
+const flagOf = (ct) => COUNTRY_FLAGS[String(ct || '').toLowerCase().trim()] || '🌍';
+
+// Красивый шаринг фильма: эмодзи-текст + ссылка на ПУБЛИЧНУЮ страницу фильма
+// (v122, B1): страница movie/<code>.html содержит OG-теги — в превью чата
+// Telegram и других мессенджеров показывается постер, оценка и название.
+// Со страницы одна кнопка возвращает в «Киноафишу» (#movie=КОД).
+function shareMovie(m) {
+  haptic('light');
+  const base = location.href.split('#')[0].replace(/index\.html$/, '');
+  const link = base + 'movie/' + encodeURIComponent(m.code) + '.html';
+  const g = (m.genres || []).slice(0, 2).join(' · ');
+  const text = `🎬 «${m.title}»${m.year ? ' (' + m.year + ')' : ''}\n` +
+    `⭐ ${m.rating || '—'}${g ? ' · ' + g : ''}\n\n` +
+    `Угадывай фильмы по кодам и смотри кино в «Киноафише» 👇`;
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text);
+  try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+}
+
+// v113: «🖼 Постер каталога» — вся афиша одной картинкой (сетка постеров с кодами).
+// Удобно кинуть в чат: витрина канала в одном посте. Рисуем на canvas, показываем
+// в модалке карточки (sharecard-modal) с кнопкой скачивания.
+function shareCatalogPoster() {
+  haptic('light');
+  if (!ALL.length) return;
+  const modal = document.getElementById('sharecard-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const prev = document.getElementById('sharecard-preview');
+  prev.innerHTML = '<p class="modal-muted">🎨 Собираем витрину…</p>';
+  const items = ALL.filter(m => m.poster).slice(0, 48);
+  if (!items.length) { prev.innerHTML = '<p class="modal-muted">Постеры ещё не загрузились — попробуй чуть позже</p>'; return; }
+  // v114: компактная витрина 6×8 (пропорции ячейки = постера 2:3), чтобы
+  // картинка не была вытянутым прямоугольником и целиком помещалась в превью.
+  const COLS = 6, CELL_W = 80, CELL_H = 120, PAD = 10, HEAD_H = 64, FOOT_H = 40;
+  const rows = Math.ceil(items.length / COLS);
+  const W = PAD * 2 + COLS * CELL_W;
+  const H = PAD * 2 + HEAD_H + rows * CELL_H + FOOT_H;
+  let cv, ctx;
+  try {
+    cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    ctx = cv.getContext('2d');
+  } catch (e) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; return; }
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#1b2340'); g.addColorStop(1, '#0a0d1a');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(255,193,7,.5)'; ctx.lineWidth = 3;
+  ctx.strokeRect(5, 5, W - 10, H - 10);
+  ctx.fillStyle = 'rgba(255,193,7,.95)';
+  ctx.font = 'bold 22px Manrope, Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('🎬 КАПИТАН КИНО', W / 2, 40);
+  ctx.fillStyle = 'rgba(255,255,255,.75)';
+  ctx.font = '14px Manrope, Arial';
+  ctx.fillText(`${ALL.length} фильмов · угадывай коды — открывай кино`, W / 2, 64);
+  const loaded = [];
+  const finish = () => {
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.font = 'bold 12px Manrope, Arial';
+    ctx.fillText('Открой афишу в Telegram → @kapitan_kino_bot', W / 2, H - 16);
+    try {
+      const url = cv.toDataURL ? cv.toDataURL('image/png') : '';
+      if (!url) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; return; }
+      prev.innerHTML = `<img src="${url}" alt="Каталог фильмов"/>`;
+      const dl = document.getElementById('btn-sharecard-download');
+      if (dl) dl.onclick = () => {
+        try {
+          const a = document.createElement('a');
+          a.href = url; a.download = 'kinokod_catalog.png'; a.click();
+        } catch (e) { window.open(url, '_blank'); }
+      };
+    } catch (e) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; }
+  };
+  items.forEach((m, i) => {
+    const r = Math.floor(i / COLS), c = i % COLS;
+    const x = PAD + c * CELL_W, y = PAD + HEAD_H + r * CELL_H;
+    // подложка-ячейка
+    ctx.fillStyle = 'rgba(0,0,0,.32)';
+    ctx.fillRect(x, y, CELL_W, CELL_H - 20);
+    const img = document.createElement('img');
+    img.crossOrigin = 'anonymous';
+    const paint = () => {
+      try {
+        const iw = img.naturalWidth || 1, ih = img.naturalHeight || 1;
+        const ar = ih / iw;
+        const ph = CELL_H - 20, pw = CELL_W;
+        // cover-филл: постер заполняет ячейку полностью (кроп сверху/снизу)
+        let w, h;
+        if (ar >= ph / pw) { h = ph; w = h / ar; }
+        else { w = pw; h = w * ar; }
+        ctx.drawImage(img, x + (pw - w) / 2, y + (ph - h) / 2, w, h);
+      } catch (e) {}
+      // плашка с кодом
+      ctx.fillStyle = 'rgba(255,193,7,.9)';
+      ctx.font = 'bold 10px Manrope, Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🔑 ' + m.code, x + CELL_W / 2, y + CELL_H - 7);
+      loaded.push(1);
+      if (loaded.length === items.length) finish();
+    };
+    img.onload = paint;
+    img.onerror = () => {
+      ctx.fillStyle = 'rgba(255,255,255,.75)';
+      ctx.font = '22px Manrope, Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🎬', x + CELL_W / 2, y + (CELL_H - 20) / 2 + 7);
+      ctx.fillStyle = 'rgba(255,193,7,.9)';
+      ctx.font = 'bold 10px Manrope, Arial';
+      ctx.fillText('🔑 ' + m.code, x + CELL_W / 2, y + CELL_H - 7);
+      loaded.push(1);
+      if (loaded.length === items.length) finish();
+    };
+    img.src = m.poster;
+  });
+  // страховка: если часть постеров зависла — всё равно отдаём витрину
+  setTimeout(() => { if (loaded.length < items.length) { loaded.length = items.length; finish(); } }, 8000);
+}
+
+// v106: 🖼 готовая карточка-картинка (canvas) для шеринга в чаты и сторис
+// Рисуем плакат 500×750: градиентный фон, постер, название, рейтинг, бренд.
+const SC_W = 500, SC_H = 750;
+function drawShareCard(m, cb) {
+  let cv = null, cx = null;
+  try {
+    cv = document.createElement('canvas');
+    cv.width = SC_W; cv.height = SC_H;
+    cx = cv.getContext('2d');
+  } catch (e) { cb(null); return; }
+  const g = cx.createLinearGradient(0, 0, 0, SC_H);
+  g.addColorStop(0, '#1b2340');
+  g.addColorStop(0.55, '#12162b');
+  g.addColorStop(1, '#0a0d1a');
+  cx.fillStyle = g;
+  cx.fillRect(0, 0, SC_W, SC_H);
+  cx.strokeStyle = 'rgba(255,193,7,.55)';
+  cx.lineWidth = 3;
+  cx.strokeRect(6, 6, SC_W - 12, SC_H - 12);
+  // финальная отрисовка текста поверх постера
+  const ready = () => {
+    cx.textAlign = 'center';
+    const title = String(m.title || '').replace(/^«|»$/g, '').trim();
+    const lines = _scLines(title, 28);
+    cx.fillStyle = '#ffffff';
+    cx.font = 'bold 30px Manrope, Arial';
+    let ty = 612;
+    lines.forEach(l => { cx.fillText(l, SC_W / 2, ty); ty += 36; });
+    cx.fillStyle = 'rgba(255,193,7,.9)';
+    cx.font = 'bold 15px Manrope, Arial';
+    cx.fillText('🔑 Код ' + m.code, SC_W / 2, m.rating ? 672 : 700);
+    if (m.rating) {
+      cx.fillStyle = 'rgba(255,255,255,.85)';
+      cx.font = '14px Manrope, Arial';
+      cx.fillText('⭐ ' + m.rating + (m.year ? '  ·  ' + m.year : ''), SC_W / 2, 700);
+    }
+    cx.fillStyle = 'rgba(255,255,255,.55)';
+    cx.font = 'bold 12px Manrope, Arial';
+    cx.fillText('🎬 КАПИТАН КИНО', SC_W / 2, 730);
+    cb(cv);
+  };
+  const paintPoster = (img) => {
+    cx.fillStyle = 'rgba(0,0,0,.35)';
+    cx.fillRect((SC_W - 300) / 2 - 8, 82 - 8, 300 + 16, 450 + 16);
+    cx.drawImage(img, (SC_W - 300) / 2, 82, 300, 450);
+    ready();
+  };
+  const paintFallback = () => {
+    cx.fillStyle = '#10131f';
+    cx.fillRect((SC_W - 300) / 2, 82, 300, 450);
+    cx.fillStyle = 'rgba(255,255,255,.85)';
+    cx.font = '38px Manrope, Arial';
+    cx.textAlign = 'center';
+    cx.fillText('🎬', SC_W / 2, 82 + 225);
+    ready();
+  };
+  if (m.poster) {
+    const img = document.createElement('img');
+    img.crossOrigin = 'anonymous';
+    let done = false;
+    img.onload = () => { if (!done) { done = true; paintPoster(img); } };
+    img.onerror = () => { if (!done) { done = true; paintFallback(); } };
+    img.src = m.poster;
+    setTimeout(() => { if (!done) { done = true; paintFallback(); } }, 4000);
+  } else paintFallback();
+}
+
+// перенос названия фиксированными лимитами (без measureText)
+function _scLines(title, maxLen) {
+  const s = String(title);
+  const lines = [];
+  for (let i = 0; i < s.length; i += maxLen) {
+    let end = Math.min(i + maxLen, s.length);
+    if (end < s.length) {
+      const sp = s.lastIndexOf(' ', end);
+      if (sp > i + maxLen / 2) end = sp;
+    }
+    lines.push(s.slice(i, end).trim());
+    if (lines.length >= 3) break;
+  }
+  return lines;
+}
+
+function openShareCard(m) {
+  haptic('light');
+  const modal = document.getElementById('sharecard-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const prev = document.getElementById('sharecard-preview');
+  prev.innerHTML = '<p class="modal-muted">🎨 Рисуем карточку…</p>';
+  drawShareCard(m, (cv) => {
+    if (!cv) { prev.innerHTML = '<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>'; return; }
+    try {
+      // Новый canvas API: toDataURL / toBlob. Фолбэк — dataURL вручную.
+      const makeUrl = (cb2) => {
+        if (cv.toDataURL) cb2(cv.toDataURL('image/png'));
+        else if (cv.toBlob) {
+          const fr = new FileReader();
+          fr.readAsDataURL(cv.toBlob()).then(cb2).catch(() => cb2(null));
+        } else cb2(null);
+      };
+      makeUrl((url) => {
+        if (!url) { prev.innerHTML = '<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>'; return; }
+        prev.innerHTML = `<img src="${url}" alt="Карточка фильма"/>`;
+        const dl = document.getElementById('btn-sharecard-download');
+        if (dl) dl.onclick = () => {
+          try {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'kinokod_' + m.code + '.png';
+            a.click();
+          } catch (e) { window.open(url, '_blank'); }
+        };
+      });
+    } catch (e) {
+      prev.innerHTML = '<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>';
+    }
+  });
+}
+
+// Открываем карточку фильма по прямой ссылке #m=КОД (из шеринга)
+function parseMovieHash() {
+  const h = (location.hash || '').replace(/^#/, '');
+  if (!/^m=[^&]+/.test(h)) return;
+  const code = decodeURIComponent(h.slice(2));
+  if (code && ALL.some(x => String(x.code) === code)) {
+    history.replaceState(null, '', location.pathname + location.search);
+    setTimeout(() => openDetail(code), 250);
+  }
+}
+
+// Случайный фильм: без недавних показов, приоритет — с постером и рейтингом
+let _recentRandom = [];
+function pickRandomMovie() {
+  if (!ALL.length) return null;
+  let pool = ALL.filter(m => m.poster && !_recentRandom.includes(String(m.code)));
+  if (!pool.length) pool = ALL.filter(m => !_recentRandom.includes(String(m.code)));
+  if (!pool.length) { _recentRandom = []; pool = ALL.slice(); }
+  const m = pool[Math.floor(Math.random() * pool.length)];
+  _recentRandom.push(String(m.code));
+  if (_recentRandom.length > 5) _recentRandom = _recentRandom.slice(-5);
+  return m;
+}
+function _renderRandomCard(m) {
+  const body = document.getElementById('random-body');
+  if (!m || !body) return;
+  const flags = (m.countries || []).slice(0, 2).map(flagOf).join(' ');
+  body.innerHTML = `
+    <div class="rm-card" data-code="${esc(m.code)}">
+      ${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" decoding="async" ${FADE}${dimStyle(m)}/>` : '<div class="rm-ph">🎬</div>'}
       <div class="rm-info">
-        <b>${esc(t.title)}</b>
-        <span>${ratingBadge(t)}${t.year?" · "+esc(String(t.year)):""}${n?" · "+n:""}</span>
-        ${(t.genres||[]).length?"<em>"+t.genres.slice(0,3).map(a=>`<i class="chip chip-genre" data-g="${esc(a)}">${esc(a)}</i>`).join(" ")+"</em>":""}
+        <b>${esc(m.title)}</b>
+        <span>${ratingBadge(m)}${m.year ? ' · ' + esc(String(m.year)) : ''}${flags ? ' · ' + flags : ''}</span>
+        ${(m.genres || []).length ? '<em>' + m.genres.slice(0, 3).map(g => `<i class="chip chip-genre" data-g="${esc(g)}">${esc(g)}</i>`).join(' ') + '</em>' : ''}
       </div>
     </div>
-    ${t.link||t.link2?'<button class="btn-watch" id="btn-rm-watch">▶️ Смотреть фильм</button>':""}`;const s=e.querySelector(".rm-card");s&&(s.onclick=()=>{closeRandom(),openDetail(t.code)}),e.querySelectorAll(".chip-genre").forEach(a=>a.addEventListener("click",i=>{i.stopPropagation(),closeRandom(),activeGenre=a.dataset.g,renderGenreChips(),openView("grid")}));const o=document.getElementById("btn-rm-watch");o&&(o.onclick=()=>openWatchLink(t))}function closeRandom(){document.getElementById("random-modal").classList.add("hidden")}function renderRandomMovie(){const t=pickRandomMovie(),e=document.getElementById("random-body"),n=document.getElementById("random-modal");if(!t||!e||!n)return;haptic("light"),(()=>{let o=0,a=60;e.innerHTML='<div class="rm-roll"><span class="rm-roll-dice">🎲</span><b id="rm-roll-name">…</b></div>';const i=()=>{if(n.classList.contains("hidden"))return;if(o++>=12){_renderRandomCard(t);return}const r=ALL[Math.floor(Math.random()*ALL.length)],c=document.getElementById("rm-roll-name");c&&(c.textContent=r.title||"…"),o%4===0&&haptic("light"),a*=1.22,setTimeout(i,a)};i()})()}const GENRE_EMOJI={боевик:"💥",триллер:"🔪",ужасы:"👻",комедия:"😂",драма:"🎭",фантастика:"🚀","фантастика / фэнтези":"🚀",криминал:"🔫",детектив:"🔍",романтика:"💕",любовь:"💕",мелодрама:"💕",мультфильм:"🧸",анимация:"🧸",мультипликационный:"🧸",приключения:"🗺",фэнтези:"🐉",история:"🏛",исторический:"🏛",военный:"🎖",спорт:"🏆",музыка:"🎵",биография:"📖",семейный:"👨‍👩‍👧",мистика:"🔮",вестерн:"🤠",документальный:"🎥",короткометражка:"⏱"};function riddleHints(t){const e=[];(t.genres||[]).slice(0,2).forEach(o=>{const a=GENRE_EMOJI[String(o).toLowerCase().trim()];a&&!e.includes(a)&&e.push(a)});const n=parseInt(t.year,10)||0;n&&e.push(n<1990?"📼":n<2005?"📀":n<2020?"💿":"🆕");const s=parseFloat(t.rating)||0;return e.push(s>=8?"🏆":s>=7?"👍":"🤔"),e.slice(0,4).join("  ")}function shareRiddle(t){haptic("light");const e=location.href.split("#")[0]+"#riddle="+encodeURIComponent(t.code),n=parseInt(t.year,10)||0,s=`🎬 Я загадал фильм в «Киноафише»!
+    ${m.link || m.link2 ? '<button class="btn-watch" id="btn-rm-watch">▶️ Смотреть фильм</button>' : ''}`;
+  const card = body.querySelector('.rm-card');
+  if (card) card.onclick = () => { closeRandom(); openDetail(m.code); };
+  body.querySelectorAll('.chip-genre').forEach(ch =>
+    ch.addEventListener('click', (e) => { e.stopPropagation(); closeRandom(); activeGenre = ch.dataset.g; renderGenreChips(); openView('grid'); }));
+  const w = document.getElementById('btn-rm-watch');
+  if (w) w.onclick = () => openWatchLink(m);
+}
+function closeRandom() { document.getElementById('random-modal').classList.add('hidden'); }
 
-Подсказки: ${riddleHints(t)}
-`+(n?`Эпоха: ~${Math.floor(n/10)*10}-е
-`:"")+"Угадаешь? Открой ссылку и проверь себя 👇",o="https://t.me/share/url?url="+encodeURIComponent(e)+"&text="+encodeURIComponent(s);try{tg.openTelegramLink(o)}catch(a){window.open(o,"_blank")}}function shareRiddleReveal(t){haptic("light");const e=location.href.split("#")[0]+"#riddle="+encodeURIComponent(t.code)+"&reveal=1",n=`🎬 Проверь себя: отгадаешь по подсказкам?
+// v98: рулетка — «Случайный фильм» перебирает названия с замедлением,
+// затем фиксирует выпавшую карточку. Закрытие модалки останавливает крутку.
+function renderRandomMovie() {
+  const m = pickRandomMovie();
+  const body = document.getElementById('random-body');
+  const modal = document.getElementById('random-modal');
+  if (!m || !body || !modal) return;
+  haptic('light');
+  const spin = () => {
+    let n = 0, delay = 60;
+    body.innerHTML = '<div class="rm-roll"><span class="rm-roll-dice">🎲</span><b id="rm-roll-name">…</b></div>';
+    const step = () => {
+      if (modal.classList.contains('hidden')) return;   // закрыли во время вращения
+      if (n++ >= 12) { _renderRandomCard(m); return; }
+      const r = ALL[Math.floor(Math.random() * ALL.length)];
+      const el = document.getElementById('rm-roll-name');
+      if (el) el.textContent = r.title || '…';
+      if (n % 4 === 0) haptic('light');
+      delay *= 1.22;
+      setTimeout(step, delay);
+    };
+    step();
+  };
+  spin();
+}
 
-${riddleHints(t)}
+// ---------- v64: «🎭 Загадай другу» ----------
+// Выбираешь фильм — делишься ссылкой с эмодзи-подсказками. Друг открывает
+// мини-апп по ссылке #riddle=КОД и угадывает: сначала подсказки, потом ответ.
+const GENRE_EMOJI = {
+  'боевик': '💥', 'триллер': '🔪', 'ужасы': '👻', 'комедия': '😂', 'драма': '🎭',
+  'фантастика': '🚀', 'фантастика / фэнтези': '🚀', 'криминал': '🔫', 'детектив': '🔍',
+  'романтика': '💕', 'любовь': '💕', 'мелодрама': '💕', 'мультфильм': '🧸',
+  'анимация': '🧸', 'мультипликационный': '🧸', 'приключения': '🗺',
+  'фэнтези': '🐉', 'история': '🏛', 'исторический': '🏛', 'военный': '🎖',
+  'спорт': '🏆', 'музыка': '🎵', 'биография': '📖', 'семейный': '👨‍👩‍👧',
+  'мистика': '🔮', 'вестерн': '🤠', 'документальный': '🎥', 'короткометражка': '⏱',
+};
+function riddleHints(m) {
+  const out = [];
+  (m.genres || []).slice(0, 2).forEach(g => {
+    const e = GENRE_EMOJI[String(g).toLowerCase().trim()];
+    if (e && !out.includes(e)) out.push(e);
+  });
+  const y = parseInt(m.year, 10) || 0;
+  if (y) out.push(y < 1990 ? '📼' : y < 2005 ? '📀' : y < 2020 ? '💿' : '🆕');
+  const r = parseFloat(m.rating) || 0;
+  out.push(r >= 8 ? '🏆' : r >= 7 ? '👍' : '🤔');
+  return out.slice(0, 4).join('  ');
+}
+function shareRiddle(m) {
+  haptic('light');
+  const link = location.href.split('#')[0] + '#riddle=' + encodeURIComponent(m.code);
+  const y = parseInt(m.year, 10) || 0;
+  const text = `🎬 Я загадал фильм в «Киноафише»!\n\n` +
+    `Подсказки: ${riddleHints(m)}\n` +
+    (y ? `Эпоха: ~${Math.floor(y / 10) * 10}-е\n` : '') +
+    `Угадаешь? Открой ссылку и проверь себя 👇`;
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text);
+  try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+}
 
-Открой ссылку — там фильм и ответ. Ты был близок? 😉`,s="https://t.me/share/url?url="+encodeURIComponent(e)+"&text="+encodeURIComponent(n);try{tg.openTelegramLink(s)}catch(o){window.open(s,"_blank")}}function showRiddleModal(t,e){const n=ALL.find(c=>String(c.code)===String(t));if(!n)return;const s=document.getElementById("riddle-modal");if(!s)return;const o=document.getElementById("riddle-hints");o&&(o.textContent=riddleHints(n));const a=document.getElementById("riddle-body");a&&(a.classList.add("hidden"),a.innerHTML=`
+// v110: «Загадать с ответом» — ссылка с параметром reveal=1, чтобы друг мог сразу
+// проверить, угадал ли (ответ разворачивается автоматически после паузы).
+function shareRiddleReveal(m) {
+  haptic('light');
+  const link = location.href.split('#')[0] + '#riddle=' + encodeURIComponent(m.code) + '&reveal=1';
+  const text = `🎬 Проверь себя: отгадаешь по подсказкам?\n\n${riddleHints(m)}\n\nОткрой ссылку — там фильм и ответ. Ты был близок? 😉`;
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text);
+  try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+}
+function showRiddleModal(code, autoReveal) {
+  const m = ALL.find(x => String(x.code) === String(code));
+  if (!m) return;
+  const modal = document.getElementById('riddle-modal');
+  if (!modal) return;
+  const hints = document.getElementById('riddle-hints');
+  if (hints) hints.textContent = riddleHints(m);
+  const body = document.getElementById('riddle-body');
+  if (body) { body.classList.add('hidden'); body.innerHTML = `
     <div class="riddle-reveal">
-      ${n.poster?`<img src="${esc(n.poster)}" alt="" loading="lazy" decoding="async" ${FADE}/>`:""}
+      ${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" decoding="async" ${FADE}/>` : ''}
       <div class="riddle-answer">
-        <b>${esc(n.title)}</b>
-        <span>${ratingBadge(n)}${n.year?" · "+esc(String(n.year)):""}</span>
+        <b>${esc(m.title)}</b>
+        <span>${ratingBadge(m)}${m.year ? ' · ' + esc(String(m.year)) : ''}</span>
       </div>
-    </div>`);const i=document.getElementById("btn-riddle-reveal");i&&(i.classList.remove("hidden"),i.onclick=()=>{haptic("ok"),a&&a.classList.remove("hidden"),i.classList.add("hidden");const c=document.getElementById("btn-riddle-open");c&&c.classList.remove("hidden")});const r=document.getElementById("btn-riddle-open");r&&(r.classList.add("hidden"),r.onclick=()=>{s.classList.add("hidden"),openDetail(n.code)}),s.classList.remove("hidden"),e&&setTimeout(()=>{haptic("ok"),a&&a.classList.remove("hidden"),i&&i.classList.add("hidden"),r&&r.classList.remove("hidden")},1200)}function parseRiddleHash(){try{const t=new URLSearchParams((location.hash||"").replace(/^#/,"")),e=t.get("riddle");e&&(history.replaceState(null,"",location.pathname+location.search),setTimeout(()=>showRiddleModal(e,t.get("reveal")==="1"),500))}catch(t){}}function parseRestoreHash(){try{const e=new URLSearchParams((location.hash||"").replace(/^#/,"")).get("restore");if(!e)return;history.replaceState(null,"",location.pathname+location.search);const n=importBackupString(String(e));setTimeout(()=>{try{if(n==="ok"){const s=window._lastRestoreDupes||0;tg.showPopup({type:"ok",title:"✅ Восстановлено из бота!",message:"«Моё», оценки, просмотренные, заметки и «🗂 Мои подборки» перенесены на это устройство."+(s>0?`
-🧹 Дубликаты убраны: ${s}.`:"")})}else tg.showPopup({type:"alert",title:"Не удалось",message:"Бэкап повреждён или устарел. Скопируй строку заново в «❤️ Моё»."})}catch(s){}},400)}catch(t){}}(function(){const e=document.getElementById("riddle-modal");e&&(e.addEventListener("click",n=>{n.target===e&&e.classList.add("hidden")}),["btn-riddle-close","btn-riddle-close2"].forEach(n=>{const s=document.getElementById(n);s&&(s.onclick=()=>e.classList.add("hidden"))}))})();let timeLimit=0;const durOf=t=>{const e=parseInt(t&&t.duration,10);return e>0?e:0};function renderTimeChips(){const t=document.getElementById("time-chips");if(!t)return;const e=[{v:0,label:"⏱ Любое время"},{v:100,label:"🎬 ~1,5 ч"},{v:125,label:"🎬 ~2 ч"},{v:190,label:"🎬 до 3 ч"}];t.innerHTML=e.map(n=>`<button class="t-chip${timeLimit===n.v?" active":""}" data-t="${n.v}">${n.label}</button>`).join(""),t.querySelectorAll(".t-chip").forEach(n=>{n.addEventListener("click",()=>{timeLimit=parseInt(n.dataset.t,10)||0,haptic("light"),renderTimeChips(),renderGrid()})})}function initShelfArrows(){document.querySelectorAll(".hero-shelf").forEach(t=>{const e=t.querySelector(".hero-row");if(!e||t.querySelector(".shelf-arrow"))return;const n=o=>e.scrollBy({left:o*Math.max(260,e.clientWidth*.8),behavior:"smooth"}),s=(o,a,i)=>{const r=document.createElement("button");r.className="shelf-arrow "+o,r.textContent=i>0?"›":"‹",r.title=a,r.addEventListener("click",()=>{haptic("light"),n(i)}),t.appendChild(r)};s("sa-prev","Назад",-1),s("sa-next","Вперёд",1)})}function initHeaderScroll(){const t=document.querySelector(".header");if(!t)return;const e=()=>t.classList.toggle("scrolled",(window.scrollY||0)>8);window.addEventListener("scroll",e,{passive:!0}),e()}function renderGrid(){const t=(document.getElementById("search").value||"").trim(),e=t.toLowerCase().replace(/ё/g,"е"),n=parseSmartQuery(t),s=document.getElementById("sort").value,o=localStorage.getItem(FAV_MODE_KEY),a=[view,t,n?JSON.stringify(n):"",s,o,activeGenre,activeCountry,timeLimit,onlyTrailer,onlyOnline,localStorage.getItem(HIDE_KEY)].join("§");a!==_gridFilterKey&&(_gridFilterKey=a,gridPage=1);const i=getUnlocked(),r=getWatched();let c=view==="fav"?o==="done"?ALL.filter(h=>i.includes(String(h.code))):o==="watched"?ALL.filter(h=>r.includes(String(h.code))):o==="rated"?ALL.filter(h=>getRatings()[String(h.code)]):ALL.filter(h=>getFavs().includes(h.code)):[...ALL];if(activeGenre&&(c=c.filter(h=>(h.genres||[]).includes(activeGenre))),activeCountry&&(c=c.filter(h=>(h.countries||[]).includes(activeCountry))),timeLimit&&view==="grid"&&(c=c.filter(h=>{const k=durOf(h);return k&&k<=timeLimit})),onlyTrailer&&view==="grid"&&(c=c.filter(h=>h.trailer_yt||h.trailer_mp4||h.trailer_file_id)),onlyOnline&&view==="grid"&&(c=c.filter(h=>!!h.link)),localStorage.getItem(HIDE_KEY)==="1"&&view!=="fav"){const h=new Set(getUnlocked());h.size&&(c=c.filter(k=>!h.has(String(k.code))))}if(e&&!n){const h=e.replace(/\D/g,""),k=/^\d+$/.test(e.replace(/\s+/g,"")),T=$=>($||"").toLowerCase().replace(/ё/g,"е"),P=e.split(/\s+/).filter(Boolean);let R=[];const b=$=>{const I=$.split(/\s+/).filter(Boolean);c.forEach(w=>{const J=T(w.title),L=T([J,w.description,(w.genres||[]).join(" "),(w.countries||[]).join(" "),w.year||"",w.director||"",(w.actors||[]).join(" ")].filter(Boolean).join(" · "));(k&&h&&String(w.code||"").includes(h)||I.length&&I.every(Y=>L.includes(Y)))&&(R.some(Y=>Y.m===w)||R.push({m:w,score:0}))})};if(b(e),!R.length&&/[a-z]/.test(e)){const $={q:"й",w:"ц",e:"у",r:"к",t:"е",y:"н",u:"г",i:"ш",o:"щ",p:"з",a:"ф",s:"ы",d:"в",f:"а",g:"п",h:"р",j:"о",k:"л",l:"д",z:"я",x:"ч",c:"с",v:"м",b:"и",n:"т",m:"ь","[":"х","]":"ъ",";":"ж","'":"э",",":"б",".":"ю"},I=e.replace(/[a-z\[\];',.]/g,w=>$[w]||w);I&&I!==e&&b(I)}if(!R.length){const $=e.length<=6?2:e.length<=12?3:4;c.forEach(I=>{const w=T(I.title),J=_levDist(e,w);J<=$&&J<=Math.max(2,Math.floor(w.length*.3))&&R.push({m:I,score:J})}),R.sort((I,w)=>I.score-w.score)}c=R.map($=>$.m)}n&&(c=[...ALL],n.genre&&(c=c.filter(h=>(h.genres||[]).some(k=>String(k).toLowerCase()===n.genre))),n.minRating!=null&&(c=c.filter(h=>(parseFloat(h.rating)||0)>=n.minRating)),n.decade&&(c=c.filter(h=>h.year>=n.decade&&h.year<n.decade+10)),n.year&&(c=c.filter(h=>String(h.year)===String(n.year))),n.maxMin&&(c=c.filter(h=>!h.duration||h.duration<=n.maxMin)),n.minDurMin&&(c=c.filter(h=>!h.duration||h.duration>=n.minDurMin))),c.sort((h,k)=>{if(s==="rating")return(parseFloat(k.rating)||0)-(parseFloat(h.rating)||0);if(s==="code")return(+h.code||0)-(+k.code||0);if(s==="new"){const T=new Date(h.added_at||0).getTime();return new Date(k.added_at||0).getTime()-T}if(s==="myrating"){const T=getRatings()[String(h.code)]||0,P=getRatings()[String(k.code)]||0;return T!==P?P-T:(h.title||"").localeCompare(k.title||"","ru")}return(h.title||"").localeCompare(k.title||"","ru")});const g=!!(t||activeGenre||activeCountry||timeLimit||onlyTrailer||onlyOnline)?'<button class="btn-clear-filters" id="btn-clear-filters" title="Сбросить все фильтры">🧹 Сбросить фильтры</button>':"",d=document.getElementById("movies-container"),p=view==="grid"&&!!(t||activeGenre);["hero-shelf","today-shelf","new-codes-shelf","recent-shelf","reco-shelf","premieres-shelf"].forEach(h=>{const k=document.getElementById(h);if(!k)return;const T=k.querySelector(".hero-row");k.classList.toggle("hidden",p||!T||!T.children.length)});const u=document.getElementById("filmday-banner");u&&u.classList.toggle("hidden",p||!u.innerHTML.trim());const f=view==="fav"?`<div class="fav-mode">
-      <button class="fav-mode-btn ${o==="fav"?"active":""}" data-mode="fav">❤️ Хочу</button>
-      <button class="fav-mode-btn ${o==="done"?"active":""}" data-mode="done">✅ Разгадал</button>
-      <button class="fav-mode-btn ${o==="watched"?"active":""}" data-mode="watched">👁 Смотрел</button>
-      <button class="fav-mode-btn ${o==="rated"?"active":""}" data-mode="rated">⭐ Оценки</button>
-    </div>`:"",y=view==="fav"&&o==="done"?`<div class="fav-progress">Разгадано ${i.length} из ${ALL.length} (${ALL.length?Math.round(100*i.length/ALL.length):0}%)</div>`:view==="fav"&&o==="watched"?`<div class="fav-progress">Просмотрено ${r.length} из ${ALL.length} (${ALL.length?Math.round(100*r.length/ALL.length):0}%)</div>`:view==="fav"&&o==="rated"?`<div class="fav-progress">Оценено ${Object.keys(getRatings()).length} фильм(ов) — рекомендации стали точнее 💫</div>`:"",v=n?`<div class="smart-hint">🧠 ${esc((n.parts||[]).join(" · "))} · найдено: ${c.length}<button class="smart-clear" title="Сбросить" onclick="document.getElementById('search').value='';renderGrid()">✕</button></div>`:"",m=(view==="grid"?`<div class="layout-switch"><span class="ls-label">Вид:</span>
-        <button class="ls-btn${gridLayout==="grid"?" active":""}" data-l="grid">▦ Сетка</button>
-        <button class="ls-btn${gridLayout==="list"?" active":""}" data-l="list">☰ Список</button>
-      </div>`:"")+f+y+v+g+(view==="grid"&&!p&&ALL.length&&r.length>0?`<div class="seen-bar"><span>👁 Отмечено просмотренными: ${r.length} из ${ALL.length}</span><span class="seen-track"><i style="width:${Math.round(100*r.length/ALL.length)}%"></i></span></div>`:""),E=()=>{d.querySelectorAll(".fav-mode-btn").forEach(h=>h.addEventListener("click",()=>{try{localStorage.setItem(FAV_MODE_KEY,h.dataset.mode)}catch(k){}haptic("light"),renderGrid()}))};if(!c.length){const h=view==="fav"?o==="done"?"🔒":o==="watched"?"👁":o==="rated"?"⭐":"🤍":"🔍",k=view==="fav"?o==="done"?"Пока ничего не разгадано — лови коды в канале! 🔑":o==="watched"?"Пока ничего не отмечено — жми «👁» на карточке фильма":o==="rated"?"Оценок пока нет — открой любой фильм и поставь звёзды ⭐":"В «Моём» пока пусто — жми сердечко ❤️ на любом фильме":"Ничего не нашлось 🤷 Попробуй другой запрос",T=view==="fav"&&(o||"fav")==="fav"?backupFavsNotice():"";d.innerHTML=m+T+`<div class="empty-state">
-      <div class="empty-emoji">${h}</div>
-      <p>${k}</p>
+    </div>`; }
+  const reveal = document.getElementById('btn-riddle-reveal');
+  if (reveal) {
+    reveal.classList.remove('hidden');
+    reveal.onclick = () => {
+      haptic('ok');
+      if (body) body.classList.remove('hidden');
+      reveal.classList.add('hidden');
+      const open = document.getElementById('btn-riddle-open');
+      if (open) open.classList.remove('hidden');
+    };
+  }
+  const open = document.getElementById('btn-riddle-open');
+  if (open) {
+    open.classList.add('hidden');
+    open.onclick = () => { modal.classList.add('hidden'); openDetail(m.code); };
+  }
+  modal.classList.remove('hidden');
+  // v110: ссылка с reveal=1 — друг сразу видит ответ (после паузы)
+  if (autoReveal) {
+    setTimeout(() => {
+      haptic('ok');
+      if (body) body.classList.remove('hidden');
+      if (reveal) reveal.classList.add('hidden');
+      if (open) open.classList.remove('hidden');
+    }, 1200);
+  }
+}
+function parseRiddleHash() {
+  // Друг пришёл по ссылке «загадай другу»: #riddle=КОД. Показываем загадку
+  // один раз и чистим хэш, чтобы при следующем открытии она не всплывала.
+  try {
+    const params = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const code = params.get('riddle');
+    if (code) {
+      history.replaceState(null, '', location.pathname + location.search);
+      setTimeout(() => showRiddleModal(code, params.get('reveal') === '1'), 500);
+    }
+  } catch (e) { /* пусто */ }
+}
+// v76: восстановление «Моё» из бота — кнопка «📥 Восстановить» в чате открывает
+// мини-апп с #restore=<строка бэкапа>. Импортируем и чистим хэш.
+function parseRestoreHash() {
+  try {
+    const params = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const data = params.get('restore');
+    if (!data) return;
+    history.replaceState(null, '', location.pathname + location.search);
+    const r = importBackupString(String(data));
+    setTimeout(() => {
+      try {
+        if (r === 'ok') {
+          const dupes = window._lastRestoreDupes || 0;
+          tg.showPopup({ type: 'ok', title: '✅ Восстановлено из бота!', message: '«Моё», оценки, просмотренные, заметки и «🗂 Мои подборки» перенесены на это устройство.' + (dupes > 0 ? `\n🧹 Дубликаты убраны: ${dupes}.` : '') });
+        } else {
+          tg.showPopup({ type: 'alert', title: 'Не удалось', message: 'Бэкап повреждён или устарел. Скопируй строку заново в «❤️ Моё».' });
+        }
+      } catch (e) { /* пусто */ }
+    }, 400);
+  } catch (e) { /* пусто */ }
+}
+(function initRiddleModal() {
+  const bg = document.getElementById('riddle-modal');
+  if (!bg) return;
+  bg.addEventListener('click', (e) => { if (e.target === bg) bg.classList.add('hidden'); });
+  ['btn-riddle-close', 'btn-riddle-close2'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.onclick = () => bg.classList.add('hidden');
+  });
+})();
+
+// ---------- v77: «Сколько времени есть?» — фильтр афиши по длительности ----------
+let timeLimit = 0;  // 0 = любая длительность
+const durOf = (m) => { const d = parseInt(m && m.duration, 10); return d > 0 ? d : 0; };
+function renderTimeChips() {
+  const box = document.getElementById('time-chips');
+  if (!box) return;
+  const chips = [
+    { v: 0, label: '⏱ Любое время' },
+    { v: 100, label: '🎬 ~1,5 ч' },
+    { v: 125, label: '🎬 ~2 ч' },
+    { v: 190, label: '🎬 до 3 ч' },
+  ];
+  box.innerHTML = chips.map(c =>
+    `<button class="t-chip${timeLimit === c.v ? ' active' : ''}" data-t="${c.v}">${c.label}</button>`).join('');
+  box.querySelectorAll('.t-chip').forEach(ch => {
+    ch.addEventListener('click', () => {
+      timeLimit = parseInt(ch.dataset.t, 10) || 0;
+      haptic('light');
+      renderTimeChips();
+      renderGrid();
+    });
+  });
+}
+// v77: стрелки прокрутки полок на ПК (на тач-устройствах остаётся свайп)
+function initShelfArrows() {
+  document.querySelectorAll('.hero-shelf').forEach(shelf => {
+    const row = shelf.querySelector('.hero-row');
+    if (!row || shelf.querySelector('.shelf-arrow')) return;
+    const go = (dir) => row.scrollBy({ left: dir * Math.max(260, row.clientWidth * 0.8), behavior: 'smooth' });
+    const mk = (cls, title, dir) => {
+      const b = document.createElement('button');
+      b.className = 'shelf-arrow ' + cls;
+      b.textContent = dir > 0 ? '›' : '‹';
+      b.title = title;
+      b.addEventListener('click', () => { haptic('light'); go(dir); });
+      shelf.appendChild(b);
+    };
+    mk('sa-prev', 'Назад', -1);
+    mk('sa-next', 'Вперёд', 1);
+  });
+}
+// v77: тень стеклянной шапки при прокрутке
+function initHeaderScroll() {
+  const h = document.querySelector('.header');
+  if (!h) return;
+  const upd = () => h.classList.toggle('scrolled', (window.scrollY || 0) > 8);
+  window.addEventListener('scroll', upd, { passive: true });
+  upd();
+}
+
+function renderGrid() {
+  const qRaw = (document.getElementById('search').value || '').trim();
+  // v64: нормализуем запрос (ё→е) — раньше «зелёная» с ё не находила «Зеленая миля»
+  const q = qRaw.toLowerCase().replace(/ё/g, 'е');
+  const smart = parseSmartQuery(qRaw);
+  const sort = document.getElementById('sort').value;
+  const favMode = localStorage.getItem(FAV_MODE_KEY);  // fav | done | watched
+  // v93: «Показать ещё» — афиша порциями по GRID_PAGE_SIZE (30). При смене
+  // любого фильтра/поиска/сортировки страница сбрасывается на первую.
+  const gKey = [view, qRaw, smart ? JSON.stringify(smart) : '', sort, favMode,
+    activeGenre, activeCountry, timeLimit, onlyTrailer, onlyOnline,
+    localStorage.getItem(HIDE_KEY)].join('§');
+  if (gKey !== _gridFilterKey) { _gridFilterKey = gKey; gridPage = 1; }
+  const unlockedAll = getUnlocked();
+  const watchedAll = getWatched();
+  let list = view === 'fav'
+    ? (favMode === 'done'
+        ? ALL.filter(m => unlockedAll.includes(String(m.code)))
+        : (favMode === 'watched'
+            ? ALL.filter(m => watchedAll.includes(String(m.code)))
+            : (favMode === 'rated'
+                ? ALL.filter(m => getRatings()[String(m.code)])
+                : ALL.filter(m => getFavs().includes(m.code)))))
+    : [...ALL];
+  if (activeGenre) list = list.filter(m => (m.genres || []).includes(activeGenre));
+  if (activeCountry) list = list.filter(m => (m.countries || []).includes(activeCountry));
+  // v77: фильтр «Сколько времени есть?» — только фильмы с известной длительностью
+  if (timeLimit && view === 'grid') list = list.filter(m => { const d = durOf(m); return d && d <= timeLimit; });
+  // v90: «▶️ С трейлером» — только фильмы, которые можно посмотреть с видео
+  if (onlyTrailer && view === 'grid') list = list.filter(m => m.trailer_yt || m.trailer_mp4 || m.trailer_file_id);
+  // v91: «🟢 Онлайн» — только фильмы с прямой ссылкой на просмотр
+  if (onlyOnline && view === 'grid') list = list.filter(m => !!m.link);
+  // 🙈 «Скрыть разгаданные»: прячем карточки, код которых есть в localStorage
+  if (localStorage.getItem(HIDE_KEY) === '1' && view !== 'fav') {
+    const unlockedSet = new Set(getUnlocked());
+    if (unlockedSet.size) list = list.filter(m => !unlockedSet.has(String(m.code)));
+  }
+    if (q && !smart) {
+    const digits = q.replace(/\D/g, '');
+    const isCode = /^\d+$/.test(q.replace(/\s+/g, ''));  // весь запрос — число → это код
+    // Сначала точные совпадения (все слова запроса в названии/описании или код),
+    // затем раскладка, затем нечёткий поиск по Левенштейну («интерстелар» найдёт «Интерстеллар»).
+    const norm = (t) => (t || '').toLowerCase().replace(/ё/g, 'е');
+    const toks = q.split(/\s+/).filter(Boolean);
+    let matches = [];
+    const tryQuery = (query) => {
+      const tks = query.split(/\s+/).filter(Boolean);
+      list.forEach(m => {
+        const t = norm(m.title);
+        // «стог сена»: название + описание + жанры + страны + год + люди
+        const hay = norm([t, m.description, (m.genres || []).join(' '),
+          (m.countries || []).join(' '), m.year || '', m.director || '',
+          (m.actors || []).join(' ')].filter(Boolean).join(' · '));
+        const codeHit = isCode && digits && String(m.code || '').includes(digits);
+        // все слова запроса должны найтись (в любом поле) — так «зеленая миля 1999»
+        // и «торино гран» работают независимо от порядка слов
+        if (codeHit || (tks.length && tks.every(w => hay.includes(w)))) {
+          if (!matches.some(x => x.m === m)) matches.push({ m, score: 0 });
+        }
+      });
+    };
+    tryQuery(q);
+    if (!matches.length && /[a-z]/.test(q)) {
+      // 2-й эшелон: неправильная раскладка клавиатуры — «ptktyfz» → «зеленая»
+      const RU_LAYOUT = { q:'й', w:'ц', e:'у', r:'к', t:'е', y:'н', u:'г', i:'ш', o:'щ', p:'з',
+        a:'ф', s:'ы', d:'в', f:'а', g:'п', h:'р', j:'о', k:'л', l:'д', z:'я', x:'ч', c:'с',
+        v:'м', b:'и', n:'т', m:'ь', '[':'х', ']':'ъ', ';':'ж', "'":'э', ',':'б', '.':'ю' };
+      const qRu = q.replace(/[a-z\[\];',.]/g, ch => RU_LAYOUT[ch] || ch);
+      if (qRu && qRu !== q) tryQuery(qRu);
+    }
+    if (!matches.length) {
+      const limit = q.length <= 6 ? 2 : (q.length <= 12 ? 3 : 4);
+      list.forEach(m => {
+        const t = norm(m.title);
+        const d = _levDist(q, t);
+        if (d <= limit && d <= Math.max(2, Math.floor(t.length * 0.3))) {
+          matches.push({ m, score: d });
+        }
+      });
+      matches.sort((a, b) => a.score - b.score);
+    }
+    list = matches.map(x => x.m);
+  }
+  // Умный фильтр: применяем разобранные из фразы директивы напрямую
+  if (smart) {
+    list = [...ALL];
+    if (smart.genre) list = list.filter(m => (m.genres || []).some(g => String(g).toLowerCase() === smart.genre));
+    if (smart.minRating != null) list = list.filter(m => (parseFloat(m.rating) || 0) >= smart.minRating);
+    if (smart.decade) list = list.filter(m => m.year >= smart.decade && m.year < smart.decade + 10);
+    if (smart.year) list = list.filter(m => String(m.year) === String(smart.year));
+    if (smart.maxMin) list = list.filter(m => !m.duration || m.duration <= smart.maxMin);
+    if (smart.minDurMin) list = list.filter(m => !m.duration || m.duration >= smart.minDurMin);
+  }
+  list.sort((a, b) => {
+    if (sort === 'rating') return (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0);
+    if (sort === 'code') return (+a.code || 0) - (+b.code || 0);
+    if (sort === 'new') {
+      const da = new Date(a.added_at || 0).getTime();
+      const db = new Date(b.added_at || 0).getTime();
+      return db - da;
+    }
+    // v92: «⭐ По моей оценке» — сначала твои 5★→1★, потом неоценённые
+    if (sort === 'myrating') {
+      const ra = getRatings()[String(a.code)] || 0;
+      const rb = getRatings()[String(b.code)] || 0;
+      if (ra !== rb) return (rb - ra);
+      return (a.title || '').localeCompare(b.title || '', 'ru');
+    }
+    return (a.title || '').localeCompare(b.title || '', 'ru');
+  });
+  // v92: кнопка «🧹 Сбросить фильтры» — видна, когда активен хоть один фильтр
+  const anyFilter = !!(qRaw || activeGenre || activeCountry || timeLimit || onlyTrailer || onlyOnline);
+  const clearBtn = anyFilter
+    ? `<button class="btn-clear-filters" id="btn-clear-filters" title="Сбросить все фильтры">🧹 Сбросить фильтры</button>`
+    : '';
+  const c = document.getElementById('movies-container');
+  // v71: во время поиска прячем полки главной (тренды, премьеры, «Советуем», фильм дня),
+  // чтобы результаты или «Ничего не нашлось» были сразу под строкой поиска, а не
+  // глубоко внизу страницы. При очистке запроса полки возвращаются сами.
+  const searching = view === 'grid' && !!(qRaw || activeGenre);
+  ['hero-shelf', 'today-shelf', 'new-codes-shelf', 'recent-shelf', 'reco-shelf', 'premieres-shelf'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const row = el.querySelector('.hero-row');
+    el.classList.toggle('hidden', searching || !row || !row.children.length);
+  });
+  const fdBan = document.getElementById('filmday-banner');
+  if (fdBan) fdBan.classList.toggle('hidden', searching || !fdBan.innerHTML.trim());
+  // Переключатель «Моё»: ❤️ хочу посмотреть / ✅ разгаданные / 👁 я смотрел + прогресс
+  const modeSwitch = view === 'fav' ? `<div class="fav-mode">
+      <button class="fav-mode-btn ${favMode === 'fav' ? 'active' : ''}" data-mode="fav">❤️ Хочу</button>
+      <button class="fav-mode-btn ${favMode === 'done' ? 'active' : ''}" data-mode="done">✅ Разгадал</button>
+      <button class="fav-mode-btn ${favMode === 'watched' ? 'active' : ''}" data-mode="watched">👁 Смотрел</button>
+      <button class="fav-mode-btn ${favMode === 'rated' ? 'active' : ''}" data-mode="rated">⭐ Оценки</button>
+    </div>` : '';
+  const progressLine = (view === 'fav' && favMode === 'done')
+    ? `<div class="fav-progress">Разгадано ${unlockedAll.length} из ${ALL.length} (${ALL.length ? Math.round(100 * unlockedAll.length / ALL.length) : 0}%)</div>`
+    : (view === 'fav' && favMode === 'watched')
+    ? `<div class="fav-progress">Просмотрено ${watchedAll.length} из ${ALL.length} (${ALL.length ? Math.round(100 * watchedAll.length / ALL.length) : 0}%)</div>`
+    : (view === 'fav' && favMode === 'rated')
+    ? `<div class="fav-progress">Оценено ${Object.keys(getRatings()).length} фильм(ов) — рекомендации стали точнее 💫</div>`
+    : '';
+  const smartHint = smart
+    ? `<div class="smart-hint">🧠 ${esc((smart.parts || []).join(' · '))} · найдено: ${list.length}<button class="smart-clear" title="Сбросить" onclick="document.getElementById('search').value='';renderGrid()">✕</button></div>`
+    : '';
+  const head = (view === 'grid'
+    ? `<div class="layout-switch"><span class="ls-label">Вид:</span>
+        <button class="ls-btn${gridLayout === 'grid' ? ' active' : ''}" data-l="grid">▦ Сетка</button>
+        <button class="ls-btn${gridLayout === 'list' ? ' active' : ''}" data-l="list">☰ Список</button>
+      </div>`
+    : '')
+    + modeSwitch + progressLine + smartHint + clearBtn
+    // v75: полоску «просмотрено» показываем только когда есть хоть одна отметка —
+    // «0 из 71» выглядело как баг и занимало место
+    + (view === 'grid' && !searching && ALL.length && watchedAll.length > 0
+      ? `<div class="seen-bar"><span>👁 Отмечено просмотренными: ${watchedAll.length} из ${ALL.length}</span><span class="seen-track"><i style="width:${Math.round(100 * watchedAll.length / ALL.length)}%"></i></span></div>`
+      : '');
+  const wireFavMode = () => {
+    c.querySelectorAll('.fav-mode-btn').forEach(b => b.addEventListener('click', () => {
+      try { localStorage.setItem(FAV_MODE_KEY, b.dataset.mode); } catch (e) {}
+      haptic('light');
+      renderGrid();
+    }));
+  };
+  if (!list.length) {
+    const emptyEmoji = view === 'fav' ? (favMode === 'done' ? '🔒' : favMode === 'watched' ? '👁' : favMode === 'rated' ? '⭐' : '🤍') : '🔍';
+    const emptyText = view === 'fav'
+      ? (favMode === 'done'
+          ? 'Пока ничего не разгадано — лови коды в канале! 🔑'
+          : (favMode === 'watched'
+              ? 'Пока ничего не отмечено — жми «👁» на карточке фильма'
+              : (favMode === 'rated'
+                  ? 'Оценок пока нет — открой любой фильм и поставь звёзды ⭐'
+                  : 'В «Моём» пока пусто — жми сердечко ❤️ на любом фильме')))
+      : 'Ничего не нашлось 🤷 Попробуй другой запрос';
+    // v74: даже при пустом «Моём» показываем карточку с бэкапом/восстановлением
+    const backupEmpty = (view === 'fav' && (favMode || 'fav') === 'fav') ? backupFavsNotice() : '';
+    c.innerHTML = head + backupEmpty + `<div class="empty-state">
+      <div class="empty-emoji">${emptyEmoji}</div>
+      <p>${emptyText}</p>
       <button class="btn-secondary" id="btn-empty-lucky">🎲 Мне повезёт</button>
-    </div>`+(view==="grid"?freshLineHtml():""),E();const P=document.getElementById("btn-copy-backup");P&&(P.onclick=copyBackup);const R=document.getElementById("btn-share-posters");R&&(R.onclick=shareFavsPoster);const b=document.getElementById("btn-import-backup");b&&(b.onclick=importBackup);const $=document.getElementById("btn-restore-bot");$&&($.onclick=()=>sendOrDeepLink({action:"restore_backup"}));const I=document.getElementById("btn-empty-lucky");I&&(I.onclick=()=>{if(!ALL.length)return;haptic("light");const w=ALL[Math.floor(Math.random()*ALL.length)];openDetail(w.code)});return}const S=view==="fav"&&(o||"fav")==="fav"?backupFavsNotice():"",x=view==="grid"&&c.length>GRID_PAGE_SIZE,j=x?c.slice(0,gridPage*GRID_PAGE_SIZE):c,N=x&&j.length<c.length?`<button class="btn-show-more" id="btn-show-more">🎞 Показать ещё (${c.length-j.length})</button>`:"";d.innerHTML=m+S+(gridLayout==="list"?j.map(h=>listRowHtml(h,e)).join(""):j.map(h=>{const k=view==="fav"&&o==="rated"&&getRatings()[String(h.code)]||0;return`
-    <div class="movie-card${view==="fav"&&(o||"fav")==="fav"&&getFavs().includes(String(h.code))?" card-fav":""}" data-code="${esc(h.code)}">
-      ${posterHtmlQuick(h)}
+    </div>` + (view === 'grid' ? freshLineHtml() : '');
+    wireFavMode();
+    const cbE = document.getElementById('btn-copy-backup');
+    if (cbE) cbE.onclick = copyBackup;
+    const spE = document.getElementById('btn-share-posters');
+    if (spE) spE.onclick = shareFavsPoster;
+    const ibE = document.getElementById('btn-import-backup');
+    if (ibE) ibE.onclick = importBackup;
+    const rbE = document.getElementById('btn-restore-bot');
+    if (rbE) rbE.onclick = () => sendOrDeepLink({ action: 'restore_backup' });
+    const el = document.getElementById('btn-empty-lucky');
+    if (el) el.onclick = () => {
+      if (!ALL.length) return;
+      haptic('light');
+      const m = ALL[Math.floor(Math.random() * ALL.length)];
+      openDetail(m.code);
+    };
+    return;
+  }
+  const backup = (view === 'fav' && (favMode || 'fav') === 'fav') ? backupFavsNotice() : '';
+  // v93: виртуализация афиши — рисуем только текущую страницу (по 30),
+  // кнопка «Показать ещё» появляется, когда за границей остались фильмы.
+  const gridClipped = (view === 'grid') && list.length > GRID_PAGE_SIZE;
+  const visible = gridClipped ? list.slice(0, gridPage * GRID_PAGE_SIZE) : list;
+  const showMoreBtn = gridClipped && visible.length < list.length
+    ? `<button class="btn-show-more" id="btn-show-more">🎞 Показать ещё (${list.length - visible.length})</button>`
+    : '';
+  c.innerHTML = head + backup + (gridLayout === 'list'
+    ? visible.map(m => listRowHtml(m, q)).join('')
+    : visible.map(m => {
+    const myR = (view === 'fav' && favMode === 'rated') ? (getRatings()[String(m.code)] || 0) : 0;
+    return `
+    <div class="movie-card${(view === 'fav' && (favMode || 'fav') === 'fav' && getFavs().includes(String(m.code))) ? ' card-fav' : ''}" data-code="${esc(m.code)}">
+      ${posterHtmlQuick(m)}
       <div class="movie-info">
-        <h3>${hlTitle(h.title,e)}</h3>
-        <span class="rating">${ratingBadge(h)}${k?`<span class="my-stars">${"★".repeat(k)}</span>`:""}${durOf(h)?`<span class="dur-chip">⏱ ${durOf(h)} мин</span>`:""}</span>
+        <h3>${hlTitle(m.title, q)}</h3>
+        <span class="rating">${ratingBadge(m)}${myR ? `<span class="my-stars">${'★'.repeat(myR)}</span>` : ''}${durOf(m) ? `<span class="dur-chip">⏱ ${durOf(m)} мин</span>` : ''}</span>
       </div>
-    </div>`}).join(""))+N+(view==="grid"?freshLineHtml():"");const C=document.getElementById("btn-backup");C&&(C.onclick=()=>sendOrDeepLink({action:"save_favs",codes:getFavs()}));const H=document.getElementById("btn-copy-list");H&&(H.onclick=copyFavsList);const D=document.getElementById("btn-share-posters");D&&(D.onclick=shareFavsPoster);const _=document.getElementById("btn-copy-backup");_&&(_.onclick=copyBackup);const M=document.getElementById("btn-import-backup");M&&(M.onclick=importBackup);const A=document.getElementById("btn-restore-bot");A&&(A.onclick=()=>sendOrDeepLink({action:"restore_backup"}));const q=document.getElementById("btn-clear-fav");q&&(q.onclick=()=>{if(getFavs().length)try{(tg.showConfirm||tg.showPopup)("Очистить список «Хочу посмотреть»?",T=>{T&&(setFavs([]),haptic("ok"),renderGrid(),renderRecoShelf())})}catch(k){setFavs([]),renderGrid()}}),E(),Array.from(d.children).forEach((h,k)=>{h.style.animationDelay=Math.min(k,24)*.03+"s"}),d.querySelectorAll(".movie-card").forEach(h=>h.addEventListener("click",()=>openDetail(h.dataset.code))),d.querySelectorAll(".ls-btn").forEach(h=>h.addEventListener("click",()=>{gridLayout=h.dataset.l==="list"?"list":"grid";try{localStorage.setItem(LAYOUT_KEY,gridLayout)}catch(k){}haptic("light"),renderGrid()})),d.querySelectorAll(".movie-row").forEach(h=>h.addEventListener("click",k=>{k.target.closest("button")||openDetail(h.dataset.code)}));const F=document.getElementById("btn-clear-filters");F&&(F.onclick=()=>{document.getElementById("search").value="",activeGenre="",renderGenreChips(),activeCountry="",renderCountryChips(),timeLimit=0,renderTimeChips(),onlyTrailer=!1;const h=document.getElementById("btn-only-tr");h&&h.classList.remove("active"),onlyOnline=!1;const k=document.getElementById("btn-only-online");k&&k.classList.remove("active"),haptic("light"),renderGrid(),window.scrollTo({top:0,behavior:"smooth"})});const O=document.getElementById("btn-show-more");O&&(O.onclick=()=>{haptic("light"),gridPage++,renderGrid()}),wireFavQuick(d)}let detailOrigin="grid";function openDetail(t){const e=ALL.find(m=>m.code===t);if(!e)return;bumpWeekStat("open"),addRecent(e.code);const n=bumpOpenCount(t);challDone("open_movie"),view&&view!=="detail"&&(detailOrigin=view),view="detail",showView("detail");const s=getFavs().includes(t),o=findSimilar(e),a=[e.year?`<span class="chip chip-dim">📅 ${esc(e.year)}</span>`:"",e.duration?`<span class="chip chip-dim">⏱ ${esc(fmtDuration(e.duration))}</span>`:"",...(e.countries||[]).slice(0,2).map(m=>`<span class="chip chip-dim">${flagOf(m)} ${esc(m)}</span>`),...(e.genres||[]).map(m=>`<button class="chip chip-genre${activeGenre===m?" active":""}" data-g="${esc(m)}" title="Фильмы этого жанра">${esc(m)}</button>`)].filter(Boolean).join(""),i=premiereForTitle(e.title);document.getElementById("view-detail").innerHTML=`
+    </div>`;
+  }).join('')) + showMoreBtn + (view === 'grid' ? freshLineHtml() : '');
+  const b = document.getElementById('btn-backup');
+  if (b) b.onclick = () => sendOrDeepLink({ action: 'save_favs', codes: getFavs() });
+  const bc = document.getElementById('btn-copy-list');
+  if (bc) bc.onclick = copyFavsList;
+  const sp2 = document.getElementById('btn-share-posters');
+  if (sp2) sp2.onclick = shareFavsPoster;
+  const cb2 = document.getElementById('btn-copy-backup');
+  if (cb2) cb2.onclick = copyBackup;
+  const ib2 = document.getElementById('btn-import-backup');
+  if (ib2) ib2.onclick = importBackup;
+  const rb2 = document.getElementById('btn-restore-bot');
+  if (rb2) rb2.onclick = () => sendOrDeepLink({ action: 'restore_backup' });
+  // v101: «🧹 Очистить „Хочу посмотреть“» — с подтверждением, очищает только список ❤️
+  const clr = document.getElementById('btn-clear-fav');
+  if (clr) clr.onclick = () => {
+    const n = getFavs().length;
+    if (!n) return;
+    try {
+      const confirm = tg.showConfirm || tg.showPopup;
+      confirm('Очистить список «Хочу посмотреть»?',
+        (ok) => {
+          if (ok) { setFavs([]); haptic('ok'); renderGrid(); renderRecoShelf(); }
+        });
+    } catch (e) { setFavs([]); renderGrid(); }
+  };
+  wireFavMode();
+  // каскадное появление карточек
+  Array.from(c.children).forEach((el, i) => {
+    el.style.animationDelay = (Math.min(i, 24) * 0.03) + 's';
+  });
+  c.querySelectorAll('.movie-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.code)));
+  // v94: переключатель «Сетка/Список» — режим сохраняется на устройство
+  c.querySelectorAll('.ls-btn').forEach(b => b.addEventListener('click', () => {
+    gridLayout = b.dataset.l === 'list' ? 'list' : 'grid';
+    try { localStorage.setItem(LAYOUT_KEY, gridLayout); } catch (e) {}
+    haptic('light');
+    renderGrid();
+  }));
+  // v94: строки списка кликабельны (кнопки внутри не перехватываем)
+  c.querySelectorAll('.movie-row').forEach(el => el.addEventListener('click', (e) => {
+    if (e.target.closest('button')) return;
+    openDetail(el.dataset.code);
+  }));
+  // v92: сброс всех фильтров одной кнопкой
+  const cf = document.getElementById('btn-clear-filters');
+  if (cf) cf.onclick = () => {
+    document.getElementById('search').value = '';
+    activeGenre = ''; renderGenreChips();
+    activeCountry = ''; renderCountryChips();
+    timeLimit = 0; renderTimeChips();
+    onlyTrailer = false; const tb = document.getElementById('btn-only-tr'); if (tb) tb.classList.remove('active');
+    onlyOnline = false; const ob = document.getElementById('btn-only-online'); if (ob) ob.classList.remove('active');
+    haptic('light');
+    renderGrid();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  // v93: «Показать ещё» — добавляем следующую порцию карточек
+  const sm = document.getElementById('btn-show-more');
+  if (sm) sm.onclick = () => {
+    haptic('light');
+    gridPage++;
+    renderGrid();
+  };
+  wireFavQuick(c);
+}
+// ---------- карточка фильма ----------
+let detailOrigin = 'grid';  // откуда открыт фильм — для кнопки «◀️ Назад»
+function openDetail(code) {
+  const m = ALL.find(x => x.code === code);
+  if (!m) return;
+  bumpWeekStat('open');
+  addRecent(m.code);
+  const openN = bumpOpenCount(code);   // v93: счётчик открытий карточки
+  challDone('open_movie');
+  if (view && view !== 'detail') detailOrigin = view;
+  view = 'detail';
+  showView('detail');
+  const fav = getFavs().includes(code);
+  const similar = findSimilar(m);
+  // Чипы метаданных (год/длительность/страны) + кликабельные жанры:
+  // тап по жанру-чипу фильтрует афишу этим жанром.
+  const chips = [
+    m.year ? `<span class="chip chip-dim">📅 ${esc(m.year)}</span>` : '',
+    m.duration ? `<span class="chip chip-dim">⏱ ${esc(fmtDuration(m.duration))}</span>` : '',
+    ...(m.countries || []).slice(0, 2).map(ct => `<span class="chip chip-dim">${flagOf(ct)} ${esc(ct)}</span>`),
+    ...(m.genres || []).map(g =>
+      `<button class="chip chip-genre${activeGenre === g ? ' active' : ''}" data-g="${esc(g)}" title="Фильмы этого жанра">${esc(g)}</button>`),
+  ].filter(Boolean).join('');
+  const prem = premiereForTitle(m.title);  // v119: фильм скоро в кино?
+  document.getElementById('view-detail').innerHTML = `
     <button class="btn-back" id="btn-back">◀️ Назад</button>
     <div class="detail">
-      ${posterHtml(e)}
+      ${posterHtml(m)}
       <div class="detail-info">
-        <h2>${esc(e.title)}</h2>
-        <span class="rating">${ratingBadge(e)}</span>
-        ${i?`<p class="premiere-note">🍿 В кино с ${i.date} — ${i.human}!</p>`:""}
-        ${(()=>{const m=myRating(t),E=[1,2,3,4,5].map(S=>`<button class="star-btn${S<=m?" on":""}" data-v="${S}" data-code="${esc(t)}" title="${S} из 5">★</button>`).join("");return`<div class="rate-strip">
-            <span class="rate-label">${m?"Твоя оценка:":"Оцени фильм:"}</span>
-            <span class="rate-stars">${E}</span>
-            ${m?`<button class="rate-clear" data-code="${esc(t)}" title="Убрать оценку">✕</button>`:""}
-            ${m&&e.rating?`<span class="rate-cmp" title="Сравнение с рейтингом Кинопоиска">⚖️ КП ${esc(String(e.rating))} · твоя ${m}/5${m/5*10>=parseFloat(e.rating)?" · 🔥 не хуже КП":""}</span>`:""}
-          </div>`})()}
-        ${a?`<div class="detail-chips">${a}</div>`:""}
-        ${e.director?`<p class="people-line">🎬 Режиссёр: <b class="person-chip" data-q="${esc(e.director)}" title="Найти фильмы">${esc(e.director)}</b></p>`:""}
-        ${(e.actors||[]).length?`<p class="people-line">⭐ В ролях: ${e.actors.slice(0,4).map(m=>`<b class="person-chip" data-q="${esc(m)}" title="Найти фильмы">${esc(m)}</b>`).join(", ")}</p>`:""}
-        <p class="desc">${esc(e.description||"Описание скоро появится.")}</p>
-        ${n>1?`<p class="open-count">👀 Открывал(а) ${n} раз(а)</p>`:n===1?'<p class="open-count">👀 Впервые открыл(а) — как тебе?</p>':""}
-        ${getNotes()[t]?`<div class="note-box">📝 ${esc(getNotes()[t])}</div>`:""}
+        <h2>${esc(m.title)}</h2>
+        <span class="rating">${ratingBadge(m)}</span>
+        ${prem ? `<p class="premiere-note">🍿 В кино с ${prem.date} — ${prem.human}!</p>` : ''}
+        ${(() => {
+          const myR = myRating(code);
+          const stars = [1, 2, 3, 4, 5].map(i =>
+            `<button class="star-btn${i <= myR ? ' on' : ''}" data-v="${i}" data-code="${esc(code)}" title="${i} из 5">★</button>`).join('');
+          return `<div class="rate-strip">
+            <span class="rate-label">${myR ? 'Твоя оценка:' : 'Оцени фильм:'}</span>
+            <span class="rate-stars">${stars}</span>
+            ${myR ? `<button class="rate-clear" data-code="${esc(code)}" title="Убрать оценку">✕</button>` : ''}
+            ${myR && m.rating ? `<span class="rate-cmp" title="Сравнение с рейтингом Кинопоиска">⚖️ КП ${esc(String(m.rating))} · твоя ${myR}/5${(myR / 5) * 10 >= parseFloat(m.rating) ? ' · 🔥 не хуже КП' : ''}</span>` : ''}
+          </div>`;
+        })()}
+        ${chips ? `<div class="detail-chips">${chips}</div>` : ''}
+        ${m.director ? `<p class="people-line">🎬 Режиссёр: <b class="person-chip" data-q="${esc(m.director)}" title="Найти фильмы">${esc(m.director)}</b></p>` : ''}
+        ${(m.actors || []).length ? `<p class="people-line">⭐ В ролях: ${m.actors.slice(0, 4).map(a => `<b class="person-chip" data-q="${esc(a)}" title="Найти фильмы">${esc(a)}</b>`).join(', ')}</p>` : ''}
+        <p class="desc">${esc(m.description || 'Описание скоро появится.')}</p>
+        ${openN > 1 ? `<p class="open-count">👀 Открывал(а) ${openN} раз(а)</p>` : (openN === 1 ? '<p class="open-count">👀 Впервые открыл(а) — как тебе?</p>' : '')}
+        ${getNotes()[code] ? `<div class="note-box">📝 ${esc(getNotes()[code])}</div>` : ''}
         <div class="detail-actions">
-          ${e.link||cleanKpTitle(e.title)?'<button class="btn-watch" id="btn-watch">'+(e.link?"▶️ Смотреть фильм":"🍿 Где посмотреть")+"</button>":""}
-          ${e.link2?'<button class="btn-secondary" id="btn-mirror">🔗 Зеркало</button>':""}
+          ${(m.link || cleanKpTitle(m.title)) ? '<button class="btn-watch" id="btn-watch">' + (m.link ? '▶️ Смотреть фильм' : '🍿 Где посмотреть') + '</button>' : ''}
+          ${m.link2 ? '<button class="btn-secondary" id="btn-mirror">🔗 Зеркало</button>' : ''}
           <button class="btn-primary" id="btn-open">🔓 Открыть код</button>
-          ${e.trailer_mp4||e.trailer_yt||e.trailer_file_id?'<button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>':""}
-          <button class="btn-fav ${s?"active":""}" id="btn-fav">${s?"❤️ В «Моём»":"🤍 Хочу посмотреть"}</button>
-          <button class="btn-secondary ${getWatched().includes(String(t))?"active watched-btn":"watched-btn"}" id="btn-watched">${getWatched().includes(String(t))?"👁 Просмотрено":"👁 Отметить просмотренным"}</button>
-          <button class="btn-secondary" id="btn-note">📝 ${getNotes()[t]?"Заметка есть":"Заметка"}</button>
+          ${m.trailer_mp4 || m.trailer_yt || m.trailer_file_id ? '<button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>' : ''}
+          <button class="btn-fav ${fav ? 'active' : ''}" id="btn-fav">${fav ? '❤️ В «Моём»' : '🤍 Хочу посмотреть'}</button>
+          <button class="btn-secondary ${getWatched().includes(String(code)) ? 'active watched-btn' : 'watched-btn'}" id="btn-watched">${getWatched().includes(String(code)) ? '👁 Просмотрено' : '👁 Отметить просмотренным'}</button>
+          <button class="btn-secondary" id="btn-note">📝 ${getNotes()[code] ? 'Заметка есть' : 'Заметка'}</button>
           <button class="btn-secondary" id="btn-copy">📎 Скопировать код</button>
           <button class="btn-secondary" id="btn-riddle">🎭 Загадать другу</button>
           <button class="btn-secondary" id="btn-riddle-reveal-share">🎭 Загадать с ответом</button>
           <button class="btn-secondary" id="btn-review">✍️ Отзыв</button>
           <button class="btn-secondary" id="btn-remind">🔔 Напомнить через час</button>
-          ${i&&i.fid?'<button class="btn-secondary" id="btn-prem-remind">💌 Напомнить о премьере</button>':""}
-          ${cleanKpTitle(e.title)?'<button class="btn-secondary" id="btn-kp">⭐ IMDB</button>':""}
+          ${prem && prem.fid ? '<button class="btn-secondary" id="btn-prem-remind">💌 Напомнить о премьере</button>' : ''}
+          ${cleanKpTitle(m.title) ? '<button class="btn-secondary" id="btn-kp">⭐ IMDB</button>' : ''}
           <button class="btn-secondary" id="btn-sharecard">🖼 Карточка</button>
           <button class="btn-secondary" id="btn-share">📤 Поделиться с другом</button>
         </div>
       </div>
     </div>
-    ${o.length?`
+    ${similar.length ? `
     <div class="similar-section">
       <h3 class="similar-title">🎬 Похожие фильмы</h3>
       <div class="similar-row">
-        ${o.map(m=>`
-          <div class="similar-card" data-code="${esc(m.code)}">
+        ${similar.map(s => `
+          <div class="similar-card" data-code="${esc(s.code)}">
             <div class="similar-poster">
-              ${m.poster?`<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" ${FADE}${dimStyle(m)} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`:'<div class="poster-placeholder similar-ph"><span>🎬</span></div>'}
+              ${s.poster
+                ? `<img src="${esc(s.poster)}" alt="${esc(s.title)}" loading="lazy" ${FADE}${dimStyle(s)} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+                : `<div class="poster-placeholder similar-ph"><span>🎬</span></div>`}
             </div>
-            <div class="similar-name">${esc(m.title)}</div>
-          </div>`).join("")}
+            <div class="similar-name">${esc(s.title)}</div>
+          </div>`).join('')}
       </div>
-    </div>`:""}`,document.getElementById("btn-back").onclick=()=>openView(detailOrigin||"grid");const r=document.querySelector("#view-detail .poster-wrap");r&&(r.classList.add("zoomable"),r.addEventListener("click",m=>{const E=r.querySelector("img"),S=document.getElementById("lightbox");!E||!S||(m.stopPropagation(),haptic("light"),S.querySelector("img").src=E.src,S.classList.remove("hidden"))})),document.getElementById("btn-open").onclick=()=>sendOrDeepLink({action:"open_movie",code:t});const c=document.getElementById("btn-watch");c&&(c.onclick=()=>openWatchLink(e));const l=document.getElementById("btn-mirror");l&&(l.onclick=()=>openUrlLink(e.link2));const g=document.getElementById("btn-kp");g&&(g.onclick=()=>openImdbLink(e)),document.querySelectorAll("#view-detail .star-btn").forEach(m=>m.addEventListener("click",()=>{setRating(m.dataset.code,parseInt(m.dataset.v,10)),openDetail(t)}));const d=document.querySelector("#view-detail .rate-clear");d&&d.addEventListener("click",()=>{removeRating(d.dataset.code),openDetail(t)});const p=document.getElementById("btn-riddle");p&&(p.onclick=()=>shareRiddle(e));const u=document.getElementById("btn-riddle-reveal-share");u&&(u.onclick=()=>shareRiddleReveal(e)),document.getElementById("btn-fav").onclick=()=>{toggleFav(t),openDetail(t)},document.getElementById("btn-watched").onclick=()=>{toggleWatched(String(t)),openDetail(t)},document.getElementById("btn-note").onclick=()=>{const m=getNotes()[t]||"";tg.showPopup({type:"prompt",title:"📝 Заметка о фильме",message:"Короткая заметка сохранится на этом устройстве.",placeholder:m,text:m,callback:(E,S)=>{E==="ok"&&(setNote(t,S||""),haptic("ok"),openDetail(t))}})},document.getElementById("btn-copy").onclick=()=>{const m=()=>{try{tg.HapticFeedback.impactOccurred("light")}catch(E){}tg.showPopup({type:"ok",title:"Код скопирован",message:`Код ${t} отправь боту @kapitan_kino_bot — и фильм откроется!`})};navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t).then(m).catch(m):m()},document.getElementById("btn-remind").onclick=()=>sendOrDeepLink({action:"remind_movie",code:t});const f=document.getElementById("btn-prem-remind");f&&(f.onclick=()=>sendOrDeepLink({action:"remind_premiere",iso:i.iso,fid:i.fid}));const y=document.getElementById("btn-trailer");y&&(y.onclick=()=>openTrailer(e)),document.getElementById("btn-review").onclick=()=>{haptic("light");const m=cleanKpTitle(e.title)||e.title||"фильму";try{tg.showPopup({title:"✍️ Отзыв о фильме",message:`Бот попросит написать отзыв о «${m}» одним сообщением.
+    </div>` : ''}`;
+  document.getElementById('btn-back').onclick = () => openView(detailOrigin || 'grid');
+  // v90: тап по постеру в карточке — лайтбокс на весь экран
+  const dPw = document.querySelector('#view-detail .poster-wrap');
+  if (dPw) {
+    dPw.classList.add('zoomable');
+    dPw.addEventListener('click', (e) => {
+      const img = dPw.querySelector('img');
+      const lb = document.getElementById('lightbox');
+      if (!img || !lb) return;
+      e.stopPropagation();
+      haptic('light');
+      lb.querySelector('img').src = img.src;
+      lb.classList.remove('hidden');
+    });
+  }
+  document.getElementById('btn-open').onclick =
+    () => sendOrDeepLink({ action: 'open_movie', code });
+  const watchBtn = document.getElementById('btn-watch');
+  if (watchBtn) watchBtn.onclick = () => openWatchLink(m);
+  const mirrorBtn = document.getElementById('btn-mirror');
+  if (mirrorBtn) mirrorBtn.onclick = () => openUrlLink(m.link2);
+  const kpBtn = document.getElementById('btn-kp');
+  if (kpBtn) kpBtn.onclick = () => openImdbLink(m);
+  // v64: оценка звёздами прямо в карточке (локально) + «Загадать другу»
+  document.querySelectorAll('#view-detail .star-btn').forEach(b =>
+    b.addEventListener('click', () => { setRating(b.dataset.code, parseInt(b.dataset.v, 10)); openDetail(code); }));
+  const rateClear = document.querySelector('#view-detail .rate-clear');
+  if (rateClear) rateClear.addEventListener('click', () => { removeRating(rateClear.dataset.code); openDetail(code); });
+  const riddleBtn = document.getElementById('btn-riddle');
+  if (riddleBtn) riddleBtn.onclick = () => shareRiddle(m);
+  const riddleRevBtn = document.getElementById('btn-riddle-reveal-share');
+  if (riddleRevBtn) riddleRevBtn.onclick = () => shareRiddleReveal(m);
+  document.getElementById('btn-fav').onclick = () => { toggleFav(code); openDetail(code); };
+  document.getElementById('btn-watched').onclick = () => { toggleWatched(String(code)); openDetail(code); };
+  document.getElementById('btn-note').onclick = () => {
+    const current = getNotes()[code] || '';
+    tg.showPopup({
+      type: 'prompt',
+      title: '📝 Заметка о фильме',
+      message: 'Короткая заметка сохранится на этом устройстве.',
+      placeholder: current,
+      text: current,
+      callback: (btnId, value) => {
+        if (btnId === 'ok') {
+          setNote(code, value || '');
+          haptic('ok');
+          openDetail(code);
+        }
+      }
+    });
+  };
+  document.getElementById('btn-copy').onclick = () => {
+    const done = () => {
+      try { tg.HapticFeedback.impactOccurred('light'); } catch (e) {}
+      tg.showPopup({
+        type: 'ok',
+        title: 'Код скопирован',
+        message: `Код ${code} отправь боту @kapitan_kino_bot — и фильм откроется!`
+      });
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(done).catch(done);
+    } else done();
+  };
+  document.getElementById('btn-remind').onclick = () =>
+    sendOrDeepLink({ action: 'remind_movie', code });
+  // v120: «💌 Напомнить о премьере» — бот пришлёт ЛС за день до релиза
+  const premRemindBtn = document.getElementById('btn-prem-remind');
+  if (premRemindBtn) premRemindBtn.onclick = () =>
+    sendOrDeepLink({ action: 'remind_premiere', iso: prem.iso, fid: prem.fid });
+  const trailerBtn = document.getElementById('btn-trailer');
+  if (trailerBtn) trailerBtn.onclick = () => openTrailer(m);
+  document.getElementById('btn-review').onclick = () => {
+    // Не «выкидываем» человека в бота вслепую: предупреждаем, что бот попросит
+    // текст отзыва, и как из этого режима выйти (кнопка «❌ Отмена» / слово «отмена»).
+    haptic('light');
+    const reviewTitle = cleanKpTitle(m.title) || m.title || 'фильму';
+    try {
+      tg.showPopup({
+        title: '✍️ Отзыв о фильме',
+        message: `Бот попросит написать отзыв о «${reviewTitle}» одним сообщением.\n\nВыйти из режима можно кнопкой «❌ Отмена» у сообщения бота или словом «отмена» — отзыв не сохранится.`,
+        buttons: [
+          { id: 'go', type: 'default', text: '✍️ Открыть бота' },
+          { id: 'no', type: 'cancel', text: 'Не сейчас' },
+        ],
+        callback: (btnId) => {
+          if (btnId === 'go') sendOrDeepLink({ action: 'review_movie', code });
+        },
+      });
+    } catch (e) {
+      sendOrDeepLink({ action: 'review_movie', code });
+    }
+  };
+  document.getElementById('btn-share').onclick = () => shareMovie(m);
+  const scBtn = document.getElementById('btn-sharecard');
+  if (scBtn) scBtn.onclick = () => openShareCard(m);
+  // Тап по похожему фильму → открываем его карточку
+  document.querySelectorAll('#view-detail .similar-card').forEach(el => {
+    el.addEventListener('click', () => {
+      haptic('light');
+      openDetail(el.dataset.code);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+  // Тап по жанровому чипу → афиша, отфильтрованная этим жанром
+  document.querySelectorAll('#view-detail .chip-genre').forEach(ch => {
+    ch.addEventListener('click', () => {
+      haptic('light');
+      activeGenre = ch.dataset.g || '';
+      view = 'grid';
+      showView('catalog');
+      renderGenreChips();
+      renderGrid();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+  // Тап по актёру/режиссёру → афиша с поиском по нему (поиск ищет и по составу)
+  document.querySelectorAll('#view-detail .person-chip').forEach(ch => {
+    ch.addEventListener('click', () => {
+      const q = ch.dataset.q || '';
+      if (!q) return;
+      haptic('light');
+      const si = document.getElementById('search');
+      if (si) si.value = q;
+      addSearchHist(q);
+      activeGenre = '';
+      view = 'grid';
+      showView('catalog');
+      renderGenreChips();
+      renderGrid();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+}
 
-Выйти из режима можно кнопкой «❌ Отмена» у сообщения бота или словом «отмена» — отзыв не сохранится.`,buttons:[{id:"go",type:"default",text:"✍️ Открыть бота"},{id:"no",type:"cancel",text:"Не сейчас"}],callback:E=>{E==="go"&&sendOrDeepLink({action:"review_movie",code:t})}})}catch(E){sendOrDeepLink({action:"review_movie",code:t})}},document.getElementById("btn-share").onclick=()=>shareMovie(e);const v=document.getElementById("btn-sharecard");v&&(v.onclick=()=>openShareCard(e)),document.querySelectorAll("#view-detail .similar-card").forEach(m=>{m.addEventListener("click",()=>{haptic("light"),openDetail(m.dataset.code),window.scrollTo({top:0,behavior:"smooth"})})}),document.querySelectorAll("#view-detail .chip-genre").forEach(m=>{m.addEventListener("click",()=>{haptic("light"),activeGenre=m.dataset.g||"",view="grid",showView("catalog"),renderGenreChips(),renderGrid(),window.scrollTo({top:0,behavior:"smooth"})})}),document.querySelectorAll("#view-detail .person-chip").forEach(m=>{m.addEventListener("click",()=>{const E=m.dataset.q||"";if(!E)return;haptic("light");const S=document.getElementById("search");S&&(S.value=E),addSearchHist(E),activeGenre="",view="grid",showView("catalog"),renderGenreChips(),renderGrid(),window.scrollTo({top:0,behavior:"smooth"})})})}function findSimilar(t){const e=new Set(t.genres||[]),n=ALL.filter(s=>s.code!==t.code).map(s=>{const o=new Set(s.genres||[]);let a=0;return e.forEach(i=>{o.has(i)&&(a+=3)}),s.year&&t.year&&Math.abs(s.year-t.year)<=3&&(a+=2),s.year&&t.year&&s.year===t.year&&(a+=1),a+=Math.min(parseFloat(s.rating)||0,10)/5,{movie:s,score:a}});return n.sort((s,o)=>o.score-s.score),n.slice(0,6).map(s=>s.movie)}const GAME_ROUNDS=5;let game=null;const shuffle=t=>t.sort(()=>Math.random()-.5);function startGame(){const t=ALL.filter(n=>n.poster);if(t.length<6){document.getElementById("view-game").innerHTML='<p class="error">Нужно минимум 6 фильмов с постерами 🎬</p>';return}game={rounds:shuffle([...t]).slice(0,GAME_ROUNDS).map(n=>{const s=shuffle(ALL.filter(o=>o.code!==n.code)).slice(0,3).map(o=>o.title);return{movie:n,options:shuffle([n.title,...s])}}),i:0,correct:0},renderRound()}function renderRound(){const t=game.rounds[game.i];if(!t)return renderGameEnd();document.getElementById("view-game").innerHTML=`
+function findSimilar(m) {
+  // Похожие фильмы: совпадение жанров > года > рейтинга. Максимум 6 карточек.
+  const mGenres = new Set(m.genres || []);
+  const scored = ALL.filter(x => x.code !== m.code).map(x => {
+    const xGenres = new Set(x.genres || []);
+    let score = 0;
+    mGenres.forEach(g => { if (xGenres.has(g)) score += 3; });
+    if (x.year && m.year && Math.abs(x.year - m.year) <= 3) score += 2;
+    if (x.year && m.year && x.year === m.year) score += 1;
+    score += Math.min(parseFloat(x.rating) || 0, 10) / 5;
+    return { movie: x, score };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 6).map(x => x.movie);
+}
+
+// ---------- тренажёр ----------
+const GAME_ROUNDS = 5;
+let game = null;
+
+const shuffle = a => a.sort(() => Math.random() - 0.5);
+
+function startGame() {
+  const withPosters = ALL.filter(m => m.poster);
+  if (withPosters.length < 6) {
+    document.getElementById('view-game').innerHTML =
+      '<p class="error">Нужно минимум 6 фильмов с постерами 🎬</p>';
+    return;
+  }
+  const rounds = shuffle([...withPosters]).slice(0, GAME_ROUNDS).map(m => {
+    const wrong = shuffle(ALL.filter(x => x.code !== m.code)).slice(0, 3).map(x => x.title);
+    return { movie: m, options: shuffle([m.title, ...wrong]) };
+  });
+  game = { rounds, i: 0, correct: 0 };
+  renderRound();
+}
+
+function renderRound() {
+  const r = game.rounds[game.i];
+  if (!r) return renderGameEnd();
+  document.getElementById('view-game').innerHTML = `
     <div class="game">
-      <div class="game-progress">Раунд ${game.i+1} / ${game.rounds.length} · Угадано: ${game.correct}</div>
+      <div class="game-progress">Раунд ${game.i + 1} / ${game.rounds.length} · Угадано: ${game.correct}</div>
       <div class="game-poster" id="game-poster">
-        <img src="${esc(t.movie.poster)}" alt="Угадай фильм" style="filter: blur(14px)"/>
+        <img src="${esc(r.movie.poster)}" alt="Угадай фильм" style="filter: blur(14px)"/>
       </div>
       <div class="game-options">
-        ${t.options.map(e=>`<button class="btn-option" data-t="${esc(e)}">${esc(e)}</button>`).join("")}
+        ${r.options.map(t => `<button class="btn-option" data-t="${esc(t)}">${esc(t)}</button>`).join('')}
       </div>
       <button class="btn-back" id="btn-game-back">◀️ Выйти</button>
-    </div>`,document.getElementById("btn-game-back").onclick=()=>{view="grid",showView("catalog"),renderGrid()},document.querySelectorAll(".btn-option").forEach(e=>e.addEventListener("click",()=>answerRound(e,t.movie)))}function answerRound(t,e){const n=t.dataset.t===e.title;n&&game.correct++,haptic(n?"ok":"error"),t.classList.add(n?"correct":"wrong"),document.querySelectorAll(".btn-option").forEach(o=>o.disabled=!0);const s=document.querySelector("#game-poster img");s&&(s.style.filter="none"),document.querySelector(".game-poster").insertAdjacentHTML("beforeend",`<div class="game-reveal">${n?"✅ Верно!":`❌ Это «${esc(e.title)}»`}</div>`),setTimeout(()=>{game.i++,renderRound()},1600)}function renderGameEnd(){const{correct:t,rounds:e}=game;document.getElementById("view-game").innerHTML=`
+    </div>`;
+  document.getElementById('btn-game-back').onclick = () => { view = 'grid'; showView('catalog'); renderGrid(); };
+  document.querySelectorAll('.btn-option').forEach(b =>
+    b.addEventListener('click', () => answerRound(b, r.movie)));
+}
+
+function answerRound(btn, movie) {
+  const right = btn.dataset.t === movie.title;
+  if (right) game.correct++;
+  haptic(right ? 'ok' : 'error');
+  btn.classList.add(right ? 'correct' : 'wrong');
+  document.querySelectorAll('.btn-option').forEach(b => b.disabled = true);
+  const img = document.querySelector('#game-poster img');
+  if (img) img.style.filter = 'none';
+  document.querySelector('.game-poster').insertAdjacentHTML('beforeend',
+    `<div class="game-reveal">${right ? '✅ Верно!' : `❌ Это «${esc(movie.title)}»`}</div>`);
+  setTimeout(() => { game.i++; renderRound(); }, 1600);
+}
+
+function renderGameEnd() {
+  const { correct, rounds } = game;
+  document.getElementById('view-game').innerHTML = `
     <div class="game">
       <div class="game-end">
-        <h2>${t===e.length?"🏆 Отличная память!":t>=3?"👍 Неплохо!":"🎬 Потренируемся ещё?"}</h2>
-        <p class="game-score">Угадано ${t} из ${e.length}</p>
+        <h2>${correct === rounds.length ? '🏆 Отличная память!' : correct >= 3 ? '👍 Неплохо!' : '🎬 Потренируемся ещё?'}</h2>
+        <p class="game-score">Угадано ${correct} из ${rounds.length}</p>
         <button class="btn-primary" id="btn-send-score">💰 Получить баллы в боте</button>
         <button class="btn-secondary" id="btn-again">🔁 Ещё раз</button>
         <button class="btn-back" id="btn-game-back2">◀️ К афише</button>
       </div>
-    </div>`,document.getElementById("btn-send-score").onclick=()=>sendOrDeepLink({action:"quiz_result",correct:t,total:e.length}),document.getElementById("btn-again").onclick=startGame,document.getElementById("btn-game-back2").onclick=()=>{view="grid",showView("catalog"),renderGrid()}}function renderGameMenu(){const t=!!document.getElementById("view-emoji");document.getElementById("view-game").innerHTML=`
+    </div>`;
+  document.getElementById('btn-send-score').onclick = () =>
+    sendOrDeepLink({ action: 'quiz_result', correct, total: rounds.length });
+  document.getElementById('btn-again').onclick = startGame;
+  document.getElementById('btn-game-back2').onclick = () => { view = 'grid'; showView('catalog'); renderGrid(); };
+}
+
+// ---------- v106: меню игр + «Угадай по кадру» ----------
+// Раздел «🏋 Тренажёр» теперь открывается меню с тремя режимами:
+// постер (классика), кадр из трейлера (новое), эмодзи-загадки.
+function renderGameMenu() {
+  const emojiReady = !!document.getElementById('view-emoji');
+  document.getElementById('view-game').innerHTML = `
     <div class="game">
       <div class="game-end">
         <h2>🏋 Тренажёр</h2>
         <p class="game-score">Три режима — выбирай!</p>
         <button class="btn-primary" id="btn-gm-poster">🖼 Угадай по постеру</button>
         <button class="btn-primary" id="btn-gm-frame">🎞 Угадай по кадру</button>
-        ${t?'<button class="btn-secondary" id="btn-gm-emoji">😀 Угадай по эмодзи</button>':""}
+        ${emojiReady ? '<button class="btn-secondary" id="btn-gm-emoji">😀 Угадай по эмодзи</button>' : ''}
         <button class="btn-back" id="btn-gm-back">◀️ К афише</button>
       </div>
-    </div>`,document.getElementById("btn-gm-poster").onclick=startGame,document.getElementById("btn-gm-frame").onclick=startFrameGame;const e=document.getElementById("btn-gm-emoji");e&&(e.onclick=()=>{document.getElementById("view-game").innerHTML="",renderEmojiGame()}),document.getElementById("btn-gm-back").onclick=()=>{view="grid",showView("catalog"),renderGrid()}}let frameGame=null;const frameThumb=t=>{if(t.frame_pic)return t.frame_pic;if(t.trailer_yt){const e=["hq1","hq2","hq3"][Math.floor(Math.random()*3)];return"https://i.ytimg.com/vi/"+t.trailer_yt+"/"+e+".jpg"}return""};function startFrameGame(){const t=ALL.filter(n=>frameThumb(n)&&n.poster);if(t.length<6){document.getElementById("view-game").innerHTML='<p class="error">Нужно минимум 6 фильмов с кадрами 🎬</p>';return}frameGame={rounds:shuffle(t).slice(0,5).map(n=>{const s=shuffle(ALL.filter(o=>o.code!==n.code)).slice(0,3).map(o=>o.title);return{movie:n,options:shuffle([n.title,...s])}}),i:0,correct:0},renderFrameRound()}function renderFrameRound(){const t=document.getElementById("view-game"),e=frameGame.rounds[frameGame.i];if(!e)return renderFrameEnd();t.innerHTML=`
+    </div>`;
+  document.getElementById('btn-gm-poster').onclick = startGame;
+  document.getElementById('btn-gm-frame').onclick = startFrameGame;
+  const ge = document.getElementById('btn-gm-emoji');
+  if (ge) ge.onclick = () => {
+    // эмодзи-загадки показываются в своём контейнере (оба видны на view-game)
+    document.getElementById('view-game').innerHTML = '';
+    renderEmojiGame();
+  };
+  document.getElementById('btn-gm-back').onclick = () => { view = 'grid'; showView('catalog'); renderGrid(); };
+}
+
+// «Угадай по кадру»: показываем РЕАЛЬНЫЙ кадр из трейлера.
+// Приоритет: frame_pic (локальный кадр из frames/, собран из hq1/hq2/hq3 —
+// сцены без титульных заставок) → онлайн hq1/hq2/hq3 → никогда постер
+// (постер содержит название фильма — игра теряет смысл).
+let frameGame = null;
+const frameThumb = (m) => {
+  if (m.frame_pic) return m.frame_pic;
+  if (m.trailer_yt) {
+    const v = ['hq1', 'hq2', 'hq3'][Math.floor(Math.random() * 3)];
+    return 'https://i.ytimg.com/vi/' + m.trailer_yt + '/' + v + '.jpg';
+  }
+  return '';
+};
+
+function startFrameGame() {
+  const pool = ALL.filter(m => frameThumb(m) && m.poster);
+  if (pool.length < 6) {
+    document.getElementById('view-game').innerHTML =
+      '<p class="error">Нужно минимум 6 фильмов с кадрами 🎬</p>';
+    return;
+  }
+  const rounds = shuffle(pool).slice(0, 5).map(m => {
+    const wrong = shuffle(ALL.filter(x => x.code !== m.code)).slice(0, 3).map(x => x.title);
+    return { movie: m, options: shuffle([m.title, ...wrong]) };
+  });
+  frameGame = { rounds, i: 0, correct: 0 };
+  renderFrameRound();
+}
+
+function renderFrameRound() {
+  const box = document.getElementById('view-game');
+  const r = frameGame.rounds[frameGame.i];
+  if (!r) return renderFrameEnd();
+  box.innerHTML = `
     <div class="game">
-      <div class="game-progress">🎞 Раунд ${frameGame.i+1} / ${frameGame.rounds.length} · Угадано: ${frameGame.correct}</div>
+      <div class="game-progress">🎞 Раунд ${frameGame.i + 1} / ${frameGame.rounds.length} · Угадано: ${frameGame.correct}</div>
       <div class="frame-question">
-        <img src="${esc(frameThumb(e.movie))}" alt="Кадр из фильма" onerror="this.parentElement.classList.add('no-thumb')"/>
+        <img src="${esc(frameThumb(r.movie))}" alt="Кадр из фильма" onerror="this.parentElement.classList.add('no-thumb')"/>
       </div>
       <div class="game-options">
-        ${e.options.map(n=>`<button class="btn-option" data-t="${esc(n)}">${esc(n)}</button>`).join("")}
+        ${r.options.map(t => `<button class="btn-option" data-t="${esc(t)}">${esc(t)}</button>`).join('')}
       </div>
       <button class="btn-back" id="btn-frame-back">◀️ Выйти</button>
-    </div>`,document.getElementById("btn-frame-back").onclick=()=>renderGameMenu(),t.querySelectorAll(".btn-option").forEach(n=>n.addEventListener("click",()=>answerFrameRound(n,e.movie)))}function answerFrameRound(t,e){const n=document.getElementById("view-game"),s=t.dataset.t===e.title;s&&frameGame.correct++,haptic(s?"ok":"error"),t.classList.add(s?"correct":"wrong"),n.querySelectorAll(".btn-option").forEach(o=>o.disabled=!0),n.querySelector(".frame-question").insertAdjacentHTML("beforeend",`<div class="game-reveal">${s?"✅ Верно!":`❌ Это «${esc(e.title)}»`}</div>`),setTimeout(()=>{frameGame.i++,renderFrameRound()},1600)}function renderFrameEnd(){const{correct:t,rounds:e}=frameGame;document.getElementById("view-game").innerHTML=`
+    </div>`;
+  document.getElementById('btn-frame-back').onclick = () => renderGameMenu();
+  box.querySelectorAll('.btn-option').forEach(b =>
+    b.addEventListener('click', () => answerFrameRound(b, r.movie)));
+}
+
+function answerFrameRound(btn, movie) {
+  const box = document.getElementById('view-game');
+  const right = btn.dataset.t === movie.title;
+  if (right) frameGame.correct++;
+  haptic(right ? 'ok' : 'error');
+  btn.classList.add(right ? 'correct' : 'wrong');
+  box.querySelectorAll('.btn-option').forEach(b => b.disabled = true);
+  box.querySelector('.frame-question').insertAdjacentHTML('beforeend',
+    `<div class="game-reveal">${right ? '✅ Верно!' : `❌ Это «${esc(movie.title)}»`}</div>`);
+  setTimeout(() => { frameGame.i++; renderFrameRound(); }, 1600);
+}
+
+function renderFrameEnd() {
+  const { correct, rounds } = frameGame;
+  document.getElementById('view-game').innerHTML = `
     <div class="game">
       <div class="game-end">
-        <h2>${t===e.length?"🏆 Киносыщик!":t>=3?"👍 Хороший глаз!":"🎬 Тренируемся ещё?"}</h2>
-        <p class="game-score">Угадано ${t} из ${e.length} кадров</p>
+        <h2>${correct === rounds.length ? '🏆 Киносыщик!' : correct >= 3 ? '👍 Хороший глаз!' : '🎬 Тренируемся ещё?'}</h2>
+        <p class="game-score">Угадано ${correct} из ${rounds.length} кадров</p>
         <button class="btn-primary" id="btn-fr-send">💰 Получить баллы в боте</button>
         <button class="btn-secondary" id="btn-fr-again">🔁 Ещё раз</button>
         <button class="btn-back" id="btn-fr-back">◀️ Меню игр</button>
       </div>
-    </div>`,document.getElementById("btn-fr-send").onclick=()=>sendOrDeepLink({action:"quiz_result",correct:t,total:e.length}),document.getElementById("btn-fr-again").onclick=startFrameGame,document.getElementById("btn-fr-back").onclick=()=>{view="game",showView("game"),renderGameMenu()}}function buildPersonGraph(){const t=new Map;return ALL.forEach(e=>{[...e.actors||[],...e.director?[e.director]:[]].forEach(n=>{if(!n)return;const s=n.toLowerCase();t.has(s)||t.set(s,{display:n,films:new Set}),t.get(s).films.add(String(e.code))})}),t}function renderChain(){const t=document.getElementById("chain-container");if(!t)return;const e=i=>i?`<div class="chain-film" data-code="${esc(i.code)}">${i.poster?`<img src="${esc(i.poster)}" loading="lazy" alt=""/>`:'<div class="chain-ph">🎬</div>'}<span>${esc(i.title)}${i.year?" · "+esc(String(i.year)):""}</span></div>`:"",n=(i,r)=>`
+    </div>`;
+  document.getElementById('btn-fr-send').onclick = () =>
+    sendOrDeepLink({ action: 'quiz_result', correct, total: rounds.length });
+  document.getElementById('btn-fr-again').onclick = startFrameGame;
+  document.getElementById('btn-fr-back').onclick = () => { view = 'game'; showView('game'); renderGameMenu(); };
+}
+
+// ---------- v60: «🔗 Кино-путь» — цепочка человек → фильм → человек ----------
+function buildPersonGraph() {
+  const g = new Map();  // ключ (lowercase) -> { display, films:Set(коды) }
+  ALL.forEach(m => {
+    [...(m.actors || []), ...(m.director ? [m.director] : [])].forEach(p => {
+      if (!p) return;
+      const k = p.toLowerCase();
+      if (!g.has(k)) g.set(k, { display: p, films: new Set() });
+      g.get(k).films.add(String(m.code));
+    });
+  });
+  return g;
+}
+function renderChain() {
+  const c = document.getElementById('chain-container');
+  if (!c) return;
+  const filmRow = (film) => film
+    ? `<div class="chain-film" data-code="${esc(film.code)}">${film.poster ? `<img src="${esc(film.poster)}" loading="lazy" alt=""/>` : '<div class="chain-ph">🎬</div>'}<span>${esc(film.title)}${film.year ? ' · ' + esc(String(film.year)) : ''}</span></div>`
+    : '';
+  const shell = (rows, hint) => `
     <button class="btn-back" id="btn-chain-back">◀️ Назад</button>
     <div class="chain-card">
       <h2>🔗 Кино-путь</h2>
-      <p class="chain-hint">${esc(r)}</p>
-      <div class="chain-row">${i}</div>
+      <p class="chain-hint">${esc(hint)}</p>
+      <div class="chain-row">${rows}</div>
       <button class="btn-primary" id="btn-chain-new">🎲 Новый путь</button>
-    </div>`,s=()=>{t.innerHTML='<div class="empty-state"><div class="empty-emoji">🔗</div><p>Пока маловато данных для цепочек — добавь фильмы в канал, и здесь появится «Кино-путь».</p></div>'},o=buildPersonGraph(),a=[...o.values()].filter(i=>i.films.size>=2);if(a.length>=3){const i=new Set,r=[];let c=a[Math.floor(Math.random()*a.length)];for(let l=0;l<7;l++){const g=[...c.films].filter(u=>!i.has(u));if(!g.length)break;const d=ALL.find(u=>String(u.code)===g[Math.floor(Math.random()*g.length)]);i.add(String(d.code)),r.push(`<div class="chain-step"><div class="chain-person">🎭 ${esc(c.display)}</div>${e(d)}</div>`);const p=[...d.actors||[],...d.director?[d.director]:[]].map(u=>String(u).toLowerCase()).filter(u=>o.has(u)&&o.get(u).films.size>=2&&o.get(u)!==c);if(!p.length)break;c=o.get(p[Math.floor(Math.random()*p.length)])}if(r.length<2){s();return}t.innerHTML=n(r.join('<div class="chain-link">↔️</div>'),"Случайная цепочка «человек — фильм — человек» по базе канала. Тапни по фильму, чтобы открыть карточку.")}else{const i=new Map;ALL.forEach(g=>(g.genres||[]).forEach(d=>i.set(d,(i.get(d)||0)+1)));const r=[],c=new Set;let l=ALL[Math.floor(Math.random()*ALL.length)];c.add(String(l.code)),r.push(`<div class="chain-step">${e(l)}</div>`);for(let g=0;g<4;g++){const d=(l.genres||[]).filter(y=>i.get(y)>=2);if(!d.length)break;const p=d[Math.floor(Math.random()*d.length)],u=ALL.filter(y=>!c.has(String(y.code))&&(y.genres||[]).includes(p));if(!u.length)break;const f=u[Math.floor(Math.random()*u.length)];c.add(String(f.code)),r.push(`<button class="chain-genre" data-g="${esc(p)}">🔗 ${esc(p)} <em>${i.get(p)}</em></button>`),r.push(`<div class="chain-step">${e(f)}</div>`),l=f}if(r.length<3){s();return}t.innerHTML=n(r.join(""),"Цепочка «фильм — жанр — фильм» из твоей базы. Тапни по жанру — откроется подборка, по фильму — карточка.")}document.getElementById("btn-chain-back").onclick=()=>openView("grid"),document.getElementById("btn-chain-new").onclick=()=>{haptic("light"),renderChain()},t.querySelectorAll(".chain-film").forEach(i=>i.addEventListener("click",()=>{haptic("light"),openDetail(i.dataset.code)})),t.querySelectorAll(".chain-genre").forEach(i=>i.addEventListener("click",()=>{haptic("light"),activeGenre=i.dataset.g||"",view="grid",showView("catalog"),renderGenreChips(),renderGrid(),window.scrollTo({top:0,behavior:"smooth"})}))}function showView(t){const e=(o,a)=>{const i=document.getElementById(o);i&&i.classList.toggle("hidden",!a)};e("view-catalog",t==="catalog"),e("view-cols",t==="cols"),e("view-news",t==="news"),e("view-top",t==="top"),e("view-profile",t==="profile"),e("view-trailers",t==="trailers"),e("view-achievements",t==="achievements"),e("view-detail",t==="detail"),e("view-game",t==="game"),e("view-emoji",t==="game"),e("view-chain",t==="chain"),e("view-year",t==="year"),e("view-marathon",t==="marathon"),e("view-tinder",t==="tinder"),e("view-mycols",t==="mycols"),e("view-mycol-detail",t==="mycol-detail"),e("toolbar",t==="catalog"||t==="trailers"),t==="catalog"&&renderFilmDay();const n=t==="catalog"?view:t;document.querySelectorAll(".tab[data-view]").forEach(o=>o.classList.toggle("active",o.dataset.view===n));const s=document.getElementById("tab-more");s&&s.classList.toggle("active",["cols","top","achievements","profile","fav","game","chain","year","tinder","mycols"].includes(n)),document.querySelectorAll(".more-item").forEach(o=>o.classList.toggle("active",o.dataset.view===n))}let _tinderQueue=[],_tinderIdx=0,_tinderPicks=[];function shuffleArr(t){const e=t.slice();for(let n=e.length-1;n>0;n--){const s=Math.floor(Math.random()*(n+1));[e[n],e[s]]=[e[s],e[n]]}return e}function renderTinder(){const t=document.getElementById("tinder-container");if(!t)return;if(!ALL.length){t.innerHTML='<p class="empty-note">Загрузка базы…</p>';return}const e=new Set(getWatched().map(String)),n=new Set(getFavs());_tinderQueue=shuffleArr(ALL).sort((s,o)=>{const a=e.has(String(s.code))||n.has(String(s.code))?1:0,i=e.has(String(o.code))||n.has(String(o.code))?1:0;return a-i}),_tinderIdx=0,_tinderPicks=[],drawTinderHead(t),drawTinderCard()}function drawTinderHead(t){t.innerHTML=`
+    </div>`;
+  const empty = () => {
+    c.innerHTML = `<div class="empty-state"><div class="empty-emoji">🔗</div><p>Пока маловато данных для цепочек — добавь фильмы в канал, и здесь появится «Кино-путь».</p></div>`;
+  };
+
+  const g = buildPersonGraph();
+  const people = [...g.values()].filter(v => v.films.size >= 2);
+  if (people.length >= 3) {
+    // режим «человек — фильм — человек» (когда синк подтянул актёров)
+    const used = new Set();
+    const rows = [];
+    let info = people[Math.floor(Math.random() * people.length)];
+    for (let s = 0; s < 7; s++) {
+      const films = [...info.films].filter(f => !used.has(f));
+      if (!films.length) break;
+      const film = ALL.find(x => String(x.code) === films[Math.floor(Math.random() * films.length)]);
+      used.add(String(film.code));
+      rows.push(`<div class="chain-step"><div class="chain-person">🎭 ${esc(info.display)}</div>${filmRow(film)}</div>`);
+      const co = [...(film.actors || []), ...(film.director ? [film.director] : [])]
+        .map(p => String(p).toLowerCase())
+        .filter(k => g.has(k) && g.get(k).films.size >= 2 && g.get(k) !== info);
+      if (!co.length) break;
+      info = g.get(co[Math.floor(Math.random() * co.length)]);
+    }
+    if (rows.length < 2) { empty(); return; }
+    c.innerHTML = shell(rows.join('<div class="chain-link">↔️</div>'),
+      'Случайная цепочка «человек — фильм — человек» по базе канала. Тапни по фильму, чтобы открыть карточку.');
+  } else {
+    // режим «фильм — жанр — фильм»: работает сразу, на текущих данных без актёров
+    const genreCount = new Map();
+    ALL.forEach(m => (m.genres || []).forEach(gg => genreCount.set(gg, (genreCount.get(gg) || 0) + 1)));
+    const rows = [];
+    const used = new Set();
+    let cur = ALL[Math.floor(Math.random() * ALL.length)];
+    used.add(String(cur.code));
+    rows.push(`<div class="chain-step">${filmRow(cur)}</div>`);
+    for (let s = 0; s < 4; s++) {
+      const gs = (cur.genres || []).filter(gg => genreCount.get(gg) >= 2);
+      if (!gs.length) break;
+      const gSel = gs[Math.floor(Math.random() * gs.length)];
+      const nexts = ALL.filter(m => !used.has(String(m.code)) && (m.genres || []).includes(gSel));
+      if (!nexts.length) break;
+      const next = nexts[Math.floor(Math.random() * nexts.length)];
+      used.add(String(next.code));
+      rows.push(`<button class="chain-genre" data-g="${esc(gSel)}">🔗 ${esc(gSel)} <em>${genreCount.get(gSel)}</em></button>`);
+      rows.push(`<div class="chain-step">${filmRow(next)}</div>`);
+      cur = next;
+    }
+    if (rows.length < 3) { empty(); return; }
+    c.innerHTML = shell(rows.join(''),
+      'Цепочка «фильм — жанр — фильм» из твоей базы. Тапни по жанру — откроется подборка, по фильму — карточка.');
+  }
+
+  document.getElementById('btn-chain-back').onclick = () => openView('grid');
+  document.getElementById('btn-chain-new').onclick = () => { haptic('light'); renderChain(); };
+  c.querySelectorAll('.chain-film').forEach(el =>
+    el.addEventListener('click', () => { haptic('light'); openDetail(el.dataset.code); }));
+  c.querySelectorAll('.chain-genre').forEach(el =>
+    el.addEventListener('click', () => {
+      haptic('light');
+      activeGenre = el.dataset.g || '';
+      view = 'grid';
+      showView('catalog');
+      renderGenreChips();
+      renderGrid();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }));
+}
+
+// ---------- вкладки и показ ----------
+function showView(name) {
+  // Null-safe: если webview отдал старый закэшированный index.html без новой
+  // вьюхи (кэш-микс), отсутствие элемента не должно ронять весь интерфейс.
+  const toggle = (id, on) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', !on);
+  };
+  toggle('view-catalog', name === 'catalog');
+  toggle('view-cols', name === 'cols');
+  toggle('view-news', name === 'news');
+  toggle('view-top', name === 'top');
+  toggle('view-profile', name === 'profile');
+  toggle('view-trailers', name === 'trailers');
+  toggle('view-achievements', name === 'achievements');
+  toggle('view-detail', name === 'detail');
+  toggle('view-game', name === 'game');
+  toggle('view-emoji', name === 'game');
+  toggle('view-chain', name === 'chain');
+  toggle('view-year', name === 'year');
+  toggle('view-marathon', name === 'marathon');
+  toggle('view-tinder', name === 'tinder');
+  toggle('view-mycols', name === 'mycols');          // v106
+  toggle('view-mycol-detail', name === 'mycol-detail');  // v106
+  toggle('toolbar', name === 'catalog' || name === 'trailers');
+  if (name === 'catalog') renderFilmDay();  // баннер скрываем/возвращаем при смене вьюхи
+  const cur = name === 'catalog' ? view : name;
+  document.querySelectorAll('.tab[data-view]').forEach(t =>
+    t.classList.toggle('active', t.dataset.view === cur));
+  const moreTab = document.getElementById('tab-more');
+  if (moreTab) moreTab.classList.toggle('active',
+    ['cols', 'top', 'achievements', 'profile', 'fav', 'game', 'chain', 'year', 'tinder', 'mycols'].includes(cur));
+  document.querySelectorAll('.more-item').forEach(b =>
+    b.classList.toggle('active', b.dataset.view === cur));
+}
+
+// ---------- «🎴 Тиндер кино» — свайп-подбор ----------
+// Вправо = «хочу посмотреть» (в Моё), вверх = «уже смотрю», влево = «мимо».
+let _tinderQueue = [];   // фильмы в текущей сессии
+let _tinderIdx = 0;      // текущая позиция
+let _tinderPicks = [];   // коды отобранных (вправо)
+function shuffleArr(a) {
+  const r = a.slice();
+  for (let i = r.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [r[i], r[j]] = [r[j], r[i]];
+  }
+  return r;
+}
+function renderTinder() {
+  const box = document.getElementById('tinder-container');
+  if (!box) return;
+  if (!ALL.length) { box.innerHTML = '<p class="empty-note">Загрузка базы…</p>'; return; }
+  const seen = new Set(getWatched().map(String));
+  const favs = new Set(getFavs());
+  // Колода — все фильмы вперемешку; уже в Моё/просмотренные уходят в хвост.
+  _tinderQueue = shuffleArr(ALL).sort((a, b) => {
+    const pa = seen.has(String(a.code)) || favs.has(String(a.code)) ? 1 : 0;
+    const pb = seen.has(String(b.code)) || favs.has(String(b.code)) ? 1 : 0;
+    return pa - pb;
+  });
+  _tinderIdx = 0;
+  _tinderPicks = [];
+  drawTinderHead(box);
+  drawTinderCard();
+}
+function drawTinderHead(box) {
+  box.innerHTML = `
     <div class="tinder-head">
       <h2>🎴 Тиндер кино</h2>
       <p class="tinder-hint">Свайпни вправо — «хочу посмотреть» · вверх — «смотрю» · влево — «мимо»</p>
@@ -601,66 +4895,1077 @@ ${riddleHints(t)}
         <button class="tinder-btn tinder-watch" id="tinder-watch" title="Уже смотрел(а)">👁</button>
       </div>
       <div class="tinder-tip">Тап по карточке — открыть фильм</div>
-    </div>`,document.getElementById("tinder-no").onclick=()=>swypeTinder("left"),document.getElementById("tinder-yes").onclick=()=>swypeTinder("right"),document.getElementById("tinder-watch").onclick=()=>swypeTinder("up"),bindTinderSwipe()}function drawTinderCard(){const t=document.getElementById("tinder-card"),e=document.getElementById("tinder-count");if(!t)return;if(_tinderIdx>=_tinderQueue.length){tinderFinish();return}const n=_tinderQueue[_tinderIdx],s=getFavs().includes(n.code),o=getWatched().includes(String(n.code)),a=[n.year,fmtDuration(n.duration),(n.genres||[]).slice(0,3).join(" · ")].filter(Boolean).join(" · ");e&&(e.textContent=`${_tinderIdx+1} / ${_tinderQueue.length}`),t.innerHTML=`
+    </div>`;
+  document.getElementById('tinder-no').onclick = () => swypeTinder('left');
+  document.getElementById('tinder-yes').onclick = () => swypeTinder('right');
+  document.getElementById('tinder-watch').onclick = () => swypeTinder('up');
+  bindTinderSwipe();
+}
+function drawTinderCard() {
+  const card = document.getElementById('tinder-card');
+  const cnt = document.getElementById('tinder-count');
+  if (!card) return;
+  if (_tinderIdx >= _tinderQueue.length) { tinderFinish(); return; }
+  const m = _tinderQueue[_tinderIdx];
+  const fav = getFavs().includes(m.code);
+  const watched = getWatched().includes(String(m.code));
+  const meta = [m.year, fmtDuration(m.duration), (m.genres || []).slice(0, 3).join(' · ')].filter(Boolean).join(' · ');
+  if (cnt) cnt.textContent = `${_tinderIdx + 1} / ${_tinderQueue.length}`;
+  card.innerHTML = `
     <div class="tinder-poster">
-      ${n.poster?`<img src="${esc(n.poster)}" alt="${esc(n.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(n)}
-             onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`:'<div class="poster-placeholder"><span>🎬</span></div>'}
-      <span class="code-badge">🔑 ${esc(String(n.code))}</span>
-      ${s?'<span class="tinder-flag t-fav">❤️ в «Моём»</span>':""}
-      ${o?'<span class="tinder-flag">👁 смотрю</span>':""}
+      ${m.poster
+        ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(m)}
+             onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+        : `<div class="poster-placeholder"><span>🎬</span></div>`}
+      <span class="code-badge">🔑 ${esc(String(m.code))}</span>
+      ${fav ? '<span class="tinder-flag t-fav">❤️ в «Моём»</span>' : ''}
+      ${watched ? '<span class="tinder-flag">👁 смотрю</span>' : ''}
     </div>
     <div class="tinder-info">
-      <h3>${esc(n.title)}</h3>
-      ${a?`<div class="tinder-meta">${esc(a)}</div>`:""}
-      <span class="rating">${ratingBadge(n)}</span>
-      ${n.director?`<div class="tinder-dir">🎬 ${esc(n.director)}</div>`:""}
-    </div>`,t.style.transform="",t.style.opacity="1",t.style.transition="none",t.onclick=i=>{i.target.closest(".tinder-actions")||i.target.closest(".tinder-btn")||openDetail(n.code)}}function tinderFinish(){const t=document.getElementById("tinder-card"),e=document.getElementById("tinder-count");if(e&&(e.textContent=""),!t)return;const n=_tinderPicks.map(o=>ALL.find(a=>a.code===o)).filter(Boolean);t.innerHTML=`
+      <h3>${esc(m.title)}</h3>
+      ${meta ? `<div class="tinder-meta">${esc(meta)}</div>` : ''}
+      <span class="rating">${ratingBadge(m)}</span>
+      ${m.director ? `<div class="tinder-dir">🎬 ${esc(m.director)}</div>` : ''}
+    </div>`;
+  card.style.transform = '';
+  card.style.opacity = '1';
+  card.style.transition = 'none';
+  card.onclick = (e) => {
+    if (e.target.closest('.tinder-actions') || e.target.closest('.tinder-btn')) return;
+    openDetail(m.code);
+  };
+}
+
+function tinderFinish() {
+  const card = document.getElementById('tinder-card');
+  const cnt = document.getElementById('tinder-count');
+  if (cnt) cnt.textContent = '';
+  if (!card) return;
+  const favs = _tinderPicks.map(code => ALL.find(x => x.code === code)).filter(Boolean);
+  card.innerHTML = `
     <div class="tinder-finish">
-      <h3>${n.length?"🎉 Твоя подборка на вечер":"🌙 Всё пересмотрели"}</h3>
-      <p class="tinder-finish-sub">${n.length?`Выбрал(а) ${n.length}${n.length===1?" фильм":" фильмов"} — нажми, чтобы открыть`:"В этой колоде ничего не приглянулось. Начнёшь новую?"}</p>
-      ${n.length?'<div class="tinder-minis">'+n.map(o=>`
-        <div class="tinder-mini" data-c="${esc(o.code)}">
-          <div class="tm-poster">${o.poster?`<img src="${esc(o.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none'"/>`:"<span>🎬</span>"}</div>
-          <div class="tm-name">${esc(o.title)}</div>
-        </div>`).join("")+"</div>":""}
+      <h3>${favs.length ? '🎉 Твоя подборка на вечер' : '🌙 Всё пересмотрели'}</h3>
+      <p class="tinder-finish-sub">${favs.length
+        ? `Выбрал(а) ${favs.length}${favs.length === 1 ? ' фильм' : ' фильмов'} — нажми, чтобы открыть`
+        : 'В этой колоде ничего не приглянулось. Начнёшь новую?'}</p>
+      ${favs.length ? '<div class="tinder-minis">' + favs.map(m => `
+        <div class="tinder-mini" data-c="${esc(m.code)}">
+          <div class="tm-poster">${m.poster
+            ? `<img src="${esc(m.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none'"/>`
+            : '<span>🎬</span>'}</div>
+          <div class="tm-name">${esc(m.title)}</div>
+        </div>`).join('') + '</div>' : ''}
       <div class="tinder-finish-actions">
         <button class="btn-primary" id="tinder-restart">🎴 Листать ещё</button>
       </div>
-    </div>`;const s=document.getElementById("tinder-restart");s&&(s.onclick=()=>{haptic("light"),renderTinder()}),t.querySelectorAll(".tinder-mini").forEach(o=>o.addEventListener("click",()=>{const a=ALL.find(i=>String(i.code)===String(o.dataset.c));a&&openDetail(a.code)}))}function swypeTinder(t){const e=document.getElementById("tinder-card");if(!e||_tinderIdx>=_tinderQueue.length)return;const n=_tinderQueue[_tinderIdx],s=window.innerWidth||400;e.style.transition="transform .28s ease, opacity .28s ease",t==="right"?(haptic("ok"),getFavs().includes(n.code)||toggleFav(n.code),_tinderPicks.push(n.code),e.style.transform=`translateX(${s}px) rotate(12deg)`,e.style.opacity="0"):t==="up"?(haptic("ok"),getWatched().includes(String(n.code))||toggleWatched(n.code),e.style.transform=`translateY(-${s*1.4}px) rotate(-10deg)`,e.style.opacity="0"):(haptic("light"),e.style.transform=`translateX(-${s}px) rotate(-12deg)`,e.style.opacity="0"),setTimeout(()=>{_tinderIdx++,drawTinderCard()},280)}function bindTinderSwipe(){const t=document.getElementById("tinder-stage"),e=document.getElementById("tinder-card");if(!t||!e)return;let n=0,s=0,o=!1,a=!1;t.addEventListener("touchstart",i=>{const r=i.touches[0];n=r.clientX,s=r.clientY,o=!0,a=!1},{passive:!0}),t.addEventListener("touchmove",i=>{if(!o)return;const r=i.touches[0],c=r.clientX-n,l=r.clientY-s;if((Math.abs(c)>5||Math.abs(l)>5)&&(a=!0),a&&e&&_tinderIdx<_tinderQueue.length){const g=Math.max(-14,Math.min(14,c/16));e.style.transition="none",e.style.transform=`translate(${c}px, ${l>0?l*.4:l}px) rotate(${g}deg)`,e.style.opacity=String(Math.max(.35,1-Math.abs(c)/420))}},{passive:!0}),t.addEventListener("touchend",i=>{if(!o)return;o=!1;const r=i.changedTouches[0],c=r.clientX-n,l=r.clientY-s;a&&_tinderIdx<_tinderQueue.length&&(Math.abs(c)>80&&Math.abs(c)>Math.abs(l)?swypeTinder(c>0?"right":"left"):Math.abs(l)>80&&l<0&&Math.abs(l)>Math.abs(c)?swypeTinder("up"):(e.style.transition="transform .2s ease, opacity .2s ease",e.style.transform="",e.style.opacity="1")),a=!1},{passive:!0})}let EMOJI_RIDDLES=[];function renderEmojiGame(){const t=document.getElementById("view-emoji");if(!t)return;if(!EMOJI_RIDDLES.length){t.innerHTML="";return}const e=EMOJI_RIDDLES[Math.floor(Math.random()*EMOJI_RIDDLES.length)];t.innerHTML=`
+    </div>`;
+  const ok = document.getElementById('tinder-restart');
+  if (ok) ok.onclick = () => { haptic('light'); renderTinder(); };
+  card.querySelectorAll('.tinder-mini').forEach(el => el.addEventListener('click', () => {
+    const m = ALL.find(x => String(x.code) === String(el.dataset.c));
+    if (m) openDetail(m.code);
+  }));
+}
+function swypeTinder(dir) {
+  const card = document.getElementById('tinder-card');
+  if (!card || _tinderIdx >= _tinderQueue.length) return;
+  const m = _tinderQueue[_tinderIdx];
+  const W = window.innerWidth || 400;
+  card.style.transition = 'transform .28s ease, opacity .28s ease';
+  if (dir === 'right') {
+    haptic('ok');
+    if (!getFavs().includes(m.code)) toggleFav(m.code);
+    _tinderPicks.push(m.code);
+    card.style.transform = `translateX(${W}px) rotate(12deg)`;
+    card.style.opacity = '0';
+  } else if (dir === 'up') {
+    haptic('ok');
+    if (!getWatched().includes(String(m.code))) toggleWatched(m.code);
+    card.style.transform = `translateY(-${W * 1.4}px) rotate(-10deg)`;
+    card.style.opacity = '0';
+  } else {
+    haptic('light');
+    card.style.transform = `translateX(-${W}px) rotate(-12deg)`;
+    card.style.opacity = '0';
+  }
+  setTimeout(() => { _tinderIdx++; drawTinderCard(); }, 280);
+}
+function bindTinderSwipe() {
+  const stage = document.getElementById('tinder-stage');
+  const card = document.getElementById('tinder-card');
+  if (!stage || !card) return;
+  let startX = 0, startY = 0, down = false, moved = false;
+  stage.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    startX = t.clientX; startY = t.clientY; down = true; moved = false;
+  }, { passive: true });
+  stage.addEventListener('touchmove', (e) => {
+    if (!down) return;
+    const t = e.touches[0];
+    const dx = t.clientX - startX, dy = t.clientY - startY;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true;
+    if (moved && card && _tinderIdx < _tinderQueue.length) {
+      const rot = Math.max(-14, Math.min(14, dx / 16));
+      card.style.transition = 'none';
+      card.style.transform = `translate(${dx}px, ${dy > 0 ? dy * 0.4 : dy}px) rotate(${rot}deg)`;
+      card.style.opacity = String(Math.max(.35, 1 - Math.abs(dx) / 420));
+    }
+  }, { passive: true });
+  stage.addEventListener('touchend', (e) => {
+    if (!down) return;
+    down = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX, dy = t.clientY - startY;
+    if (moved && _tinderIdx < _tinderQueue.length) {
+      if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy)) swypeTinder(dx > 0 ? 'right' : 'left');
+      else if (Math.abs(dy) > 80 && dy < 0 && Math.abs(dy) > Math.abs(dx)) swypeTinder('up');
+      else { card.style.transition = 'transform .2s ease, opacity .2s ease'; card.style.transform = ''; card.style.opacity = '1'; }
+    }
+    moved = false;
+  }, { passive: true });
+}
+
+// ---------- мини-игра «😀 Угадай по эмодзи» ----------
+let EMOJI_RIDDLES = [];
+function renderEmojiGame() {
+  const box = document.getElementById('view-emoji');
+  if (!box) return;
+  if (!EMOJI_RIDDLES.length) { box.innerHTML = ''; return; }
+  const r = EMOJI_RIDDLES[Math.floor(Math.random() * EMOJI_RIDDLES.length)];
+  box.innerHTML = `
     <div class="emoji-game">
       <h2 class="emoji-title">😀 Угадай по эмодзи</h2>
-      <div class="emoji-q">${esc(e.emoji)}</div>
+      <div class="emoji-q">${esc(r.emoji)}</div>
       <div class="game-options">
-                ${e.options.map(n=>`<button class="btn-option" data-t="${esc(n)}" data-code="${e.code}">${esc(n)}</button>`).join("")}
+                ${r.options.map(t => `<button class="btn-option" data-t="${esc(t)}" data-code="${r.code}">${esc(t)}</button>`).join('')}
       </div>
       <button class="btn-back" id="emoji-next">🎲 Другая загадка</button>
-    </div>`,t.querySelectorAll(".btn-option").forEach(n=>n.addEventListener("click",()=>{if(t.dataset.locked==="1")return;t.dataset.locked="1";const s=ALL.find(i=>String(i.code)===String(n.dataset.code))||{},o=s?n.dataset.t===s.title:!1;haptic(o?"ok":"error"),n.classList.add(o?"correct":"wrong"),t.querySelectorAll(".btn-option").forEach(i=>{s&&i.dataset.t===s.title&&i.classList.add("correct"),i.disabled=!0});const a=s.code;if(a){const i=document.createElement("button");i.className="btn-primary",i.style.marginTop="10px",i.textContent=`🔓 Открыть код «${s.title||""}»`,i.onclick=()=>sendOrDeepLink({action:"open_movie",code:a}),t.querySelector(".emoji-game").appendChild(i)}})),document.getElementById("emoji-next").onclick=()=>{haptic("light"),t.dataset.locked="0",renderEmojiGame()}}const LAST_VIEW_KEY="kinoafisha_last_view";function openView(t){view=t;try{localStorage.setItem(LAST_VIEW_KEY,t)}catch(e){}t==="game"?(showView("game"),renderGameMenu()):t==="cols"?(showView("cols"),renderCols()):t==="news"?(showView("news"),renderNews()):t==="top"?(showView("top"),renderLeaderboard()):t==="profile"?(showView("profile"),renderProfile()):t==="trailers"?(showView("trailers"),renderTrailerGenreChips(),renderTrailers()):t==="achievements"?(showView("achievements"),renderAchievements()):t==="chain"?(showView("chain"),renderChain()):t==="marathon"?(showView("marathon"),renderMarathonView()):t==="year"?(showView("year"),renderYear()):t==="tinder"?(showView("tinder"),renderTinder()):t==="mycols"?(showView("mycols"),renderMyCols()):t==="mycol-detail"?(showView("mycol-detail"),renderMyColDetail()):(showView("catalog"),renderGrid())}document.querySelectorAll(".tab[data-view]").forEach(t=>t.addEventListener("click",()=>openView(t.dataset.view))),(()=>{const t=["grid","trailers","news"];let e=0,n=0,s=!1;const o=()=>!!document.querySelector(".modal:not(.hidden)");document.addEventListener("touchstart",a=>{if(s=!1,o()||moreMenu&&!moreMenu.classList.contains("hidden"))return;const i=document.getElementById("view-detail");i&&!i.classList.contains("hidden")||a.target.closest("input, textarea, select, .hero-row, .similar-row, .genre-chips, .trailer-genre-chips")||(e=a.touches[0].clientX,n=a.touches[0].clientY,s=!0)},{passive:!0}),document.addEventListener("touchend",a=>{if(!s)return;s=!1;const i=a.changedTouches[0].clientX-e,r=a.changedTouches[0].clientY-n;if(Math.abs(i)<70||Math.abs(r)>45)return;const c=view==="fav"?"grid":view,l=t.indexOf(c);if(l===-1)return;const g=i<0?t[l+1]:t[l-1];g&&(haptic("light"),openView(g))},{passive:!0})})();const moreTab=document.getElementById("tab-more"),moreMenu=document.getElementById("more-menu");function closeMoreMenu(){moreMenu&&moreMenu.classList.add("hidden"),moreTab&&moreTab.setAttribute("aria-expanded","false")}moreTab&&moreMenu&&(moreTab.addEventListener("click",t=>{t.stopPropagation();const e=moreMenu.classList.toggle("hidden");moreTab.setAttribute("aria-expanded",String(!e)),haptic("light")}),document.addEventListener("click",t=>{moreMenu.classList.contains("hidden")||!moreMenu.contains(t.target)&&!moreTab.contains(t.target)&&closeMoreMenu()}),document.querySelectorAll(".more-item").forEach(t=>t.addEventListener("click",()=>{if(closeMoreMenu(),t.id==="more-changelog"){showChangelog(!0);return}if(t.id==="more-catalog"){shareCatalogPoster();return}openView(t.dataset.view)})));let _searchTimer=null;document.getElementById("search").addEventListener("input",()=>{clearTimeout(_searchTimer),activeGenre&&(activeGenre="",renderGenreChips()),activeCountry&&(activeCountry="",renderCountryChips()),initSearchHist(document.getElementById("search").value);const t=document.getElementById("code-hint"),e=document.getElementById("search").value.trim();if(t)if(/^\d+$/.test(e)&&e.length>=2){const n=ALL.find(s=>String(s.code)===e);t.textContent=n?"🔑 "+e+" · "+(n.title||"")+" — Enter откроет":"🤷 Кода "+e+" нет в афише",t.classList.remove("hidden")}else t.classList.add("hidden");_searchTimer=setTimeout(renderGrid,180)}),document.getElementById("sort").addEventListener("change",renderGrid),document.getElementById("search").addEventListener("keydown",t=>{if(t.key==="Enter"){const e=document.getElementById("search").value.trim();if(/^\d+$/.test(e)){const n=ALL.find(s=>String(s.code)===e);if(n){addSearchHist(e),initSearchHist(),haptic("ok"),openDetail(n.code);return}}e&&(addSearchHist(e),initSearchHist())}}),document.getElementById("trailer-search").addEventListener("input",()=>{clearTimeout(_trailerSearchTimer),_trailerPage=1,trailerGenre&&(trailerGenre="",renderTrailerGenreChips()),_trailerSearchTimer=setTimeout(renderTrailers,180)}),document.getElementById("trailer-sort").addEventListener("change",()=>{_trailerPage=1,renderTrailers()});const btnTop=document.getElementById("btn-top");window.addEventListener("scroll",()=>{btnTop.classList.toggle("hidden",window.scrollY<700)},{passive:!0}),btnTop.addEventListener("click",()=>{haptic("light"),window.scrollTo({top:0,behavior:"smooth"})}),document.getElementById("btn-theme").addEventListener("click",toggleTheme),(()=>{const t=document.getElementById("btn-mute");if(!t)return;const e=()=>{t.textContent=hapticsEnabled()?"🔔":"🔇"};t.addEventListener("click",()=>{const n=toggleHaptics();e(),n||haptic("light");try{tg.showPopup({type:"ok",title:n?"🔇 Вибрации выключены":"🔔 Вибрации включены",message:n?"Приложение больше не вибрирует на действиях.":"Тактильный отклик вернулся."})}catch(s){}}),e()})();function buildLabel(){const t=document.querySelector('script[src*="script.js?v="]'),e=t&&/[?&]v=(\d+)/.exec(t.getAttribute("src")||""),n=["Сборка "+(e?"v"+e[1]:"неизвестна")];try{tg&&tg.version&&n.push("Telegram "+tg.version),tg&&tg.platform&&n.push(tg.platform)}catch(s){}return n.join(" · ")}document.getElementById("btn-info").addEventListener("click",()=>{haptic("light");const t=document.getElementById("about-build");if(t)try{t.textContent=buildLabel()}catch(e){t.textContent=""}document.getElementById("about").classList.remove("hidden")}),document.getElementById("btn-about-close").addEventListener("click",()=>document.getElementById("about").classList.add("hidden")),document.getElementById("about").addEventListener("click",t=>{t.target.id==="about"&&document.getElementById("about").classList.add("hidden")}),document.getElementById("btn-about-channel").addEventListener("click",()=>tg.openTelegramLink(CHANNEL_URL)),document.getElementById("btn-lucky").addEventListener("click",()=>{if(!ALL.length)return;haptic("light");const t=ALL[Math.floor(Math.random()*ALL.length)];openDetail(t.code)});const rndModal=document.getElementById("random-modal");document.getElementById("btn-random").addEventListener("click",()=>{ALL.length&&(rndModal.classList.remove("hidden"),renderRandomMovie())}),document.getElementById("btn-random-close").addEventListener("click",closeRandom),document.getElementById("btn-random-again").addEventListener("click",renderRandomMovie),rndModal.addEventListener("click",t=>{t.target===rndModal&&closeRandom()}),document.getElementById("btn-only-tr").addEventListener("click",()=>{onlyTrailer=!onlyTrailer,haptic("light"),document.getElementById("btn-only-tr").classList.toggle("active",onlyTrailer),renderGrid()}),document.getElementById("btn-only-online").addEventListener("click",()=>{onlyOnline=!onlyOnline,haptic("light"),document.getElementById("btn-only-online").classList.toggle("active",onlyOnline),renderGrid()}),(function(){const e=document.getElementById("lightbox");e&&e.addEventListener("click",()=>{e.classList.add("hidden"),e.querySelector("img").src=""})})();const refreshBtn=document.getElementById("btn-refresh");refreshBtn.addEventListener("click",async()=>{if(!refreshBtn.dataset.busy){refreshBtn.dataset.busy="1",refreshBtn.classList.add("spin"),haptic("light");try{await loadMovies()}catch(t){}refreshBtn.classList.remove("spin"),delete refreshBtn.dataset.busy,refreshBtn.textContent="✓",setTimeout(()=>{refreshBtn.textContent="⟳"},1600)}}),(function(){const t=document.getElementById("ptr");if(!t)return;let e=0,n=!1,s=0;const o=()=>!!document.querySelector(".modal:not(.hidden)");document.addEventListener("touchstart",a=>{if(window.scrollY>0||o()){n=!1;return}e=a.touches[0].clientY,s=0,n=!0},{passive:!0}),document.addEventListener("touchmove",a=>{if(!n)return;if(s=a.touches[0].clientY-e,s<=0){t.style.opacity="0";return}const i=Math.min(s,120);t.textContent=s>90?"🔄 Отпусти — обновлю":"↓ Тяни вниз",t.style.transform="translate(-50%, "+Math.round(40+i*.4)+"px)",t.style.opacity=String(Math.min(i/80,1))},{passive:!0}),document.addEventListener("touchend",()=>{n&&(n=!1,s>90?(t.textContent="⏳ Обновляю…",loadMovies().then(()=>{view==="trailers"&&(renderTrailerGenreChips(),renderTrailers()),view==="news"&&renderNews(),setTimeout(()=>{t.style.opacity="0",t.style.transform=""},700)})):(t.style.opacity="0",t.style.transform=""))})})();function openKinogod(){var p,u;const t=document.getElementById("kinogod-modal"),e=document.getElementById("kinogod-body"),n=PROFILE||{},s=getUnlocked(),o=getFavs(),a=n.pts||0,i=n.str||0,r=n.tit||"Зритель",c=n.rank,l=typeof c=="number"?`<div class="kg-row"><span>📍 Место в топе</span><b>${c}</b></div>`:"",g=new Map;[...o,...s].forEach(f=>{const y=ALL.find(v=>v.code===f);(y&&Array.isArray(y.genres)?y.genres:[]).forEach(v=>g.set(v,(g.get(v)||0)+1))});const d=((p=[...g.entries()].sort((f,y)=>y[1]-f[1])[0])==null?void 0:p[0])||"";e.innerHTML=`
+    </div>`;
+  box.querySelectorAll('.btn-option').forEach(b => b.addEventListener('click', () => {
+    if (box.dataset.locked === '1') return;
+    box.dataset.locked = '1';
+        // v130: ответ ищем через code, а не через data-a (который больше не раскрывает title)
+    const movie = ALL.find(m => String(m.code) === String(b.dataset.code)) || {};
+    const right = movie ? b.dataset.t === movie.title : false;
+    haptic(right ? 'ok' : 'error');
+    b.classList.add(right ? 'correct' : 'wrong');
+    box.querySelectorAll('.btn-option').forEach(x => {
+            if (movie && x.dataset.t === movie.title) x.classList.add('correct');
+      x.disabled = true;
+    });
+        // v130: код уже найден выше по data-code (он равен r.code, с которым
+    // рендерятся кнопки). Раньше здесь стоял повторный `const movie` в этом же
+    // блоке — это SyntaxError, из-за которого весь бандл не парсился, а
+    // приложение открывалось чёрным экраном.
+    const code = movie.code;
+    if (code) {
+      const open = document.createElement('button');
+      open.className = 'btn-primary';
+      open.style.marginTop = '10px';
+            open.textContent = `🔓 Открыть код «${movie.title || ''}»`;
+      open.onclick = () => sendOrDeepLink({ action: 'open_movie', code });
+      box.querySelector('.emoji-game').appendChild(open);
+    }
+  }));
+  document.getElementById('emoji-next').onclick = () => { haptic('light'); box.dataset.locked = '0'; renderEmojiGame(); };
+}
+
+const LAST_VIEW_KEY = 'kinoafisha_last_view';
+// Единая точка открытия разделов: вкладки, подменю «Ещё» и восстановление
+// последнего раздела при запуске — всё через openView.
+function openView(v) {
+  view = v;
+  try { localStorage.setItem(LAST_VIEW_KEY, v); } catch (e) {}
+  if (v === 'game') { showView('game'); renderGameMenu(); }
+  else if (v === 'cols') { showView('cols'); renderCols(); }
+  else if (v === 'news') { showView('news'); renderNews(); }
+  else if (v === 'top') { showView('top'); renderLeaderboard(); }
+  else if (v === 'profile') { showView('profile'); renderProfile(); }
+  else if (v === 'trailers') { showView('trailers'); renderTrailerGenreChips(); renderTrailers(); }
+  else if (v === 'achievements') { showView('achievements'); renderAchievements(); }
+  else if (v === 'chain') { showView('chain'); renderChain(); }
+  else if (v === 'marathon') { showView('marathon'); renderMarathonView(); }
+  else if (v === 'year') { showView('year'); renderYear(); }
+  else if (v === 'tinder') { showView('tinder'); renderTinder(); }
+  else if (v === 'mycols') { showView('mycols'); renderMyCols(); }   // v106: свои подборки
+  else if (v === 'mycol-detail') { showView('mycol-detail'); renderMyColDetail(); }
+  else { showView('catalog'); renderGrid(); }  // grid | fav
+}
+document.querySelectorAll('.tab[data-view]').forEach(t => t.addEventListener('click', () => openView(t.dataset.view)));
+
+// ---------- v60: свайп влево/вправо листает главные вкладки ----------
+// Афиша → Трейлеры → Новости и обратно. В доп. разделах («Ещё») и в карточке
+// фильма свайп не работает, чтобы не уводить со специфичного экрана.
+(() => {
+  const ORDER = ['grid', 'trailers', 'news'];
+  let sx = 0, sy = 0, armed = false;
+  const modalOpen = () => !!document.querySelector('.modal:not(.hidden)');
+  document.addEventListener('touchstart', (e) => {
+    armed = false;
+    if (modalOpen()) return;
+    if (moreMenu && !moreMenu.classList.contains('hidden')) return;
+    const det = document.getElementById('view-detail');
+    if (det && !det.classList.contains('hidden')) return;
+    // не мешаем горизонтальным прокруткам и формам
+    if (e.target.closest('input, textarea, select, .hero-row, .similar-row, .genre-chips, .trailer-genre-chips')) return;
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    armed = true;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (!armed) return;
+    armed = false;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > 45) return;
+    const cur = view === 'fav' ? 'grid' : view;
+    const i = ORDER.indexOf(cur);
+    if (i === -1) return;
+    const next = dx < 0 ? ORDER[i + 1] : ORDER[i - 1];
+    if (!next) return;
+    haptic('light');
+    openView(next);
+  }, { passive: true });
+})();
+
+// ---------- раскрывающееся подменю «Ещё» ----------
+const moreTab = document.getElementById('tab-more');
+const moreMenu = document.getElementById('more-menu');
+function closeMoreMenu() {
+  if (moreMenu) moreMenu.classList.add('hidden');
+  if (moreTab) moreTab.setAttribute('aria-expanded', 'false');
+}
+if (moreTab && moreMenu) {
+  moreTab.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const nowHidden = moreMenu.classList.toggle('hidden');
+    moreTab.setAttribute('aria-expanded', String(!nowHidden));
+    haptic('light');
+  });
+  // клик вне меню — закрываем
+  document.addEventListener('click', (e) => {
+    if (moreMenu.classList.contains('hidden')) return;
+    if (!moreMenu.contains(e.target) && !moreTab.contains(e.target)) closeMoreMenu();
+  });
+  document.querySelectorAll('.more-item').forEach(b => b.addEventListener('click', () => {
+    closeMoreMenu();
+    if (b.id === 'more-changelog') { showChangelog(true); return; }  // v101: открываемый инфоблок
+    if (b.id === 'more-catalog') { shareCatalogPoster(); return; }   // v113: витрина одной картинкой
+    openView(b.dataset.view);
+  }));
+}
+
+// ---------- поиск с debounce (не рендерим на каждый символ) ----------
+let _searchTimer = null;
+document.getElementById('search').addEventListener('input', () => {
+  clearTimeout(_searchTimer);
+  // Поиск — всегда по ВСЕЙ афише: если был активен жанровый фильтр (например,
+  // после тапа по чипу жанра в карточке фильма), сбрасываем его — иначе поиск
+  // ищет только внутри одного жанра и выглядит «сломанным».
+  if (activeGenre) {
+    activeGenre = '';
+    renderGenreChips();
+  }
+  // v89: сброс фильтра по стране при вводе поиска — как и жанровый
+  if (activeCountry) {
+    activeCountry = '';
+    renderCountryChips();
+  }
+  initSearchHist(document.getElementById('search').value);
+  // v100: живая подсказка «код найден» под строкой поиска
+  const hint = document.getElementById('code-hint');
+  const cq = document.getElementById('search').value.trim();
+  if (hint) {
+    if (/^\d+$/.test(cq) && cq.length >= 2) {
+      const m = ALL.find(x => String(x.code) === cq);
+      hint.textContent = m
+        ? '🔑 ' + cq + ' · ' + (m.title || '') + ' — Enter откроет'
+        : '🤷 Кода ' + cq + ' нет в афише';
+      hint.classList.remove('hidden');
+    } else {
+      hint.classList.add('hidden');
+    }
+  }
+  _searchTimer = setTimeout(renderGrid, 180);
+});
+document.getElementById('sort').addEventListener('change', renderGrid);
+document.getElementById('search').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const q = document.getElementById('search').value.trim();
+    if (/^\d+$/.test(q)) {
+      // v100: ввёл чистый код → Enter = мгновенно открыть карточку
+      const m = ALL.find(x => String(x.code) === q);
+      if (m) {
+        addSearchHist(q); initSearchHist();
+        haptic('ok');
+        openDetail(m.code);
+        return;
+      }
+    }
+    if (q) { addSearchHist(q); initSearchHist(); }
+  }
+});
+
+// ---------- поиск/сортировка трейлеров ----------
+document.getElementById('trailer-search').addEventListener('input', () => {
+  clearTimeout(_trailerSearchTimer);
+  _trailerPage = 1;
+  if (trailerGenre) { trailerGenre = ''; renderTrailerGenreChips(); }
+  _trailerSearchTimer = setTimeout(renderTrailers, 180);
+});
+document.getElementById('trailer-sort').addEventListener('change', () => { _trailerPage = 1; renderTrailers(); });
+
+// ---------- кнопка «наверх» (glass-дизайн) ----------
+const btnTop = document.getElementById('btn-top');
+window.addEventListener('scroll', () => {
+  btnTop.classList.toggle('hidden', window.scrollY < 700);
+}, { passive: true });
+btnTop.addEventListener('click', () => {
+  haptic('light');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ---------- переключатель темы ----------
+document.getElementById('btn-theme').addEventListener('click', toggleTheme);
+
+// ---------- v109: «🔇 без вибраций» ----------
+(() => {
+  const btn = document.getElementById('btn-mute');
+  if (!btn) return;
+  const sync = () => { btn.textContent = hapticsEnabled() ? '🔔' : '🔇'; };
+  btn.addEventListener('click', () => {
+    const off = toggleHaptics();
+    sync();
+    if (!off) haptic('light');   // при включении вибраций сразу подтверждаем
+    try {
+      tg.showPopup({
+        type: 'ok',
+        title: off ? '🔇 Вибрации выключены' : '🔔 Вибрации включены',
+        message: off ? 'Приложение больше не вибрирует на действиях.' : 'Тактильный отклик вернулся.',
+      });
+    } catch (e) {}
+  });
+  sync();
+})();
+
+// ---------- «О боте» ----------
+// v136: показываем версию сборки и клиент Telegram. Версию берём из СВОЕГО
+// script-тега (?v=N), а не из константы: константу забыли бы поднять при бампе,
+// а тег всегда совпадает с реально загруженным бандлом — по нему и видно,
+// не отдал ли SW прошлую сборку.
+function buildLabel() {
+  const tag = document.querySelector('script[src*="script.js?v="]');
+  const m = tag && /[?&]v=(\d+)/.exec(tag.getAttribute('src') || '');
+  const parts = ['Сборка ' + (m ? 'v' + m[1] : 'неизвестна')];
+  try {
+    if (tg && tg.version) parts.push('Telegram ' + tg.version);
+    if (tg && tg.platform) parts.push(tg.platform);
+  } catch (e) { /* диагностика не должна мешать открыть «О боте» */ }
+  return parts.join(' · ');
+}
+document.getElementById('btn-info').addEventListener('click', () => {
+  haptic('light');
+  const build = document.getElementById('about-build');
+  if (build) {
+    try { build.textContent = buildLabel(); } catch (e) { build.textContent = ''; }
+  }
+  document.getElementById('about').classList.remove('hidden');
+});
+document.getElementById('btn-about-close').addEventListener('click', () =>
+  document.getElementById('about').classList.add('hidden'));
+document.getElementById('about').addEventListener('click', (e) => {
+  if (e.target.id === 'about') document.getElementById('about').classList.add('hidden');
+});
+document.getElementById('btn-about-channel').addEventListener('click', () =>
+  tg.openTelegramLink(CHANNEL_URL));
+
+// 🎲 «Мне повезёт» — случайный фильм
+document.getElementById('btn-lucky').addEventListener('click', () => {
+  if (!ALL.length) return;
+  haptic('light');
+  const m = ALL[Math.floor(Math.random() * ALL.length)];
+  openDetail(m.code);
+});
+
+// ---------- v72: «🎲 Случайный фильм» и «⟳ Обновить афишу» ----------
+const rndModal = document.getElementById('random-modal');
+document.getElementById('btn-random').addEventListener('click', () => {
+  if (!ALL.length) return;
+  rndModal.classList.remove('hidden');
+  renderRandomMovie();
+});
+document.getElementById('btn-random-close').addEventListener('click', closeRandom);
+document.getElementById('btn-random-again').addEventListener('click', renderRandomMovie);
+rndModal.addEventListener('click', (e) => { if (e.target === rndModal) closeRandom(); });
+
+// v90: «▶️ С трейлером» — фильтр афиши по наличию видео
+document.getElementById('btn-only-tr').addEventListener('click', () => {
+  onlyTrailer = !onlyTrailer;
+  haptic('light');
+  document.getElementById('btn-only-tr').classList.toggle('active', onlyTrailer);
+  renderGrid();
+});
+
+// v91: «🟢 Онлайн» — фильтр афиши по прямой ссылке на просмотр
+document.getElementById('btn-only-online').addEventListener('click', () => {
+  onlyOnline = !onlyOnline;
+  haptic('light');
+  document.getElementById('btn-only-online').classList.toggle('active', onlyOnline);
+  renderGrid();
+});
+
+// v90: лайтбокс — закрытие по тапу в любом месте
+(function initLightbox() {
+  const lb = document.getElementById('lightbox');
+  if (!lb) return;
+  lb.addEventListener('click', () => { lb.classList.add('hidden'); lb.querySelector('img').src = ''; });
+})();
+
+const refreshBtn = document.getElementById('btn-refresh');
+refreshBtn.addEventListener('click', async () => {
+  if (refreshBtn.dataset.busy) return;
+  refreshBtn.dataset.busy = '1';
+  refreshBtn.classList.add('spin');
+  haptic('light');
+  try { await loadMovies(); } catch (e) {}
+  refreshBtn.classList.remove('spin');
+  delete refreshBtn.dataset.busy;
+  refreshBtn.textContent = '✓';
+  setTimeout(() => { refreshBtn.textContent = '⟳'; }, 1600);
+});
+
+// 👇 Pull-to-refresh: на верху страницы тянешь список вниз — данные обновляются
+(function () {
+  const ind = document.getElementById('ptr');
+  if (!ind) return;
+  let startY = 0, pulling = false, dist = 0;
+  const modalOpen = () => !!document.querySelector('.modal:not(.hidden)');
+  document.addEventListener('touchstart', (e) => {
+    if (window.scrollY > 0 || modalOpen()) { pulling = false; return; }
+    startY = e.touches[0].clientY;
+    dist = 0;
+    pulling = true;
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (!pulling) return;
+    dist = e.touches[0].clientY - startY;
+    if (dist <= 0) { ind.style.opacity = '0'; return; }
+    const d = Math.min(dist, 120);
+    ind.textContent = dist > 90 ? '🔄 Отпусти — обновлю' : '↓ Тяни вниз';
+    ind.style.transform = 'translate(-50%, ' + Math.round(40 + d * 0.4) + 'px)';
+    ind.style.opacity = String(Math.min(d / 80, 1));
+  }, { passive: true });
+  document.addEventListener('touchend', () => {
+    if (!pulling) return;
+    pulling = false;
+    if (dist > 90) {
+      ind.textContent = '⏳ Обновляю…';
+      loadMovies().then(() => {
+        if (view === 'trailers') { renderTrailerGenreChips(); renderTrailers(); }
+        if (view === 'news') renderNews();
+        setTimeout(() => { ind.style.opacity = '0'; ind.style.transform = ''; }, 700);
+      });
+    } else {
+      ind.style.opacity = '0';
+      ind.style.transform = '';
+    }
+  });
+})();
+
+// 🎬 «Мой Киногод» — карточка-итог прямо в приложении (без сворачивания);
+// данные берём из синхронизированного профиля (PROFILE). Если не синхронизирован —
+// предлагаем нажать 🔁, а самому можно зайти в бота кнопкой ниже.
+function openKinogod() {
+  const modal = document.getElementById('kinogod-modal');
+  const body = document.getElementById('kinogod-body');
+  const p = PROFILE || {};
+  const unlocked = getUnlocked();
+  const favs = getFavs();
+  const pts = p.pts || 0;
+  const streak = p.str || 0;
+  const level = p.tit || 'Зритель';
+  const rank = p.rank;   // может быть undefined
+  const topText = (typeof rank === 'number')
+    ? `<div class="kg-row"><span>📍 Место в топе</span><b>${rank}</b></div>`
+    : '';
+  // любимый жанр — локально по избранному/разгаданным
+  const genreCount = new Map();
+  [...favs, ...unlocked].forEach(code => {
+    const m = ALL.find(x => x.code === code);
+    (m && Array.isArray(m.genres) ? m.genres : []).forEach(g => genreCount.set(g, (genreCount.get(g) || 0) + 1));
+  });
+  const topGenre = [...genreCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+  body.innerHTML = `
     <div class="kg-head">
       <div class="kg-emoji">🎬</div>
       <h2>Мой Киногод</h2>
       <p class="modal-muted">Твой год в кино — как ты угадываешь фильмы</p>
     </div>
     <div class="kg-stats">
-      ${n.uid?"":'<p class="kg-hint">🔁 Синхронизируйся с ботом, чтобы сюда добавились уровень и баллы.</p>'}
-      <div class="kg-row"><span>🏅 Уровень</span><b>${esc(r)}</b></div>
-      <div class="kg-row"><span>💰 Кинобаллы</span><b>${a}</b></div>
-      <div class="kg-row"><span>🔥 Стрик</span><b>${i} ${i%10===1&&i%100!==11?"день":"дней"}</b></div>
-      <div class="kg-row"><span>🔓 Разгадано кодов</span><b>${s.length}</b></div>
-      <div class="kg-row"><span>❤️ В «Моём»</span><b>${o.length}</b></div>
-      ${l}
-      ${d?`<div class="kg-row"><span>🎯 Любимый жанр</span><b>${esc(d)}</b></div>`:""}
+      ${p.uid ? '' : '<p class="kg-hint">🔁 Синхронизируйся с ботом, чтобы сюда добавились уровень и баллы.</p>'}
+      <div class="kg-row"><span>🏅 Уровень</span><b>${esc(level)}</b></div>
+      <div class="kg-row"><span>💰 Кинобаллы</span><b>${pts}</b></div>
+      <div class="kg-row"><span>🔥 Стрик</span><b>${streak} ${streak % 10 === 1 && streak % 100 !== 11 ? 'день' : 'дней'}</b></div>
+      <div class="kg-row"><span>🔓 Разгадано кодов</span><b>${unlocked.length}</b></div>
+      <div class="kg-row"><span>❤️ В «Моём»</span><b>${favs.length}</b></div>
+      ${topText}
+      ${topGenre ? `<div class="kg-row"><span>🎯 Любимый жанр</span><b>${esc(topGenre)}</b></div>` : ''}
     </div>
     <div class="kg-actions">
       <button class="btn-primary" id="kg-bot">🤖 Открыть бота</button>
-    </div>`,t.classList.remove("hidden"),(u=document.getElementById("kg-bot"))==null||u.addEventListener("click",()=>{tg.openTelegramLink("https://t.me/kapitan_kino_bot")})}document.getElementById("btn-kinogod").addEventListener("click",()=>{haptic("light"),openKinogod()}),document.getElementById("btn-kinogod-close").addEventListener("click",()=>{document.getElementById("kinogod-modal").classList.add("hidden")}),(U=document.getElementById("kinogod-modal"))==null||U.addEventListener("click",t=>{t.target===t.currentTarget&&document.getElementById("kinogod-modal").classList.add("hidden")}),document.getElementById("btn-howto").addEventListener("click",()=>{haptic("light"),document.getElementById("howto-modal").classList.remove("hidden")}),document.getElementById("btn-howto-close").addEventListener("click",()=>{document.getElementById("howto-modal").classList.add("hidden")}),(K=document.getElementById("howto-modal"))==null||K.addEventListener("click",t=>{t.target===t.currentTarget&&document.getElementById("howto-modal").classList.add("hidden")});const pickModal=document.getElementById("pick-modal"),pickResults=document.getElementById("pick-results");function fillPickGenres(){const t=document.getElementById("pick-genre");if(!t||t.options.length>1)return;const e=new Set;ALL.forEach(n=>(n.genres||[]).forEach(s=>{s&&e.add(s)})),[...e].sort((n,s)=>n.localeCompare(s,"ru")).forEach(n=>{const s=document.createElement("option");s.value=n,s.textContent=n,t.appendChild(s)})}function runPick(){const t=document.getElementById("pick-genre").value,e=document.getElementById("pick-dur").value,n=parseFloat(document.getElementById("pick-rate").value)||0;if(!pickResults)return;let s=[...ALL];if(t&&(s=s.filter(i=>(i.genres||[]).includes(t))),e==="short"?s=s.filter(i=>(parseInt(i.duration,10)||0)>0&&(parseInt(i.duration,10)||0)<=90):e==="mid"?s=s.filter(i=>{const r=parseInt(i.duration,10)||0;return r>90&&r<=120}):e==="long"&&(s=s.filter(i=>(parseInt(i.duration,10)||0)>120)),n&&(s=s.filter(i=>parseFloat(i.rating)>=n)),!s.length){pickResults.innerHTML='<p class="error">Ничего не нашлось под такие вкусы 😔 Попробуй ослабить фильтры.</p>';return}const o=[],a=[...s].sort(()=>Math.random()-.5);for(const i of a){if(o.length>=3)break;o.push(i)}pickResults.innerHTML=o.map(i=>`
-    <div class="pick-card" data-code="${esc(i.code)}">
+    </div>`;
+  modal.classList.remove('hidden');
+  document.getElementById('kg-bot')?.addEventListener('click', () => {
+    tg.openTelegramLink('https://t.me/kapitan_kino_bot');
+  });
+}
+document.getElementById('btn-kinogod').addEventListener('click', () => {
+  haptic('light');
+  openKinogod();
+});
+document.getElementById('btn-kinogod-close').addEventListener('click', () => {
+  document.getElementById('kinogod-modal').classList.add('hidden');
+});
+document.getElementById('kinogod-modal')?.addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) document.getElementById('kinogod-modal').classList.add('hidden');
+});
+
+// ❓ «Как играть» — короткая справка по кодам и боту
+document.getElementById('btn-howto').addEventListener('click', () => {
+  haptic('light');
+  document.getElementById('howto-modal').classList.remove('hidden');
+});
+document.getElementById('btn-howto-close').addEventListener('click', () => {
+  document.getElementById('howto-modal').classList.add('hidden');
+});
+document.getElementById('howto-modal')?.addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) document.getElementById('howto-modal').classList.add('hidden');
+});
+
+// 🎲 «Фильм на вечер» — модалка подбора по вкусу
+const pickModal = document.getElementById('pick-modal');
+const pickResults = document.getElementById('pick-results');
+function fillPickGenres() {
+  const sel = document.getElementById('pick-genre');
+  if (!sel || sel.options.length > 1) return;
+  const genres = new Set();
+  ALL.forEach(m => (m.genres || []).forEach(g => { if (g) genres.add(g); }));
+  [...genres].sort((a, b) => a.localeCompare(b, 'ru')).forEach(g => {
+    const o = document.createElement('option');
+    o.value = g; o.textContent = g;
+    sel.appendChild(o);
+  });
+}
+function runPick() {
+  const genre = document.getElementById('pick-genre').value;
+  const dur = document.getElementById('pick-dur').value;
+  const minRate = parseFloat(document.getElementById('pick-rate').value) || 0;
+  if (!pickResults) return;
+  let pool = [...ALL];
+  if (genre) pool = pool.filter(m => (m.genres || []).includes(genre));
+  if (dur === 'short') pool = pool.filter(m => (parseInt(m.duration, 10) || 0) > 0 && (parseInt(m.duration, 10) || 0) <= 90);
+  else if (dur === 'mid') pool = pool.filter(m => { const d = parseInt(m.duration, 10) || 0; return d > 90 && d <= 120; });
+  else if (dur === 'long') pool = pool.filter(m => (parseInt(m.duration, 10) || 0) > 120);
+  if (minRate) pool = pool.filter(m => parseFloat(m.rating) >= minRate);
+  if (!pool.length) {
+    pickResults.innerHTML = '<p class="error">Ничего не нашлось под такие вкусы 😔 Попробуй ослабить фильтры.</p>';
+    return;
+  }
+  const picks = [];
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  for (const m of shuffled) {
+    if (picks.length >= 3) break;
+    picks.push(m);
+  }
+  pickResults.innerHTML = picks.map(m => `
+    <div class="pick-card" data-code="${esc(m.code)}">
       <div class="pick-thumb">
-        ${i.poster?`<img src="${esc(i.poster)}" alt="" loading="lazy" ${FADE}${dimStyle(i)} onerror="this.style.display='none'"/>`:'<div class="trailer-thumb-ph">🎬</div>'}
+        ${m.poster
+          ? `<img src="${esc(m.poster)}" alt="" loading="lazy" ${FADE}${dimStyle(m)} onerror="this.style.display='none'"/>`
+          : `<div class="trailer-thumb-ph">🎬</div>`}
       </div>
       <div class="pick-info">
-        <b>${esc(i.title)}</b>
-        <span class="rating">${ratingBadge(i)}${i.duration?" · ⏱ "+esc(fmtDuration(i.duration)):""}</span>
-        ${i.description?`<p>${esc((i.description||"").slice(0,120))}…</p>`:""}
+        <b>${esc(m.title)}</b>
+        <span class="rating">${ratingBadge(m)}${m.duration ? ' · ⏱ ' + esc(fmtDuration(m.duration)) : ''}</span>
+        ${m.description ? `<p>${esc((m.description || '').slice(0, 120))}…</p>` : ''}
       </div>
-    </div>`).join(""),pickResults.querySelectorAll(".pick-card").forEach(i=>i.addEventListener("click",()=>openDetail(i.dataset.code)))}document.getElementById("btn-pick").addEventListener("click",()=>{pickModal&&(fillPickGenres(),pickModal.classList.remove("hidden"))});const btnPickClose=document.getElementById("btn-pick-close");btnPickClose&&(btnPickClose.onclick=()=>pickModal.classList.add("hidden"));const btnPickRun=document.getElementById("btn-pick-run");btnPickRun&&(btnPickRun.onclick=()=>{haptic("light"),runPick()}),pickModal.addEventListener("click",t=>{t.target===pickModal&&pickModal.classList.add("hidden")});const APP_FS_MIN_VERSION="8.0",FS_BUILD="v133";let _appFsByUs=!1,_appFsOff=!1,_appFsFails=0,_swipesWereDisabled=!1;function _appFsAvailable(){try{return!_appFsOff&&!!tg&&typeof tg.requestFullscreen=="function"&&!!tg.isVersionAtLeast&&tg.isVersionAtLeast(APP_FS_MIN_VERSION)}catch(t){return!1}}function _appInFs(){try{return!!tg.isFullscreen}catch(t){return!1}}function enterAppFullscreen(){if(!(!_appFsAvailable()||_appInFs()))try{typeof tg.disableVerticalSwipes=="function"&&(tg.disableVerticalSwipes(),_swipesWereDisabled=!0),tg.requestFullscreen(),_appFsByUs=!0}catch(t){}}function exitAppFullscreen(){if(_appFsByUs){_appFsByUs=!1;try{_appInFs()&&typeof tg.exitFullscreen=="function"&&tg.exitFullscreen()}catch(t){}try{_swipesWereDisabled&&typeof tg.enableVerticalSwipes=="function"&&tg.enableVerticalSwipes()}catch(t){}_swipesWereDisabled=!1}}function _syncTrailerFs(){const t=document.getElementById("btn-trailer-fs");if(!t)return;const e=!!(document.fullscreenElement||document.webkitFullscreenElement||document.msFullscreenElement),n=e||_appInFs();t.textContent=n?"⤢":"⛶",t.title=n?"Свернуть":"На весь экран",t.classList.toggle("hidden",e)}function _requestFs(t){return new Promise(e=>{try{if(!t){e(!1);return}if(t.requestFullscreen){const n=t.requestFullscreen();if(n&&typeof n.then=="function"){n.then(()=>e(!0),()=>e(!1));return}e(!0);return}if(t.webkitRequestFullscreen){t.webkitRequestFullscreen(),e(!0);return}if(t.msRequestFullscreen){t.msRequestFullscreen(),e(!0);return}}catch(n){}e(!1)})}function _showFsDiag(){const t=document.getElementById("trailer-frame"),e=document.getElementById("trailer-video"),n=document.documentElement,s=!!(t&&!t.classList.contains("hidden")),o=!!(e&&!e.classList.contains("hidden"));let a="?";try{a=!!(tg&&tg.isVersionAtLeast&&tg.isVersionAtLeast(APP_FS_MIN_VERSION))}catch(c){a="err"}const r=["сборка: "+FS_BUILD,"tg: "+(tg&&tg.version||"?")+" / "+(tg&&tg.platform||"?"),"tg.requestFullscreen: "+(tg?typeof tg.requestFullscreen:"нет tg"),"мин. "+APP_FS_MIN_VERSION+": "+a,"appFs: off="+_appFsOff+" fails="+_appFsFails,"browserFs: "+(n?typeof n.requestFullscreen+"/"+typeof n.webkitRequestFullscreen:"нет"),"трейлер: "+(s?"youtube":o?"mp4":"нет")].join(`
-`);try{tg.showAlert(r);return}catch(c){}try{alert(r)}catch(c){}}function _exitFs(){try{document.fullscreenElement?document.exitFullscreen().catch(()=>{}):document.webkitFullscreenElement?document.webkitExitFullscreen():document.msExitFullscreen&&document.msExitFullscreen()}catch(t){}}function _offerTrailerInYouTube(){const t=document.getElementById("trailer-frame"),n=(t&&t.getAttribute("src")||"").match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/);if(!n)return;const s="https://youtu.be/"+n[1],o=()=>{try{tg.openLink(s,{try_instant_view:!1})}catch(a){window.open(s,"_blank")}};try{tg.showPopup({title:"⛶ Полный экран",message:"Внутри Telegram на iPhone плеер YouTube развернуть нельзя. Открыть трейлер в YouTube?",buttons:[{id:"yt",type:"default",text:"▶️ Открыть"},{id:"no",type:"cancel"}]},a=>{a==="yt"&&o()});return}catch(a){}o()}async function _trailerFsFlow(){if(!!(document.fullscreenElement||document.webkitFullscreenElement||document.msFullscreenElement)){_exitFs();return}if(_appInFs()){exitAppFullscreen(),_syncTrailerFs();return}if(_appFsAvailable()){enterAppFullscreen(),_syncTrailerFs();return}const e=document.documentElement;if(e&&(typeof e.requestFullscreen=="function"||typeof e.webkitRequestFullscreen=="function")){const s=document.getElementById("trailer-frame"),o=document.getElementById("trailer-modal");if(await _requestFs(s&&!s.classList.contains("hidden")?s:o||void 0))return}const n=document.getElementById("trailer-video");if(n&&!n.classList.contains("hidden")&&n.webkitEnterFullscreen)try{n.webkitEnterFullscreen();return}catch(s){}_offerTrailerInYouTube()}(function(){const e=document.getElementById("btn-trailer-fs");if(!e)return;let n=null,s=!1;e.addEventListener("click",o=>{if(o.stopPropagation(),clearTimeout(n),s){s=!1;return}haptic("light"),_trailerFsFlow()}),e.addEventListener("touchstart",()=>{clearTimeout(n),n=setTimeout(()=>{s=!0,_showFsDiag()},600)},{passive:!0}),["touchend","touchcancel"].forEach(o=>{e.addEventListener(o,()=>clearTimeout(n),{passive:!0})}),e.addEventListener("contextmenu",o=>{o.preventDefault(),_showFsDiag()}),document.addEventListener("fullscreenchange",_syncTrailerFs),document.addEventListener("webkitfullscreenchange",_syncTrailerFs),document.addEventListener("MSFullscreenChange",_syncTrailerFs);try{tg&&typeof tg.onEvent=="function"&&(tg.onEvent("fullscreenChanged",_syncTrailerFs),tg.onEvent("fullscreenFailed",o=>{o&&o.error==="UNSUPPORTED"?_appFsOff=!0:(_appFsFails++,_appFsFails>=2&&(_appFsOff=!0)),_syncTrailerFs()}))}catch(o){}})();function openTrailer(t){if(t){if(window._challTrailerWatched=(window._challTrailerWatched||0)+1,challDone("watch_trailer"),bumpWeekStat("trailers"),pushTrailerWatch(t.code),view==="grid"||view==="fav"){const e=document.getElementById("continue-shelf");e&&!e.classList.contains("hidden")&&renderTrailerShelf()}if(!(!t.trailer_yt&&!t.trailer_file_id)){if(haptic("light"),t.trailer_yt){const e=document.getElementById("trailer-modal"),n=document.getElementById("trailer-frame"),s=document.getElementById("trailer-video");if(!e||!n||!s)return;s.classList.add("hidden"),s.removeAttribute("src"),n.classList.remove("hidden"),n.src="https://www.youtube.com/embed/"+t.trailer_yt+"?autoplay=1&rel=0&playsinline=1&fs=1",e.classList.remove("hidden"),startWatchSession(t.code),enterAppFullscreen(),_syncTrailerFs();return}t.trailer_file_id&&sendOrDeepLink({action:"trailer_movie",code:t.code})}}}(function(){const t=document.getElementById("net-banner");if(!t)return;const e=()=>t.classList.toggle("hidden",navigator.onLine!==!1);window.addEventListener("offline",()=>{e(),haptic("heavy")}),window.addEventListener("online",e),e()})(),(function(){const t=document.querySelector(".tabs");if(window.__tabsDbg={bar:!!t,ran:1,upds:0},!t)return;let e=!1;const n=()=>{e=!1,window.__tabsDbg.upds++;const s=window.scrollY>60&&t.getBoundingClientRect().top<=2;document.body.classList.toggle("tabs-stuck",s)};window.addEventListener("scroll",()=>{n()},{passive:!0})})();function closeTrailer(){_exitFs(),exitAppFullscreen(),endWatchSession();const t=document.getElementById("trailer-modal"),e=document.getElementById("trailer-frame"),n=document.getElementById("trailer-video");e&&(e.src="about:blank"),n&&(n.pause(),n.removeAttribute("src")),t&&t.classList.add("hidden")}(function(){const e=document.getElementById("trailer-modal");e&&e.addEventListener("click",s=>{s.target===e&&closeTrailer()});const n=document.getElementById("btn-trailer-close");n&&n.addEventListener("click",closeTrailer)})(),window.addEventListener("error",t=>{try{const e=document.getElementById("err-banner");e&&(e.textContent="⚠️ Ошибка приложения: "+(t.message||"неизвестная"),e.classList.remove("hidden"))}catch(e){}});const OB_KEY="kinoafisha_onboarded";function showOnboarding(){if(localStorage.getItem(OB_KEY))return;const t=document.getElementById("onboarding");if(!t)return;let e=0;const n=4,s=t.querySelectorAll(".ob-slide"),o=t.querySelectorAll(".ob-dot"),a=document.getElementById("ob-next"),i=document.getElementById("ob-skip"),r=()=>{s.forEach((l,g)=>l.classList.toggle("active",g===e)),o.forEach((l,g)=>l.classList.toggle("active",g===e)),a.textContent=e===n-1?"Начать!":"Далее"},c=()=>{localStorage.setItem(OB_KEY,"1"),t.classList.add("hidden"),haptic("light")};a.onclick=()=>{e<n-1?(e++,r(),haptic("light")):c()},i.onclick=c,r(),t.classList.remove("hidden")}const CHANGELOG_V="116",CL_KEY="kinoafisha_seen_changelog";function showChangelog(t=!1){try{if(!t&&localStorage.getItem(CL_KEY)===CHANGELOG_V)return}catch(a){return}const e=document.getElementById("changelog-modal");if(!e)return;e.classList.remove("hidden");const n=()=>{e.classList.add("hidden");try{localStorage.setItem(CL_KEY,CHANGELOG_V)}catch(a){}},s=document.getElementById("btn-cl-ok");s&&(s.onclick=()=>{haptic("light"),n()});const o=document.getElementById("btn-cl-close");o&&(o.onclick=n),e.addEventListener("click",a=>{a.target===e&&n()})}(()=>{const t=document.getElementById("sharecard-modal");if(!t)return;const e=()=>{t.classList.add("hidden")},n=document.getElementById("btn-sharecard-close");n&&(n.onclick=e),t.addEventListener("click",s=>{s.target===t&&e()})})(),window.__kinoBooted=!0,parseAccessHash(),localStorage.getItem(ACCESS_KEY)==="1"?(enterApp(),showOnboarding(),setTimeout(showChangelog,900)):showGate(),document.querySelectorAll(".modal:not(#trailer-modal):not(#onboarding)").forEach((t,e)=>{let n=0;t.addEventListener("touchstart",s=>{if(t.classList.contains("hidden"))return;const o=t.querySelector(".modal-card, .onboarding-card, .kinogod-card");if(!o)return;const a=o.getBoundingClientRect();s.touches[0].clientY-a.top>a.height*.3||(n=s.touches[0].clientY)},{passive:!0}),t.addEventListener("touchmove",s=>{if(!n||t.classList.contains("hidden"))return;const o=t.querySelector(".modal-card, .onboarding-card, .kinogod-card");if(!o)return;const a=s.touches[0].clientY-n;a>12&&(o.style.transition="transform .18s ease",o.style.transform=`translateY(${Math.min(a,90)}px)`,o.style.opacity=String(Math.max(0,1-a/220)))},{passive:!0}),t.addEventListener("touchend",s=>{if(!n||t.classList.contains("hidden"))return;const o=t.querySelector(".modal-card, .onboarding-card, .kinogod-card"),a=o?s.changedTouches[0].clientY-n:0;n=0,o&&(o.style.transition="transform .18s ease, opacity .18s ease",a>70?(o.style.transform="translateY(120%)",o.style.opacity="0",setTimeout(()=>{t.classList.add("hidden"),o.style.transform="",o.style.opacity=""},150)):(o.style.transform="",o.style.opacity=""))},{passive:!0})}),"serviceWorker"in navigator&&location.protocol==="https:"&&window.addEventListener("load",()=>{navigator.serviceWorker.register("./sw.js").catch(()=>{})});
+    </div>`).join('');
+  pickResults.querySelectorAll('.pick-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.code)));
+}
+document.getElementById('btn-pick').addEventListener('click', () => {
+  if (!pickModal) return;
+  fillPickGenres();
+  pickModal.classList.remove('hidden');
+});
+const btnPickClose = document.getElementById('btn-pick-close');
+if (btnPickClose) btnPickClose.onclick = () => pickModal.classList.add('hidden');
+const btnPickRun = document.getElementById('btn-pick-run');
+if (btnPickRun) btnPickRun.onclick = () => { haptic('light'); runPick(); };
+pickModal.addEventListener('click', (e) => {
+  if (e.target === pickModal) pickModal.classList.add('hidden');
+});
+// ---------- Трейлер: полноэкранный просмотр ----------
+// v132: на телефоне трейлер не разворачивался, а кнопка «⛶» молча ничего не
+// делала. Причина: браузерный Fullscreen API (Element.requestFullscreen) в
+// WebView Telegram на iOS не поддерживается вообще, а iframe с YouTube сам
+// развернуться не может. Теперь сначала разворачиваем сам мини-апп: у Telegram
+// (Bot API 8.0+) есть свой полноэкранный режим tg.requestFullscreen() — он
+// убирает полуэкран/шапку, и плеер занимает весь экран телефона. Дальше по
+// цепочке — браузерный fullscreen (ПК и веб), webkitEnterFullscreen для нашего
+// mp4 (iOS) и, как последний шов для YouTube-iframe на iOS, открытие трейлера
+// в приложении YouTube: там полноэкранный плеер работает всегда.
+const APP_FS_MIN_VERSION = '8.0';
+const FS_BUILD = 'v133'; // версия логики фуллскрина — видна в диагностике (долгое нажатие на «⛶»)
+let _appFsByUs = false;        // развернули мини-апп сами — сами же и свернём
+let _appFsOff = false;         // клиент точно не умеет (два UNSUPPORTED подряд)
+let _appFsFails = 0;
+let _swipesWereDisabled = false;
+
+function _appFsAvailable() {
+  try {
+    return !_appFsOff && !!tg && typeof tg.requestFullscreen === 'function'
+      && !!tg.isVersionAtLeast && tg.isVersionAtLeast(APP_FS_MIN_VERSION);
+  } catch (e) { return false; }
+}
+
+function _appInFs() {
+  try { return !!tg.isFullscreen; } catch (e) { return false; }
+}
+
+function enterAppFullscreen() {
+  if (!_appFsAvailable() || _appInFs()) return;
+  try {
+    // В полноэкранном режиме вертикальный свайп выходит из него, а он у нас
+    // занят (свайпы в марафоне/шторке) — пока трейлер открыт, свайпы гасим.
+    if (typeof tg.disableVerticalSwipes === 'function') {
+      tg.disableVerticalSwipes(); _swipesWereDisabled = true;
+    }
+    tg.requestFullscreen();
+    _appFsByUs = true;
+  } catch (e) { /* пусто */ }
+}
+
+function exitAppFullscreen() {
+  if (!_appFsByUs) return;
+  _appFsByUs = false;
+  try {
+    if (_appInFs() && typeof tg.exitFullscreen === 'function') tg.exitFullscreen();
+  } catch (e) { /* пусто */ }
+  try {
+    if (_swipesWereDisabled && typeof tg.enableVerticalSwipes === 'function') {
+      tg.enableVerticalSwipes();
+    }
+  } catch (e) { /* пусто */ }
+  _swipesWereDisabled = false;
+}
+
+function _syncTrailerFs() {
+  const fsBtn = document.getElementById('btn-trailer-fs');
+  if (!fsBtn) return;
+  const inDeviceFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  const inAnyFs = inDeviceFs || _appInFs();
+  fsBtn.textContent = inAnyFs ? '⤢' : '⛶';
+  fsBtn.title = inAnyFs ? 'Свернуть' : 'На весь экран';
+  // Прячем кнопку только в «настоящем» fullscreen браузера (там поверх плеера
+  // ничего не нужно); в полноэкранном режиме Telegram она остаётся — ею же
+  // можно вернуться назад.
+  fsBtn.classList.toggle('hidden', inDeviceFs);
+}
+
+// v133: возвращает Promise<boolean> — удалось развернуть или нет. Раньше отказ
+// вебвью проглатывался (.catch(() => {})) и на Android кнопка «молчала», не
+// доходя до фолбэков: requestFullscreen в WebView Telegram может существовать,
+// но отклоняться (нет разрешения на fullscreen в чужом вебвью).
+function _requestFs(el) {
+  return new Promise((resolve) => {
+    try {
+      if (!el) { resolve(false); return; }
+      if (el.requestFullscreen) {
+        const p = el.requestFullscreen();
+        if (p && typeof p.then === 'function') {
+          p.then(() => resolve(true), () => resolve(false));
+          return;
+        }
+        resolve(true); return;
+      }
+      if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); resolve(true); return; }
+      if (el.msRequestFullscreen) { el.msRequestFullscreen(); resolve(true); return; }
+    } catch (e) { /* пусто */ }
+    resolve(false);
+  });
+}
+
+// v133: диагностика — долгое нажатие (или правый клик) на «⛶» показывает,
+// что умеет клиент. Если кнопка «молчит» и это не помогло — телефон ещё
+// гоняет старый скрипт из кэша (сборка в отчёте будет старой).
+function _showFsDiag() {
+  const frame = document.getElementById('trailer-frame');
+  const video = document.getElementById('trailer-video');
+  const root = document.documentElement;
+  const yt = !!(frame && !frame.classList.contains('hidden'));
+  const mp4 = !!(video && !video.classList.contains('hidden'));
+  let min8 = '?';
+  try { min8 = !!(tg && tg.isVersionAtLeast && tg.isVersionAtLeast(APP_FS_MIN_VERSION)); } catch (e) { min8 = 'err'; }
+  const lines = [
+    'сборка: ' + FS_BUILD,
+    'tg: ' + ((tg && tg.version) || '?') + ' / ' + ((tg && tg.platform) || '?'),
+    'tg.requestFullscreen: ' + (tg ? typeof tg.requestFullscreen : 'нет tg'),
+    'мин. ' + APP_FS_MIN_VERSION + ': ' + min8,
+    'appFs: off=' + _appFsOff + ' fails=' + _appFsFails,
+    'browserFs: ' + (root ? (typeof root.requestFullscreen) + '/' + (typeof root.webkitRequestFullscreen) : 'нет'),
+    'трейлер: ' + (yt ? 'youtube' : (mp4 ? 'mp4' : 'нет')),
+  ];
+  const text = lines.join('\n');
+  try { tg.showAlert(text); return; } catch (e) { /* пусто */ }
+  try { alert(text); } catch (e2) { /* пусто */ }
+}
+
+function _exitFs() {
+  try {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else if (document.webkitFullscreenElement) document.webkitExitFullscreen();
+    else if (document.msExitFullscreen) document.msExitFullscreen();
+  } catch (e) { /* пусто */ }
+}
+
+// iOS: YouTube-iframe развернуть из вебвью нельзя — предлагаем открыть трейлер
+// в приложении YouTube (там плеер полноэкранный и с поворотом).
+function _offerTrailerInYouTube() {
+  const frame = document.getElementById('trailer-frame');
+  const src = (frame && frame.getAttribute('src')) || '';
+  const match = src.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/);
+  if (!match) return;
+  const url = 'https://youtu.be/' + match[1];
+  const open = () => {
+    try { tg.openLink(url, { try_instant_view: false }); }
+    catch (e) { window.open(url, '_blank'); }
+  };
+  try {
+    tg.showPopup({
+      title: '⛶ Полный экран',
+      message: 'Внутри Telegram на iPhone плеер YouTube развернуть нельзя. '
+             + 'Открыть трейлер в YouTube?',
+      buttons: [{ id: 'yt', type: 'default', text: '▶️ Открыть' },
+                { id: 'no', type: 'cancel' }],
+    }, (btn) => { if (btn === 'yt') open(); });
+    return;
+  } catch (e) { /* нет showPopup — открываем сразу */ }
+  open();
+}
+
+async function _trailerFsFlow() {
+  const inDeviceFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  if (inDeviceFs) { _exitFs(); return; }
+  // 1) Полноэкранный режим мини-аппа — основной путь на телефоне.
+  if (_appInFs()) { exitAppFullscreen(); _syncTrailerFs(); return; }
+  if (_appFsAvailable()) { enterAppFullscreen(); _syncTrailerFs(); return; }
+  // 2) ПК и веб: обычный браузерный fullscreen на обёртке/iframe.
+  const root = document.documentElement;
+  if (root && (typeof root.requestFullscreen === 'function' || typeof root.webkitRequestFullscreen === 'function')) {
+    const frame = document.getElementById('trailer-frame');
+    const modal = document.getElementById('trailer-modal');
+    const ok = await _requestFs(frame && !frame.classList.contains('hidden') ? frame : (modal || undefined));
+    if (ok) return;
+    // v133: в вебвью Telegram браузерный fullscreen может существовать, но
+    // молча отклоняться (Android) — не «молчим», а идём по фолбэкам дальше.
+  }
+  // 3) iOS и старый Android: наш mp4 умеет своё webkitEnterFullscreen.
+  const video = document.getElementById('trailer-video');
+  if (video && !video.classList.contains('hidden') && video.webkitEnterFullscreen) {
+    try { video.webkitEnterFullscreen(); return; } catch (err) { /* пусто */ }
+  }
+  // 4) YouTube-iframe из вебвью не развернуть — предлагаем приложение YouTube.
+  _offerTrailerInYouTube();
+}
+
+(function initTrailerFsButton() {
+  const fsBtn = document.getElementById('btn-trailer-fs');
+  if (!fsBtn) return;
+  let pressTimer = null, diagShown = false;
+  fsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearTimeout(pressTimer);
+    if (diagShown) { diagShown = false; return; } // только что показали диагностику
+    haptic('light');
+    _trailerFsFlow();
+  });
+  // v133: долгое нажатие (0.6 с) на «⛶» — показать диагностику возможностей.
+  fsBtn.addEventListener('touchstart', () => {
+    clearTimeout(pressTimer);
+    pressTimer = setTimeout(() => { diagShown = true; _showFsDiag(); }, 600);
+  }, { passive: true });
+  ['touchend', 'touchcancel'].forEach((t) => {
+    fsBtn.addEventListener(t, () => clearTimeout(pressTimer), { passive: true });
+  });
+  // На ПК — та же диагностика по правому клику.
+  fsBtn.addEventListener('contextmenu', (e) => { e.preventDefault(); _showFsDiag(); });
+  document.addEventListener('fullscreenchange', _syncTrailerFs);
+  document.addEventListener('webkitfullscreenchange', _syncTrailerFs);
+  document.addEventListener('MSFullscreenChange', _syncTrailerFs);
+  try {
+    if (tg && typeof tg.onEvent === 'function') {
+      tg.onEvent('fullscreenChanged', _syncTrailerFs);
+      tg.onEvent('fullscreenFailed', (e) => {
+        // UNSUPPORTED — клиент точно не умеет полноэкранный режим мини-аппа
+        // (Telegram Web, Desktop или старый клиент) — отключаем сразу. Иные
+        // сбои копим: после двух подряд больше не дёргаем метод и падаем
+        // на фолбэки.
+        if (e && e.error === 'UNSUPPORTED') {
+          _appFsOff = true;
+        } else {
+          _appFsFails++;
+          if (_appFsFails >= 2) _appFsOff = true;
+        }
+        _syncTrailerFs();
+      });
+    }
+  } catch (e) { /* пусто */ }
+})();
+
+function openTrailer(m) {
+  if (!m) return;
+  window._challTrailerWatched = (window._challTrailerWatched || 0) + 1;
+  challDone('watch_trailer');
+  bumpWeekStat('trailers');
+  pushTrailerWatch(m.code);      // v74: в «Продолжить смотреть»
+  // v74: полка «Продолжить смотреть» обновляется сразу, если она видна
+  if (view === 'grid' || view === 'fav') {
+    const cs = document.getElementById('continue-shelf');
+    if (cs && !cs.classList.contains('hidden')) renderTrailerShelf();
+  }
+  if (!m.trailer_yt && !m.trailer_file_id) {
+    return;
+  }
+  haptic('light');
+  // Приоритет — YouTube: играем прямо в приложении на весь экран,
+  // ничего не сворачивая. Локальный файл в Telegram — только фолбэк,
+  // если у фильма нет YouTube-версии (тогда бот пришлёт видео в чат).
+  if (m.trailer_yt) {
+    const modal = document.getElementById('trailer-modal');
+    const frame = document.getElementById('trailer-frame');
+    const video = document.getElementById('trailer-video');
+    if (!modal || !frame || !video) return;
+    video.classList.add('hidden');
+    video.removeAttribute('src');
+    frame.classList.remove('hidden');
+    frame.src = 'https://www.youtube.com/embed/' + m.trailer_yt +
+                '?autoplay=1&rel=0&playsinline=1&fs=1';
+    modal.classList.remove('hidden');
+    startWatchSession(m.code);   // v109: считаем время просмотра
+    // v132: трейлер — единственное место, где нужен весь экран, поэтому просим
+    // полноэкранный режим мини-аппа сразу при открытии: на телефоне он убирает
+    // полуэкран Telegram и работает даже там, где браузерный fullscreen нельзя
+    // (iPhone). Если клиент не умеет — тихо остаёмся как были, а кнопка
+    // разворота предложит фолбэки.
+    enterAppFullscreen();
+    _syncTrailerFs();
+    return;
+  }
+  if (m.trailer_file_id) {
+    // Действие называется 'trailer_movie' — ровно как в маппинге sendOrDeepLink
+    // (раньше тут было 'trailer', маппинг не совпадал, и вместо видео уходил
+    // фолбэк ?start=afisha — трейлер «не открывался»).
+    sendOrDeepLink({ action: 'trailer_movie', code: m.code });
+  }
+}
+
+// v67: индикатор оффлайна — при потере сети показываем баннер,
+// данные остаются доступны из кэша Service Worker.
+(function () {
+  const nb = document.getElementById('net-banner');
+  if (!nb) return;
+  const update = () => nb.classList.toggle('hidden', navigator.onLine !== false);
+  window.addEventListener('offline', () => { update(); haptic('heavy'); });
+  window.addEventListener('online', update);
+  update();
+})();
+
+// v87: таб-бар «отрывается» от контента, когда прилип к верху —
+// скруглённый низ + тень, чтобы не выглядел обрезанным при скролле.
+(function () {
+  const bar = document.querySelector('.tabs');
+  window.__tabsDbg = { bar: !!bar, ran: 1, upds: 0 };
+  if (!bar) return;
+  let ticking = false;
+  const upd = () => {
+    ticking = false;
+    window.__tabsDbg.upds++;
+    const stuck = window.scrollY > 60 && bar.getBoundingClientRect().top <= 2;
+    document.body.classList.toggle('tabs-stuck', stuck);
+  };
+  window.addEventListener('scroll', () => {
+    // прямой вызов — rAF в части WebView не срабатывает, а вычисление дешёвое
+    upd();
+  }, { passive: true });
+})();
+
+function closeTrailer() {
+  _exitFs();
+  exitAppFullscreen();          // v132: вернуть мини-апп в обычный размер
+  endWatchSession();            // v109: фиксируем реальное время просмотра
+  const modal = document.getElementById('trailer-modal');
+  const frame = document.getElementById('trailer-frame');
+  const video = document.getElementById('trailer-video');
+  if (frame) frame.src = 'about:blank'; // останавливаем воспроизведение
+  if (video) { video.pause(); video.removeAttribute('src'); }
+  if (modal) modal.classList.add('hidden');
+}
+
+// Глобальные обработчики модалки (один раз, а не на каждый openDetail)
+(function initTrailerModal() {
+  const bg = document.getElementById('trailer-modal');
+  if (bg) bg.addEventListener('click', (e) => { if (e.target === bg) closeTrailer(); });
+  const closeBtn = document.getElementById('btn-trailer-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeTrailer);
+})();
+
+// ---------- видимый отчёт об ошибках (чтобы вместо «белого экрана» было видно, что сломалось) ----------
+window.addEventListener('error', (e) => {
+  try {
+    const el = document.getElementById('err-banner');
+    if (el) {
+      el.textContent = '⚠️ Ошибка приложения: ' + (e.message || 'неизвестная');
+      el.classList.remove('hidden');
+    }
+  } catch (_) {}
+});
+
+// ---------- ЗАПУСК (в самом конце файла: все объявления и обработчики готовы) ----------
+// Раньше enterApp() вызывался в начале файла, до объявления ALL/COLLS — из-за TDZ
+// гонки с fetch приложение открывалось пустым. Теперь запускаем, когда всё готово.
+// ---------- онбординг (показывается один раз) ----------
+const OB_KEY = 'kinoafisha_onboarded';
+function showOnboarding() {
+  if (localStorage.getItem(OB_KEY)) return;
+  const modal = document.getElementById('onboarding');
+  if (!modal) return;
+  let slide = 0;
+  const total = 4;
+  const slides = modal.querySelectorAll('.ob-slide');
+  const dots = modal.querySelectorAll('.ob-dot');
+  const nextBtn = document.getElementById('ob-next');
+  const skipBtn = document.getElementById('ob-skip');
+  const render = () => {
+    slides.forEach((s, i) => s.classList.toggle('active', i === slide));
+    dots.forEach((d, i) => d.classList.toggle('active', i === slide));
+    nextBtn.textContent = slide === total - 1 ? 'Начать!' : 'Далее';
+  };
+  const close = () => {
+    localStorage.setItem(OB_KEY, '1');
+    modal.classList.add('hidden');
+    haptic('light');
+  };
+  nextBtn.onclick = () => {
+    if (slide < total - 1) {
+      slide++;
+      render();
+      haptic('light');
+    } else {
+      close();
+    }
+  };
+  skipBtn.onclick = close;
+  render();
+  modal.classList.remove('hidden');
+}
+
+// v98: «Что нового» — показываем один раз на версию, только после входа в апп
+const CHANGELOG_V = '116';
+const CL_KEY = 'kinoafisha_seen_changelog';
+function showChangelog(force = false) {
+  // v101: force=true — открываем даже если уже видели («Ещё → Что нового»)
+  try { if (!force && localStorage.getItem(CL_KEY) === CHANGELOG_V) return; } catch (e) { return; }
+  const m = document.getElementById('changelog-modal');
+  if (!m) return;
+  m.classList.remove('hidden');
+  const done = () => {
+    m.classList.add('hidden');
+    try { localStorage.setItem(CL_KEY, CHANGELOG_V); } catch (e) { /* пусто */ }
+  };
+  const ok = document.getElementById('btn-cl-ok');
+  if (ok) ok.onclick = () => { haptic('light'); done(); };
+  const x = document.getElementById('btn-cl-close');
+  if (x) x.onclick = done;
+  m.addEventListener('click', (e) => { if (e.target === m) done(); });
+}
+
+// v106: закрытие модалки карточки-шеринга (крестик / клик по фону)
+(() => {
+  const m = document.getElementById('sharecard-modal');
+  if (!m) return;
+  const close = () => { m.classList.add('hidden'); };
+  const x = document.getElementById('btn-sharecard-close');
+  if (x) x.onclick = close;
+  m.addEventListener('click', (e) => { if (e.target === m) close(); });
+})();
+
+// v135: сторож запуска (inline-JS в index.html) читает этот флаг. Бандл доехал и
+// выполняется? Если флаг так и не появился — значит скрипт не выполнился вообще
+// (SyntaxError/404/офлайн), и вместо чёрного экрана надо показать сообщение.
+window.__kinoBooted = true;
+parseAccessHash();  // v96: подтверждение подписки (#access=1) — до решения гейт/вход
+if (localStorage.getItem(ACCESS_KEY) === '1') {
+  enterApp();
+  showOnboarding();
+  setTimeout(showChangelog, 900);  // v98: «Что нового» — раз на версию
+} else {
+  showGate();
+}
+
+// ---------- свайп вниз для закрытия модалок ----------
+// Универсальный жест: потянул модалку вниз — закрывается (кроме полноэкранного
+// трейлера и онбординга — там свой UX). Жест работает от области «шапки» модалки,
+// чтобы случайные свайпы по контенту не срабатывали.
+document.querySelectorAll('.modal:not(#trailer-modal):not(#onboarding)').forEach((modal, idx) => {
+  let startY = 0;
+  modal.addEventListener('touchstart', (e) => {
+    if (modal.classList.contains('hidden')) return;
+    const card = modal.querySelector('.modal-card, .onboarding-card, .kinogod-card');
+    if (!card) return;
+    const r = card.getBoundingClientRect();
+    // срабатываем только если жест начат в верхних 30% карточки
+    if (e.touches[0].clientY - r.top > r.height * 0.3) return;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  modal.addEventListener('touchmove', (e) => {
+    if (!startY || modal.classList.contains('hidden')) return;
+    const card = modal.querySelector('.modal-card, .onboarding-card, .kinogod-card');
+    if (!card) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 12) {
+      card.style.transition = 'transform .18s ease';
+      card.style.transform = `translateY(${Math.min(dy, 90)}px)`;
+      card.style.opacity = String(Math.max(0, 1 - dy / 220));
+    }
+  }, { passive: true });
+  modal.addEventListener('touchend', (e) => {
+    if (!startY || modal.classList.contains('hidden')) return;
+    const card = modal.querySelector('.modal-card, .onboarding-card, .kinogod-card');
+    const dy = card ? e.changedTouches[0].clientY - startY : 0;
+    startY = 0;
+    if (card) {
+      card.style.transition = 'transform .18s ease, opacity .18s ease';
+      if (dy > 70) {
+        card.style.transform = 'translateY(120%)';
+        card.style.opacity = '0';
+        setTimeout(() => {
+          modal.classList.add('hidden');
+          card.style.transform = '';
+          card.style.opacity = '';
+        }, 150);
+      } else {
+        card.style.transform = '';
+        card.style.opacity = '';
+      }
+    }
+  }, { passive: true });
+});
+
+// ---------- Service Worker: оффлайн + мгновенные повторные загрузки ----------
+// Регистрируем только на https (в Telegram webview и на GitHub Pages).
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
