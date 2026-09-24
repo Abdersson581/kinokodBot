@@ -45,73 +45,59 @@
   },
   {
    "rank": 9,
-   "unlocks": 0,
-   "total": 126
+   "unlocks": 1,
+   "total": 4
   },
   {
    "rank": 10,
-   "unlocks": 0,
-   "total": 14
+   "unlocks": 1,
+   "total": 2
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "Освобождение",
-    "Хатико: Самый верный друг",
-    "Костюм",
-    "Бездна"
-   ]
-  },
-  {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Дело храбрых",
-    "Давление",
+    "Побег из Шоушенка",
+    "Костюм",
     "Начало",
-    "Скрытые фигуры"
+    "Богемская рапсодия"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
+    "Меняющие реальность",
     "Побег из Шоушенка",
-    "Хитмен. Последнее дело",
-    "Начало",
-    "За пивом"
+    "Бездна",
+    "Остров проклятых"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Хатико: Самый верный друг",
+    "Богемская рапсодия",
+    "Бандит",
+    "Хитмен. Последнее дело"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
+    "Интерстеллар",
+    "Между нами горы",
     "Зеленая миля",
-    "Хатико: Самый верный друг",
-    "Проклятый путь",
-    "Не говори никому"
+    "Побег из Шоушенка"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Студия 20th Century экранизирует видеоигру \"99 ночей в лесу\"",
-   "link": "https://www.kinonews.ru/news_143224/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143224.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789754218.2012136
-  },
-  {
-   "title": "Аслан останется самцом с голосом Мэрил Стрип в \"Хрониках Нарнии\"",
-   "link": "https://www.kinonews.ru/news_143223/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143223.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789754229.9113886
-  },
   {
    "title": "Кейт Бекинсейл опубликовала загадочные посты в соцсетях",
    "link": "https://www.kinonews.ru/news_143253/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143313.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1790186416.3339717
+  },
+  {
+   "title": "В Беларуси начались съемки четвертого сезона сериала \"Казанова\"",
+   "link": "https://www.kinonews.ru/news_143325/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143325.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790272882.4932523
+  },
+  {
+   "title": "Илон Маск может стать инвестором Paramount и Warner Bros.",
+   "link": "https://www.kinonews.ru/news_143321/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143321.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790272895.8551095
   }
  ],
  "premieres": [
