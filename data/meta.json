@@ -1,31 +1,31 @@
 {
- "code_of_day": "485",
- "code_of_day_date": "2026-09-24",
- "updated_at": "2026-09-24",
+ "code_of_day": "466",
+ "code_of_day_date": "2026-09-25",
+ "updated_at": "2026-09-25",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 9,
+   "unlocks": 8,
    "total": 80
   },
   {
    "rank": 2,
-   "unlocks": 5,
-   "total": 17
-  },
-  {
-   "rank": 3,
-   "unlocks": 4,
-   "total": 7
-  },
-  {
-   "rank": 4,
    "unlocks": 4,
    "total": 4
   },
   {
-   "rank": 5,
+   "rank": 3,
    "unlocks": 3,
+   "total": 17
+  },
+  {
+   "rank": 4,
+   "unlocks": 3,
+   "total": 7
+  },
+  {
+   "rank": 5,
+   "unlocks": 2,
    "total": 3
   },
   {
@@ -41,59 +41,59 @@
   {
    "rank": 8,
    "unlocks": 1,
-   "total": 8
+   "total": 4
   },
   {
    "rank": 9,
    "unlocks": 1,
-   "total": 4
+   "total": 2
   },
   {
    "rank": 10,
-   "unlocks": 1,
-   "total": 2
+   "unlocks": 0,
+   "total": 126
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🪨🔨🌧️🎵",
-   "code": "461",
-   "options": [
-    "Побег из Шоушенка",
-    "Игры разума",
-    "Хатико: Самый верный друг",
-    "Между нами горы"
-   ]
-  },
-  {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Ветреная река",
-    "Начало",
-    "Всевидящее око",
-    "По соображениям совести"
-   ]
-  },
-  {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
-   "options": [
-    "Зеленая миля",
-    "Зодиак",
-    "Хитмен. Последнее дело",
-    "Враг государства"
+    "Между нами горы",
+    "Миссия Сиренити",
+    "Суррогаты",
+    "Начало"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Богемская рапсодия",
-    "Хатико: Самый верный друг",
-    "Опасная игра Слоун",
-    "Палмер"
+    "Того",
+    "Меняющие реальность",
+    "Два ствола",
+    "Хатико: Самый верный друг"
+   ]
+  },
+  {
+   "emoji": "🪨🔨🌧️🎵",
+   "code": "461",
+   "options": [
+    "Исходный код",
+    "Между нами горы",
+    "Побег из Шоушенка",
+    "Титаник"
+   ]
+  },
+  {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
+   "options": [
+    "Послезавтра",
+    "Ветреная река",
+    "Зеленая миля",
+    "Водный мир"
    ]
   }
  ],
@@ -171,76 +171,76 @@
  ],
  "premieres": [
   {
-   "title": "Девятая планета",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5426247.jpg",
-   "ru_date": "2026-09-24",
-   "film_id": 5426247
-  },
-  {
-   "title": "Вышка 2",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5610132.jpg",
-   "ru_date": "2026-09-24",
-   "film_id": 5610132
-  },
-  {
-   "title": "Романовы: преданность и предательство",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5426284.jpg",
-   "ru_date": "2026-09-24",
-   "film_id": 5426284
-  },
-  {
-   "title": "Дочь",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7939989.jpg",
-   "ru_date": "2026-09-24",
-   "film_id": 7939989
-  },
-  {
-   "title": "Джуманджи: Тёмный уровень",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11816563.jpg",
-   "ru_date": "2026-09-24",
-   "film_id": 11816563
-  },
-  {
-   "title": "Капитан Невельской и земли Чёрного дракона",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5396269.jpg",
-   "ru_date": "2026-09-24",
-   "film_id": 5396269
-  },
-  {
-   "title": "Девочки учатся бриться",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9018826.jpg",
-   "ru_date": "2026-09-24",
-   "film_id": 9018826
-  },
-  {
-   "title": "Флорист",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11440665.jpg",
-   "ru_date": "2026-09-24",
-   "film_id": 11440665
-  },
-  {
-   "title": "Твигги",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5212271.jpg",
-   "ru_date": "2026-09-24",
-   "film_id": 5212271
-  },
-  {
-   "title": "На деревню к дедушке. Супермиссия",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13514191.jpg",
-   "ru_date": "2026-09-24",
-   "film_id": 13514191
-  },
-  {
-   "title": "Italian Best Shorts 9. Крутые повороты",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9918438.jpg",
-   "ru_date": "2026-09-24",
-   "film_id": 9918438
-  },
-  {
    "title": "TheatreHD: Курентзис: Кармен",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13939771.jpg",
    "ru_date": "2026-09-25",
    "film_id": 13939771
+  },
+  {
+   "title": "Ваан: Душа леса",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14246389.jpg",
+   "ru_date": "2026-09-25",
+   "film_id": 14246389
+  },
+  {
+   "title": "Царевна Несмеяна",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8357994.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 8357994
+  },
+  {
+   "title": "Демон скорости",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7484325.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 7484325
+  },
+  {
+   "title": "Приключения мамонтенка. В поисках мамы",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11826673.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 11826673
+  },
+  {
+   "title": "Доктор Глас",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11434424.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 11434424
+  },
+  {
+   "title": "Особый пациент",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7722931.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 7722931
+  },
+  {
+   "title": "Без оглядки",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9817724.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 9817724
+  },
+  {
+   "title": "Арахнид",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6146248.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 6146248
+  },
+  {
+   "title": "Чарли и Харпер",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10187722.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 10187722
+  },
+  {
+   "title": "Добро пожаловать в Декорадо",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12251733.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 12251733
+  },
+  {
+   "title": "Мамин блюз",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8406417.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 8406417
   }
  ]
 }
