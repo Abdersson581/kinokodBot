@@ -1,12 +1,12 @@
 {
- "code_of_day": "466",
- "code_of_day_date": "2026-09-25",
- "updated_at": "2026-09-25",
+ "code_of_day": "461",
+ "code_of_day_date": "2026-09-26",
+ "updated_at": "2026-09-26",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 8,
-   "total": 80
+   "unlocks": 10,
+   "total": 82
   },
   {
    "rank": 2,
@@ -15,23 +15,23 @@
   },
   {
    "rank": 3,
-   "unlocks": 3,
-   "total": 17
+   "unlocks": 4,
+   "total": 4
   },
   {
    "rank": 4,
    "unlocks": 3,
-   "total": 7
+   "total": 17
   },
   {
    "rank": 5,
-   "unlocks": 2,
-   "total": 3
+   "unlocks": 3,
+   "total": 7
   },
   {
    "rank": 6,
-   "unlocks": 2,
-   "total": 3
+   "unlocks": 3,
+   "total": 4
   },
   {
    "rank": 7,
@@ -40,60 +40,60 @@
   },
   {
    "rank": 8,
-   "unlocks": 1,
-   "total": 4
+   "unlocks": 2,
+   "total": 3
   },
   {
    "rank": 9,
-   "unlocks": 1,
-   "total": 2
+   "unlocks": 2,
+   "total": 3
   },
   {
    "rank": 10,
-   "unlocks": 0,
-   "total": 126
+   "unlocks": 1,
+   "total": 127
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
    "options": [
-    "Между нами горы",
-    "Миссия Сиренити",
+    "Зеленая миля",
+    "Ангел-А",
     "Суррогаты",
-    "Начало"
+    "1+1"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Того",
-    "Меняющие реальность",
-    "Два ствола",
-    "Хатико: Самый верный друг"
+    "Бездна",
+    "Хатико: Самый верный друг",
+    "Зеленая книга",
+    "Исходный код"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "Начало",
+    "Суррогаты",
+    "Истина и измена",
+    "Зеленая книга"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Исходный код",
-    "Между нами горы",
     "Побег из Шоушенка",
-    "Титаник"
-   ]
-  },
-  {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
-   "options": [
-    "Послезавтра",
-    "Ветреная река",
-    "Зеленая миля",
-    "Водный мир"
+    "Бандит",
+    "Проклятый путь",
+    "Остров проклятых"
    ]
   }
  ],
@@ -171,18 +171,6 @@
  ],
  "premieres": [
   {
-   "title": "TheatreHD: Курентзис: Кармен",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13939771.jpg",
-   "ru_date": "2026-09-25",
-   "film_id": 13939771
-  },
-  {
-   "title": "Ваан: Душа леса",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14246389.jpg",
-   "ru_date": "2026-09-25",
-   "film_id": 14246389
-  },
-  {
    "title": "Царевна Несмеяна",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8357994.jpg",
    "ru_date": "2026-10-01",
@@ -241,6 +229,18 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8406417.jpg",
    "ru_date": "2026-10-01",
    "film_id": 8406417
+  },
+  {
+   "title": "Сделано в Милане: История Армани и итальянской моды",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12373657.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 12373657
+  },
+  {
+   "title": "Я стану капитаном",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13016985.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 13016985
   }
  ]
 }
