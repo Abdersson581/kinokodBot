@@ -5,13 +5,13 @@
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 10,
-   "total": 82
+   "unlocks": 11,
+   "total": 83
   },
   {
    "rank": 2,
    "unlocks": 4,
-   "total": 4
+   "total": 8
   },
   {
    "rank": 3,
@@ -20,13 +20,13 @@
   },
   {
    "rank": 4,
-   "unlocks": 3,
-   "total": 17
+   "unlocks": 4,
+   "total": 4
   },
   {
    "rank": 5,
    "unlocks": 3,
-   "total": 7
+   "total": 17
   },
   {
    "rank": 6,
@@ -35,7 +35,7 @@
   },
   {
    "rank": 7,
-   "unlocks": 2,
+   "unlocks": 3,
    "total": 3
   },
   {
@@ -50,68 +50,54 @@
   },
   {
    "rank": 10,
-   "unlocks": 1,
-   "total": 127
+   "unlocks": 2,
+   "total": 3
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
-   "options": [
-    "Зеленая миля",
-    "Ангел-А",
-    "Суррогаты",
-    "1+1"
-   ]
-  },
-  {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Бездна",
+    "Два ствола",
     "Хатико: Самый верный друг",
-    "Зеленая книга",
-    "Исходный код"
+    "Меч короля",
+    "Послезавтра"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
+    "Охотники за головами",
     "Начало",
-    "Суррогаты",
-    "Истина и измена",
-    "Зеленая книга"
+    "Эдди \"Орёл\"",
+    "Побег из Шоушенка"
+   ]
+  },
+  {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
+   "options": [
+    "Зеленая миля",
+    "Меч короля",
+    "О чем говорят незнакомцы",
+    "Два ствола"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
+    "Напоминание о нём",
+    "Первый день моей жизни",
     "Побег из Шоушенка",
-    "Бандит",
-    "Проклятый путь",
-    "Остров проклятых"
+    "Иллюзионист"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Кейт Бекинсейл опубликовала загадочные посты в соцсетях",
-   "link": "https://www.kinonews.ru/news_143253/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143253.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789924450.6974237
-  },
-  {
-   "title": "Сериал \"До гробовой доски\" закрыт после первого сезона",
-   "link": "https://www.kinonews.ru/news_143248/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143248.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1789924469.1938462
-  },
   {
    "title": "Режиссер Дункан Джонс объявил о конце эпохи авторского кино Netflix",
    "link": "https://www.kinonews.ru/news_143270/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143321.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1790272895.8551095
+  },
+  {
+   "title": "Джон Гудмен сыграет в третьем сезоне сериала \"Одни из нас\"",
+   "link": "https://www.kinonews.ru/news_143361/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143361.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790442787.995196
+  },
+  {
+   "title": "Леди Гага получила предложение сыграть мутанта в новых \"Людях Икс\"",
+   "link": "https://www.kinonews.ru/news_143360/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143360.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790442831.439542
   }
  ],
  "premieres": [
