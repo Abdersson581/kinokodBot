@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=138" />
+  <link rel="stylesheet" href="style.css?v=139" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -65,7 +65,13 @@
       <button class="tab" data-view="trailers"><span class="tab-ico">🎥</span> Трейлеры</button>
       <button class="tab" data-view="news"><span class="tab-ico">📰</span> Новости</button>
       <button class="tab tab-more" id="tab-more" aria-expanded="false" aria-controls="more-menu">Ещё <span class="more-arrow">▾</span></button>
-      <div id="more-menu" class="more-menu hidden">
+      <div id="sheet-backdrop" class="sheet-backdrop hidden"></div>
+      <div id="more-menu" class="more-menu hidden" role="dialog" aria-modal="true" aria-label="Все разделы">
+        <span class="sheet-grab" aria-hidden="true"></span>
+        <div class="sheet-head">
+          <span>Все разделы</span>
+          <button class="sheet-x" id="sheet-close" aria-label="Закрыть">✕</button>
+        </div>
         <button class="more-item" data-view="cols">📚 Подборки</button>
         <button class="more-item" data-view="top">🏆 Топ</button>
         <button class="more-item" data-view="achievements">🎖 Достижения</button>
@@ -109,6 +115,7 @@
         <div class="time-chips" id="time-chips"></div>
       </div>
       <div id="genre-chips" class="genre-chips hidden"></div>
+      <div id="filter-bar" class="filter-bar hidden"></div>
       <div id="country-chips" class="genre-chips hidden"></div>
       <div id="search-hist" class="search-hist hidden"></div>
       <div id="code-day-banner" class="code-day hidden"></div>
@@ -595,7 +602,7 @@
   })();
   </script>
 
-  <script src="script.js?v=138"></script>
+  <script src="script.js?v=139"></script>
 </body>
 </html>
 
