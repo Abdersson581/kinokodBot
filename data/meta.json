@@ -11,7 +11,7 @@
   {
    "rank": 2,
    "unlocks": 4,
-   "total": 4
+   "total": 10
   },
   {
    "rank": 3,
@@ -20,23 +20,23 @@
   },
   {
    "rank": 4,
-   "unlocks": 3,
+   "unlocks": 4,
    "total": 4
   },
   {
    "rank": 5,
    "unlocks": 3,
-   "total": 3
+   "total": 4
   },
   {
    "rank": 6,
-   "unlocks": 2,
-   "total": 17
+   "unlocks": 3,
+   "total": 3
   },
   {
    "rank": 7,
    "unlocks": 2,
-   "total": 8
+   "total": 17
   },
   {
    "rank": 8,
@@ -57,61 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "Джанго освобожденный",
-    "Война миров Z",
-    "Богемская рапсодия",
-    "Начало"
-   ]
-  },
-  {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
     "Хатико: Самый верный друг",
     "Борьба со льдом",
-    "Миссия Сиренити",
-    "История рыцаря"
+    "Освобождение",
+    "Люди в черном"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "Два ствола",
+    "В конце туннеля",
+    "Начало",
+    "Всевидящее око"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Ангел-А",
-    "Зеленая миля",
-    "Иллюзионист",
-    "Послезавтра"
+    "Гран Торино",
+    "По соображениям совести",
+    "Девушка и море",
+    "Зеленая миля"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Место встречи",
-    "Константин: Повелитель тьмы",
-    "Опасная игра Слоун",
-    "Побег из Шоушенка"
+    "Враг государства",
+    "История рыцаря",
+    "Побег из Шоушенка",
+    "Старый Генри"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Режиссер Дункан Джонс объявил о конце эпохи авторского кино Netflix",
-   "link": "https://www.kinonews.ru/news_143270/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143270.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790011725.5477252
-  },
-  {
-   "title": "Paramount договорилась со всеми штатами о поглощении Warner Bros.",
-   "link": "https://www.kinonews.ru/news_143267/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143267.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790011749.336507
-  },
   {
    "title": "Объявлена причина смерти актрисы Хайден Панеттьери",
    "link": "https://www.kinonews.ru/news_143295/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143360.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1790442831.439542
+  },
+  {
+   "title": "Роберт Эггерс представил трейлер фильма ужасов \"Оборотень\"",
+   "link": "https://www.kinonews.ru/news_143376/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143376.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790529584.8393002
+  },
+  {
+   "title": "Рецензия на фильм \"Донни Дарко\". Подростковый апокалипсис",
+   "link": "https://www.kinonews.ru/article_143373/",
+   "image": "https://www.kinonews.ru/insimgs/2026/artimg/big/artimg143373.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790529629.294512
   }
  ],
  "premieres": [
