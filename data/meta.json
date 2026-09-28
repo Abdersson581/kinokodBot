@@ -10,8 +10,8 @@
   },
   {
    "rank": 2,
-   "unlocks": 4,
-   "total": 4
+   "unlocks": 5,
+   "total": 6
   },
   {
    "rank": 3,
@@ -20,13 +20,13 @@
   },
   {
    "rank": 4,
-   "unlocks": 3,
-   "total": 10
+   "unlocks": 4,
+   "total": 4
   },
   {
    "rank": 5,
    "unlocks": 3,
-   "total": 4
+   "total": 10
   },
   {
    "rank": 6,
@@ -35,18 +35,18 @@
   },
   {
    "rank": 7,
-   "unlocks": 2,
-   "total": 128
+   "unlocks": 3,
+   "total": 3
   },
   {
    "rank": 8,
    "unlocks": 2,
-   "total": 17
+   "total": 128
   },
   {
    "rank": 9,
    "unlocks": 2,
-   "total": 3
+   "total": 17
   },
   {
    "rank": 10,
@@ -57,61 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
+   "emoji": "🪨🔨🌧️🎵",
+   "code": "461",
    "options": [
-    "Обливион",
-    "Ветреная река",
-    "Эдди \"Орёл\"",
-    "Зеленая миля"
-   ]
-  },
-  {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "Хатико: Самый верный друг",
-    "Давление",
-    "Дело храбрых",
-    "Слова"
+    "Водный мир",
+    "В конце туннеля",
+    "Того",
+    "Побег из Шоушенка"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Костюм",
-    "В конце туннеля",
-    "Скрытые фигуры",
+    "Проклятый путь",
+    "Суррогаты",
+    "Дом у озера",
     "Начало"
    ]
   },
   {
-   "emoji": "🪨🔨🌧️🎵",
-   "code": "461",
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
    "options": [
-    "Война миров Z",
-    "Тетрис",
+    "Игры разума",
+    "Зеленая миля",
     "Исходный код",
-    "Побег из Шоушенка"
+    "Артур, ты король"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Пароль \"Рыба-меч\"",
+    "Слова",
+    "Хатико: Самый верный друг",
+    "Спасти рядового Райана"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Объявлена причина смерти актрисы Хайден Панеттьери",
-   "link": "https://www.kinonews.ru/news_143295/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143295.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790098769.3041577
-  },
-  {
-   "title": "\"Сумерки\" вновь возглавили российский прокат",
-   "link": "https://www.kinonews.ru/news_143291/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143291.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790098775.0391974
-  },
   {
    "title": "Харви Вайнштейну дали еще 15 лет тюрьмы за сексуальное насилие",
    "link": "https://www.kinonews.ru/news_143315/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/artimg/big/artimg143373.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1790529629.294512
+  },
+  {
+   "title": "Режиссер \"Блэйда\" пролил свет на \"конвейер\" Marvel",
+   "link": "https://www.kinonews.ru/news_143384/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143384.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790616806.2892797
+  },
+  {
+   "title": "Участие Адама Драйвера в боевике \"Схватка 2\" подтверждено",
+   "link": "https://www.kinonews.ru/news_143383/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143383.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790616843.9587822
   }
  ],
  "premieres": [

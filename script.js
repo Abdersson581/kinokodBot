@@ -742,13 +742,13 @@ function haptic(kind = 'light') {
   } catch (e) { /* пусто */ }
 }
 
-// ---------- v124: телеметрия разделов ----------
+// ---------- v124/v126: телеметрия разделов и ошибок ----------
 // Отдельного канала «приложение → бот» нет: tg.sendData работает только при
 // запуске из reply-кнопки клавиатуры (и закрывает окно), а переход по разделам
 // не должен уводить в чат. Поэтому счётчики копятся локально и уезжают боту
-// вместе со следующим диплинком: ?start=kv1_<chunk>_<payload>.
-// Формат (буква раздела + счётчик в base36) разбирает miniapp_stats.py —
-// буквы обязаны совпадать с VIEW_NAMES там; совпадение проверяет
+// вместе со следующим диплинком: ?start=ke1_<ошибки>_<слаг>_kv1_<разделы>_<payload>.
+// Формат (буква + счётчик в base36) разбирает miniapp_stats.py — буквы обязаны
+// совпадать с VIEW_NAMES/ERROR_CODES там; совпадение проверяет
 // tests/test_miniapp_view_stats.py (round-trip «JS-чанк → счётчики бота»).
 const VIEW_STAT_CODES = {
   grid: 'a', fav: 'b', trailers: 'c', news: 'd', cols: 'e', top: 'f',
@@ -758,24 +758,38 @@ const VIEW_STAT_CODES = {
 const VIEW_STATS_KEY = 'kino_view_stats';
 const VIEW_STATS_PREFIX = 'kv1_';
 const VIEW_STAT_MAX = 35;   // 'z' в base36 — один символ на счётчик
+// v126: счётчик раздела упёрся в предел — клиент пишет служебную пару вида 'p1'.
+// Буква вне карты разделов (a-o), поэтому бот читает её не как ещё один раздел,
+// а как «цифры занижены»: раньше лишние переходы исчезали молча, и по заниженным
+// цифрам можно было сделать неверный вывод о популярности раздела.
+const VIEW_OVERFLOW_CODE = 'p';
 function bumpViewStat(name) {
   const code = VIEW_STAT_CODES[name];
   if (!code) return;
   try {
     const st = JSON.parse(localStorage.getItem(VIEW_STATS_KEY) || '{}') || {};
-    st[code] = Math.min(VIEW_STAT_MAX, (Number(st[code]) || 0) + 1);
+    const cur = Number(st[code]) || 0;
+    if (cur >= VIEW_STAT_MAX) {
+      st[VIEW_OVERFLOW_CODE] = Math.min(VIEW_STAT_MAX, (Number(st[VIEW_OVERFLOW_CODE]) || 0) + 1);
+    } else {
+      st[code] = cur + 1;
+    }
     localStorage.setItem(VIEW_STATS_KEY, JSON.stringify(st));
   } catch (e) { /* приватный режим / нет localStorage — просто без телеметрии */ }
 }
 function viewStatsChunk() {
   try {
     const st = JSON.parse(localStorage.getItem(VIEW_STATS_KEY) || '{}') || {};
-    return Object.keys(VIEW_STAT_CODES)
+    const overflow = Math.min(VIEW_STAT_MAX, Number(st[VIEW_OVERFLOW_CODE]) || 0);
+    const body = Object.keys(VIEW_STAT_CODES)
       .filter(n => Number(st[VIEW_STAT_CODES[n]]) > 0)
       .map(n => ({ c: VIEW_STAT_CODES[n], n: Math.min(VIEW_STAT_MAX, Number(st[VIEW_STAT_CODES[n]])) }))
       .sort((x, y) => y.n - x.n)   // самые «горячие» разделы выживают при обрезке
       .map(p => p.c + p.n.toString(36))
       .join('');
+    // Пара о переполнении идёт первой: при обрезке чанка она обязана выжить —
+    // иначе бот получит заниженные цифры и посчитает их полными.
+    return (overflow > 0 ? VIEW_OVERFLOW_CODE + overflow.toString(36) : '') + body;
   } catch (e) { return ''; }
 }
 function clearViewStats() {
@@ -789,6 +803,75 @@ function viewStatsPrefix(base) {
   const room = 64 - VIEW_STATS_PREFIX.length - 1 - String(base || '').length;
   const fits = room >= 2 ? chunk.slice(0, room - (room % 2)) : '';
   return fits ? VIEW_STATS_PREFIX + fits + '_' : '';
+}
+
+// ---------- v126: ошибки мини-аппа ----------
+// Ошибка, о которой никто не узнал, живёт до первой жалобы. Ловим пять классов
+// сбоя (js / promise / resource / view / data), копим агрегат и увозим боту тем
+// же диплинком, что и счётчики разделов. Текст ошибки превращаем в «слаг» из
+// [a-z0-9-]: в start-параметре Telegram других символов не бывает (64 символа),
+// а по слагу уже видно, что сломалось — «cannot-read-properties» читается без
+// расшифровки (буквы классов обязаны совпадать с ERROR_CODES в miniapp_stats.py).
+const ERROR_STATS_KEY = 'kino_error_stats';
+const ERROR_STATS_PREFIX = 'ke1_';
+const ERROR_STAT_CODES = { js: 'a', promise: 'b', resource: 'c', view: 'd', data: 'e' };
+const ERROR_SLUG_MAX = 32;   // столько же, сколько ERR_SLUG_MAX_LEN в miniapp_stats.py
+function errorStatSlug(raw) {
+  // Дефис, а не подчёркивание: подчёркивание — разделитель формата диплинка, и
+  // слаг с ним разорвал бы payload (то есть сломал бы кнопку у пользователя).
+  const s = String(raw || '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  if (s.length <= ERROR_SLUG_MAX) return s;
+  // Режем по границе слова: «cannot-read-properties» читается, а обрывок
+  // «cannot-read-propert» — уже нет (в start-параметре Telegram
+  // больше 64 символов всё равно не влезет, поэтому слаг экономит место).
+  const cut = s.slice(0, ERROR_SLUG_MAX);
+  const boundary = cut.lastIndexOf('-');
+  return boundary > 0 ? cut.slice(0, boundary) : cut;
+}
+function bumpErrorStat(kind, slug) {
+  const code = ERROR_STAT_CODES[kind];
+  if (!code) return;
+  try {
+    const st = JSON.parse(localStorage.getItem(ERROR_STATS_KEY) || '{}') || {};
+    st[code] = Math.min(VIEW_STAT_MAX, (Number(st[code]) || 0) + 1);
+    // Храним только последнюю ошибку: в отчёте нужен один пример, а не список
+    // всех — иначе слаги съедят весь бюджет 64 символов диплинка.
+    const s = errorStatSlug(slug);
+    if (s) st.slug = s;
+    localStorage.setItem(ERROR_STATS_KEY, JSON.stringify(st));
+  } catch (e) { /* без localStorage — просто без телеметрии */ }
+}
+function errorStatsChunk() {
+  try {
+    const st = JSON.parse(localStorage.getItem(ERROR_STATS_KEY) || '{}') || {};
+    return Object.keys(ERROR_STAT_CODES)
+      .filter(k => Number(st[ERROR_STAT_CODES[k]]) > 0)
+      .map(k => ERROR_STAT_CODES[k] + Math.min(VIEW_STAT_MAX, Number(st[ERROR_STAT_CODES[k]])).toString(36))
+      .join('');
+  } catch (e) { return ''; }
+}
+function errorStatsSlug() {
+  try {
+    const st = JSON.parse(localStorage.getItem(ERROR_STATS_KEY) || '{}') || {};
+    return errorStatSlug(st.slug);
+  } catch (e) { return ''; }
+}
+function clearErrorStats() {
+  try { localStorage.removeItem(ERROR_STATS_KEY); } catch (e) { /* пусто */ }
+}
+function errorStatsPrefix(base) {
+  // Формат бота жёсткий: `ke1_<чанк>_<слаг>_<payload>` — слаг пишется всегда
+  // (пустой — просто подчёркивание), иначе payload с его подчёркиваниями не
+  // отделить от служебной части. При нехватке места режем чанк, но слаг
+  // сохраняем целиком: именно он объясняет, что сломалось.
+  const chunk = errorStatsChunk();
+  if (!chunk) return '';
+  const slug = errorStatsSlug();
+  const room = 64 - ERROR_STATS_PREFIX.length - 1 - slug.length - 1 - String(base || '').length;
+  const fits = room >= 2 ? chunk.slice(0, room - (room % 2)) : '';
+  return fits ? ERROR_STATS_PREFIX + fits + '_' + slug + '_' : '';
 }
 
 // ---------- отправка действий боту ----------
@@ -815,7 +898,12 @@ function sendOrDeepLink(data) {
   else if (data.action === 'kinogod') start = 'kinogod';
   else if (data.action === 'toggle_optin') start = data.on ? 'optin_on' : 'optin_off';
   else if (data.action === 'set_theme') start = 'theme_' + data.theme;
-  // v124: счётчики открытых разделов уезжают боту вместе с этим же диплинком
+  // v124/v126: счётчики разделов и ошибок уезжают боту вместе с этим же диплинком.
+  // Порядок важен: ошибки пишутся СНАРУЖИ разделов (так их и разбирает бот), но
+  // место под них резервируется первым — иначе разделы съели бы весь бюджет
+  // 64 символов и слаг с ошибкой уже не влез бы.
+  const errPrefix = errorStatsPrefix(start);
+  if (errPrefix) start = errPrefix + start;
   const statsPrefix = viewStatsPrefix(start);
   if (statsPrefix) start = statsPrefix + start;
   haptic('light');
@@ -827,7 +915,10 @@ function sendOrDeepLink(data) {
   }
   // Данные уехали в диплинк — копить их дальше значит посчитать переход дважды
   // (телефон мог быть офлайн, но двойной счёт хуже потери одного перехода).
-  clearViewStats();
+  // Чистим только то, что действительно уехало: не поместившееся в лимит должно
+  // дождаться следующего перехода, иначе ошибка потерялась бы молча.
+  if (statsPrefix) clearViewStats();
+  if (errPrefix) clearErrorStats();
   // Сворачиваем мини-апп: пользователь сразу видит чат с ботом, куда придёт
   // трейлер/сообщение (иначе webview висит поверх и ответ бота не виден).
   // Небольшая задержка — дать openTelegramLink успеть начать переход.
@@ -1207,6 +1298,9 @@ async function loadMovies() {
     try { saved = localStorage.getItem(LAST_VIEW_KEY); } catch (e) {}
     if (saved && saved !== 'grid') openView(saved, { restore: true });
   } catch (e) {
+    // v126: сбой загрузки данных считаем всегда, даже когда показан кэш: «видишь
+    // старое вместо свежего» — та же поломка, а по отчёту видно её частоту.
+    bumpErrorStat('data', (e && e.message) || 'movies_load');
     if (ALL.length) return; // уже показан кэш — не пугаем ошибкой
     document.getElementById('movies-container').innerHTML =
       '<div class="error-box"><p class="error">Не удалось загрузить афишу 😔</p>' +
@@ -5555,20 +5649,28 @@ function openView(v, opts) {
   // раздела при запуске приложения — не переход (opts.restore), иначе «Афиша»
   // вырастет от каждого открытия приложения.
   if (!(opts && opts.restore)) bumpViewStat(v);
-  if (v === 'game') { showView('game'); renderGameMenu(); }
-  else if (v === 'cols') { showView('cols'); renderCols(); }
-  else if (v === 'news') { showView('news'); renderNews(); }
-  else if (v === 'top') { showView('top'); renderLeaderboard(); }
-  else if (v === 'profile') { showView('profile'); renderProfile(); }
-  else if (v === 'trailers') { showView('trailers'); renderTrailerGenreChips(); renderTrailers(); }
-  else if (v === 'achievements') { showView('achievements'); renderAchievements(); }
-  else if (v === 'chain') { showView('chain'); renderChain(); }
-  else if (v === 'marathon') { showView('marathon'); renderMarathonView(); }
-  else if (v === 'year') { showView('year'); renderYear(); }
-  else if (v === 'tinder') { showView('tinder'); renderTinder(); }
-  else if (v === 'mycols') { showView('mycols'); renderMyCols(); }   // v106: свои подборки
-  else if (v === 'mycol-detail') { showView('mycol-detail'); renderMyColDetail(); }
-  else { showView('catalog'); renderGrid(); }  // grid | fav
+  // v126: падение рендера раздела — самая тихая поломка: пользователь видит
+  // пустой экран и уходит, а мы узнаём об этом только из жалобы. Сбой считаем и
+  // показываем в той же плашке, что и прочие ошибки приложения.
+  try {
+    if (v === 'game') { showView('game'); renderGameMenu(); }
+    else if (v === 'cols') { showView('cols'); renderCols(); }
+    else if (v === 'news') { showView('news'); renderNews(); }
+    else if (v === 'top') { showView('top'); renderLeaderboard(); }
+    else if (v === 'profile') { showView('profile'); renderProfile(); }
+    else if (v === 'trailers') { showView('trailers'); renderTrailerGenreChips(); renderTrailers(); }
+    else if (v === 'achievements') { showView('achievements'); renderAchievements(); }
+    else if (v === 'chain') { showView('chain'); renderChain(); }
+    else if (v === 'marathon') { showView('marathon'); renderMarathonView(); }
+    else if (v === 'year') { showView('year'); renderYear(); }
+    else if (v === 'tinder') { showView('tinder'); renderTinder(); }
+    else if (v === 'mycols') { showView('mycols'); renderMyCols(); }   // v106: свои подборки
+    else if (v === 'mycol-detail') { showView('mycol-detail'); renderMyColDetail(); }
+    else { showView('catalog'); renderGrid(); }  // grid | fav
+  } catch (e) {
+    bumpErrorStat('view', v);
+    showErrorBanner('Раздел «' + v + '» не открылся: ' + ((e && e.message) || 'неизвестная ошибка'));
+  }
   // v124: раздел открывается на своём прежнем месте (первый вход — наверх)
   restoreScroll(v);
 }
@@ -6427,13 +6529,36 @@ function closeTrailer() {
 })();
 
 // ---------- видимый отчёт об ошибках (чтобы вместо «белого экрана» было видно, что сломалось) ----------
-window.addEventListener('error', (e) => {
+function showErrorBanner(text) {
   try {
     const el = document.getElementById('err-banner');
     if (el) {
-      el.textContent = '⚠️ Ошибка приложения: ' + (e.message || 'неизвестная');
+      el.textContent = '⚠️ ' + text;
       el.classList.remove('hidden');
     }
+  } catch (_) {}
+}
+window.addEventListener('error', (e) => {
+  // v126: ошибку не только показываем, но и увозим боту (errorStatsPrefix) —
+  // о поломке у подписчиков узнаём из отчёта, а не из первой жалобы.
+  try {
+    const t = e && e.target;
+    if (t && t !== window) {
+      // Картинки/шрифты не считаем: они не мешают приложению и срываются
+      // постоянно (то же правило, что у inline-сторожа в index.html).
+      if (t.tagName === 'SCRIPT') bumpErrorStat('resource', 'script_load');
+    } else {
+      bumpErrorStat('js', e && e.message);
+    }
+  } catch (_) {}
+  showErrorBanner('Ошибка приложения: ' + ((e && e.message) || 'неизвестная'));
+});
+// Сорванный промис (например, не доехал fetch) до window.onerror не доходит —
+// исключение живёт внутри промиса, и в отчёте такие поломки были не видны вовсе.
+window.addEventListener('unhandledrejection', (e) => {
+  try {
+    const r = e && e.reason;
+    bumpErrorStat('promise', (r && r.message) || r || 'promise');
   } catch (_) {}
 });
 
