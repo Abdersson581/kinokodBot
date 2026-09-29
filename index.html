@@ -499,6 +499,10 @@
     var UPDATE_MS = 12000;      // когда после запуска проверяем новую сборку
     var UPDATE_THROTTLE = 6 * 3600 * 1000;
     var UPDATE_KEY = 'kinoafisha_update_check';
+    // v127: ссылка «сообщить боту» о неоткрывшемся приложении. Формат разбирает
+    // miniapp_stats.py и проверяет tests/test_miniapp_bootstrap_guard.py: класс
+    // f = «сбой запуска», слаг boot-failed, payload — BOOT_FAIL_ARGS бота.
+    var BOOT_REPORT_URL = 'https://t.me/kapitan_kino_bot?start=ke2_f1_boot-failed__boot_failed';
 
     function booted() {
       if (window.__kinoBooted) return true;
@@ -507,7 +511,7 @@
       return !!((app && !app.classList.contains('hidden')) ||
                 (gate && !gate.classList.contains('hidden')));
     }
-    function card(id, text, withReload) {
+    function card(id, text, withReload, withReport) {
       if (document.getElementById(id)) return;   // такой уже висит — не дублируем
       var box = document.createElement('div');
       box.id = id;
@@ -531,12 +535,27 @@
         btn.addEventListener('click', function () { location.reload(); });
         box.appendChild(btn);
       }
+      // v127: бандл не выполнился — своей телеметрии у приложения в этот момент
+      // нет вообще, поэтому сигнал отправляет сторож: одна ссылка в чат с ботом,
+      // где /start примет метку сбоя запуска (ke2_f1_boot-failed). Так о «чёрном
+      // экране» узнаём от первого же человека, а не из суточной проверки.
+      if (withReport) {
+        var rep = document.createElement('a');
+        rep.setAttribute('id', 'boot-fail-report');
+        rep.setAttribute('href', BOOT_REPORT_URL);
+        rep.setAttribute('style',
+          'display:block;margin-top:8px;text-align:center;text-decoration:none;' +
+          'padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.35);' +
+          'color:#f2f2f7;font-weight:600;font-size:14px');
+        rep.textContent = '📣 Сообщить боту';
+        box.appendChild(rep);
+      }
       (document.body || document.documentElement).appendChild(box);
     }
     // «Приложение не открылось» — только если оно действительно не поднялось.
-    function banner(text, withReload) {
+    function banner(text, withReload, withReport) {
       if (booted()) return;
-      card('boot-fail', text, withReload);
+      card('boot-fail', text, withReload, withReport);
     }
     // «Вышло обновление» — наоборот, только когда приложение РАБОТАЕТ.
     function notice(text) {
@@ -552,14 +571,15 @@
     window.addEventListener('error', function (e) {
       var t = e && e.target;
       if (t && t !== window && t.tagName !== 'SCRIPT') return;
-      banner('⚠️ Не удалось загрузить приложение. Проверь соединение и попробуй ещё раз.', true);
+      banner('⚠️ Не удалось загрузить приложение. Проверь соединение и попробуй ещё раз.',
+             true, true);
     }, true);
     window.addEventListener('unhandledrejection', function () {
-      if (!booted()) banner('⚠️ Не удалось загрузить приложение.', true);
+      if (!booted()) banner('⚠️ Не удалось загрузить приложение.', true, true);
     });
     // Бандл так и не запустился (10 с) — молчать нельзя: это и был «чёрный экран».
     setTimeout(function () {
-      banner('⚠️ Приложение не открылось. Обнови страницу.', true);
+      banner('⚠️ Приложение не открылось. Обнови страницу.', true, true);
     }, BOOT_MS);
     // Поздний запуск (медленная сеть) — убираем сообщение, приложение важнее.
     var watch = setInterval(function () {

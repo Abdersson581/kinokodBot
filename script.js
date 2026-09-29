@@ -8,6 +8,7 @@ const ACCESS_KEY = 'kinoafisha_access';
 const CHANNEL_URL = 'https://t.me/capitanKino1';
 
 function showGate() {
+  markSessionOpen();   // v127: заход в приложение считаем и у ворот подписки
   document.getElementById('gate').classList.remove('hidden');
   document.getElementById('app').classList.add('hidden');
   document.getElementById('btn-gate-channel').onclick = () => tg.openTelegramLink(CHANNEL_URL);
@@ -16,6 +17,7 @@ function showGate() {
 }
 function enterApp() {
   localStorage.setItem(ACCESS_KEY, '1');
+  markSessionOpen();   // v127: заход в приложение (новый, если прошёл >30 мин)
   document.getElementById('gate').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
   parseProfileHash();  // до parseUnlockedHash: тот очищает location.hash
@@ -742,7 +744,7 @@ function haptic(kind = 'light') {
   } catch (e) { /* пусто */ }
 }
 
-// ---------- v124/v126: телеметрия разделов и ошибок ----------
+// ---------- v124–v127: телеметрия разделов, заходов и ошибок ----------
 // Отдельного канала «приложение → бот» нет: tg.sendData работает только при
 // запуске из reply-кнопки клавиатуры (и закрывает окно), а переход по разделам
 // не должен уводить в чат. Поэтому счётчики копятся локально и уезжают боту
@@ -757,6 +759,12 @@ const VIEW_STAT_CODES = {
 };
 const VIEW_STATS_KEY = 'kino_view_stats';
 const VIEW_STATS_PREFIX = 'kv1_';
+// v127: заходы в приложение. Каждое открытие боту не отправить (канала нет),
+// поэтому приложение помечает ПЕРВЫЙ переход в бота за сессию: по этой метке бот
+// считает людей, а не события, и не путает «заход» с «ещё один тап».
+const SESSION_STATS_KEY = 'kino_session_stats';
+const SESSION_PREFIX = 'ks1_';
+const SESSION_OPEN_CODE = 'q';   // a-o — разделы, 'p' — упор в предел, 'q' — заход
 const VIEW_STAT_MAX = 35;   // 'z' в base36 — один символ на счётчик
 // v126: счётчик раздела упёрся в предел — клиент пишет служебную пару вида 'p1'.
 // Буква вне карты разделов (a-o), поэтому бот читает её не как ещё один раздел,
@@ -805,16 +813,50 @@ function viewStatsPrefix(base) {
   return fits ? VIEW_STATS_PREFIX + fits + '_' : '';
 }
 
-// ---------- v126: ошибки мини-аппа ----------
-// Ошибка, о которой никто не узнал, живёт до первой жалобы. Ловим пять классов
-// сбоя (js / promise / resource / view / data), копим агрегат и увозим боту тем
-// же диплинком, что и счётчики разделов. Текст ошибки превращаем в «слаг» из
+// ---------- v127: заходы в приложение ----------
+// Своего канала к боту у приложения нет, поэтому «заход» отмечается флагом в
+// localStorage и уезжает вместе с первым переходом в бота за сессию. Дальше бот
+// считает ЛЮДЕЙ (уникальных), а не переходы: без метки десять тапов одного
+// человека выглядели бы как десять заходов.
+const SESSION_LAST_KEY = 'kino_session_last';
+const SESSION_GAP_MS = 30 * 60 * 1000;   // пауза, после которой это уже новый заход
+function markSessionOpen() {
+  try {
+    const now = Date.now();
+    const last = Number(localStorage.getItem(SESSION_LAST_KEY) || 0);
+    localStorage.setItem(SESSION_LAST_KEY, String(now));
+    // Свернули и вернулись в течение получаса — тот же заход; закрыли и открыли
+    // позже — новый. Так метка не двоит заходы, но и не теряет возвращения.
+    if (!last || now - last > SESSION_GAP_MS) localStorage.setItem(SESSION_STATS_KEY, '1');
+  } catch (e) { /* без localStorage метку отправить нечем — просто без заходов */ }
+}
+function sessionStatsChunk() {
+  try { return localStorage.getItem(SESSION_STATS_KEY) ? SESSION_OPEN_CODE + '1' : ''; }
+  catch (e) { return ''; }
+}
+function clearSessionStats() {
+  try { localStorage.removeItem(SESSION_STATS_KEY); } catch (e) { /* пусто */ }
+}
+function sessionStatsPrefix(base) {
+  // Метка «захода» — две пары символов ('q1'), при любой полезной части влезает:
+  // если места нет совсем, ссылку не портим, а метка подождёт следующего перехода.
+  const chunk = sessionStatsChunk();
+  if (!chunk) return '';
+  const room = 64 - SESSION_PREFIX.length - 1 - String(base || '').length;
+  return room >= chunk.length ? SESSION_PREFIX + chunk + '_' : '';
+}
+
+// ---------- v126/v127: ошибки мини-аппа ----------
+// Ошибка, о которой никто не узнал, живёт до первой жалобы. Ловим шесть классов
+// сбоя (js / promise / resource / view / data / boot), копим агрегат и увозим боту
+// тем же диплинком, что и счётчики разделов. Текст ошибки превращаем в «слаг» из
 // [a-z0-9-]: в start-параметре Telegram других символов не бывает (64 символа),
 // а по слагу уже видно, что сломалось — «cannot-read-properties» читается без
 // расшифровки (буквы классов обязаны совпадать с ERROR_CODES в miniapp_stats.py).
 const ERROR_STATS_KEY = 'kino_error_stats';
-const ERROR_STATS_PREFIX = 'ke1_';
-const ERROR_STAT_CODES = { js: 'a', promise: 'b', resource: 'c', view: 'd', data: 'e' };
+const ERROR_STATS_PREFIX = 'ke2_';   // два слага: первая ошибка сессии и последняя
+const ERROR_STAT_CODES = { js: 'a', promise: 'b', resource: 'c', view: 'd', data: 'e',
+                           boot: 'f' };
 const ERROR_SLUG_MAX = 32;   // столько же, сколько ERR_SLUG_MAX_LEN в miniapp_stats.py
 function errorStatSlug(raw) {
   // Дефис, а не подчёркивание: подчёркивание — разделитель формата диплинка, и
@@ -822,11 +864,15 @@ function errorStatSlug(raw) {
   const s = String(raw || '').toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-  if (s.length <= ERROR_SLUG_MAX) return s;
+  return cutSlug(s, ERROR_SLUG_MAX);
+}
+function cutSlug(s, max) {
+  if (!max || max <= 0) return '';
+  if (s.length <= max) return s;
   // Режем по границе слова: «cannot-read-properties» читается, а обрывок
-  // «cannot-read-propert» — уже нет (в start-параметре Telegram
-  // больше 64 символов всё равно не влезет, поэтому слаг экономит место).
-  const cut = s.slice(0, ERROR_SLUG_MAX);
+  // «cannot-read-propert» — уже нет (в start-параметре Telegram больше 64
+  // символов всё равно не влезет, поэтому слаг экономит место).
+  const cut = s.slice(0, max);
   const boundary = cut.lastIndexOf('-');
   return boundary > 0 ? cut.slice(0, boundary) : cut;
 }
@@ -836,10 +882,13 @@ function bumpErrorStat(kind, slug) {
   try {
     const st = JSON.parse(localStorage.getItem(ERROR_STATS_KEY) || '{}') || {};
     st[code] = Math.min(VIEW_STAT_MAX, (Number(st[code]) || 0) + 1);
-    // Храним только последнюю ошибку: в отчёте нужен один пример, а не список
-    // всех — иначе слаги съедят весь бюджет 64 символов диплинка.
     const s = errorStatSlug(slug);
-    if (s) st.slug = s;
+    if (s) {
+      // Первую ошибку сессии не перезаписываем: она чаще и есть причина, тогда
+      // как последняя нередко следствие. Обе уезжают боту отдельными сегментами.
+      if (!st.slug0) st.slug0 = s;
+      st.slug = s;
+    }
     localStorage.setItem(ERROR_STATS_KEY, JSON.stringify(st));
   } catch (e) { /* без localStorage — просто без телеметрии */ }
 }
@@ -852,26 +901,44 @@ function errorStatsChunk() {
       .join('');
   } catch (e) { return ''; }
 }
+function errorStatsSlugs() {
+  try {
+    const st = JSON.parse(localStorage.getItem(ERROR_STATS_KEY) || '{}') || {};
+    const first = errorStatSlug(st.slug0);
+    const last = errorStatSlug(st.slug);
+    return { first, last: last === first ? '' : last };
+  } catch (e) { return { first: '', last: '' }; }
+}
 function errorStatsSlug() {
   try {
     const st = JSON.parse(localStorage.getItem(ERROR_STATS_KEY) || '{}') || {};
-    return errorStatSlug(st.slug);
+    return errorStatSlug(st.slug || st.slug0);
   } catch (e) { return ''; }
 }
 function clearErrorStats() {
   try { localStorage.removeItem(ERROR_STATS_KEY); } catch (e) { /* пусто */ }
 }
 function errorStatsPrefix(base) {
-  // Формат бота жёсткий: `ke1_<чанк>_<слаг>_<payload>` — слаг пишется всегда
-  // (пустой — просто подчёркивание), иначе payload с его подчёркиваниями не
-  // отделить от служебной части. При нехватке места режем чанк, но слаг
-  // сохраняем целиком: именно он объясняет, что сломалось.
+  // Формат бота жёсткий: `ke2_<чанк>_<первая>_<последняя>_<payload>`. Сегменты
+  // слагов пишутся всегда (пустые — просто подчёркивания): при фиксированной
+  // арности payload со своими подчёркиваниями не спутать со служебной частью.
   const chunk = errorStatsChunk();
   if (!chunk) return '';
-  const slug = errorStatsSlug();
-  const room = 64 - ERROR_STATS_PREFIX.length - 1 - slug.length - 1 - String(base || '').length;
-  const fits = room >= 2 ? chunk.slice(0, room - (room % 2)) : '';
-  return fits ? ERROR_STATS_PREFIX + fits + '_' + slug + '_' : '';
+  const slugs = errorStatsSlugs();
+  // Бюджет: 64 минус 'ke2_', три разделителя и payload. Слаги важнее чанка (тот
+  // всё равно уезжает счётчиками), но их пара может не влезть — тогда режем
+  // последнюю ошибку, а первую (причину) сохраняем целиком.
+  const budget = 64 - ERROR_STATS_PREFIX.length - 3 - String(base || '').length;
+  if (budget < 2) return '';
+  const first = cutSlug(slugs.first, ERROR_SLUG_MAX);
+  let last = cutSlug(slugs.last, ERROR_SLUG_MAX);
+  while (last && first.length + last.length > budget) {
+    last = cutSlug(last, last.length - 4);
+  }
+  if (first.length + last.length > budget) return '';   // даже причины не влезло
+  const room = budget - first.length - last.length;
+  const fits = chunk.slice(0, room - (room % 2));
+  return ERROR_STATS_PREFIX + fits + '_' + first + '_' + last + '_';
 }
 
 // ---------- отправка действий боту ----------
@@ -898,10 +965,13 @@ function sendOrDeepLink(data) {
   else if (data.action === 'kinogod') start = 'kinogod';
   else if (data.action === 'toggle_optin') start = data.on ? 'optin_on' : 'optin_off';
   else if (data.action === 'set_theme') start = 'theme_' + data.theme;
-  // v124/v126: счётчики разделов и ошибок уезжают боту вместе с этим же диплинком.
-  // Порядок важен: ошибки пишутся СНАРУЖИ разделов (так их и разбирает бот), но
-  // место под них резервируется первым — иначе разделы съели бы весь бюджет
-  // 64 символов и слаг с ошибкой уже не влез бы.
+  // v124–v127: служебные блоки уезжают боту вместе с этим же диплинком. Порядок —
+  // по важности: снаружи метка захода (по ней считаются люди), затем ошибки,
+  // ближе к payload — счётчики разделов. Каждый блок считает место с учётом уже
+  // добавленного, поэтому при нехватке 64 символов теряются менее важные метки,
+  // а сама ссылка и действие остаются рабочими.
+  const sessPrefix = sessionStatsPrefix(start);
+  if (sessPrefix) start = sessPrefix + start;
   const errPrefix = errorStatsPrefix(start);
   if (errPrefix) start = errPrefix + start;
   const statsPrefix = viewStatsPrefix(start);
@@ -916,9 +986,10 @@ function sendOrDeepLink(data) {
   // Данные уехали в диплинк — копить их дальше значит посчитать переход дважды
   // (телефон мог быть офлайн, но двойной счёт хуже потери одного перехода).
   // Чистим только то, что действительно уехало: не поместившееся в лимит должно
-  // дождаться следующего перехода, иначе ошибка потерялась бы молча.
+  // дождаться следующего перехода, иначе метка потерялась бы молча.
   if (statsPrefix) clearViewStats();
   if (errPrefix) clearErrorStats();
+  if (sessPrefix) clearSessionStats();
   // Сворачиваем мини-апп: пользователь сразу видит чат с ботом, куда придёт
   // трейлер/сообщение (иначе webview висит поверх и ответ бота не виден).
   // Небольшая задержка — дать openTelegramLink успеть начать переход.
