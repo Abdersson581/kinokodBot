@@ -57,61 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "Хатико: Самый верный друг",
-    "О чем говорят незнакомцы",
-    "Суррогаты",
-    "Гран Торино"
-   ]
-  },
-  {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Уличный кот по кличке Боб",
-    "Опасная игра Слоун",
-    "Человек божий",
-    "Начало"
+    "Проклятый путь",
+    "Начало",
+    "Побег из Шоушенка",
+    "Эдди \"Орёл\""
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Война миров Z",
-    "Эдди \"Орёл\"",
-    "Побег из Шоушенка",
-    "Зодиак"
+    "Суррогаты",
+    "Начало",
+    "История рыцаря",
+    "Побег из Шоушенка"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Зеленая миля",
-    "Ночная сова",
-    "Исходный код",
-    "Палмер"
+    "Всевидящее око",
+    "Зодиак",
+    "Скрытые фигуры",
+    "Зеленая миля"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Спасти рядового Райана",
+    "Хатико: Самый верный друг",
+    "Зодиак",
+    "Константин: Повелитель тьмы"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Харви Вайнштейну дали еще 15 лет тюрьмы за сексуальное насилие",
-   "link": "https://www.kinonews.ru/news_143315/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143315.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790186365.342629
-  },
-  {
-   "title": "Создатель \"Рататуя\" представил трейлер нового проекта - \"Рэй Ганн\"",
-   "link": "https://www.kinonews.ru/news_143313/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143313.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790186416.3339717
-  },
   {
    "title": "В Беларуси начались съемки четвертого сезона сериала \"Казанова\"",
    "link": "https://www.kinonews.ru/news_143325/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143383.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1790616843.9587822
+  },
+  {
+   "title": "Глава BBC рассказал о сгенерированном ИИ эпизоде \"Доктора Кто\"",
+   "link": "https://www.kinonews.ru/news_143397/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143397.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790703427.202779
+  },
+  {
+   "title": "Режиссеры фильма \"Мстители: Судный день\" пообещали Халка",
+   "link": "https://www.kinonews.ru/news_143396/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143396.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790703432.4258816
   }
  ],
  "premieres": [
