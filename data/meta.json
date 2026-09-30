@@ -57,61 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
-   "options": [
-    "Зеленая миля",
-    "Расплата",
-    "История рыцаря",
-    "Два ствола"
-   ]
-  },
-  {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "Меняющие реальность",
-    "Титаник",
-    "Хатико: Самый верный друг",
-    "Дело храбрых"
-   ]
-  },
-  {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
+    "Обливион",
+    "1+1",
     "Побег из Шоушенка",
-    "пассажиры",
-    "Хитмен. Последнее дело",
-    "История рыцаря"
+    "Бездна"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "В конце туннеля",
-    "«Также известный» (AKA, 2023)",
+    "Старый Генри",
+    "Игры разума",
     "Начало",
-    "Человек божий"
+    "Опасная игра Слоун"
+   ]
+  },
+  {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
+   "options": [
+    "Зеленая миля",
+    "История рыцаря",
+    "Побег из Шоушенка",
+    "Звук свободы"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Хатико: Самый верный друг",
+    "Два ствола",
+    "Остров проклятых",
+    "Давление"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "В Беларуси начались съемки четвертого сезона сериала \"Казанова\"",
-   "link": "https://www.kinonews.ru/news_143325/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143325.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790272882.4932523
-  },
-  {
-   "title": "Илон Маск может стать инвестором Paramount и Warner Bros.",
-   "link": "https://www.kinonews.ru/news_143321/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143321.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790272895.8551095
-  },
   {
    "title": "Джон Гудмен сыграет в третьем сезоне сериала \"Одни из нас\"",
    "link": "https://www.kinonews.ru/news_143361/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143396.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1790703432.4258816
+  },
+  {
+   "title": "Арнольд Шварценеггер стал Сантой в трейлере \"Человек с мешком\"",
+   "link": "https://www.kinonews.ru/news_143416/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143416.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790789891.9281225
+  },
+  {
+   "title": "Появились первые отзывы на фильм М. Найт Шьямалана \"Остаток\"",
+   "link": "https://www.kinonews.ru/news_143413/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143413.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790789904.1288843
   }
  ],
  "premieres": [
