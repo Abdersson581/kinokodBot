@@ -1,17 +1,17 @@
 {
- "code_of_day": "448",
- "code_of_day_date": "2026-09-29",
- "updated_at": "2026-09-29",
+ "code_of_day": "455",
+ "code_of_day_date": "2026-09-30",
+ "updated_at": "2026-09-30",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 6,
-   "total": 83
+   "unlocks": 5,
+   "total": 6
   },
   {
    "rank": 2,
-   "unlocks": 5,
-   "total": 6
+   "unlocks": 4,
+   "total": 83
   },
   {
    "rank": 3,
@@ -21,12 +21,12 @@
   {
    "rank": 4,
    "unlocks": 3,
-   "total": 10
+   "total": 18
   },
   {
    "rank": 5,
    "unlocks": 3,
-   "total": 3
+   "total": 10
   },
   {
    "rank": 6,
@@ -41,7 +41,7 @@
   {
    "rank": 8,
    "unlocks": 2,
-   "total": 17
+   "total": 3
   },
   {
    "rank": 9,
@@ -57,43 +57,43 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "Начало",
-    "Суррогаты",
-    "Зеленая миля",
-    "Зеленая книга"
-   ]
-  },
-  {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
     "Зеленая миля",
-    "Дело храбрых",
-    "На цепи",
-    "Хатико: Самый верный друг"
-   ]
-  },
-  {
-   "emoji": "🪨🔨🌧️🎵",
-   "code": "461",
-   "options": [
-    "Палмер",
-    "На цепи",
-    "Опасная игра Слоун",
-    "Побег из Шоушенка"
+    "Расплата",
+    "История рыцаря",
+    "Два ствола"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Артур, ты король",
-    "Освобождение",
-    "Проклятый путь",
-    "Хатико: Самый верный друг"
+    "Меняющие реальность",
+    "Титаник",
+    "Хатико: Самый верный друг",
+    "Дело храбрых"
+   ]
+  },
+  {
+   "emoji": "🪨🔨🌧️🎵",
+   "code": "461",
+   "options": [
+    "Побег из Шоушенка",
+    "пассажиры",
+    "Хитмен. Последнее дело",
+    "История рыцаря"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "В конце туннеля",
+    "«Также известный» (AKA, 2023)",
+    "Начало",
+    "Человек божий"
    ]
   }
  ],
@@ -201,16 +201,16 @@
    "film_id": 7722931
   },
   {
-   "title": "Без оглядки",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9817724.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 9817724
-  },
-  {
    "title": "Арахнид",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6146248.jpg",
    "ru_date": "2026-10-01",
    "film_id": 6146248
+  },
+  {
+   "title": "Без оглядки",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9817724.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 9817724
   },
   {
    "title": "Чарли и Харпер",
