@@ -1,7 +1,7 @@
 {
- "code_of_day": "455",
- "code_of_day_date": "2026-09-30",
- "updated_at": "2026-09-30",
+ "code_of_day": "450",
+ "code_of_day_date": "2026-10-01",
+ "updated_at": "2026-10-01",
  "leaderboard": [
   {
    "rank": 1,
@@ -11,32 +11,32 @@
   {
    "rank": 2,
    "unlocks": 4,
-   "total": 83
+   "total": 4
   },
   {
    "rank": 3,
-   "unlocks": 4,
-   "total": 4
+   "unlocks": 3,
+   "total": 83
   },
   {
    "rank": 4,
    "unlocks": 3,
-   "total": 18
+   "total": 10
   },
   {
    "rank": 5,
    "unlocks": 3,
-   "total": 10
+   "total": 3
   },
   {
    "rank": 6,
-   "unlocks": 3,
-   "total": 3
+   "unlocks": 2,
+   "total": 128
   },
   {
    "rank": 7,
    "unlocks": 2,
-   "total": 128
+   "total": 3
   },
   {
    "rank": 8,
@@ -45,13 +45,13 @@
   },
   {
    "rank": 9,
-   "unlocks": 2,
-   "total": 3
+   "unlocks": 1,
+   "total": 18
   },
   {
    "rank": 10,
-   "unlocks": 2,
-   "total": 3
+   "unlocks": 1,
+   "total": 7
   }
  ],
  "leaderboard_kind": "week",
@@ -60,40 +60,40 @@
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Истина и измена",
+    "Ангел-А",
     "Хатико: Самый верный друг",
-    "Палмер",
-    "Борьба со льдом"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "пассажиры",
-    "Бездна",
-    "Начало",
-    "Ветреная река"
-   ]
-  },
-  {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
-   "options": [
-    "Крушение",
-    "Старый Генри",
-    "Давление",
-    "Зеленая миля"
+    "Спасти рядового Райана",
+    "Легенда Багера Ванса"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Палмер",
-    "Тетрис",
+    "Ветреная река",
+    "1+1",
     "Побег из Шоушенка",
-    "Того"
+    "Дом у озера"
+   ]
+  },
+  {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
+   "options": [
+    "Ветреная река",
+    "Проклятый путь",
+    "Зеленая миля",
+    "Истина и измена"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "Давление",
+    "Начало",
+    "В конце туннеля",
+    "Напоминание о нём"
    ]
   }
  ],
@@ -167,80 +167,6 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143413.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1790789904.1288843
-  }
- ],
- "premieres": [
-  {
-   "title": "Царевна Несмеяна",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8357994.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 8357994
-  },
-  {
-   "title": "Демон скорости",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7484325.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 7484325
-  },
-  {
-   "title": "Приключения мамонтенка. В поисках мамы",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11826673.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 11826673
-  },
-  {
-   "title": "Доктор Глас",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11434424.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 11434424
-  },
-  {
-   "title": "Особый пациент",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7722931.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 7722931
-  },
-  {
-   "title": "Арахнид",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6146248.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 6146248
-  },
-  {
-   "title": "Без оглядки",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9817724.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 9817724
-  },
-  {
-   "title": "Чарли и Харпер",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10187722.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 10187722
-  },
-  {
-   "title": "Добро пожаловать в Декорадо",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12251733.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 12251733
-  },
-  {
-   "title": "Мамин блюз",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8406417.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 8406417
-  },
-  {
-   "title": "Сделано в Милане: История Армани и итальянской моды",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12373657.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 12373657
-  },
-  {
-   "title": "Я стану капитаном",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13016985.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 13016985
   }
  ]
 }
