@@ -57,61 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "1+1",
+    "Начало",
+    "Место встречи",
+    "Меняющие реальность"
+   ]
+  },
+  {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Ангел-А",
-    "Хатико: Самый верный друг",
-    "Спасти рядового Райана",
-    "Легенда Багера Ванса"
+    "Борьба со льдом",
+    "За пивом",
+    "Освобождение",
+    "Хатико: Самый верный друг"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Ветреная река",
-    "1+1",
-    "Побег из Шоушенка",
-    "Дом у озера"
+    "Послезавтра",
+    "Два ствола",
+    "Скрытые фигуры",
+    "Побег из Шоушенка"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Ветреная река",
-    "Проклятый путь",
     "Зеленая миля",
-    "Истина и измена"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "Давление",
-    "Начало",
-    "В конце туннеля",
-    "Напоминание о нём"
+    "Девушка и море",
+    "Пароль \"Рыба-меч\"",
+    "Меняющие реальность"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Джон Гудмен сыграет в третьем сезоне сериала \"Одни из нас\"",
-   "link": "https://www.kinonews.ru/news_143361/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143361.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790442787.995196
-  },
-  {
-   "title": "Леди Гага получила предложение сыграть мутанта в новых \"Людях Икс\"",
-   "link": "https://www.kinonews.ru/news_143360/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143360.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790442831.439542
-  },
   {
    "title": "Роберт Эггерс представил трейлер фильма ужасов \"Оборотень\"",
    "link": "https://www.kinonews.ru/news_143376/",
@@ -167,6 +153,94 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143413.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1790789904.1288843
+  },
+  {
+   "title": "Сериалы первой половины октября 2026: даты выхода новинок",
+   "link": "https://www.kinonews.ru/article_143428/",
+   "image": "https://www.kinonews.ru/insimgs/2026/artimg/big/artimg143428.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790876342.0101423
+  },
+  {
+   "title": "Джим Керри женился в третий раз",
+   "link": "https://www.kinonews.ru/news_143435/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143435.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790876365.192113
+  }
+ ],
+ "premieres": [
+  {
+   "title": "Царевна Несмеяна",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8357994.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 8357994
+  },
+  {
+   "title": "Приключения мамонтенка. В поисках мамы",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11826673.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 11826673
+  },
+  {
+   "title": "Демон скорости",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7484325.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 7484325
+  },
+  {
+   "title": "Арахнид",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6146248.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 6146248
+  },
+  {
+   "title": "Доктор Глас",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11434424.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 11434424
+  },
+  {
+   "title": "Особый пациент",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7722931.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 7722931
+  },
+  {
+   "title": "Без оглядки",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9817724.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 9817724
+  },
+  {
+   "title": "Чарли и Харпер",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10187722.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 10187722
+  },
+  {
+   "title": "Добро пожаловать в Декорадо",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12251733.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 12251733
+  },
+  {
+   "title": "Мамин блюз",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8406417.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 8406417
+  },
+  {
+   "title": "Я стану капитаном",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13016985.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 13016985
+  },
+  {
+   "title": "Сделано в Милане: История Армани и итальянской моды",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12373657.jpg",
+   "ru_date": "2026-10-01",
+   "film_id": 12373657
   }
  ]
 }
