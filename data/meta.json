@@ -57,61 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "Начало",
-    "Напоминание о нём",
-    "Давление",
-    "Крушение"
-   ]
-  },
-  {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Обливион",
-    "Побег из Шоушенка",
-    "Игры разума",
-    "Хатико: Самый верный друг"
-   ]
-  },
-  {
-   "emoji": "🪨🔨🌧️🎵",
-   "code": "461",
-   "options": [
-    "Исходный код",
-    "Проклятый путь",
-    "Побег из Шоушенка",
-    "Ночная сова"
+    "Напоминание о нём",
+    "Хатико: Самый верный друг",
+    "Остров проклятых",
+    "Начало"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Игры разума",
-    "Меч короля",
-    "Палмер",
-    "Зеленая миля"
+    "Титаник",
+    "Грань будущего",
+    "Зеленая миля",
+    "Война миров Z"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "Начало",
+    "пассажиры",
+    "«Также известный» (AKA, 2023)",
+    "Дом у озера"
+   ]
+  },
+  {
+   "emoji": "🪨🔨🌧️🎵",
+   "code": "461",
+   "options": [
+    "Хатико: Самый верный друг",
+    "Побег из Шоушенка",
+    "Зеленая книга",
+    "пассажиры"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Роберт Эггерс представил трейлер фильма ужасов \"Оборотень\"",
-   "link": "https://www.kinonews.ru/news_143376/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143376.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790529584.8393002
-  },
-  {
-   "title": "Рецензия на фильм \"Донни Дарко\". Подростковый апокалипсис",
-   "link": "https://www.kinonews.ru/article_143373/",
-   "image": "https://www.kinonews.ru/insimgs/2026/artimg/big/artimg143373.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790529629.294512
-  },
   {
    "title": "Режиссер \"Блэйда\" пролил свет на \"конвейер\" Marvel",
    "link": "https://www.kinonews.ru/news_143384/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143435.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1790876365.192113
+  },
+  {
+   "title": "Сериал \"Наблюдатель\" с Наоми Уоттс продлен на второй сезон",
+   "link": "https://www.kinonews.ru/news_143469/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143469.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790962897.2044315
+  },
+  {
+   "title": "Глава Netflix объяснил уход всех создателей \"Очень странных дел\"",
+   "link": "https://www.kinonews.ru/news_143468/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143468.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1790962918.0664651
   }
  ],
  "premieres": [
