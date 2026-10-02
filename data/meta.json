@@ -1,7 +1,7 @@
 {
- "code_of_day": "450",
- "code_of_day_date": "2026-10-01",
- "updated_at": "2026-10-01",
+ "code_of_day": "454",
+ "code_of_day_date": "2026-10-02",
+ "updated_at": "2026-10-02",
  "leaderboard": [
   {
    "rank": 1,
@@ -40,60 +40,60 @@
   },
   {
    "rank": 8,
-   "unlocks": 2,
-   "total": 3
-  },
-  {
-   "rank": 9,
    "unlocks": 1,
    "total": 18
   },
   {
-   "rank": 10,
+   "rank": 9,
    "unlocks": 1,
    "total": 7
+  },
+  {
+   "rank": 10,
+   "unlocks": 1,
+   "total": 3
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🪨🔨🌧️🎵",
-   "code": "461",
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
    "options": [
-    "Грань будущего",
-    "Побег из Шоушенка",
-    "Зеленая миля",
-    "Место встречи"
-   ]
-  },
-  {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
-   "options": [
-    "Ветреная река",
-    "Джанго освобожденный",
-    "Хитмен. Последнее дело",
-    "Зеленая миля"
+    "Начало",
+    "Напоминание о нём",
+    "Давление",
+    "Крушение"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Зодиак",
-    "Начало",
-    "Бандит",
+    "Обливион",
+    "Побег из Шоушенка",
+    "Игры разума",
     "Хатико: Самый верный друг"
    ]
   },
   {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
+   "emoji": "🪨🔨🌧️🎵",
+   "code": "461",
    "options": [
-    "Крушение",
-    "Не говори никому",
-    "Старый Генри",
-    "Начало"
+    "Исходный код",
+    "Проклятый путь",
+    "Побег из Шоушенка",
+    "Ночная сова"
+   ]
+  },
+  {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
+   "options": [
+    "Игры разума",
+    "Меч короля",
+    "Палмер",
+    "Зеленая миля"
    ]
   }
  ],
@@ -171,76 +171,76 @@
  ],
  "premieres": [
   {
-   "title": "Царевна Несмеяна",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8357994.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 8357994
+   "title": "Мульт в кино. Выпуск №200. Весёлый листопад",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14274589.jpg",
+   "ru_date": "2026-10-03",
+   "film_id": 14274589
   },
   {
-   "title": "Приключения мамонтенка. В поисках мамы",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11826673.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 11826673
+   "title": "TheatreHD: Венская опера: Иоланта",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13741122.jpg",
+   "ru_date": "2026-10-03",
+   "film_id": 13741122
   },
   {
-   "title": "Демон скорости",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7484325.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 7484325
+   "title": "Сумерки. Сага. Новолуние",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/420224.jpg",
+   "ru_date": "2026-10-08",
+   "film_id": 420224
   },
   {
-   "title": "Арахнид",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6146248.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 6146248
+   "title": "Битва моторов",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5505674.jpg",
+   "ru_date": "2026-10-08",
+   "film_id": 5505674
   },
   {
-   "title": "Доктор Глас",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11434424.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 11434424
+   "title": "Это всё она!",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/4661328.jpg",
+   "ru_date": "2026-10-08",
+   "film_id": 4661328
   },
   {
-   "title": "Особый пациент",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7722931.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 7722931
+   "title": "Всё закончится",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10443078.jpg",
+   "ru_date": "2026-10-08",
+   "film_id": 10443078
   },
   {
-   "title": "Без оглядки",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9817724.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 9817724
+   "title": "Барашек в ящике",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9239415.jpg",
+   "ru_date": "2026-10-08",
+   "film_id": 9239415
   },
   {
-   "title": "Чарли и Харпер",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10187722.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 10187722
+   "title": "Спарта 2. Гоплиты",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5444471.jpg",
+   "ru_date": "2026-10-08",
+   "film_id": 5444471
   },
   {
-   "title": "Добро пожаловать в Декорадо",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12251733.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 12251733
+   "title": "Над вечным покоем",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9161859.jpg",
+   "ru_date": "2026-10-08",
+   "film_id": 9161859
   },
   {
-   "title": "Мамин блюз",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8406417.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 8406417
+   "title": "Ассистент в морге",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10261131.jpg",
+   "ru_date": "2026-10-08",
+   "film_id": 10261131
   },
   {
-   "title": "Я стану капитаном",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13016985.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 13016985
+   "title": "Я приду",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6327824.jpg",
+   "ru_date": "2026-10-08",
+   "film_id": 6327824
   },
   {
-   "title": "Сделано в Милане: История Армани и итальянской моды",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12373657.jpg",
-   "ru_date": "2026-10-01",
-   "film_id": 12373657
+   "title": "Волшебное перо",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12854647.jpg",
+   "ru_date": "2026-10-08",
+   "film_id": 12854647
   }
  ]
 }
