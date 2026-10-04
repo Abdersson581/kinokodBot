@@ -1,117 +1,103 @@
 {
- "code_of_day": "432",
- "code_of_day_date": "2026-10-03",
- "updated_at": "2026-10-03",
+ "code_of_day": "455",
+ "code_of_day_date": "2026-10-04",
+ "updated_at": "2026-10-04",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 3,
-   "total": 10
+   "unlocks": 4,
+   "total": 131
   },
   {
    "rank": 2,
    "unlocks": 2,
-   "total": 129
+   "total": 19
   },
   {
    "rank": 3,
    "unlocks": 2,
-   "total": 6
+   "total": 10
   },
   {
    "rank": 4,
    "unlocks": 2,
-   "total": 3
+   "total": 6
   },
   {
    "rank": 5,
-   "unlocks": 1,
-   "total": 83
+   "unlocks": 2,
+   "total": 3
   },
   {
    "rank": 6,
    "unlocks": 1,
-   "total": 18
+   "total": 7
   },
   {
    "rank": 7,
    "unlocks": 1,
-   "total": 7
+   "total": 3
   },
   {
    "rank": 8,
-   "unlocks": 1,
-   "total": 3
+   "unlocks": 0,
+   "total": 83
   },
   {
    "rank": 9,
-   "unlocks": 1,
-   "total": 3
+   "unlocks": 0,
+   "total": 14
   },
   {
    "rank": 10,
    "unlocks": 0,
-   "total": 14
+   "total": 12
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
    "options": [
-    "Начало",
-    "Меч короля",
-    "Легенда Багера Ванса",
-    "Ночная смена"
+    "Не говори никому",
+    "Хатико: Самый верный друг",
+    "Суррогаты",
+    "Хитмен. Последнее дело"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Опасная игра Слоун",
-    "Хитмен. Последнее дело",
-    "Ночная смена",
-    "Побег из Шоушенка"
+    "Побег из Шоушенка",
+    "Костюм",
+    "Меняющие реальность",
+    "Последний самурай"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
+    "Богемская рапсодия",
+    "Между нами горы",
     "Зеленая миля",
-    "Дом у озера",
-    "Хатико: Самый верный друг",
-    "Бандит"
+    "Звук свободы"
    ]
   },
   {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
    "options": [
-    "За пивом",
-    "Хатико: Самый верный друг",
-    "Интерстеллар",
-    "О чем говорят незнакомцы"
+    "Игры разума",
+    "Ночная смена",
+    "Опасная игра Слоун",
+    "Начало"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Режиссер \"Блэйда\" пролил свет на \"конвейер\" Marvel",
-   "link": "https://www.kinonews.ru/news_143384/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143384.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790616806.2892797
-  },
-  {
-   "title": "Участие Адама Драйвера в боевике \"Схватка 2\" подтверждено",
-   "link": "https://www.kinonews.ru/news_143383/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143383.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790616843.9587822
-  },
   {
    "title": "Глава BBC рассказал о сгенерированном ИИ эпизоде \"Доктора Кто\"",
    "link": "https://www.kinonews.ru/news_143397/",
@@ -167,21 +153,23 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143468.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1790962918.0664651
+  },
+  {
+   "title": "Завершились съемки фильма \"Сумерки мертвецов\" с Кейт Бекинсейл",
+   "link": "https://www.kinonews.ru/news_143481/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143481.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1791049711.0489304
+  },
+  {
+   "title": "\"Диггер\" стартует с худшим результатом для Тома Круза",
+   "link": "https://www.kinonews.ru/news_143480/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143480.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1791049750.5519536
   }
  ],
  "premieres": [
-  {
-   "title": "Мульт в кино. Выпуск №200. Весёлый листопад",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14274589.jpg",
-   "ru_date": "2026-10-03",
-   "film_id": 14274589
-  },
-  {
-   "title": "TheatreHD: Венская опера: Иоланта",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13741122.jpg",
-   "ru_date": "2026-10-03",
-   "film_id": 13741122
-  },
   {
    "title": "Сумерки. Сага. Новолуние",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/420224.jpg",
@@ -241,6 +229,18 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12854647.jpg",
    "ru_date": "2026-10-08",
    "film_id": 12854647
+  },
+  {
+   "title": "Астрал. Шёпот призрака",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8476698.jpg",
+   "ru_date": "2026-10-08",
+   "film_id": 8476698
+  },
+  {
+   "title": "Барбоскины. 15 лет вместе",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13954214.jpg",
+   "ru_date": "2026-10-08",
+   "film_id": 13954214
   }
  ]
 }
