@@ -57,61 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🪨🔨🌧️🎵",
-   "code": "461",
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
    "options": [
-    "О чем говорят незнакомцы",
-    "Побег из Шоушенка",
     "Зеленая миля",
-    "Человек божий"
-   ]
-  },
-  {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "Звук свободы",
-    "Хатико: Самый верный друг",
-    "Меч короля",
-    "Всевидящее око"
+    "Интерстеллар",
+    "Люди в черном",
+    "Два ствола"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Враг государства",
     "Начало",
-    "Богемская рапсодия",
-    "Напоминание о нём"
+    "Хатико: Самый верный друг",
+    "Эдди \"Орёл\"",
+    "История рыцаря"
    ]
   },
   {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
    "options": [
+    "Ночная сова",
+    "В конце туннеля",
     "Зеленая миля",
-    "Меняющие реальность",
-    "Титаник",
-    "Давление"
+    "Хатико: Самый верный друг"
+   ]
+  },
+  {
+   "emoji": "🪨🔨🌧️🎵",
+   "code": "461",
+   "options": [
+    "Побег из Шоушенка",
+    "Иллюзионист",
+    "Девушка и море",
+    "Всевидящее око"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Глава BBC рассказал о сгенерированном ИИ эпизоде \"Доктора Кто\"",
-   "link": "https://www.kinonews.ru/news_143397/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143397.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790703427.202779
-  },
-  {
-   "title": "Режиссеры фильма \"Мстители: Судный день\" пообещали Халка",
-   "link": "https://www.kinonews.ru/news_143396/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143396.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790703432.4258816
-  },
   {
    "title": "Арнольд Шварценеггер стал Сантой в трейлере \"Человек с мешком\"",
    "link": "https://www.kinonews.ru/news_143416/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143480.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1791049750.5519536
+  },
+  {
+   "title": "Сарик Андреасян представил трейлер фильма \"Война и мир\"",
+   "link": "https://www.kinonews.ru/news_143501/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143501.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1791220684.0149994
+  },
+  {
+   "title": "Джеймс Ганн уже пишет сценарий к своему следующему фильму",
+   "link": "https://www.kinonews.ru/news_143491/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143491.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1791220703.2562728
   }
  ],
  "premieres": [
