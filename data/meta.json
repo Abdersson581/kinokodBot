@@ -57,61 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "Спасти рядового Райана",
+    "Начало",
+    "Война миров Z",
+    "Давление"
+   ]
+  },
+  {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Враг государства",
-    "Люди в черном",
     "Хатико: Самый верный друг",
-    "Зодиак"
+    "Остров проклятых",
+    "Последний самурай",
+    "Проклятый путь"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Последний самурай",
-    "Дело храбрых",
     "Зеленая миля",
-    "Первый день моей жизни"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "Начало",
-    "пассажиры",
-    "1+1",
-    "Богемская рапсодия"
+    "Слова",
+    "Послезавтра",
+    "Костюм"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Первый день моей жизни",
-    "Меняющие реальность",
-    "Побег из Шоушенка",
-    "За пивом"
+    "Звук свободы",
+    "Девушка и море",
+    "Константин: Повелитель тьмы",
+    "Побег из Шоушенка"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Сериалы первой половины октября 2026: даты выхода новинок",
-   "link": "https://www.kinonews.ru/article_143428/",
-   "image": "https://www.kinonews.ru/insimgs/2026/artimg/big/artimg143428.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790876342.0101423
-  },
-  {
-   "title": "Джим Керри женился в третий раз",
-   "link": "https://www.kinonews.ru/news_143435/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143435.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790876365.192113
-  },
   {
    "title": "Сериал \"Наблюдатель\" с Наоми Уоттс продлен на второй сезон",
    "link": "https://www.kinonews.ru/news_143469/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143514.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1791308477.4488084
+  },
+  {
+   "title": "Человек-паук стал самым кассовым героем в истории кино",
+   "link": "https://www.kinonews.ru/news_143538/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143538.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1791394907.0854242
+  },
+  {
+   "title": "Юру Борисова назвали главным претендентом на \"Оскар 2027\"",
+   "link": "https://www.kinonews.ru/news_143537/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143537.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1791394921.2897794
   }
  ],
  "premieres": [
