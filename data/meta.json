@@ -15,103 +15,89 @@
   },
   {
    "rank": 3,
-   "unlocks": 1,
-   "total": 19
+   "unlocks": 2,
+   "total": 20
   },
   {
    "rank": 4,
+   "unlocks": 2,
+   "total": 6
+  },
+  {
+   "rank": 5,
+   "unlocks": 1,
+   "total": 84
+  },
+  {
+   "rank": 6,
    "unlocks": 1,
    "total": 3
   },
   {
-   "rank": 5,
-   "unlocks": 0,
-   "total": 83
-  },
-  {
-   "rank": 6,
+   "rank": 7,
    "unlocks": 0,
    "total": 14
   },
   {
-   "rank": 7,
+   "rank": 8,
    "unlocks": 0,
    "total": 12
   },
   {
-   "rank": 8,
+   "rank": 9,
    "unlocks": 0,
    "total": 10
   },
   {
-   "rank": 9,
-   "unlocks": 0,
-   "total": 8
-  },
-  {
    "rank": 10,
    "unlocks": 0,
-   "total": 7
+   "total": 8
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "Миссия Сиренити",
-    "Титаник",
-    "Хатико: Самый верный друг",
-    "Расплата"
-   ]
-  },
-  {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Звук свободы",
     "Зеленая миля",
-    "Титаник",
-    "Джанго освобожденный"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "Водный мир",
-    "Страсти Христовы",
-    "Расплата",
-    "Начало"
+    "Ночная сова",
+    "Хатико: Самый верный друг",
+    "О чем говорят незнакомцы"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Зеленая миля",
+    "Титаник",
+    "Давление",
     "Побег из Шоушенка",
-    "В конце туннеля",
-    "Ночная смена"
+    "Богемская рапсодия"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Хатико: Самый верный друг",
+    "Страсти Христовы",
+    "Охотники за головами",
+    "Зодиак"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "Начало",
+    "пассажиры",
+    "Зодиак",
+    "Война миров Z"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Сериал \"Наблюдатель\" с Наоми Уоттс продлен на второй сезон",
-   "link": "https://www.kinonews.ru/news_143469/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143469.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790962897.2044315
-  },
-  {
-   "title": "Глава Netflix объяснил уход всех создателей \"Очень странных дел\"",
-   "link": "https://www.kinonews.ru/news_143468/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143468.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1790962918.0664651
-  },
   {
    "title": "Завершились съемки фильма \"Сумерки мертвецов\" с Кейт Бекинсейл",
    "link": "https://www.kinonews.ru/news_143481/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143537.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1791394921.2897794
+  },
+  {
+   "title": "Альфонсо Куарон снимет фильм ужасов",
+   "link": "https://www.kinonews.ru/news_143549/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143549.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1791481423.109637
+  },
+  {
+   "title": "НТВ снимает продолжение военной драмы \"Солдат по кличке Рекс\"",
+   "link": "https://www.kinonews.ru/news_143548/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143548.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1791481458.4128013
   }
  ],
  "premieres": [
