@@ -1,12 +1,12 @@
 {
- "code_of_day": "448",
- "code_of_day_date": "2026-10-08",
- "updated_at": "2026-10-08",
+ "code_of_day": "438",
+ "code_of_day_date": "2026-10-09",
+ "updated_at": "2026-10-09",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 7,
-   "total": 7
+   "unlocks": 19,
+   "total": 19
   },
   {
    "rank": 2,
@@ -60,40 +60,40 @@
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Побег из Шоушенка",
-    "Суррогаты",
-    "Артур, ты король",
-    "За пивом"
+    "Страсти Христовы",
+    "Расплата",
+    "Титаник",
+    "Побег из Шоушенка"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Джанго освобожденный",
+    "Освобождение",
+    "Остров проклятых",
     "Начало",
-    "Грань будущего",
-    "пассажиры"
+    "Грань будущего"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Два ствола",
+    "Крушение",
+    "Меч короля",
     "Зеленая миля",
-    "Между нами горы",
-    "Бездна"
+    "Страсти Христовы"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Грань будущего",
-    "Люди в черном",
-    "пассажиры",
-    "Хатико: Самый верный друг"
+    "Волк с Уолл-стрит",
+    "Девушка и море",
+    "Хатико: Самый верный друг",
+    "Того"
    ]
   }
  ],
@@ -171,76 +171,76 @@
  ],
  "premieres": [
   {
-   "title": "Сумерки. Сага. Новолуние",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/420224.jpg",
-   "ru_date": "2026-10-08",
-   "film_id": 420224
+   "title": "TheatreHD: Ноймайер: Призрачный свет",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14131570.jpg",
+   "ru_date": "2026-10-11",
+   "film_id": 14131570
   },
   {
-   "title": "Битва моторов",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5505674.jpg",
-   "ru_date": "2026-10-08",
-   "film_id": 5505674
+   "title": "TheatreHD: Гамлет | Коллаж",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/1236106.jpg",
+   "ru_date": "2026-10-14",
+   "film_id": 1236106
   },
   {
-   "title": "Это всё она!",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/4661328.jpg",
-   "ru_date": "2026-10-08",
-   "film_id": 4661328
+   "title": "Изгои",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/2001.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 2001
   },
   {
-   "title": "Всё закончится",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10443078.jpg",
-   "ru_date": "2026-10-08",
-   "film_id": 10443078
+   "title": "До последнего грамма",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/1330494.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 1330494
   },
   {
-   "title": "Барашек в ящике",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9239415.jpg",
-   "ru_date": "2026-10-08",
-   "film_id": 9239415
+   "title": "Руки Вверх! 2",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12455426.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 12455426
   },
   {
-   "title": "Спарта 2. Гоплиты",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5444471.jpg",
-   "ru_date": "2026-10-08",
-   "film_id": 5444471
+   "title": "Любовь моя",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11893236.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 11893236
   },
   {
-   "title": "Над вечным покоем",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9161859.jpg",
-   "ru_date": "2026-10-08",
-   "film_id": 9161859
+   "title": "Непристойное предложение",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10833279.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 10833279
   },
   {
-   "title": "Ассистент в морге",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10261131.jpg",
-   "ru_date": "2026-10-08",
-   "film_id": 10261131
+   "title": "Красный экран",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9321315.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 9321315
   },
   {
-   "title": "Я приду",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6327824.jpg",
-   "ru_date": "2026-10-08",
-   "film_id": 6327824
+   "title": "Вкускилл",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11398966.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 11398966
   },
   {
-   "title": "Волшебное перо",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12854647.jpg",
-   "ru_date": "2026-10-08",
-   "film_id": 12854647
+   "title": "Подводная братва. На страже рифа",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10167857.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 10167857
   },
   {
-   "title": "Астрал. Шёпот призрака",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8476698.jpg",
-   "ru_date": "2026-10-08",
-   "film_id": 8476698
+   "title": "Синтетика",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10434163.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 10434163
   },
   {
-   "title": "Барбоскины. 15 лет вместе",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13954214.jpg",
-   "ru_date": "2026-10-08",
-   "film_id": 13954214
+   "title": "О чём говорят любовники",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11881697.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 11881697
   }
  ]
 }
