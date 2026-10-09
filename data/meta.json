@@ -10,18 +10,18 @@
   },
   {
    "rank": 2,
+   "unlocks": 6,
+   "total": 10
+  },
+  {
+   "rank": 3,
    "unlocks": 3,
    "total": 131
   },
   {
-   "rank": 3,
-   "unlocks": 2,
-   "total": 20
-  },
-  {
    "rank": 4,
    "unlocks": 2,
-   "total": 6
+   "total": 20
   },
   {
    "rank": 5,
@@ -35,83 +35,69 @@
   },
   {
    "rank": 7,
-   "unlocks": 0,
-   "total": 14
+   "unlocks": 1,
+   "total": 3
   },
   {
    "rank": 8,
    "unlocks": 0,
-   "total": 12
+   "total": 14
   },
   {
    "rank": 9,
    "unlocks": 0,
-   "total": 10
+   "total": 12
   },
   {
    "rank": 10,
    "unlocks": 0,
-   "total": 8
+   "total": 10
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Хатико: Самый верный друг",
+    "Джанго освобожденный",
+    "Последний самурай",
+    "Ночная смена"
+   ]
+  },
+  {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Страсти Христовы",
-    "Расплата",
-    "Титаник",
-    "Побег из Шоушенка"
+    "Между нами горы",
+    "Костюм",
+    "Побег из Шоушенка",
+    "Давление"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Освобождение",
-    "Остров проклятых",
     "Начало",
-    "Грань будущего"
+    "Бездна",
+    "Человек божий",
+    "Освобождение"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Крушение",
-    "Меч короля",
-    "Зеленая миля",
-    "Страсти Христовы"
-   ]
-  },
-  {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "Волк с Уолл-стрит",
-    "Девушка и море",
-    "Хатико: Самый верный друг",
-    "Того"
+    "Константин: Повелитель тьмы",
+    "Водный мир",
+    "Легенда Багера Ванса",
+    "Зеленая миля"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Завершились съемки фильма \"Сумерки мертвецов\" с Кейт Бекинсейл",
-   "link": "https://www.kinonews.ru/news_143481/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143481.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1791049711.0489304
-  },
-  {
-   "title": "\"Диггер\" стартует с худшим результатом для Тома Круза",
-   "link": "https://www.kinonews.ru/news_143480/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143480.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1791049750.5519536
-  },
   {
    "title": "Сарик Андреасян представил трейлер фильма \"Война и мир\"",
    "link": "https://www.kinonews.ru/news_143501/",
@@ -167,6 +153,20 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143548.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1791481458.4128013
+  },
+  {
+   "title": "Хью Джекман рассказал о контролирующем его микрочипе",
+   "link": "https://www.kinonews.ru/news_143577/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143577.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1791568516.0768325
+  },
+  {
+   "title": "\"Матрица 5\" запущена в производство после провала \"Матрицы 4\"",
+   "link": "https://www.kinonews.ru/news_143574/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143574.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1791568528.4003348
   }
  ],
  "premieres": [
