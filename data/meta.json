@@ -15,23 +15,23 @@
   },
   {
    "rank": 3,
+   "unlocks": 4,
+   "total": 4
+  },
+  {
+   "rank": 4,
    "unlocks": 3,
    "total": 86
   },
   {
-   "rank": 4,
+   "rank": 5,
    "unlocks": 1,
    "total": 132
   },
   {
-   "rank": 5,
-   "unlocks": 1,
-   "total": 20
-  },
-  {
    "rank": 6,
    "unlocks": 1,
-   "total": 3
+   "total": 20
   },
   {
    "rank": 7,
@@ -45,13 +45,13 @@
   },
   {
    "rank": 9,
-   "unlocks": 0,
-   "total": 14
+   "unlocks": 1,
+   "total": 3
   },
   {
    "rank": 10,
    "unlocks": 0,
-   "total": 12
+   "total": 14
   }
  ],
  "leaderboard_kind": "week",
@@ -60,51 +60,44 @@
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Первый день моей жизни",
+    "Расплата",
+    "Дом у озера",
     "Начало",
-    "Бездна",
-    "Волк с Уолл-стрит"
-   ]
-  },
-  {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
-   "options": [
-    "На цепи",
-    "Зеленая миля",
-    "Артур, ты король",
-    "Освобождение"
-   ]
-  },
-  {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "Скрытые фигуры",
-    "Охотники за головами",
-    "Ночная смена",
-    "Хатико: Самый верный друг"
+    "Давление"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Зодиак",
-    "Дом у озера",
+    "Первый день моей жизни",
     "Побег из Шоушенка",
-    "Хитмен. Последнее дело"
+    "Спасти рядового Райана",
+    "Люди в черном"
+   ]
+  },
+  {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
+   "options": [
+    "Люди в черном",
+    "Расплата",
+    "Борьба со льдом",
+    "Зеленая миля"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Меняющие реальность",
+    "Хатико: Самый верный друг",
+    "Пароль \"Рыба-меч\"",
+    "Ангел-А"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Сарик Андреасян представил трейлер фильма \"Война и мир\"",
-   "link": "https://www.kinonews.ru/news_143501/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143501.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1791220684.0149994
-  },
   {
    "title": "Джеймс Ганн уже пишет сценарий к своему следующему фильму",
    "link": "https://www.kinonews.ru/news_143491/",
@@ -167,6 +160,13 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143574.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1791568528.4003348
+  },
+  {
+   "title": "Николас Кейдж опроверг свое участие в \"Сокровище нации 3\"",
+   "link": "https://www.kinonews.ru/news_143599/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143599.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1791706570.2516778
   }
  ],
  "premieres": [
