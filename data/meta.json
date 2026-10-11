@@ -1,7 +1,7 @@
 {
- "code_of_day": "470",
- "code_of_day_date": "2026-10-10",
- "updated_at": "2026-10-10",
+ "code_of_day": "464",
+ "code_of_day_date": "2026-10-11",
+ "updated_at": "2026-10-11",
  "leaderboard": [
   {
    "rank": 1,
@@ -10,22 +10,22 @@
   },
   {
    "rank": 2,
-   "unlocks": 6,
-   "total": 10
+   "unlocks": 7,
+   "total": 11
   },
   {
    "rank": 3,
-   "unlocks": 2,
-   "total": 131
+   "unlocks": 3,
+   "total": 86
   },
   {
    "rank": 4,
-   "unlocks": 2,
-   "total": 85
+   "unlocks": 1,
+   "total": 132
   },
   {
    "rank": 5,
-   "unlocks": 2,
+   "unlocks": 1,
    "total": 20
   },
   {
@@ -40,64 +40,71 @@
   },
   {
    "rank": 8,
-   "unlocks": 0,
-   "total": 14
+   "unlocks": 1,
+   "total": 3
   },
   {
    "rank": 9,
    "unlocks": 0,
-   "total": 12
+   "total": 14
   },
   {
    "rank": 10,
    "unlocks": 0,
-   "total": 10
+   "total": 12
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "Первый день моей жизни",
+    "Начало",
+    "Бездна",
+    "Волк с Уолл-стрит"
+   ]
+  },
+  {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "1+1",
-    "Война миров Z",
-    "Константин: Повелитель тьмы",
-    "Зеленая миля"
+    "На цепи",
+    "Зеленая миля",
+    "Артур, ты король",
+    "Освобождение"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Звук свободы",
-    "Эдди \"Орёл\"",
-    "Зодиак",
-    "Хатико: Самый верный друг"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "Начало",
+    "Скрытые фигуры",
+    "Охотники за головами",
     "Ночная смена",
-    "Всевидящее око",
-    "пассажиры"
+    "Хатико: Самый верный друг"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
+    "Зодиак",
+    "Дом у озера",
     "Побег из Шоушенка",
-    "О чем говорят незнакомцы",
-    "Проклятый путь",
-    "Грань будущего"
+    "Хитмен. Последнее дело"
    ]
   }
  ],
  "recent_news": [
+  {
+   "title": "Сарик Андреасян представил трейлер фильма \"Война и мир\"",
+   "link": "https://www.kinonews.ru/news_143501/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143501.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1791220684.0149994
+  },
   {
    "title": "Джеймс Ганн уже пишет сценарий к своему следующему фильму",
    "link": "https://www.kinonews.ru/news_143491/",
@@ -160,28 +167,9 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143574.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1791568528.4003348
-  },
-  {
-   "title": "Скарлетт Йоханссон борется с демонами в трейлере \"Изгоняющий дьявола: Мученики\"",
-   "link": "https://www.kinonews.ru/news_143585/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143585.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1791620073.6148248
   }
  ],
  "premieres": [
-  {
-   "title": "TheatreHD: Ноймайер: Призрачный свет",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14131570.jpg",
-   "ru_date": "2026-10-11",
-   "film_id": 14131570
-  },
-  {
-   "title": "TheatreHD: Гамлет | Коллаж",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/1236106.jpg",
-   "ru_date": "2026-10-14",
-   "film_id": 1236106
-  },
   {
    "title": "Изгои",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/2001.jpg",
@@ -241,6 +229,18 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11881697.jpg",
    "ru_date": "2026-10-15",
    "film_id": 11881697
+  },
+  {
+   "title": "До встречи в Тоскане",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13961423.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 13961423
+  },
+  {
+   "title": "Лес. Хранитель жизни",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8869524.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 8869524
   }
  ]
 }
