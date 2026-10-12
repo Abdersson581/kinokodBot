@@ -10,8 +10,8 @@
   },
   {
    "rank": 2,
-   "unlocks": 8,
-   "total": 12
+   "unlocks": 9,
+   "total": 13
   },
   {
    "rank": 3,
@@ -57,12 +57,22 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Хатико: Самый верный друг",
+    "За пивом",
+    "Побег из Шоушенка",
+    "Дом у озера"
+   ]
+  },
+  {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Борьба со льдом",
-    "Тетрис",
-    "Охотники за головами",
+    "Люди в черном",
+    "Напоминание о нём",
+    "Два ствола",
     "Побег из Шоушенка"
    ]
   },
@@ -70,30 +80,20 @@
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Дом у озера",
+    "Уличный кот по кличке Боб",
+    "Проклятый путь",
     "Начало",
-    "Богемская рапсодия",
-    "Хатико: Самый верный друг"
+    "Тело"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Богемская рапсодия",
-    "Последний самурай",
-    "Зеленая миля",
-    "Хитмен. Последнее дело"
-   ]
-  },
-  {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "Всевидящее око",
-    "Хатико: Самый верный друг",
-    "Палмер",
-    "Старый Генри"
+    "пассажиры",
+    "Зодиак",
+    "Ночная сова",
+    "Зеленая миля"
    ]
   }
  ],
@@ -167,6 +167,80 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143608.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1791792999.8564923
+  }
+ ],
+ "premieres": [
+  {
+   "title": "Изгои",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/2001.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 2001
+  },
+  {
+   "title": "До последнего грамма",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/1330494.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 1330494
+  },
+  {
+   "title": "Руки Вверх! 2",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12455426.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 12455426
+  },
+  {
+   "title": "Любовь моя",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11893236.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 11893236
+  },
+  {
+   "title": "Непристойное предложение",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10833279.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 10833279
+  },
+  {
+   "title": "Красный экран",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9321315.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 9321315
+  },
+  {
+   "title": "Вкускилл",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11398966.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 11398966
+  },
+  {
+   "title": "Подводная братва. На страже рифа",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10167857.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 10167857
+  },
+  {
+   "title": "Синтетика",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10434163.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 10434163
+  },
+  {
+   "title": "О чём говорят любовники",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11881697.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 11881697
+  },
+  {
+   "title": "До встречи в Тоскане",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13961423.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 13961423
+  },
+  {
+   "title": "Лес. Хранитель жизни",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8869524.jpg",
+   "ru_date": "2026-10-15",
+   "film_id": 8869524
   }
  ]
 }
