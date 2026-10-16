@@ -1,42 +1,42 @@
 {
- "code_of_day": "444",
- "code_of_day_date": "2026-10-15",
- "updated_at": "2026-10-15",
+ "code_of_day": "442",
+ "code_of_day_date": "2026-10-16",
+ "updated_at": "2026-10-16",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 12,
-   "total": 19
-  },
-  {
-   "rank": 2,
-   "unlocks": 10,
+   "unlocks": 8,
    "total": 14
   },
   {
-   "rank": 3,
-   "unlocks": 4,
-   "total": 87
-  },
-  {
-   "rank": 4,
+   "rank": 2,
    "unlocks": 4,
    "total": 4
   },
   {
-   "rank": 5,
+   "rank": 3,
    "unlocks": 3,
+   "total": 87
+  },
+  {
+   "rank": 4,
+   "unlocks": 2,
    "total": 22
   },
   {
-   "rank": 6,
+   "rank": 5,
    "unlocks": 1,
    "total": 132
   },
   {
-   "rank": 7,
+   "rank": 6,
    "unlocks": 1,
    "total": 6
+  },
+  {
+   "rank": 7,
+   "unlocks": 1,
+   "total": 3
   },
   {
    "rank": 8,
@@ -45,8 +45,8 @@
   },
   {
    "rank": 9,
-   "unlocks": 1,
-   "total": 3
+   "unlocks": 0,
+   "total": 19
   },
   {
    "rank": 10,
@@ -57,43 +57,43 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
+   "options": [
+    "Не говори никому",
+    "Человек божий",
+    "Ночная смена",
+    "Зеленая миля"
+   ]
+  },
+  {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
     "Побег из Шоушенка",
-    "Скрытые фигуры",
-    "Напоминание о нём",
-    "Первый день моей жизни"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "Уличный кот по кличке Боб",
-    "Человек божий",
-    "Дело храбрых",
-    "Начало"
+    "Миссия Сиренити",
+    "Константин: Повелитель тьмы",
+    "Игры разума"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Освобождение",
+    "По соображениям совести",
     "Хатико: Самый верный друг",
-    "Люди в черном",
-    "Титаник"
+    "пассажиры",
+    "Бандит"
    ]
   },
   {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
    "options": [
-    "История рыцаря",
-    "Зеленая миля",
-    "Интерстеллар",
-    "Тело"
+    "Джанго освобожденный",
+    "Место встречи",
+    "Гран Торино",
+    "Начало"
    ]
   }
  ],
@@ -171,76 +171,76 @@
  ],
  "premieres": [
   {
-   "title": "Изгои",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/2001.jpg",
-   "ru_date": "2026-10-15",
-   "film_id": 2001
-  },
-  {
-   "title": "До последнего грамма",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/1330494.jpg",
-   "ru_date": "2026-10-15",
-   "film_id": 1330494
-  },
-  {
-   "title": "Любовь моя",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11893236.jpg",
-   "ru_date": "2026-10-15",
-   "film_id": 11893236
-  },
-  {
-   "title": "Непристойное предложение",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10833279.jpg",
-   "ru_date": "2026-10-15",
-   "film_id": 10833279
-  },
-  {
-   "title": "Красный экран",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9321315.jpg",
-   "ru_date": "2026-10-15",
-   "film_id": 9321315
-  },
-  {
-   "title": "Вкускилл",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11398966.jpg",
-   "ru_date": "2026-10-15",
-   "film_id": 11398966
-  },
-  {
-   "title": "Подводная братва. На страже рифа",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10167857.jpg",
-   "ru_date": "2026-10-15",
-   "film_id": 10167857
-  },
-  {
-   "title": "Синтетика",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10434163.jpg",
-   "ru_date": "2026-10-15",
-   "film_id": 10434163
-  },
-  {
-   "title": "О чём говорят любовники",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11881697.jpg",
-   "ru_date": "2026-10-15",
-   "film_id": 11881697
-  },
-  {
-   "title": "До встречи в Тоскане",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13961423.jpg",
-   "ru_date": "2026-10-15",
-   "film_id": 13961423
-  },
-  {
-   "title": "Лес. Хранитель жизни",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8869524.jpg",
-   "ru_date": "2026-10-15",
-   "film_id": 8869524
-  },
-  {
    "title": "Новая невестка",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14621701.jpg",
    "ru_date": "2026-10-16",
    "film_id": 14621701
+  },
+  {
+   "title": "Морозко",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6013720.jpg",
+   "ru_date": "2026-10-22",
+   "film_id": 6013720
+  },
+  {
+   "title": "Сказка о потерянном времени",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6588291.jpg",
+   "ru_date": "2026-10-22",
+   "film_id": 6588291
+  },
+  {
+   "title": "Чудо-Юдо",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7953925.jpg",
+   "ru_date": "2026-10-22",
+   "film_id": 7953925
+  },
+  {
+   "title": "Пранкер",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5019840.jpg",
+   "ru_date": "2026-10-22",
+   "film_id": 5019840
+  },
+  {
+   "title": "Цикл зверя",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13536634.jpg",
+   "ru_date": "2026-10-22",
+   "film_id": 13536634
+  },
+  {
+   "title": "Свинцовые небеса",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8860799.jpg",
+   "ru_date": "2026-10-22",
+   "film_id": 8860799
+  },
+  {
+   "title": "Четыре жизни Петра Мамонова",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13418594.jpg",
+   "ru_date": "2026-10-22",
+   "film_id": 13418594
+  },
+  {
+   "title": "Последнее проклятие",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12001319.jpg",
+   "ru_date": "2026-10-22",
+   "film_id": 12001319
+  },
+  {
+   "title": "Дитя воды",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13642987.jpg",
+   "ru_date": "2026-10-22",
+   "film_id": 13642987
+  },
+  {
+   "title": "Шальная стрела",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5919426.jpg",
+   "ru_date": "2026-10-23",
+   "film_id": 5919426
+  },
+  {
+   "title": "Жертвоприношение",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/79821.jpg",
+   "ru_date": "2026-10-29",
+   "film_id": 79821
   }
  ]
 }
