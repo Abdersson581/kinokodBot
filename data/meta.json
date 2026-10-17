@@ -25,8 +25,8 @@
   },
   {
    "rank": 5,
-   "unlocks": 1,
-   "total": 132
+   "unlocks": 2,
+   "total": 133
   },
   {
    "rank": 6,
@@ -57,54 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "Начало",
-    "Меняющие реальность",
-    "Легенда Багера Ванса",
-    "Опасная игра Слоун"
-   ]
-  },
-  {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
-   "options": [
-    "Зеленая миля",
-    "Миссия Сиренити",
-    "Бездна",
-    "Меч короля"
-   ]
-  },
-  {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Исходный код",
-    "Давление",
+    "1+1",
+    "Тетрис",
     "Хатико: Самый верный друг",
-    "Два ствола"
+    "Давление"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Богемская рапсодия",
+    "«Также известный» (AKA, 2023)",
+    "Меч короля",
     "Побег из Шоушенка",
-    "Давление",
-    "На цепи"
+    "Палмер"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "Человек божий",
+    "Легенда Багера Ванса",
+    "Начало",
+    "Миссия Сиренити"
+   ]
+  },
+  {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
+   "options": [
+    "Скрытые фигуры",
+    "Зеленая миля",
+    "Проклятый путь",
+    "Эдди \"Орёл\""
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Альфонсо Куарон снимет фильм ужасов",
-   "link": "https://www.kinonews.ru/news_143549/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143549.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1791481423.109637
-  },
   {
    "title": "НТВ снимает продолжение военной драмы \"Солдат по кличке Рекс\"",
    "link": "https://www.kinonews.ru/news_143548/",
@@ -167,6 +160,13 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143681.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1792138065.4617953
+  },
+  {
+   "title": "Режиссер \"Голодных игр\" экранизирует \"Красное восстание\"",
+   "link": "https://www.kinonews.ru/news_143700/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143700.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1792224374.1204474
   }
  ],
  "premieres": [
