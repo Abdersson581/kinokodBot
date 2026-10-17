@@ -1,11 +1,11 @@
 {
- "code_of_day": "442",
- "code_of_day_date": "2026-10-16",
- "updated_at": "2026-10-16",
+ "code_of_day": "437",
+ "code_of_day_date": "2026-10-17",
+ "updated_at": "2026-10-17",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 8,
+   "unlocks": 4,
    "total": 14
   },
   {
@@ -20,8 +20,8 @@
   },
   {
    "rank": 4,
-   "unlocks": 2,
-   "total": 22
+   "unlocks": 3,
+   "total": 23
   },
   {
    "rank": 5,
@@ -40,60 +40,60 @@
   },
   {
    "rank": 8,
-   "unlocks": 1,
-   "total": 3
-  },
-  {
-   "rank": 9,
    "unlocks": 0,
    "total": 19
   },
   {
-   "rank": 10,
+   "rank": 9,
    "unlocks": 0,
    "total": 14
+  },
+  {
+   "rank": 10,
+   "unlocks": 0,
+   "total": 12
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
    "options": [
-    "Водный мир",
     "Начало",
-    "Хитмен. Последнее дело",
-    "Хатико: Самый верный друг"
+    "Меняющие реальность",
+    "Легенда Багера Ванса",
+    "Опасная игра Слоун"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Гран Торино",
-    "На цепи",
-    "Ангел-А",
-    "Зеленая миля"
+    "Зеленая миля",
+    "Миссия Сиренити",
+    "Бездна",
+    "Меч короля"
    ]
   },
   {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
    "options": [
-    "Начало",
-    "Суррогаты",
-    "Обливион",
-    "Слова"
+    "Исходный код",
+    "Давление",
+    "Хатико: Самый верный друг",
+    "Два ствола"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Пароль \"Рыба-меч\"",
-    "Место встречи",
+    "Богемская рапсодия",
     "Побег из Шоушенка",
-    "В конце туннеля"
+    "Давление",
+    "На цепи"
    ]
   }
  ],
@@ -171,12 +171,6 @@
  ],
  "premieres": [
   {
-   "title": "Новая невестка",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14621701.jpg",
-   "ru_date": "2026-10-16",
-   "film_id": 14621701
-  },
-  {
    "title": "Морозко",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6013720.jpg",
    "ru_date": "2026-10-22",
@@ -241,6 +235,12 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/79821.jpg",
    "ru_date": "2026-10-29",
    "film_id": 79821
+  },
+  {
+   "title": "Рождение империи",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/4859012.jpg",
+   "ru_date": "2026-10-29",
+   "film_id": 4859012
   }
  ]
 }
