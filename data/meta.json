@@ -1,69 +1,79 @@
 {
- "code_of_day": "462",
- "code_of_day_date": "2026-10-18",
- "updated_at": "2026-10-18",
+ "code_of_day": "417",
+ "code_of_day_date": "2026-10-19",
+ "updated_at": "2026-10-19",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 4,
+   "unlocks": 3,
    "total": 24
   },
   {
    "rank": 2,
-   "unlocks": 4,
-   "total": 4
-  },
-  {
-   "rank": 3,
-   "unlocks": 3,
-   "total": 14
-  },
-  {
-   "rank": 4,
    "unlocks": 2,
    "total": 134
   },
   {
-   "rank": 5,
+   "rank": 3,
+   "unlocks": 2,
+   "total": 14
+  },
+  {
+   "rank": 4,
    "unlocks": 1,
    "total": 87
   },
   {
-   "rank": 6,
-   "unlocks": 1,
-   "total": 6
-  },
-  {
-   "rank": 7,
+   "rank": 5,
    "unlocks": 0,
    "total": 19
   },
   {
-   "rank": 8,
+   "rank": 6,
    "unlocks": 0,
    "total": 14
   },
   {
-   "rank": 9,
+   "rank": 7,
    "unlocks": 0,
    "total": 12
   },
   {
-   "rank": 10,
+   "rank": 8,
    "unlocks": 0,
    "total": 10
+  },
+  {
+   "rank": 9,
+   "unlocks": 0,
+   "total": 8
+  },
+  {
+   "rank": 10,
+   "unlocks": 0,
+   "total": 7
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Хатико: Самый верный друг",
+    "Место встречи",
+    "На цепи",
+    "Бездна"
+   ]
+  },
+  {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Иллюзионист",
-    "Люди в черном",
-    "Зеленая миля",
-    "Бандит"
+    "Тело",
+    "Человек божий",
+    "Два ствола",
+    "Зеленая миля"
    ]
   },
   {
@@ -71,8 +81,8 @@
    "code": "467",
    "options": [
     "Начало",
-    "Богемская рапсодия",
-    "Зеленая миля",
+    "Уличный кот по кличке Боб",
+    "Волк с Уолл-стрит",
     "Побег из Шоушенка"
    ]
   },
@@ -80,20 +90,10 @@
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Тетрис",
-    "Эдди \"Орёл\"",
-    "Хатико: Самый верный друг",
-    "Побег из Шоушенка"
-   ]
-  },
-  {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "Остров проклятых",
-    "Хитмен. Последнее дело",
-    "Суррогаты",
-    "Хатико: Самый верный друг"
+    "Обливион",
+    "По соображениям совести",
+    "Побег из Шоушенка",
+    "Крушение"
    ]
   }
  ],
@@ -213,16 +213,16 @@
    "film_id": 13418594
   },
   {
-   "title": "Последнее проклятие",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12001319.jpg",
-   "ru_date": "2026-10-22",
-   "film_id": 12001319
-  },
-  {
    "title": "Дитя воды",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13642987.jpg",
    "ru_date": "2026-10-22",
    "film_id": 13642987
+  },
+  {
+   "title": "Последнее проклятие",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12001319.jpg",
+   "ru_date": "2026-10-22",
+   "film_id": 12001319
   },
   {
    "title": "Шальная стрела",
