@@ -57,54 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "История рыцаря",
-    "Страсти Христовы",
-    "Исходный код",
-    "Начало"
-   ]
-  },
-  {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Слова",
-    "Ночная смена",
     "Зеленая миля",
-    "Скрытые фигуры"
-   ]
-  },
-  {
-   "emoji": "🪨🔨🌧️🎵",
-   "code": "461",
-   "options": [
-    "На цепи",
-    "Артур, ты король",
-    "Крушение",
-    "Побег из Шоушенка"
+    "Богемская рапсодия",
+    "Титаник",
+    "Тело"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Ночная сова",
+    "Водный мир",
     "Хатико: Самый верный друг",
-    "История рыцаря",
-    "Исходный код"
+    "Гран Торино",
+    "Последний самурай"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "Старый Генри",
+    "Начало",
+    "Зеленая миля",
+    "Люди в черном"
+   ]
+  },
+  {
+   "emoji": "🪨🔨🌧️🎵",
+   "code": "461",
+   "options": [
+    "Побег из Шоушенка",
+    "Богемская рапсодия",
+    "Расплата",
+    "Уличный кот по кличке Боб"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "На съемках сериала \"911 служба спасения\" произошла серия травм",
-   "link": "https://www.kinonews.ru/news_143608/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143608.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1791792999.8564923
-  },
   {
    "title": "Анонсированы съемки фильма по \"Слову о полку Игореве\"",
    "link": "https://www.kinonews.ru/news_143632/",
@@ -167,6 +160,13 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143766.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1792570308.669898
+  },
+  {
+   "title": "Electronic Arts сократит персонал и закроет студию BioWare",
+   "link": "https://www.kinonews.ru/news_143782/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143782.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1792657055.4118788
   }
  ],
  "premieres": [
