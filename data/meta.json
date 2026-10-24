@@ -1,7 +1,7 @@
 {
- "code_of_day": "451",
- "code_of_day_date": "2026-10-23",
- "updated_at": "2026-10-23",
+ "code_of_day": "446",
+ "code_of_day_date": "2026-10-24",
+ "updated_at": "2026-10-24",
  "leaderboard": [
   {
    "rank": 1,
@@ -57,43 +57,43 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🪨🔨🌧️🎵",
-   "code": "461",
-   "options": [
-    "1+1",
-    "Дело храбрых",
-    "Побег из Шоушенка",
-    "За пивом"
-   ]
-  },
-  {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
+    "Джентльмены",
     "Зодиак",
-    "Не говори никому",
     "Начало",
-    "Слова"
+    "Пароль \"Рыба-меч\""
    ]
   },
   {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
+   "emoji": "🪨🔨🌧️🎵",
+   "code": "461",
    "options": [
-    "Напоминание о нём",
-    "Зеленая миля",
-    "Хатико: Самый верный друг",
-    "Послезавтра"
+    "Зеленая книга",
+    "Девушка и море",
+    "Хитмен. Последнее дело",
+    "Побег из Шоушенка"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Игры разума",
-    "Начало",
+    "Послезавтра",
     "Зеленая миля",
-    "О чем говорят незнакомцы"
+    "Хатико: Самый верный друг",
+    "Спасти рядового Райана"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Дом у озера",
+    "Костюм",
+    "Игры разума",
+    "Хатико: Самый верный друг"
    ]
   }
  ],
@@ -171,12 +171,6 @@
  ],
  "premieres": [
   {
-   "title": "Шальная стрела",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5919426.jpg",
-   "ru_date": "2026-10-23",
-   "film_id": 5919426
-  },
-  {
    "title": "Жертвоприношение",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/79821.jpg",
    "ru_date": "2026-10-29",
@@ -207,16 +201,16 @@
    "film_id": 7918531
   },
   {
-   "title": "Синистер. Дом мёртвых",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12081017.jpg",
-   "ru_date": "2026-10-29",
-   "film_id": 12081017
-  },
-  {
    "title": "Меня пожирает собственная кровать",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12566634.jpg",
    "ru_date": "2026-10-29",
    "film_id": 12566634
+  },
+  {
+   "title": "Синистер. Дом мёртвых",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12081017.jpg",
+   "ru_date": "2026-10-29",
+   "film_id": 12081017
   },
   {
    "title": "Безумный день в Комеди Франсез",
@@ -241,6 +235,12 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11026619.jpg",
    "ru_date": "2026-11-04",
    "film_id": 11026619
+  },
+  {
+   "title": "Живая книга",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9389142.jpg",
+   "ru_date": "2026-11-04",
+   "film_id": 9389142
   }
  ]
 }
