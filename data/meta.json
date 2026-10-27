@@ -1,7 +1,7 @@
 {
- "code_of_day": "469",
- "code_of_day_date": "2026-10-26",
- "updated_at": "2026-10-26",
+ "code_of_day": "452",
+ "code_of_day_date": "2026-10-27",
+ "updated_at": "2026-10-27",
  "leaderboard": [
   {
    "rank": 1,
@@ -10,23 +10,23 @@
   },
   {
    "rank": 2,
-   "unlocks": 1,
-   "total": 25
+   "unlocks": 2,
+   "total": 26
   },
   {
    "rank": 3,
    "unlocks": 1,
-   "total": 15
+   "total": 88
   },
   {
    "rank": 4,
-   "unlocks": 0,
-   "total": 134
+   "unlocks": 1,
+   "total": 15
   },
   {
    "rank": 5,
    "unlocks": 0,
-   "total": 87
+   "total": 134
   },
   {
    "rank": 6,
@@ -57,43 +57,43 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Хатико: Самый верный друг",
+    "пассажиры",
+    "Страсти Христовы",
+    "Всевидящее око"
+   ]
+  },
+  {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Обливион",
-    "Зеленая миля",
     "Побег из Шоушенка",
-    "Ангел-А"
+    "Место встречи",
+    "Константин: Повелитель тьмы",
+    "В конце туннеля"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Меч короля",
-    "Человек божий",
-    "Побег из Шоушенка",
-    "Начало"
+    "Начало",
+    "Артур, ты король",
+    "Водный мир",
+    "1+1"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Уличный кот по кличке Боб",
-    "Ночная смена",
-    "История рыцаря",
-    "Зеленая миля"
-   ]
-  },
-  {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "На цепи",
-    "Послезавтра",
-    "Исходный код",
-    "Хатико: Самый верный друг"
+    "Скрытые фигуры",
+    "1+1",
+    "Зеленая миля",
+    "Первый день моей жизни"
    ]
   }
  ],
@@ -219,6 +219,12 @@
    "film_id": 13539331
   },
   {
+   "title": "Мульт в кино. Выпуск 201: Цифровая азбука с Бодо Бородо",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14826552.jpg",
+   "ru_date": "2026-10-31",
+   "film_id": 14826552
+  },
+  {
    "title": "Арт-лекторий: Караваджо: Се человек",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13041648.jpg",
    "ru_date": "2026-11-01",
@@ -235,12 +241,6 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11026619.jpg",
    "ru_date": "2026-11-04",
    "film_id": 11026619
-  },
-  {
-   "title": "Живая книга",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9389142.jpg",
-   "ru_date": "2026-11-04",
-   "film_id": 9389142
   }
  ]
 }
