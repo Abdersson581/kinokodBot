@@ -1,17 +1,17 @@
 {
- "code_of_day": "439",
- "code_of_day_date": "2026-10-29",
- "updated_at": "2026-10-29",
+ "code_of_day": "420",
+ "code_of_day_date": "2026-10-30",
+ "updated_at": "2026-10-30",
  "leaderboard": [
   {
    "rank": 1,
    "unlocks": 4,
-   "total": 5
+   "total": 28
   },
   {
    "rank": 2,
-   "unlocks": 3,
-   "total": 27
+   "unlocks": 4,
+   "total": 5
   },
   {
    "rank": 3,
@@ -57,43 +57,43 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "Начало",
-    "Палмер",
-    "Обливион",
-    "Люди в черном"
-   ]
-  },
-  {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Проклятый путь",
-    "Меняющие реальность",
+    "Бездна",
     "Зеленая миля",
-    "Напоминание о нём"
+    "Побег из Шоушенка",
+    "За пивом"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Хатико: Самый верный друг",
-    "пассажиры",
-    "«Также известный» (AKA, 2023)",
-    "Уличный кот по кличке Боб"
+    "За пивом",
+    "1+1",
+    "По соображениям совести",
+    "Хатико: Самый верный друг"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "Бандит",
+    "Крушение",
+    "Начало",
+    "Константин: Повелитель тьмы"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Расплата",
-    "Хитмен. Последнее дело",
-    "Проклятый путь",
-    "Побег из Шоушенка"
+    "В конце туннеля",
+    "Спасти рядового Райана",
+    "Побег из Шоушенка",
+    "Бандит"
    ]
   }
  ],
@@ -171,54 +171,6 @@
  ],
  "premieres": [
   {
-   "title": "Жертвоприношение",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/79821.jpg",
-   "ru_date": "2026-10-29",
-   "film_id": 79821
-  },
-  {
-   "title": "Рождение империи",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/4859012.jpg",
-   "ru_date": "2026-10-29",
-   "film_id": 4859012
-  },
-  {
-   "title": "Маленькие демоны путешествуют на Запад",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7783722.jpg",
-   "ru_date": "2026-10-29",
-   "film_id": 7783722
-  },
-  {
-   "title": "Фьорд",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7029820.jpg",
-   "ru_date": "2026-10-29",
-   "film_id": 7029820
-  },
-  {
-   "title": "Барашек Шон и Чудище Лохматое",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7918531.jpg",
-   "ru_date": "2026-10-29",
-   "film_id": 7918531
-  },
-  {
-   "title": "Меня пожирает собственная кровать",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12566634.jpg",
-   "ru_date": "2026-10-29",
-   "film_id": 12566634
-  },
-  {
-   "title": "Синистер. Дом мёртвых",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12081017.jpg",
-   "ru_date": "2026-10-29",
-   "film_id": 12081017
-  },
-  {
-   "title": "Безумный день в Комеди Франсез",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13539331.jpg",
-   "ru_date": "2026-10-29",
-   "film_id": 13539331
-  },
-  {
    "title": "Мульт в кино. Выпуск 201: Цифровая азбука с Бодо Бородо",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14826552.jpg",
    "ru_date": "2026-10-31",
@@ -241,6 +193,54 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11026619.jpg",
    "ru_date": "2026-11-04",
    "film_id": 11026619
+  },
+  {
+   "title": "Живая книга",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9389142.jpg",
+   "ru_date": "2026-11-04",
+   "film_id": 9389142
+  },
+  {
+   "title": "Отверженные",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7856055.jpg",
+   "ru_date": "2026-11-04",
+   "film_id": 7856055
+  },
+  {
+   "title": "Зверь",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5512124.jpg",
+   "ru_date": "2026-11-04",
+   "film_id": 5512124
+  },
+  {
+   "title": "Айтматов",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14422783.jpg",
+   "ru_date": "2026-11-04",
+   "film_id": 14422783
+  },
+  {
+   "title": "Шкатулка проклятия. Зло внутри",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13992649.jpg",
+   "ru_date": "2026-11-04",
+   "film_id": 13992649
+  },
+  {
+   "title": "Сумерки. Сага. Затмение",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/432423.jpg",
+   "ru_date": "2026-11-05",
+   "film_id": 432423
+  },
+  {
+   "title": "Настройщик",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7518867.jpg",
+   "ru_date": "2026-11-05",
+   "film_id": 7518867
+  },
+  {
+   "title": "Плетёный муж",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11095481.jpg",
+   "ru_date": "2026-11-05",
+   "film_id": 11095481
   }
  ]
 }
