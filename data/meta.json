@@ -57,12 +57,22 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "Начало",
+    "Послезавтра",
+    "В конце туннеля",
+    "Зеленая книга"
+   ]
+  },
+  {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
+    "Опасная игра Слоун",
+    "Грань будущего",
     "Освобождение",
-    "Дом у озера",
-    "Исходный код",
     "Зеленая миля"
    ]
   },
@@ -70,41 +80,24 @@
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Люди в черном",
-    "Охотники за головами",
+    "Хитмен. Последнее дело",
+    "Крушение",
     "Хатико: Самый верный друг",
-    "Зодиак"
+    "Водный мир"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
+    "Джанго освобожденный",
+    "Ангел-А",
     "Побег из Шоушенка",
-    "Иллюзионист",
-    "Между нами горы",
-    "пассажиры"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "Освобождение",
-    "Начало",
-    "Война миров Z",
-    "пассажиры"
+    "История рыцаря"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Дензел Вашингтон займется искуплением в триллере о бывшем копе",
-   "link": "https://www.kinonews.ru/news_143766/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143766.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1792570308.669898
-  },
   {
    "title": "Electronic Arts сократит персонал и закроет студию BioWare",
    "link": "https://www.kinonews.ru/news_143782/",
@@ -167,6 +160,13 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143894.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1793347476.9749992
+  },
+  {
+   "title": "Звезда \"Субстанции\" Маргарет Куолли развелась с мужем",
+   "link": "https://www.kinonews.ru/news_143910/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143910.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1793434651.390096
   }
  ],
  "premieres": [
