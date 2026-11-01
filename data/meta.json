@@ -60,51 +60,44 @@
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
+    "Ночная сова",
     "Зеленая миля",
-    "Скрытые фигуры",
-    "Гран Торино",
-    "Ночная смена"
-   ]
-  },
-  {
-   "emoji": "🪨🔨🌧️🎵",
-   "code": "461",
-   "options": [
-    "Эдди \"Орёл\"",
     "Проклятый путь",
-    "Побег из Шоушенка",
-    "Константин: Повелитель тьмы"
-   ]
-  },
-  {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "Суррогаты",
-    "Между нами горы",
-    "Побег из Шоушенка",
-    "Хатико: Самый верный друг"
+    "Дом у озера"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Суррогаты",
-    "Костюм",
-    "Начало",
-    "Слова"
+    "Меч короля",
+    "Богемская рапсодия",
+    "За пивом",
+    "Начало"
+   ]
+  },
+  {
+   "emoji": "🪨🔨🌧️🎵",
+   "code": "461",
+   "options": [
+    "Побег из Шоушенка",
+    "Слова",
+    "Охотники за головами",
+    "Меч короля"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Хатико: Самый верный друг",
+    "Уличный кот по кличке Боб",
+    "Богемская рапсодия",
+    "Тело"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Electronic Arts сократит персонал и закроет студию BioWare",
-   "link": "https://www.kinonews.ru/news_143782/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143782.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1792657055.4118788
-  },
   {
    "title": "Автор \"Александра\" Лаэта Калогридис займется фильмом по игре \"Samurai Spirits\"",
    "link": "https://www.kinonews.ru/news_143793/",
@@ -167,6 +160,13 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143910.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1793434651.390096
+  },
+  {
+   "title": "Японская индустрия аниме установила новый рекорд",
+   "link": "https://www.kinonews.ru/news_143916/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143916.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1793520301.1346073
   }
  ],
  "premieres": [
