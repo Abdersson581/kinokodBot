@@ -1,7 +1,7 @@
 {
- "code_of_day": "453",
- "code_of_day_date": "2026-10-31",
- "updated_at": "2026-10-31",
+ "code_of_day": "446",
+ "code_of_day_date": "2026-11-01",
+ "updated_at": "2026-11-01",
  "leaderboard": [
   {
    "rank": 1,
@@ -57,43 +57,43 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
    "options": [
-    "Интерстеллар",
-    "Расплата",
-    "По соображениям совести",
-    "Хатико: Самый верный друг"
+    "Зеленая миля",
+    "Скрытые фигуры",
+    "Гран Торино",
+    "Ночная смена"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
+    "Эдди \"Орёл\"",
+    "Проклятый путь",
     "Побег из Шоушенка",
-    "Исходный код",
-    "Тетрис",
-    "Ночная смена"
+    "Константин: Повелитель тьмы"
    ]
   },
   {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
    "options": [
-    "Зеленая миля",
-    "По соображениям совести",
-    "Слова",
-    "Меч короля"
+    "Суррогаты",
+    "Между нами горы",
+    "Побег из Шоушенка",
+    "Хатико: Самый верный друг"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
+    "Суррогаты",
+    "Костюм",
     "Начало",
-    "Богемская рапсодия",
-    "1+1",
-    "Хатико: Самый верный друг"
+    "Слова"
    ]
   }
  ],
@@ -171,12 +171,6 @@
  ],
  "premieres": [
   {
-   "title": "Мульт в кино. Выпуск 201: Цифровая азбука с Бодо Бородо",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14826552.jpg",
-   "ru_date": "2026-10-31",
-   "film_id": 14826552
-  },
-  {
    "title": "Арт-лекторий: Караваджо: Се человек",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13041648.jpg",
    "ru_date": "2026-11-01",
@@ -241,6 +235,12 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11095481.jpg",
    "ru_date": "2026-11-05",
    "film_id": 11095481
+  },
+  {
+   "title": "Навар",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7382045.jpg",
+   "ru_date": "2026-11-05",
+   "film_id": 7382045
   }
  ]
 }
