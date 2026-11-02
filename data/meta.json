@@ -15,18 +15,18 @@
   },
   {
    "rank": 3,
-   "unlocks": 1,
-   "total": 88
+   "unlocks": 2,
+   "total": 136
   },
   {
    "rank": 4,
    "unlocks": 1,
-   "total": 16
+   "total": 88
   },
   {
    "rank": 5,
-   "unlocks": 0,
-   "total": 134
+   "unlocks": 1,
+   "total": 16
   },
   {
    "rank": 6,
@@ -60,51 +60,44 @@
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "По соображениям совести",
-    "«Также известный» (AKA, 2023)",
-    "Начало",
-    "Тело"
+    "Слова",
+    "Исходный код",
+    "пассажиры",
+    "Начало"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Грань будущего",
+    "Старый Генри",
     "Зеленая миля",
-    "Истина и измена",
-    "История рыцаря"
+    "Волк с Уолл-стрит",
+    "Константин: Повелитель тьмы"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "История рыцаря",
+    "Меняющие реальность",
+    "Того",
     "Побег из Шоушенка",
-    "Зодиак",
-    "Два ствола"
+    "Иллюзионист"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Всевидящее око",
-    "Скрытые фигуры",
+    "Дело храбрых",
+    "В конце туннеля",
     "Хатико: Самый верный друг",
-    "Расплата"
+    "Проклятый путь"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Автор \"Александра\" Лаэта Калогридис займется фильмом по игре \"Samurai Spirits\"",
-   "link": "https://www.kinonews.ru/news_143793/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143793.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1792742782.2505503
-  },
   {
    "title": "Букмекеры назвали фаворитов на роль Джеймса Бонда",
    "link": "https://www.kinonews.ru/news_143808/",
@@ -167,6 +160,13 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143916.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1793520301.1346073
+  },
+  {
+   "title": "Экранизация комиксов \"Глиноликий\" проиграла документальному фильму",
+   "link": "https://www.kinonews.ru/news_143934/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143934.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1793607519.9403565
   }
  ],
  "premieres": [
