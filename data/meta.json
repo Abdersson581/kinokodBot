@@ -1,12 +1,12 @@
 {
- "code_of_day": "446",
- "code_of_day_date": "2026-11-01",
- "updated_at": "2026-11-01",
+ "code_of_day": "478",
+ "code_of_day_date": "2026-11-02",
+ "updated_at": "2026-11-02",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 4,
-   "total": 28
+   "unlocks": 5,
+   "total": 29
   },
   {
    "rank": 2,
@@ -57,43 +57,43 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "По соображениям совести",
+    "«Также известный» (AKA, 2023)",
+    "Начало",
+    "Тело"
+   ]
+  },
+  {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Ангел-А",
-    "Зеленая миля",
     "Грань будущего",
-    "Меняющие реальность"
+    "Зеленая миля",
+    "Истина и измена",
+    "История рыцаря"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Зеленая миля",
-    "Палмер",
-    "Ночная сова",
-    "Побег из Шоушенка"
+    "История рыцаря",
+    "Побег из Шоушенка",
+    "Зодиак",
+    "Два ствола"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Старый Генри",
-    "Давление",
-    "Бандит",
-    "Хатико: Самый верный друг"
-   ]
-  },
-  {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "пассажиры",
-    "Грань будущего",
-    "Начало",
-    "Остров проклятых"
+    "Всевидящее око",
+    "Скрытые фигуры",
+    "Хатико: Самый верный друг",
+    "Расплата"
    ]
   }
  ],
@@ -171,12 +171,6 @@
  ],
  "premieres": [
   {
-   "title": "Арт-лекторий: Караваджо: Се человек",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13041648.jpg",
-   "ru_date": "2026-11-01",
-   "film_id": 13041648
-  },
-  {
    "title": "Проклятие Сальмокджи",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7663666.jpg",
    "ru_date": "2026-11-04",
@@ -241,6 +235,12 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7382045.jpg",
    "ru_date": "2026-11-05",
    "film_id": 7382045
+  },
+  {
+   "title": "Идеальный шторм",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11280741.jpg",
+   "ru_date": "2026-11-05",
+   "film_id": 11280741
   }
  ]
 }
