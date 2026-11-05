@@ -57,54 +57,47 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🪨🔨🌧️🎵",
+   "code": "461",
+   "options": [
+    "Ангел-А",
+    "Меч короля",
+    "Побег из Шоушенка",
+    "Зодиак"
+   ]
+  },
+  {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Зеленая миля",
-    "Истина и измена",
-    "Иллюзионист",
-    "Скрытые фигуры"
+    "Палмер",
+    "Игра",
+    "Тетрис",
+    "Зеленая миля"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Дело храбрых",
-    "Обливион",
+    "Интерстеллар",
+    "Палмер",
     "Начало",
-    "Первый день моей жизни"
-   ]
-  },
-  {
-   "emoji": "🪨🔨🌧️🎵",
-   "code": "461",
-   "options": [
-    "Джанго освобожденный",
-    "Побег из Шоушенка",
-    "Скрытые фигуры",
-    "Между нами горы"
+    "Враг государства"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Ночная смена",
-    "Опасная игра Слоун",
+    "Богемская рапсодия",
+    "Начало",
     "Хатико: Самый верный друг",
-    "Того"
+    "Тело"
    ]
   }
  ],
  "recent_news": [
-  {
-   "title": "Аманда Сайфред отвергла \"Стражей Галактики\" и не жалеет об этом",
-   "link": "https://www.kinonews.ru/news_143828/",
-   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143828.webp",
-   "source": "https://www.kinonews.ru/rss/",
-   "ts": 1793002422.1056612
-  },
   {
    "title": "Питер Берг призвал не ждать супергероики от фильма \"Call of Duty\"",
    "link": "https://www.kinonews.ru/news_143839/",
@@ -167,6 +160,13 @@
    "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143982.webp",
    "source": "https://www.kinonews.ru/rss/",
    "ts": 1793779598.3687348
+  },
+  {
+   "title": "Звезда \"Медведя\" Джереми Аллен Уайт может стать новым Росомахой",
+   "link": "https://www.kinonews.ru/news_143996/",
+   "image": "https://www.kinonews.ru/insimgs/2026/newsimg/big/newsimg143996.webp",
+   "source": "https://www.kinonews.ru/rss/",
+   "ts": 1793865971.2056708
   }
  ],
  "premieres": [
