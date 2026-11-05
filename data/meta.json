@@ -1,7 +1,7 @@
 {
- "code_of_day": "483",
- "code_of_day_date": "2026-11-04",
- "updated_at": "2026-11-04",
+ "code_of_day": "484",
+ "code_of_day_date": "2026-11-05",
+ "updated_at": "2026-11-05",
  "leaderboard": [
   {
    "rank": 1,
@@ -20,8 +20,8 @@
   },
   {
    "rank": 4,
-   "unlocks": 0,
-   "total": 88
+   "unlocks": 1,
+   "total": 89
   },
   {
    "rank": 5,
@@ -57,43 +57,43 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "Остров проклятых",
-    "Джанго освобожденный",
-    "Эдди \"Орёл\"",
-    "Начало"
-   ]
-  },
-  {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Артур, ты король",
     "Зеленая миля",
+    "Истина и измена",
+    "Иллюзионист",
+    "Скрытые фигуры"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "Дело храбрых",
+    "Обливион",
     "Начало",
-    "Интерстеллар"
+    "Первый день моей жизни"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
+    "Джанго освобожденный",
     "Побег из Шоушенка",
-    "Страсти Христовы",
-    "Место встречи",
-    "Бездна"
+    "Скрытые фигуры",
+    "Между нами горы"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
+    "Ночная смена",
+    "Опасная игра Слоун",
     "Хатико: Самый верный друг",
-    "Остров проклятых",
-    "Начало",
-    "За пивом"
+    "Того"
    ]
   }
  ],
@@ -171,48 +171,6 @@
  ],
  "premieres": [
   {
-   "title": "Проклятие Сальмокджи",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7663666.jpg",
-   "ru_date": "2026-11-04",
-   "film_id": 7663666
-  },
-  {
-   "title": "Большие гонки. Пегас 3",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11026619.jpg",
-   "ru_date": "2026-11-04",
-   "film_id": 11026619
-  },
-  {
-   "title": "Живая книга",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9389142.jpg",
-   "ru_date": "2026-11-04",
-   "film_id": 9389142
-  },
-  {
-   "title": "Отверженные",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7856055.jpg",
-   "ru_date": "2026-11-04",
-   "film_id": 7856055
-  },
-  {
-   "title": "Зверь",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5512124.jpg",
-   "ru_date": "2026-11-04",
-   "film_id": 5512124
-  },
-  {
-   "title": "Айтматов",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14422783.jpg",
-   "ru_date": "2026-11-04",
-   "film_id": 14422783
-  },
-  {
-   "title": "Шкатулка проклятия. Зло внутри",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13992649.jpg",
-   "ru_date": "2026-11-04",
-   "film_id": 13992649
-  },
-  {
    "title": "Сумерки. Сага. Затмение",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/432423.jpg",
    "ru_date": "2026-11-05",
@@ -225,12 +183,6 @@
    "film_id": 7518867
   },
   {
-   "title": "Плетёный муж",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11095481.jpg",
-   "ru_date": "2026-11-05",
-   "film_id": 11095481
-  },
-  {
    "title": "Навар",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7382045.jpg",
    "ru_date": "2026-11-05",
@@ -241,6 +193,54 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11280741.jpg",
    "ru_date": "2026-11-05",
    "film_id": 11280741
+  },
+  {
+   "title": "Роллинг Лауд. Дикое веселье",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11440677.jpg",
+   "ru_date": "2026-11-05",
+   "film_id": 11440677
+  },
+  {
+   "title": "Лето в Бадене",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10632639.jpg",
+   "ru_date": "2026-11-05",
+   "film_id": 10632639
+  },
+  {
+   "title": "Как поймать Деда Мороза",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10170290.jpg",
+   "ru_date": "2026-11-05",
+   "film_id": 10170290
+  },
+  {
+   "title": "Святые предприниматели",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14871032.jpg",
+   "ru_date": "2026-11-05",
+   "film_id": 14871032
+  },
+  {
+   "title": "Ангельский чин",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13520782.jpg",
+   "ru_date": "2026-11-08",
+   "film_id": 13520782
+  },
+  {
+   "title": "Театр в кино: Женитьба Бальзаминова",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14368547.jpg",
+   "ru_date": "2026-11-08",
+   "film_id": 14368547
+  },
+  {
+   "title": "Лес",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8239428.jpg",
+   "ru_date": "2026-11-12",
+   "film_id": 8239428
+  },
+  {
+   "title": "Операция «Возмездие»",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5146946.jpg",
+   "ru_date": "2026-11-12",
+   "film_id": 5146946
   }
  ]
 }
