@@ -1,7 +1,7 @@
 {
- "code_of_day": "484",
- "code_of_day_date": "2026-11-05",
- "updated_at": "2026-11-05",
+ "code_of_day": "444",
+ "code_of_day_date": "2026-11-06",
+ "updated_at": "2026-11-06",
  "leaderboard": [
   {
    "rank": 1,
@@ -20,13 +20,13 @@
   },
   {
    "rank": 4,
-   "unlocks": 2,
-   "total": 29
+   "unlocks": 1,
+   "total": 89
   },
   {
    "rank": 5,
    "unlocks": 1,
-   "total": 89
+   "total": 29
   },
   {
    "rank": 6,
@@ -57,43 +57,43 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
+   "emoji": "🪨🔨🌧️🎵",
+   "code": "461",
    "options": [
-    "Зеленая миля",
-    "Хитмен. Последнее дело",
-    "Костюм",
-    "Дом у озера"
+    "Люди в черном",
+    "1+1",
+    "Побег из Шоушенка",
+    "Скрытые фигуры"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Хатико: Самый верный друг",
-    "Гран Торино",
-    "Бездна",
-    "Игра"
+    "Константин: Повелитель тьмы",
+    "Слова",
+    "Меняющие реальность",
+    "Хатико: Самый верный друг"
    ]
   },
   {
-   "emoji": "🪨🔨🌧️🎵",
-   "code": "461",
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
    "options": [
-    "Побег из Шоушенка",
-    "Давление",
-    "Игры разума",
-    "Хитмен. Последнее дело"
+    "Остров проклятых",
+    "Зеленая миля",
+    "Иллюзионист",
+    "По соображениям совести"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Начало",
-    "Враг государства",
-    "Проклятый путь",
-    "Первый день моей жизни"
+    "Остров проклятых",
+    "Спасти рядового Райана",
+    "Люди в черном",
+    "Начало"
    ]
   }
  ],
@@ -171,54 +171,6 @@
  ],
  "premieres": [
   {
-   "title": "Сумерки. Сага. Затмение",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/432423.jpg",
-   "ru_date": "2026-11-05",
-   "film_id": 432423
-  },
-  {
-   "title": "Настройщик",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7518867.jpg",
-   "ru_date": "2026-11-05",
-   "film_id": 7518867
-  },
-  {
-   "title": "Навар",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7382045.jpg",
-   "ru_date": "2026-11-05",
-   "film_id": 7382045
-  },
-  {
-   "title": "Идеальный шторм",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11280741.jpg",
-   "ru_date": "2026-11-05",
-   "film_id": 11280741
-  },
-  {
-   "title": "Роллинг Лауд. Дикое веселье",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11440677.jpg",
-   "ru_date": "2026-11-05",
-   "film_id": 11440677
-  },
-  {
-   "title": "Лето в Бадене",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10632639.jpg",
-   "ru_date": "2026-11-05",
-   "film_id": 10632639
-  },
-  {
-   "title": "Как поймать Деда Мороза",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10170290.jpg",
-   "ru_date": "2026-11-05",
-   "film_id": 10170290
-  },
-  {
-   "title": "Святые предприниматели",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14871032.jpg",
-   "ru_date": "2026-11-05",
-   "film_id": 14871032
-  },
-  {
    "title": "Ангельский чин",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13520782.jpg",
    "ru_date": "2026-11-08",
@@ -241,6 +193,54 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5146946.jpg",
    "ru_date": "2026-11-12",
    "film_id": 5146946
+  },
+  {
+   "title": "Психопатка",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6559309.jpg",
+   "ru_date": "2026-11-12",
+   "film_id": 6559309
+  },
+  {
+   "title": "Лиля",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8237728.jpg",
+   "ru_date": "2026-11-12",
+   "film_id": 8237728
+  },
+  {
+   "title": "Девичник в спа",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12899144.jpg",
+   "ru_date": "2026-11-12",
+   "film_id": 12899144
+  },
+  {
+   "title": "Приключения пингвиненка",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8874755.jpg",
+   "ru_date": "2026-11-12",
+   "film_id": 8874755
+  },
+  {
+   "title": "Лучшее лето в жизни",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8426882.jpg",
+   "ru_date": "2026-11-12",
+   "film_id": 8426882
+  },
+  {
+   "title": "Инфлюенсер",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13711125.jpg",
+   "ru_date": "2026-11-12",
+   "film_id": 13711125
+  },
+  {
+   "title": "Новый дом",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10439638.jpg",
+   "ru_date": "2026-11-12",
+   "film_id": 10439638
+  },
+  {
+   "title": "Безликие. Кошмар джунглей",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11825627.jpg",
+   "ru_date": "2026-11-12",
+   "film_id": 11825627
   }
  ]
 }

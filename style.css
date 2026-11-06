@@ -3552,3 +3552,43 @@ body.tgtheme .filter-bar {
 .poster-rate { border-radius: var(--r-xs); }
 .movie-card { border-radius: var(--r-md); }
 .chall-pane, .chain-card, .code-collection { border-radius: var(--r-md); }
+
+
+/* v146: на телефоне кнопки шапки — одной ровной панелью под заголовком (раньше
+   2+3 кнопки рвались на две строки вразнобой) */
+@media (max-width: 480px) {
+  .brand .btn-lucky {
+    flex: 1 1 calc(20% - 8px);
+    width: auto;
+    min-width: 0;
+    height: 36px;
+    border-radius: 12px;
+    font-size: 17px;
+  }
+  .brand-text { flex: 1 1 calc(100% - 70px); }
+}
+
+
+/* v146: компактная афиша на телефоне — вторичные фильтры под кнопкой «Фильтры» */
+.btn-filters { display: none; }
+@media (max-width: 600px) {
+  .btn-filters {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 100%;
+    justify-content: center;
+    background: var(--card);
+    border: 1px solid #2a3050;
+    color: var(--text);
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-filters.on { border-color: var(--gold); color: var(--gold); }
+  #view-catalog:not(.filters-open) #toolbar-row,
+  #view-catalog:not(.filters-open) #time-chips,
+  #view-catalog:not(.filters-open) #country-chips { display: none !important; }
+}

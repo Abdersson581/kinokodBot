@@ -26,6 +26,7 @@ function enterApp() {
 parseMarathonHash(); // v78: «#marathon=…» — запуск марафона по ссылке от друга
   bumpDaily();         // v64: ежедневная серия заходит
   initHideToggle();
+  initFiltersToggle();
   applyGridCols();
   initSearchHist();
   renderTimeChips();  // v77: чипы длительности
@@ -657,6 +658,22 @@ function parseUnlockedHash() {
       history.replaceState(null, '', location.pathname);
     }
   } catch (e) { /* пусто */ }
+}
+
+// v146: на телефоне вторичные фильтры (чипы времени/стран, «Разгаданные», «С трейлером»…)
+// спрятаны под кнопку «Фильтры» — афиша видна с первого экрана. Включённые фильтры
+// видны в полосе #filter-bar, так что состояние не теряется.
+function initFiltersToggle() {
+  const btn = document.getElementById('btn-filters');
+  const view = document.getElementById('view-catalog');
+  if (!btn || !view || btn.dataset.wired) return;
+  btn.dataset.wired = '1';
+  btn.addEventListener('click', () => {
+    const open = view.classList.toggle('filters-open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.classList.toggle('on', open);
+    haptic('light');
+  });
 }
 
 function initHideToggle() {
@@ -1298,11 +1315,29 @@ function freshLineHtml() {
 }
 
 // Применяем порцию данных (из кэша или сети) ко всему интерфейсу
+function plFilms(n) {
+  n = Math.abs(parseInt(n, 10) || 0);
+  const a = n % 100, b = n % 10;
+  if (a >= 11 && a <= 14) return n + ' фильмов';
+  if (b === 1) return n + ' фильм';
+  if (b >= 2 && b <= 4) return n + ' фильма';
+  return n + ' фильмов';
+}
+
 function applyData(data) {
   // v69: нормализация полей — старый кэш/синк мог отдать actors/genres/countries строкой
   const toArr = (v) => Array.isArray(v) ? v
     : (typeof v === 'string' && v.trim() ? v.split(/\s*[,;]\s*/).filter(Boolean) : []);
+  // v146: «Название» (Original, 2012) → «Название»; полное имя остаётся в _raw для поиска
+  const prettyTitle = (raw) => {
+    const r = String(raw || '').trim();
+    let t = r.replace(/\s*\((?:[^()]*?(?:19|20)\d{2}|[A-Za-z0-9 .:,'&!\-]+)\)\s*$/, '').trim();
+    const q = t.match(/^«([^»]+)»$/);
+    if (q) t = q[1].trim();
+    return t || r;
+  };
   ALL = (data.all || []).map(m => {
+    if (m._raw === undefined) { m._raw = m.title; m.title = prettyTitle(m.title); }
     m.actors = toArr(m.actors);
     m.genres = toArr(m.genres);
     m.countries = toArr(m.countries);
@@ -1441,7 +1476,8 @@ function updateChallPane() {
   const c = getChallenges();
   const listEl = document.getElementById('chall-list');
   const countEl = document.getElementById('chall-count');
-  const collapsed = localStorage.getItem(CHALL_COLLAPSE_KEY) === '1';
+  // v146: по умолчанию «Цель дня» свёрнута — афиша выше; раскрытие запоминается
+  const collapsed = localStorage.getItem(CHALL_COLLAPSE_KEY) !== '0';
   const items = CHALLENGE_LIST.map(ch => {
     const ok = c.done.includes(ch.id) || ch.check();
     return `<div class="chall-item ${ok ? 'done' : ''}">
@@ -1498,7 +1534,7 @@ function updateChallPane() {
     head.dataset.wired = '1';
     head.addEventListener('click', (e) => {
       if (e.target.closest('#chall-reward')) return;
-      const nowCollapsed = !(localStorage.getItem(CHALL_COLLAPSE_KEY) === '1');
+      const nowCollapsed = !(localStorage.getItem(CHALL_COLLAPSE_KEY) !== '0');
       localStorage.setItem(CHALL_COLLAPSE_KEY, nowCollapsed ? '1' : '0');
       haptic('light');
       updateChallPane();
@@ -1541,7 +1577,7 @@ function renderCodeCollection() {
 function updateSubtitle() {
   const el = document.getElementById('subtitle');
   if (!el) return;
-  const parts = [`Капитан Кино · ${ALL.length} фильм(ов)`];
+  const parts = [`Капитан Кино · ${plFilms(ALL.length)}`];
   if (COLLS.length) parts.push(`${COLLS.length} подборок`);
   el.textContent = parts.join(' · ');
 }
@@ -2510,7 +2546,7 @@ function genreShelvesHTML() {
       <span class="col-emoji">${_genreEmoji(g)}</span>
       <div class="col-body">
         <h3>${esc(g)}</h3>
-        <p>${total} фильм(ов)</p>
+        <p>${plFilms(total)}</p>
         <div class="col-progress"><i style="width:${pct}%"></i></div>
         <p class="col-progress-label">${label}</p>
       </div>
@@ -2550,7 +2586,7 @@ function renderCols() {
       ${fan}
       <div class="col-body">
         <h3>${esc(col.emoji || '📚')} ${esc(col.title)}</h3>
-        <p>${col.codes.length} фильм(ов)</p>
+        <p>${plFilms(col.codes.length)}</p>
         <div class="col-progress"><i style="width:${pct}%"></i></div>
         <p class="col-progress-label">🔓 ${owned}/${col.codes.length} в коллекции</p>
       </div>
@@ -2637,7 +2673,7 @@ function renderMyCols() {
       ${fan}
       <div class="col-body">
         <h3>🗂 ${esc(col.title)}</h3>
-        <p>${col.codes.length} фильм(ов) · моя</p>
+        <p>${plFilms(col.codes.length)} · моя</p>
       </div>
       <button class="btn-share-sm" data-mcshare="${esc(col.id)}" title="Поделиться">📤</button>
     </div>`;
@@ -3467,7 +3503,7 @@ function renderTrailers() {
     const tks = q.split(/\s+/).filter(Boolean);
     list = list.filter(m => {
       if (isCode && digits && String(m.code || '').includes(digits)) return true;
-      const t = norm(m.title);
+      const t = norm(m._raw || m.title);
       if (tks.every(w => t.includes(w))) return true;
       const people = [...(m.actors || []), ...(m.director ? [m.director] : [])].map(norm).join(' ');
       if (people && tks.every(w => people.includes(w))) return true;
@@ -4731,7 +4767,7 @@ function renderGrid() {
     const tryQuery = (query) => {
       const tks = query.split(/\s+/).filter(Boolean);
       list.forEach(m => {
-        const t = norm(m.title);
+        const t = norm(m._raw || m.title);
         // «стог сена»: название + описание + жанры + страны + год + люди
         const hay = norm([t, m.description, (m.genres || []).join(' '),
           (m.countries || []).join(' '), m.year || '', m.director || '',
@@ -4823,7 +4859,7 @@ function renderGrid() {
     : (view === 'fav' && favMode === 'watched')
     ? `<div class="fav-progress">Просмотрено ${watchedAll.length} из ${ALL.length} (${ALL.length ? Math.round(100 * watchedAll.length / ALL.length) : 0}%)</div>`
     : (view === 'fav' && favMode === 'rated')
-    ? `<div class="fav-progress">Оценено ${Object.keys(getRatings()).length} фильм(ов) — рекомендации стали точнее 💫</div>`
+    ? `<div class="fav-progress">Оценено ${plFilms(Object.keys(getRatings()).length)} — рекомендации стали точнее 💫</div>`
     : '';
   const smartHint = smart
     ? `<div class="smart-hint">🧠 ${esc((smart.parts || []).join(' · '))} · найдено: ${list.length}<button class="smart-clear" title="Сбросить" onclick="document.getElementById('search').value='';renderGrid()">✕</button></div>`
