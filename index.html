@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=151" />
+  <link rel="stylesheet" href="style.css?v=152" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -44,18 +44,7 @@
           <div id="header-progress" class="header-progress hidden"></div>
         </div>
         <button class="btn-lucky" id="btn-theme" title="Сменить тему">🌓</button>
-        <button class="btn-lucky" id="btn-accent" title="Акцент">🎨</button>
-        <div id="accent-pop" class="accent-pop hidden">
-          <span class="ap-title">🎨 Цвет оформления</span>
-          <button class="ap-swatch is-c active" data-a="classic" title="Классика" style="--sw:#ff4466">🎯</button>
-          <button class="ap-swatch" data-a="ocean" title="Океан" style="--sw:#2f7bff">🌊</button>
-          <button class="ap-swatch" data-a="emerald" title="Изумруд" style="--sw:#19b86a">🌿</button>
-          <button class="ap-swatch" data-a="purple" title="Неон-фиолет" style="--sw:#9b59d0">🔮</button>
-          <button class="ap-swatch" data-a="neon" title="Неон-циан" style="--sw:#00e5ff">💠</button>
-          <button class="ap-swatch" data-a="gold" title="Золото" style="--sw:#ffb300">✨</button>
-        </div>
-        <button class="btn-lucky" id="btn-mute" title="Вибрации вкл/выкл">🔔</button>
-        <button class="btn-lucky" id="btn-info" title="О боте">ℹ️</button>
+        <span class="hdr-proxy" hidden><button id="btn-accent"></button><div id="accent-pop" class="accent-pop hidden"></div><button id="btn-mute">🔔</button><button id="btn-info">ℹ️</button></span>
         <button class="btn-lucky" id="btn-lucky" title="Мне повезёт">🎲</button>
       </div>
     </header>
@@ -72,6 +61,8 @@
           <span>Все разделы</span>
           <button class="sheet-x" id="sheet-close" aria-label="Закрыть">✕</button>
         </div>
+        <button class="more-item" data-view="tonight">🌙 Сегодня вечером</button>
+        <button class="more-item" data-view="quiz">🧠 Викторина дня</button>
         <button class="more-item" data-view="cols">📚 Подборки</button>
         <button class="more-item" data-view="top">🏆 Топ</button>
         <button class="more-item" data-view="achievements">🎖 Достижения</button>
@@ -85,11 +76,28 @@
         <button class="more-item" data-view="mycols">🗂 Мои подборки</button>
         <button class="more-item" id="more-catalog">🖼 Постер каталога</button>
         <button class="more-item" id="more-changelog">🎁 Что нового</button>
+        <div class="more-accent" id="more-accent">
+          <span class="ma-title">🎨 Цвет оформления</span>
+          <span class="ma-row">
+            <button class="ap-swatch is-c" data-a="classic" title="Классика" style="--sw:#ff4466"></button>
+            <button class="ap-swatch" data-a="ocean" title="Океан" style="--sw:#2f7bff"></button>
+            <button class="ap-swatch" data-a="emerald" title="Изумруд" style="--sw:#19b86a"></button>
+            <button class="ap-swatch" data-a="purple" title="Фиолет" style="--sw:#9b59d0"></button>
+            <button class="ap-swatch" data-a="neon" title="Циан" style="--sw:#00e5ff"></button>
+            <button class="ap-swatch" data-a="gold" title="Золото" style="--sw:#ffb300"></button>
+          </span>
+        </div>
+        <button class="more-item" id="more-mute">🔔 Вибрации</button>
+        <button class="more-item" id="more-info">ℹ️ О боте</button>
       </div>
     </nav>
 
     <!-- Афиша + Моё -->
     <div id="view-catalog">
+      <div class="quick-row" id="quick-row">
+        <button class="quick-btn" data-go="tonight"><span>🌙</span><b>Сегодня вечером</b><i>подберём фильм по настроению</i></button>
+        <button class="quick-btn" data-go="quiz"><span>🧠</span><b>Викторина дня</b><i>5 вопросов · серия дней</i></button>
+      </div>
       <div class="toolbar glass" id="toolbar">
         <input type="text" id="search" placeholder="🔍 Поиск или код…" />
         <select id="sort">
@@ -200,6 +208,9 @@
     <div id="view-marathon" class="hidden">
       <main id="marathon-container"></main>
     </div>
+
+    <div id="view-tonight" class="hidden"><main id="tonight-container"></main></div>
+    <div id="view-quiz" class="hidden"><main id="quiz-container"></main></div>
 
     <!-- Тиндер кино: свайп-подбор -->
     <div id="view-tinder" class="hidden">
@@ -624,7 +635,7 @@
   })();
   </script>
 
-  <script src="script.js?v=151"></script>
+  <script src="script.js?v=152"></script>
 </body>
 </html>
 
