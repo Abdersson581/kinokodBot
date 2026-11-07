@@ -1,7 +1,7 @@
 {
- "code_of_day": "444",
- "code_of_day_date": "2026-11-06",
- "updated_at": "2026-11-06",
+ "code_of_day": "453",
+ "code_of_day_date": "2026-11-07",
+ "updated_at": "2026-11-07",
  "leaderboard": [
   {
    "rank": 1,
@@ -20,8 +20,8 @@
   },
   {
    "rank": 4,
-   "unlocks": 1,
-   "total": 89
+   "unlocks": 2,
+   "total": 90
   },
   {
    "rank": 5,
@@ -57,43 +57,43 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "В конце туннеля",
-    "За пивом",
-    "Истина и измена",
-    "Хатико: Самый верный друг"
-   ]
-  },
-  {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
     "Побег из Шоушенка",
-    "Пароль \"Рыба-меч\"",
-    "Интерстеллар",
-    "Слова"
+    "пассажиры",
+    "Суррогаты",
+    "Меняющие реальность"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Обливион",
+    "Зодиак",
+    "Охотники за головами",
+    "Хатико: Самый верный друг"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
+    "Бобро пожаловать",
+    "Пароль \"Рыба-меч\"",
     "Начало",
-    "Враг государства",
-    "Зеленая книга",
-    "Водный мир"
+    "Бездна"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Два ствола",
-    "Зеленая миля",
-    "Старый Генри",
-    "Охотники за головами"
+    "Первый день моей жизни",
+    "Опасная игра Слоун",
+    "Ангел-А",
+    "Зеленая миля"
    ]
   }
  ],
@@ -189,12 +189,6 @@
    "film_id": 8239428
   },
   {
-   "title": "Операция «Возмездие»",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5146946.jpg",
-   "ru_date": "2026-11-12",
-   "film_id": 5146946
-  },
-  {
    "title": "Психопатка",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6559309.jpg",
    "ru_date": "2026-11-12",
@@ -241,6 +235,12 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11825627.jpg",
    "ru_date": "2026-11-12",
    "film_id": 11825627
+  },
+  {
+   "title": "История огня",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13779021.jpg",
+   "ru_date": "2026-11-12",
+   "film_id": 13779021
   }
  ]
 }
