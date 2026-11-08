@@ -1,12 +1,12 @@
 {
- "code_of_day": "453",
- "code_of_day_date": "2026-11-07",
- "updated_at": "2026-11-07",
+ "code_of_day": "409",
+ "code_of_day_date": "2026-11-08",
+ "updated_at": "2026-11-08",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 4,
-   "total": 138
+   "unlocks": 6,
+   "total": 140
   },
   {
    "rank": 2,
@@ -15,64 +15,74 @@
   },
   {
    "rank": 3,
-   "unlocks": 4,
-   "total": 4
-  },
-  {
-   "rank": 4,
    "unlocks": 3,
    "total": 91
   },
   {
-   "rank": 5,
+   "rank": 4,
    "unlocks": 3,
    "total": 4
   },
   {
-   "rank": 6,
+   "rank": 5,
    "unlocks": 1,
    "total": 29
   },
   {
-   "rank": 7,
+   "rank": 6,
    "unlocks": 0,
    "total": 19
   },
   {
-   "rank": 8,
+   "rank": 7,
    "unlocks": 0,
    "total": 16
   },
   {
-   "rank": 9,
+   "rank": 8,
    "unlocks": 0,
    "total": 14
   },
   {
-   "rank": 10,
+   "rank": 9,
    "unlocks": 0,
    "total": 12
+  },
+  {
+   "rank": 10,
+   "unlocks": 0,
+   "total": 10
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
+   "options": [
+    "Зеленая миля",
+    "Богемская рапсодия",
+    "Короли улиц",
+    "Интерстеллар"
+   ]
+  },
+  {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "На цепи",
-    "Бобро пожаловать",
-    "Меняющие реальность",
-    "Начало"
+    "Начало",
+    "Скрытые фигуры",
+    "Человек божий",
+    "Гран Торино"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Скрытые фигуры",
-    "Опасная игра Слоун",
-    "Не говори никому",
+    "По соображениям совести",
+    "Страсти Христовы",
+    "Бобро поржаловать!",
     "Побег из Шоушенка"
    ]
   },
@@ -80,20 +90,10 @@
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Хатико: Самый верный друг",
-    "Богемская рапсодия",
-    "Джанго освобожденный",
-    "Грань будущего"
-   ]
-  },
-  {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
-   "options": [
-    "Зеленая миля",
-    "Побег из Шоушенка",
-    "Меч короля",
-    "Скрытые фигуры"
+    "Константин: Повелитель тьмы",
+    "Люди в черном",
+    "Напоминание о нём",
+    "Хатико: Самый верный друг"
    ]
   }
  ],
@@ -220,16 +220,16 @@
    "film_id": 8426882
   },
   {
-   "title": "Инфлюенсер",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13711125.jpg",
-   "ru_date": "2026-11-12",
-   "film_id": 13711125
-  },
-  {
    "title": "Новый дом",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10439638.jpg",
    "ru_date": "2026-11-12",
    "film_id": 10439638
+  },
+  {
+   "title": "Инфлюенсер",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13711125.jpg",
+   "ru_date": "2026-11-12",
+   "film_id": 13711125
   },
   {
    "title": "Безликие. Кошмар джунглей",

@@ -305,33 +305,6 @@
   "link": "https://kinogo.ec/27496--bezdna.html"
  },
  {
-  "code": "498",
-  "title": "Бобро пожаловать",
-  "rating": "7.8",
-  "poster": "posters/498.jpg",
-  "description": "Филипп Абрамс, начальник почтового отделения на юге Франции делает всё, чтобы его перевели в Кассис — райский уголок близ Марселя. Однако все его старания и мечты идут крахом, когда за мелкое служебное нарушение он получает дисциплинарный перевод на два…",
-  "genres": [],
-  "duration": 0,
-  "countries": [],
-  "year": "2008",
-  "added_at": "",
-  "trailer": "https://widgets.kinopoisk.ru/discovery/trailer/24177?onlyPlayer=1&autoplay=1&cover=1",
-  "trailer_yt": "",
-  "trailer_file_id": "",
-  "trailer_thumb": "",
-  "frame_pic": "",
-  "director": "Дэни Бун",
-  "actors": [
-   "Кад Мерад",
-   "Дэни Бун",
-   "Анн Маривен",
-   "Зоэ Феликс",
-   "Филипп Дюкен"
-  ],
-  "kinopoisk_id": 391735,
-  "link": "https://kinogo.ec/13090--bobro-porzhalovat.html"
- },
- {
   "code": "497",
   "title": "Бобро поржаловать!",
   "rating": "7.7",
@@ -2974,6 +2947,33 @@
   ],
   "kinopoisk_id": 1173444,
   "link": "https://kinogo.ec/36482--togo.html"
+ },
+ {
+  "code": "503",
+  "title": "Тренер",
+  "rating": "7.7",
+  "poster": "posters/503.jpg",
+  "description": "В 1987 году в маленьком городке МакФарланд профессиональный тренер создает команду по легкой атлетике из обычных сорванцов и мелких «хулиганов» и доводит эту команду до вершины спортивного Олимпа.",
+  "genres": [],
+  "duration": 0,
+  "countries": [],
+  "year": "2014",
+  "added_at": "",
+  "trailer": "https://widgets.kinopoisk.ru/discovery/trailer/110918?onlyPlayer=1&autoplay=1&cover=1",
+  "trailer_yt": "",
+  "trailer_file_id": "",
+  "trailer_thumb": "",
+  "frame_pic": "",
+  "director": "Ники Каро",
+  "actors": [
+   "Кевин Костнер",
+   "Рамиро Родригес",
+   "Карлос Праттс",
+   "Джонни Ортиз",
+   "Рафаэль Мартинес"
+  ],
+  "kinopoisk_id": 645261,
+  "link": "https://kinogo.ec/21305--trener.html"
  },
  {
   "code": "465",
