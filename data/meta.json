@@ -1,7 +1,7 @@
 {
- "code_of_day": "409",
- "code_of_day_date": "2026-11-08",
- "updated_at": "2026-11-08",
+ "code_of_day": "455",
+ "code_of_day_date": "2026-11-09",
+ "updated_at": "2026-11-09",
  "leaderboard": [
   {
    "rank": 1,
@@ -25,7 +25,7 @@
   },
   {
    "rank": 5,
-   "unlocks": 2,
+   "unlocks": 1,
    "total": 30
   },
   {
@@ -57,43 +57,43 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
    "options": [
-    "Старый Генри",
-    "Послезавтра",
-    "Зеленая миля",
-    "Финч"
+    "О чем говорят незнакомцы",
+    "Хатико: Самый верный друг",
+    "Игра",
+    "Зодиак"
    ]
   },
   {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Побег из Шоушенка",
-    "Послезавтра",
-    "Зеленая книга",
-    "Крушение"
+    "Охотники за головами",
+    "Любовь сквозь время",
+    "Тренер",
+    "Побег из Шоушенка"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Расплата",
-    "Проклятый путь",
-    "Начало",
-    "В конце туннеля"
+    "Дело Ричарда Джуэлла",
+    "Волк с Уолл-стрит",
+    "Финч",
+    "Начало"
    ]
   },
   {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
    "options": [
-    "Хатико: Самый верный друг",
-    "Иллюзионист",
-    "Обливион",
-    "Напоминание о нём"
+    "Девушка и море",
+    "Зеленая миля",
+    "Меняющие реальность",
+    "Ночная сова"
    ]
   }
  ],
@@ -173,18 +173,6 @@
  ],
  "premieres": [
   {
-   "title": "Ангельский чин",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13520782.jpg",
-   "ru_date": "2026-11-08",
-   "film_id": 13520782
-  },
-  {
-   "title": "Театр в кино: Женитьба Бальзаминова",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14368547.jpg",
-   "ru_date": "2026-11-08",
-   "film_id": 14368547
-  },
-  {
    "title": "Лес",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8239428.jpg",
    "ru_date": "2026-11-12",
@@ -243,6 +231,18 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13779021.jpg",
    "ru_date": "2026-11-12",
    "film_id": 13779021
+  },
+  {
+   "title": "Зверодвиж",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12436800.jpg",
+   "ru_date": "2026-11-12",
+   "film_id": 12436800
+  },
+  {
+   "title": "Редкие",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12493604.jpg",
+   "ru_date": "2026-11-12",
+   "film_id": 12493604
   }
  ]
 }
