@@ -162,7 +162,7 @@
  },
  {
   "code": "514",
-  "title": "Банк Дэйва (2022)",
+  "title": "Банк Дэйва",
   "rating": "6.8",
   "poster": "posters/514.jpg",
   "description": "Английский предприниматель Дэйв Фишвик убеждён, что банки должны работать в интересах людей, а не только ради прибыли. Разочаровавшись в правилах и подходах крупных финансовых организаций, он решает бросить вызов системе. В своём родном Бернли Дэйв задумал…",
@@ -1418,6 +1418,33 @@
   "link": "https://kinogo.ec/19038--konstantin-povelitel-tmy.html"
  },
  {
+  "code": "515",
+  "title": "Копы в юбках",
+  "rating": "6.7",
+  "poster": "posters/515.jpg",
+  "description": "Агенту ФБР и бостонскому полицейскому доверено ответственное задание: выйти на след и обезвредить безжалостного наркобарона.",
+  "genres": [],
+  "duration": 0,
+  "countries": [],
+  "year": "2013",
+  "added_at": "",
+  "trailer": "https://widgets.kinopoisk.ru/discovery/trailer/83194?onlyPlayer=1&autoplay=1&cover=1",
+  "trailer_yt": "",
+  "trailer_file_id": "",
+  "trailer_thumb": "",
+  "frame_pic": "",
+  "director": "Пол Фиг",
+  "actors": [
+   "Сандра Буллок",
+   "Мелисса Маккарти",
+   "Демиан Бичир",
+   "Марлон Уайанс",
+   "Майкл Рапапорт"
+  ],
+  "kinopoisk_id": 682716,
+  "link": "https://kinogo.ec/14594--kopy-v-jubkah.html"
+ },
+ {
   "code": "500",
   "title": "Короли улиц",
   "rating": "7.2",
@@ -2542,6 +2569,33 @@
   "link": "https://kinogo.ec/29176--pobeg-iz-shoushenka.html"
  },
  {
+  "code": "518",
+  "title": "Помнить",
+  "rating": "7.8",
+  "poster": "posters/518.jpg",
+  "description": "89-летний Зев Гуттман многие годы пытался забыть Освенцим, а теперь он благословлён деменцией и доживает дни в специализированном учреждении. Жена недавно умерла, а друг Макс Розенбаум напоминает, что на похоронах Зев поклялся отомстить офицеру СС,…",
+  "genres": [],
+  "duration": 0,
+  "countries": [],
+  "year": "2015",
+  "added_at": "",
+  "trailer": "https://widgets.kinopoisk.ru/discovery/trailer/131389?onlyPlayer=1&autoplay=1&cover=1",
+  "trailer_yt": "",
+  "trailer_file_id": "",
+  "trailer_thumb": "",
+  "frame_pic": "",
+  "director": "Атом Эгоян",
+  "actors": [
+   "Кристофер Пламмер",
+   "Мартин Ландау",
+   "Юрген Прохнов",
+   "Генри Черни",
+   "Дин Норрис"
+  ],
+  "kinopoisk_id": "",
+  "link": "https://kinogo.ec/27222--pomnit.html"
+ },
+ {
   "code": "458",
   "title": "Последний самурай",
   "rating": "8.1",
@@ -2673,6 +2727,33 @@
   ],
   "kinopoisk_id": 662359,
   "link": "https://kinogo.ec/16164-rasplata.html"
+ },
+ {
+  "code": "516",
+  "title": "Рожденный чемпионом",
+  "rating": "6.8",
+  "poster": "posters/516.jpg",
+  "description": "Режиссёр Алекс Ранаривело, уже не новичок в спортивном кино, с первых минут «Рождённого чемпионом» выбирает псевдодокументальную манеру. В кадре у окна татуированный Роско вспоминает, как впервые встретил ветерана «Бури в пустыне» Микки Келли: на парковке…",
+  "genres": [],
+  "duration": 0,
+  "countries": [],
+  "year": "2021",
+  "added_at": "",
+  "trailer": "",
+  "trailer_yt": "",
+  "trailer_file_id": "",
+  "trailer_thumb": "",
+  "frame_pic": "",
+  "director": "Алекс Ранаривело",
+  "actors": [
+   "Кортни Хоуп Тернер",
+   "Морис Комт",
+   "Шон Патрик Флэнери",
+   "Кристофер Трой",
+   "Крис Ховард"
+  ],
+  "kinopoisk_id": 1289617,
+  "link": "https://kinogo.ec/38620-rozhdennyj-chempionom.html"
  },
  {
   "code": "469",
@@ -3190,6 +3271,33 @@
   ],
   "kinopoisk_id": 645261,
   "link": "https://kinogo.ec/21305--trener.html"
+ },
+ {
+  "code": "517",
+  "title": "Тэмпл Грандин",
+  "rating": "8.1",
+  "poster": "posters/517.jpg",
+  "description": "История Тэмпл Грандин — аутистки, которая стала одной из ведущих учёных в области животноводства и по гуманному обращению со скотом.",
+  "genres": [],
+  "duration": 0,
+  "countries": [],
+  "year": "2010",
+  "added_at": "",
+  "trailer": "https://widgets.kinopoisk.ru/discovery/trailer/189755?onlyPlayer=1&autoplay=1&cover=1",
+  "trailer_yt": "",
+  "trailer_file_id": "",
+  "trailer_thumb": "",
+  "frame_pic": "",
+  "director": "Мик Джексон",
+  "actors": [
+   "Клэр Дэйнс",
+   "Джулия Ормонд",
+   "Дэвид Стрэтэйрн",
+   "Кэтрин О’Хара",
+   "Стефани Фэраси"
+  ],
+  "kinopoisk_id": 424153,
+  "link": "https://kinogo.ec/15535--tjempl-grandin.html"
  },
  {
   "code": "465",
