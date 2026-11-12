@@ -985,6 +985,7 @@ function sendOrDeepLink(data) {
   else if (data.action === 'sync_unlocked') start = 'sync_unlocked';
   else if (data.action === 'restore_backup') start = 'restore_backup';
   else if (data.action === 'kinogod') start = 'kinogod';
+  else if (data.action === 'ask_captain') start = 'ask';
   else if (data.action === 'toggle_optin') start = data.on ? 'optin_on' : 'optin_off';
   else if (data.action === 'set_theme') start = 'theme_' + data.theme;
   // v124–v127: служебные блоки уезжают боту вместе с этим же диплинком. Порядок —
@@ -6356,6 +6357,10 @@ function openKinogod() {
     tg.openTelegramLink('https://t.me/kapitan_kino_bot');
   });
 }
+document.getElementById('btn-ask-captain')?.addEventListener('click', () => {
+  haptic('light');
+  sendOrDeepLink({ action: 'ask_captain' });
+});
 document.getElementById('btn-kinogod').addEventListener('click', () => {
   haptic('light');
   openKinogod();
