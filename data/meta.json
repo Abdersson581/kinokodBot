@@ -1,7 +1,7 @@
 {
- "code_of_day": "477",
- "code_of_day_date": "2026-11-12",
- "updated_at": "2026-11-12",
+ "code_of_day": "453",
+ "code_of_day_date": "2026-11-13",
+ "updated_at": "2026-11-13",
  "leaderboard": [
   {
    "rank": 1,
@@ -21,17 +21,17 @@
   {
    "rank": 4,
    "unlocks": 2,
-   "total": 5
+   "total": 4
   },
   {
    "rank": 5,
-   "unlocks": 2,
-   "total": 4
+   "unlocks": 1,
+   "total": 30
   },
   {
    "rank": 6,
    "unlocks": 1,
-   "total": 30
+   "total": 5
   },
   {
    "rank": 7,
@@ -57,43 +57,43 @@
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
-   "options": [
-    "Два ствола",
-    "Ветреная река",
-    "Зеленая миля",
-    "Палмер"
-   ]
-  },
-  {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Побег из Шоушенка",
-    "Опасная игра Слоун",
-    "16 кварталов",
-    "Девушка и море"
+    "Место встречи",
+    "Первый день моей жизни",
+    "Меч короля",
+    "Побег из Шоушенка"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
+    "Расплата",
+    "На гребне волны",
     "Начало",
-    "Тень Караваджо",
-    "Миссия Сиренити",
-    "Грань будущего"
+    "Водный мир"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Криминальное чтиво",
-    "По соображениям совести",
-    "Хатико: Самый верный друг",
-    "Зодиак"
+    "Интерстеллар",
+    "Два ствола",
+    "Отец-молодец",
+    "Хатико: Самый верный друг"
+   ]
+  },
+  {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
+   "options": [
+    "Зеленая миля",
+    "Пароль «Рыба-меч»",
+    "Костюм",
+    "Джокер"
    ]
   }
  ],
@@ -177,76 +177,76 @@
  ],
  "premieres": [
   {
-   "title": "Лес",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8239428.jpg",
-   "ru_date": "2026-11-12",
-   "film_id": 8239428
+   "title": "Поезд в Пусан",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/977288.jpg",
+   "ru_date": "2026-11-19",
+   "film_id": 977288
   },
   {
-   "title": "Психопатка",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6559309.jpg",
-   "ru_date": "2026-11-12",
-   "film_id": 6559309
+   "title": "Патерсон",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/954059.jpg",
+   "ru_date": "2026-11-19",
+   "film_id": 954059
   },
   {
-   "title": "Лиля",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8237728.jpg",
-   "ru_date": "2026-11-12",
-   "film_id": 8237728
+   "title": "Колотун и волшебное королевство",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5457958.jpg",
+   "ru_date": "2026-11-19",
+   "film_id": 5457958
   },
   {
-   "title": "Девичник в спа",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12899144.jpg",
-   "ru_date": "2026-11-12",
-   "film_id": 12899144
+   "title": "Рокки — это я",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5582129.jpg",
+   "ru_date": "2026-11-19",
+   "film_id": 5582129
   },
   {
-   "title": "Приключения пингвиненка",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8874755.jpg",
-   "ru_date": "2026-11-12",
-   "film_id": 8874755
+   "title": "Бумажный тигр",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7420147.jpg",
+   "ru_date": "2026-11-19",
+   "film_id": 7420147
   },
   {
-   "title": "Лучшее лето в жизни",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8426882.jpg",
-   "ru_date": "2026-11-12",
-   "film_id": 8426882
+   "title": "Увидеть всё",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14001130.jpg",
+   "ru_date": "2026-11-19",
+   "film_id": 14001130
   },
   {
-   "title": "Новый дом",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/10439638.jpg",
-   "ru_date": "2026-11-12",
-   "film_id": 10439638
+   "title": "Дедмобиль",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9226789.jpg",
+   "ru_date": "2026-11-19",
+   "film_id": 9226789
   },
   {
-   "title": "Инфлюенсер",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13711125.jpg",
-   "ru_date": "2026-11-12",
-   "film_id": 13711125
+   "title": "Турбозавры. Суперфильм",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9124577.jpg",
+   "ru_date": "2026-11-19",
+   "film_id": 9124577
   },
   {
-   "title": "Безликие. Кошмар джунглей",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11825627.jpg",
-   "ru_date": "2026-11-12",
-   "film_id": 11825627
+   "title": "Мама. Зло внутри",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8550743.jpg",
+   "ru_date": "2026-11-19",
+   "film_id": 8550743
   },
   {
-   "title": "История огня",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13779021.jpg",
-   "ru_date": "2026-11-12",
-   "film_id": 13779021
+   "title": "Астрал. Иной мир",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12356117.jpg",
+   "ru_date": "2026-11-19",
+   "film_id": 12356117
   },
   {
-   "title": "Зверодвиж",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12436800.jpg",
-   "ru_date": "2026-11-12",
-   "film_id": 12436800
+   "title": "Было не было",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11845102.jpg",
+   "ru_date": "2026-11-19",
+   "film_id": 11845102
   },
   {
-   "title": "Редкие",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12493604.jpg",
-   "ru_date": "2026-11-12",
-   "film_id": 12493604
+   "title": "Как приручить монстров: Рождественский переполох",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13644810.jpg",
+   "ru_date": "2026-11-19",
+   "film_id": 13644810
   }
  ]
 }
