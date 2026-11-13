@@ -1569,6 +1569,12 @@ function renderCodeCollection() {
       <h3>🔑 Коллекция кодов</h3>
       <span>${unlocked.length}/${all.length} · ${openPct}%</span>
     </div>
+    <div class="cap-scene" id="cap-scene">
+      <canvas aria-label="Капитан Кино идёт и собирает коды"></canvas>
+      <div class="cap-bubble" role="button"></div>
+      <div class="cap-count">Тапни — Капитан прыгнет</div>
+      <button class="cap-play" id="btn-cap-play">▶ Играть</button>
+    </div>
     <div class="coll-grid">${all.map(m => {
       const ok = unlockedSet.has(String(m.code));
       return `<span class="coll-cell ${ok ? 'on' : ''}" title="${esc(m.title)}"
@@ -1576,6 +1582,359 @@ function renderCodeCollection() {
     }).join('')}</div>`;
   wrap.querySelectorAll('.coll-cell.on').forEach(cell =>
     cell.addEventListener('click', () => openDetail(cell.dataset.code)));
+  try { startCaptainScene(wrap.querySelector('#cap-scene'), unlocked, all); } catch (e) {}
+  wrap.querySelector('#btn-cap-play')?.addEventListener('click', (e) => { e.stopPropagation(); haptic('light'); openCaptainGame(); });
+}
+
+// ---------- v155: «Капитан в пути» — 2D-игра: Капитан идёт и подбирает ваши открытые коды ----------
+// Canvas без библиотек. Золотые жетоны — реальные открытые коды пользователя; подобрал —
+// над головой всплывает название фильма (тап по облачку открывает карточку).
+// Тап — прыжок. Два режима: спокойная сцена в «Достижениях» (без препятствий) и раунд на 45 секунд
+// (кнопка «Играть»): очки за путь и жетоны, комбо, препятствия-попкорн, личный рекорд на устройстве.
+// Баллы бота за игру не начисляются — только рекорд и удовольствие.
+let CAP_STOP = null, CAP_GAME_STOP = null;
+const CAP_BEST_KEY = 'kino_cap_best';
+const CAP_ROUND_SEC = 45;
+function startCaptainScene(wrap, unlocked, all, opts = {}) {
+  const game = !!opts.game;
+  if (game) { if (CAP_GAME_STOP) CAP_GAME_STOP(); } else if (CAP_STOP) CAP_STOP();
+  const canvas = wrap.querySelector('canvas');
+  const bubble = wrap.querySelector('.cap-bubble');
+  const counter = wrap.querySelector('.cap-count');
+  if (!canvas || !canvas.getContext) return () => {};
+  const ctx = canvas.getContext('2d');
+  const H = opts.H || 150, GY = H - 26;
+  const reduce = !game && window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const byCode = new Map(all.map(m => [String(m.code), m]));
+  const codes = unlocked.map(String).filter(c => byCode.has(c));
+  const level = codes.length;           // наряд растёт вместе с коллекцией
+  let W = 0, dpr = 1;
+  function fit() {
+    W = Math.max(240, wrap.clientWidth || 320);
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  fit();
+
+  let off = 0, ph = 0, jumpY = 0, vy = 0, got = 0, bubbleTimer = 0, last = performance.now();
+  let score = 0, combo = 0, elapsed = 0, stumble = 0, flash = 0, over = false, hintShown = false;
+  let jumps = 0, magnet = 0;
+  const PAL = [['#0b1230', '#1d2b5a', '#243a6e'], ['#2a1245', '#6a2f6e', '#4b2a63'], ['#07262b', '#14505a', '#1c5f6b']];
+  const pal = game ? PAL[Math.floor(Math.random() * PAL.length)] : PAL[0];
+  const tokens = [], obstacles = [], sparks = [];
+  let cursor = Math.floor(Math.random() * Math.max(1, codes.length));
+  let nextX = W * 0.75, nextObs = W * 1.1;
+  function spawn() {
+    const high = Math.random() < 0.4;
+    const t = { x: nextX, y: GY - (high ? 92 : 40), high, got: false };
+    if (game && Math.random() < 0.1) t.ticket = true;                 // 🎟 билет-магнит
+    else if (codes.length) { t.code = codes[cursor % codes.length]; cursor++; } else { t.lock = true; }
+    tokens.push(t);
+    nextX += 120 + Math.random() * 90;
+  }
+  function spawnObstacle() {
+    let x = nextObs;
+    if (tokens.some(t => !t.high && Math.abs(t.x - x) < 45)) x += 70;   // не поверх жетона у земли
+    obstacles.push({ x, hit: false });
+    nextObs = x + 230 + Math.random() * 170;
+  }
+  while (nextX < W * 2) spawn();
+  if (game) while (nextObs < W * 2) spawnObstacle();
+
+  function say(html, code, secs) {
+    if (!bubble) return;
+    bubble.innerHTML = html; bubble.dataset.code = code || '';
+    bubble.classList.add('show'); bubbleTimer = secs || 2.6;
+  }
+  function jump() {
+    if (over) return;
+    if (jumpY === 0 && vy === 0) { vy = 330; jumps = 1; haptic('light'); }
+    else if (jumps === 1) { vy = 290; jumps = 2; sparkle(W * 0.28, GY - 30 - jumpY, '#ffffff', 6); haptic('light'); }   // двойной прыжок
+  }
+  canvas.onpointerdown = jump;
+  if (bubble) bubble.onclick = () => { const c = bubble.dataset.code; if (c) { if (opts.onOpen) opts.onOpen(); openDetail(c); } };
+
+  function sparkle(x, y, color, n = 9) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * 6.28, s = 40 + Math.random() * 70;
+      sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 30, life: 0.6, color });
+    }
+  }
+  function leg(x, y, ang) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+    ctx.fillStyle = '#16264a'; ctx.fillRect(-2.5, 0, 5, 13);
+    ctx.fillStyle = '#2b1b12'; ctx.fillRect(-3, 12, 8, 4);
+    ctx.restore();
+  }
+  function arm(x, y, ang) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+    ctx.fillStyle = '#244a86'; ctx.fillRect(-2, 0, 4, 11);
+    ctx.fillStyle = '#f2c9a0'; ctx.beginPath(); ctx.arc(0, 12, 2.6, 0, 6.28); ctx.fill();
+    ctx.restore();
+  }
+  function drawCaptain(cx, base, airborne) {
+    const bob = airborne ? 0 : Math.abs(Math.sin(ph)) * 2;
+    const sw = airborne ? 0.9 : Math.sin(ph) * 0.7;
+    const tilt = stumble > 0 ? Math.sin(elapsed * 40) * 0.08 : 0;
+    const y0 = base - bob;
+    ctx.fillStyle = 'rgba(0,0,0,.28)';
+    ctx.beginPath(); ctx.ellipse(cx, GY + 2, Math.max(6, 13 - jumpY / 12), 3.5, 0, 0, 6.28); ctx.fill();
+    ctx.save(); ctx.translate(cx, y0); ctx.rotate(tilt); ctx.translate(-cx, -y0);
+    arm(cx - 9, y0 - 36, -sw);
+    leg(cx - 3, y0 - 14, sw); leg(cx + 3, y0 - 14, -sw);
+    ctx.fillStyle = '#1f3a68';
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(cx - 10, y0 - 40, 20, 27, 5) : ctx.rect(cx - 10, y0 - 40, 20, 27);
+    ctx.fill();
+    ctx.fillStyle = '#f5c542';
+    ctx.beginPath(); ctx.arc(cx + 2, y0 - 33, 1.6, 0, 6.28); ctx.arc(cx + 2, y0 - 27, 1.6, 0, 6.28); ctx.fill();
+    ctx.fillStyle = '#0f1c38'; ctx.fillRect(cx - 10, y0 - 19, 20, 3);
+    if (level >= 25) {                      // медаль — за 25 открытых кодов
+      ctx.fillStyle = '#e24b4b'; ctx.beginPath(); ctx.arc(cx - 5, y0 - 33, 2.6, 0, 6.28); ctx.fill();
+      ctx.fillStyle = '#ffd96a'; ctx.fillRect(cx - 5.7, y0 - 37, 1.4, 3);
+    }
+    arm(cx + 9, y0 - 36, sw);
+    ctx.fillStyle = '#f2c9a0';
+    ctx.beginPath(); ctx.arc(cx, y0 - 49, 9, 0, 6.28); ctx.fill();
+    ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(cx + 3.5, y0 - 50, 1.3, 0, 6.28); ctx.fill();
+    ctx.strokeStyle = '#8a4b2a'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(cx + 1, y0 - 45); ctx.quadraticCurveTo(cx + 6, y0 - 44, cx + 9, y0 - 46); ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(cx, y0 - 53, 9.5, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = level >= 10 ? '#d9a521' : '#16264a'; ctx.fillRect(cx - 9.5, y0 - 55, 19, 4);   // золотой околыш — за 10 кодов
+    ctx.fillStyle = '#111'; ctx.fillRect(cx + 1, y0 - 51.5, 12, 2.4);
+    ctx.fillStyle = '#f5c542'; ctx.beginPath(); ctx.arc(cx, y0 - 57, 2.3, 0, 6.28); ctx.fill();
+    ctx.restore();
+  }
+  function drawToken(t) {
+    const x = t.x - off, y = t.y + Math.sin((t.x + off * 0.3) / 18) * 3;
+    ctx.save();
+    if (t.ticket) {
+      ctx.translate(x, y); ctx.rotate(-0.12);
+      ctx.fillStyle = '#e24b4b'; ctx.fillRect(-16, -10, 32, 20);
+      ctx.fillStyle = '#0b1230'; ctx.beginPath(); ctx.arc(-16, 0, 4, 0, 6.28); ctx.arc(16, 0, 4, 0, 6.28); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = '700 10px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('🧲', 0, 1);
+      ctx.restore(); return;
+    }
+    ctx.fillStyle = t.lock ? '#56607a' : '#f5c542';
+    ctx.strokeStyle = t.lock ? '#7a859f' : '#fff2b0'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, 13, 0, 6.28); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = t.lock ? '#d5dbea' : '#4a3200';
+    ctx.font = '700 11px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(t.lock ? '?' : String(t.code).slice(0, 4), x, y + 0.5);
+    ctx.restore();
+  }
+  function drawObstacle(o) {       // ведёрко попкорна
+    const x = o.x - off, y = GY;
+    ctx.save();
+    ctx.globalAlpha = o.hit ? 0.35 : 1;
+    ctx.fillStyle = '#fff3d0';
+    for (const [dx, dy, r] of [[-7, -27, 5], [0, -30, 6], [7, -27, 5], [-3, -24, 5], [4, -24, 5]]) {
+      ctx.beginPath(); ctx.arc(x + dx, y + dy, r, 0, 6.28); ctx.fill();
+    }
+    ctx.beginPath(); ctx.moveTo(x - 12, y - 24); ctx.lineTo(x + 12, y - 24); ctx.lineTo(x + 9, y); ctx.lineTo(x - 9, y); ctx.closePath();
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.fillStyle = '#d93b3b';
+    for (let i = -1; i <= 1; i++) {
+      ctx.beginPath(); ctx.moveTo(x + i * 8 - 3, y - 24); ctx.lineTo(x + i * 8 + 3, y - 24);
+      ctx.lineTo(x + i * 6 + 2, y); ctx.lineTo(x + i * 6 - 2, y); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawScene() {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, pal[0]); g.addColorStop(1, pal[1]);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    for (let i = 0; i < 18; i++) {
+      const sx = ((i * 97 - off * 0.08) % (W + 20) + (W + 20)) % (W + 20) - 10;
+      ctx.fillRect(sx, 12 + (i * 37) % Math.max(60, H - 90), 1.5, 1.5);
+    }
+    ctx.fillStyle = 'rgba(255,255,255,.07)';
+    ctx.fillRect(0, 22, W, 20);
+    for (let x = -((off * 0.25) % 16); x < W; x += 16) ctx.clearRect(x + 4, 25, 8, 4), ctx.clearRect(x + 4, 35, 8, 4);
+    ctx.fillStyle = pal[2];
+    for (let i = 0; i < 6; i++) {
+      const bx = ((i * 140 - off * 0.35) % (W + 160) + (W + 160)) % (W + 160) - 80;
+      ctx.fillRect(bx, GY - 26 - (i % 3) * 10, 46, 26 + (i % 3) * 10);
+    }
+    ctx.fillStyle = '#10182f'; ctx.fillRect(0, GY, W, H - GY);
+    ctx.fillStyle = '#f5c542';
+    for (let x = -(off % 40); x < W; x += 40) ctx.fillRect(x, GY + 12, 18, 3);
+  }
+  function drawHud() {
+    ctx.save();
+    ctx.font = '700 13px system-ui, sans-serif'; ctx.textBaseline = 'top';
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
+    ctx.fillText(`Счёт ${Math.floor(score)}`, 10, 8);
+    if (combo >= 2) { ctx.fillStyle = '#ffd96a'; ctx.fillText(`комбо ×${Math.min(combo, 5)}`, 10, 26); }
+    if (magnet > 0) { ctx.textAlign = 'center'; ctx.fillStyle = '#ffd96a'; ctx.fillText(`🧲 ${Math.ceil(magnet)}`, W / 2, 8); }
+    ctx.textAlign = 'right'; ctx.fillStyle = '#fff';
+    ctx.fillText(`⏱ ${Math.max(0, Math.ceil(CAP_ROUND_SEC - elapsed))}`, W - 10, 8);
+    ctx.restore();
+  }
+  function finish() {
+    over = true;
+    const final = Math.floor(score);
+    let best = 0;
+    try { best = parseInt(localStorage.getItem(CAP_BEST_KEY) || '0', 10) || 0; } catch (e) {}
+    const record = final > best;
+    if (record) { try { localStorage.setItem(CAP_BEST_KEY, String(final)); } catch (e) {} }
+    haptic(record ? 'ok' : 'light');
+    if (opts.onEnd) opts.onEnd({ score: final, got, best: Math.max(best, final), record });
+  }
+  function frame(dt) {
+    const speed = game ? (70 + Math.min(70, elapsed * 1.6)) * (stumble > 0 ? 0.4 : 1) : 55;
+    off += speed * dt; ph += speed * dt / 9;
+    if (game) {
+      elapsed += dt; score += speed * dt / 10;
+      if (stumble > 0) stumble -= dt;
+      if (flash > 0) flash -= dt;
+      if (elapsed >= CAP_ROUND_SEC) { finish(); return; }
+    }
+    if (vy !== 0 || jumpY > 0) {
+      vy -= 900 * dt; jumpY += vy * dt;
+      if (jumpY <= 0) { jumpY = 0; vy = 0; jumps = 0; }
+    }
+    const capX = W * 0.28;
+    if (magnet > 0) {
+      magnet -= dt;
+      for (const t of tokens) {
+        if (t.got || t.ticket) continue;
+        const dx = t.x - off - capX;
+        if (Math.abs(dx) < 160) { t.x -= dx * dt * 3.5; t.y += ((GY - 30 - jumpY) - t.y) * dt * 4; }
+      }
+    }
+    for (const t of tokens) {
+      if (t.got) continue;
+      const tx = t.x - off;
+      if (Math.abs(tx - capX) < 20 && Math.abs(t.y - (GY - 30 - jumpY)) < 34) {
+        t.got = true;
+        if (t.ticket) {
+          magnet = 6; sparkle(tx, t.y, '#ff8a8a', 12);
+          say('🎟 Билет! Жетоны сами летят к Капитану', '', 1.8); haptic('medium');
+          continue;
+        }
+        got++;
+        sparkle(tx, t.y, t.lock ? '#9aa6c6' : '#ffd96a');
+        if (game) { combo++; score += t.lock ? 5 : 20 * Math.min(combo, 5); }
+        if (t.lock) {
+          if (!game || !hintShown) { hintShown = true; say('Пока пусто 🔍 Пришлите боту код — Капитан его подберёт.'); }
+        } else {
+          const m = byCode.get(String(t.code));
+          say(`🔑 <b>${esc(m.title)}</b> · код ${esc(t.code)}`, t.code);
+          haptic('light');
+        }
+        if (counter && !game) counter.textContent = `В пути подобрано: ${got}`;
+      }
+    }
+    if (game) {
+      for (const o of obstacles) {
+        if (o.hit) continue;
+        if (Math.abs(o.x - off - capX) < 16 && jumpY < 22) {
+          o.hit = true; combo = 0; stumble = 0.5; flash = 0.25;
+          sparkle(o.x - off, GY - 20, '#fff3d0', 12);
+          say('Ой, попкорн! 🍿 Прыгай заранее', '', 1.4);
+          haptic('medium');
+        }
+      }
+      while (obstacles.length && obstacles[0].x - off < -40) obstacles.shift();
+      while (nextObs - off < W * 1.6) spawnObstacle();
+    }
+    while (tokens.length && tokens[0].x - off < -40) tokens.shift();
+    while (nextX - off < W * 1.6) spawn();
+    for (const s of sparks) { s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 160 * dt; s.life -= dt; }
+    for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
+    if (bubbleTimer > 0) { bubbleTimer -= dt; if (bubbleTimer <= 0 && bubble) bubble.classList.remove('show'); }
+  }
+  function draw() {
+    drawScene();
+    obstacles.forEach(drawObstacle);
+    tokens.forEach(t => { if (!t.got) drawToken(t); });
+    drawCaptain(W * 0.28, GY - jumpY, jumpY > 0);
+    for (const s of sparks) { ctx.globalAlpha = Math.max(0, s.life / 0.6); ctx.fillStyle = s.color; ctx.fillRect(s.x, s.y, 3, 3); }
+    ctx.globalAlpha = 1;
+    if (flash > 0) { ctx.fillStyle = `rgba(255,80,80,${flash})`; ctx.fillRect(0, 0, W, H); }
+    if (game) drawHud();
+  }
+
+  let raf = 0, stopped = false, visible = true, io = null;
+  function stop() { stopped = true; cancelAnimationFrame(raf); if (io) io.disconnect(); }
+  function loop(now) {
+    if (stopped) return;
+    if (!document.body.contains(canvas)) { stop(); return; }
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (visible && !document.hidden && !over) {
+      if (Math.abs(wrap.clientWidth - W) > 4 && wrap.clientWidth) fit();
+      frame(dt); draw();
+    }
+    if (over) { draw(); stop(); return; }
+    raf = requestAnimationFrame(loop);
+  }
+  if ('IntersectionObserver' in window) {
+    io = new IntersectionObserver(es => { visible = es[0].isIntersecting; last = performance.now(); });
+    io.observe(canvas);
+  }
+  if (reduce) { draw(); return stop; }
+  if (game) CAP_GAME_STOP = stop; else CAP_STOP = stop;
+  raf = requestAnimationFrame(loop);
+  return stop;
+}
+
+// Раунд на 45 секунд в полноэкранной панели.
+function openCaptainGame() {
+  if (CAP_STOP) { CAP_STOP(); CAP_STOP = null; }
+  let ov = document.getElementById('cap-game');
+  if (ov) ov.remove();
+  ov = document.createElement('div');
+  ov.id = 'cap-game'; ov.className = 'cap-game';
+  ov.innerHTML = `
+    <div class="cap-game-card">
+      <button class="cap-game-x" aria-label="Закрыть">✕</button>
+      <h3>🎮 Капитан в пути</h3>
+      <p class="cap-game-hint">Тапай — Капитан прыгает, тап в воздухе — второй прыжок. Бери жетоны (твои коды), лови 🎟 билеты-магниты и перепрыгивай попкорн. Раунд ${CAP_ROUND_SEC} секунд.</p>
+      <div class="cap-scene" id="cap-game-scene">
+        <canvas aria-label="Игра: Капитан Кино собирает коды"></canvas>
+        <div class="cap-bubble" role="button"></div>
+      </div>
+      <div class="cap-result hidden"></div>
+    </div>`;
+  document.body.appendChild(ov);
+  const scene = ov.querySelector('#cap-game-scene');
+  const result = ov.querySelector('.cap-result');
+  const H = Math.max(170, Math.min(300, Math.round(window.innerHeight * 0.4)));
+  const unlocked = getUnlocked();
+  let stopGame = () => {};
+  function close() {
+    stopGame(); if (CAP_GAME_STOP) CAP_GAME_STOP();
+    ov.remove();
+    if (!document.getElementById('view-achievements').classList.contains('hidden')) renderCodeCollection();
+  }
+  function run() {
+    result.classList.add('hidden'); result.innerHTML = '';
+    stopGame = startCaptainScene(scene, unlocked, ALL, {
+      game: true, H, onOpen: () => { close(); },
+      onEnd: (r) => {
+        const share = 'https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') +
+          '&text=' + encodeURIComponent(`Я набрал ${r.score} очков в игре «Капитан в пути» 🎬 Сможешь больше?`);
+        result.innerHTML = `
+          <div class="cap-res-score">${r.score} <small>очков</small></div>
+          <div class="cap-res-line">${r.record ? '🏆 Новый рекорд!' : `Рекорд: ${r.best}`} · жетонов: ${r.got}</div>
+          <div class="cap-res-btns">
+            <button class="btn-primary" data-act="again">Ещё раз</button>
+            <button class="btn-secondary" data-act="share">Поделиться</button>
+          </div>`;
+        result.classList.remove('hidden');
+        result.querySelector('[data-act=again]').onclick = () => { haptic('light'); run(); };
+        result.querySelector('[data-act=share]').onclick = () => { haptic('light'); try { tg.openTelegramLink(share); } catch (e) {} };
+      },
+    });
+  }
+  ov.querySelector('.cap-game-x').onclick = close;
+  ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+  run();
 }
 
 // ---------- hero-полка «Сейчас в тренде» ----------
@@ -6357,6 +6716,7 @@ function openKinogod() {
     tg.openTelegramLink('https://t.me/kapitan_kino_bot');
   });
 }
+document.getElementById('btn-cap-game')?.addEventListener('click', () => { haptic('light'); openCaptainGame(); });
 document.getElementById('btn-ask-captain')?.addEventListener('click', () => {
   haptic('light');
   sendOrDeepLink({ action: 'ask_captain' });
@@ -6836,7 +7196,7 @@ function showOnboarding() {
 }
 
 // v98: «Что нового» — показываем один раз на версию, только после входа в апп
-const CHANGELOG_V = '125';
+const CHANGELOG_V = '155';
 const CL_KEY = 'kinoafisha_seen_changelog';
 function showChangelog(force = false) {
   // v101: force=true — открываем даже если уже видели («Ещё → Что нового»)
