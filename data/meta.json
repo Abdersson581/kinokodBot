@@ -1,17 +1,17 @@
 {
- "code_of_day": "453",
- "code_of_day_date": "2026-11-13",
- "updated_at": "2026-11-13",
+ "code_of_day": "416",
+ "code_of_day_date": "2026-11-14",
+ "updated_at": "2026-11-14",
  "leaderboard": [
   {
    "rank": 1,
    "unlocks": 5,
-   "total": 94
+   "total": 95
   },
   {
    "rank": 2,
-   "unlocks": 4,
-   "total": 140
+   "unlocks": 3,
+   "total": 5
   },
   {
    "rank": 3,
@@ -21,7 +21,7 @@
   {
    "rank": 4,
    "unlocks": 2,
-   "total": 4
+   "total": 140
   },
   {
    "rank": 5,
@@ -30,70 +30,70 @@
   },
   {
    "rank": 6,
-   "unlocks": 1,
-   "total": 5
-  },
-  {
-   "rank": 7,
    "unlocks": 0,
    "total": 19
   },
   {
-   "rank": 8,
+   "rank": 7,
    "unlocks": 0,
    "total": 16
   },
   {
-   "rank": 9,
+   "rank": 8,
    "unlocks": 0,
    "total": 14
   },
   {
-   "rank": 10,
+   "rank": 9,
    "unlocks": 0,
    "total": 12
+  },
+  {
+   "rank": 10,
+   "unlocks": 0,
+   "total": 10
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
-   "options": [
-    "Зеленая миля",
-    "Первый день моей жизни",
-    "Расплата",
-    "Уличный кот по кличке Боб"
-   ]
-  },
-  {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Бобро поржаловать!",
+    "История рыцаря",
+    "Палмер",
     "Побег из Шоушенка",
-    "Волк с Уолл-стрит",
-    "Два ствола"
+    "О чем говорят незнакомцы"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "1+1",
-    "Война миров Z",
     "Начало",
-    "Банк Дэйва"
+    "Ангел-А",
+    "Дело храбрых",
+    "Тетрис"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Хатико: Самый верный друг",
-    "Тело",
-    "Проклятый путь",
-    "Последний самурай"
+    "Злобные маленькие письма",
+    "Ночная сова",
+    "16 кварталов",
+    "Хатико: Самый верный друг"
+   ]
+  },
+  {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
+   "options": [
+    "На грани",
+    "Зеленая миля",
+    "Между нами горы",
+    "Бобро поржаловать!"
    ]
   }
  ],
@@ -202,16 +202,16 @@
    "film_id": 5582129
   },
   {
-   "title": "Бумажный тигр",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7420147.jpg",
-   "ru_date": "2026-11-19",
-   "film_id": 7420147
-  },
-  {
    "title": "Увидеть всё",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14001130.jpg",
    "ru_date": "2026-11-19",
    "film_id": 14001130
+  },
+  {
+   "title": "Бумажный тигр",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7420147.jpg",
+   "ru_date": "2026-11-19",
+   "film_id": 7420147
   },
   {
    "title": "Дедмобиль",
