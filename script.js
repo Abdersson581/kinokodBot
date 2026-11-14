@@ -494,6 +494,7 @@ ${t}
       <span class="pg-info">🎬 ${s.length}</span>
     </div>`:"",a=u=>u.trailer_thumb||u.poster||(u.trailer_yt?`https://i.ytimg.com/vi/${encodeURIComponent(u.trailer_yt)}/0.jpg`:""),l=u=>u.poster||(u.trailer_yt?`https://i.ytimg.com/vi/${encodeURIComponent(u.trailer_yt)}/hqdefault.jpg`:""),d=getTrailerPins();let m="";if(!e&&!trailerGenre&&_trailerPage===1&&s.length>=6){const u=new Date,p=u.getFullYear()*400+u.getMonth()*31+u.getDate(),g=s.filter(b=>(parseFloat(b.rating)||0)>=7&&a(b)),y=g.length?g[p%g.length]:null;if(y){const b=(y.genres||[]).slice(0,2).join(" · ");m=`<div class="tr-hero" data-code="${esc(y.code)}">
         <div class="tr-hero-bg" style="background-image:url('${esc(a(y))}')"></div>
+        <img class="tr-hero-poster" src="${esc(a(y))}" alt="" onerror="this.style.display='none'"/>
         <div class="tr-hero-body">
           <span class="tr-hero-tag">🎬 Трейлер дня</span>
           <h3>${esc(y.title)}</h3>
