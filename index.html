@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=180" />
+  <link rel="stylesheet" href="style.css?v=181" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -130,17 +130,19 @@
       <div id="country-chips" class="genre-chips hidden"></div>
       <div id="search-hist" class="search-hist hidden"></div>
       <div id="code-day-banner" class="code-day hidden"></div>
-      <div id="streak-strip" class="streak-strip hidden"></div>
-      <div id="chall-pane" class="chall-pane hidden">
-        <div class="chall-head" id="chall-head">
-          <span class="chall-title">🎯 Цель дня</span>
-          <span class="chall-count" id="chall-count">0/3</span>
-          <span class="chall-arrow" id="chall-arrow">▾</span>
+      <div class="day-pair" id="day-pair">
+        <div id="streak-strip" class="streak-strip hidden"></div>
+        <div id="chall-pane" class="chall-pane hidden">
+          <div class="chall-head" id="chall-head">
+            <span class="chall-title">🎯 Цель дня</span>
+            <span class="chall-count" id="chall-count">0/3</span>
+            <span class="chall-arrow" id="chall-arrow">▾</span>
+          </div>
+          <div id="chall-list" class="chall-list">
+            <div class="chall-list"><div class="chall-item">Загрузка…</div></div>
+          </div>
+          <button class="btn-primary hidden" id="chall-reward" style="margin:8px 10px 10px">💰 Забрать баллы за цель дня</button>
         </div>
-        <div id="chall-list" class="chall-list">
-          <div class="chall-list"><div class="chall-item">Загрузка…</div></div>
-        </div>
-        <button class="btn-primary hidden" id="chall-reward" style="margin:8px 10px 10px">💰 Забрать баллы за цель дня</button>
       </div>
       <div id="filmday-banner" class="filmday-banner hidden"></div>
       <div id="code-wallet" class="code-wallet hidden"></div>
@@ -662,7 +664,7 @@
   })();
   </script>
 
-  <script src="script.js?v=180"></script>
+  <script src="script.js?v=181"></script>
 </body>
 </html>
 
