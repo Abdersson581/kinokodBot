@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=177" />
+  <link rel="stylesheet" href="style.css?v=178" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -70,6 +70,7 @@
         <button class="more-item" data-view="cols">📚 Подборки</button>
         <button class="more-item" data-view="top">🏆 Топ</button>
         <button class="more-item" data-view="achievements">🎖 Достижения</button>
+        <button class="more-item" data-view="library">📚 Моя библиотека</button>
         <button class="more-item" data-view="profile">👤 Профиль</button>
         <button class="more-item" data-view="fav">❤️ Моё</button>
         <button class="more-item" data-view="game">🏋 Тренажёр</button>
@@ -201,6 +202,11 @@
     <!-- Кино-путь (цепочка человек — фильм — человек) -->
     <div id="view-chain" class="hidden">
       <main id="chain-container"></main>
+    </div>
+
+    <!-- v177: Моя библиотека -->
+    <div id="view-library" class="hidden">
+      <main id="library-container" class="library-feed"></main>
     </div>
 
     <!-- v176: Кино-карта -->
@@ -659,7 +665,7 @@
   })();
   </script>
 
-  <script src="script.js?v=177"></script>
+  <script src="script.js?v=178"></script>
 </body>
 </html>
 
