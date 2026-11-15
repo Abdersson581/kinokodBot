@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=179" />
+  <link rel="stylesheet" href="style.css?v=180" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -99,10 +99,7 @@
 
     <!-- Афиша + Моё -->
     <div id="view-catalog">
-      <div class="quick-row" id="quick-row">
-        <button class="quick-btn" data-go="tonight"><span>🌙</span><div class="qb-txt"><b>Сегодня вечером</b><i>по настроению</i></div></button>
-        <button class="quick-btn" data-go="quiz"><span>🧠</span><div class="qb-txt"><b>Викторина дня</b><i>5 вопросов</i></div></button>
-      </div>
+      <div class="today-strip" id="quick-row"></div>
       <div class="toolbar glass" id="toolbar">
         <input type="text" id="search" placeholder="🔍 Поиск или код…" />
         <select id="sort">
@@ -665,7 +662,7 @@
   })();
   </script>
 
-  <script src="script.js?v=179"></script>
+  <script src="script.js?v=180"></script>
 </body>
 </html>
 
