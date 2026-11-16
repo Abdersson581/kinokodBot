@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=183" />
+  <link rel="stylesheet" href="style.css?v=184" />
 </head>
 <body>
   <div id="err-banner" class="hidden"></div>
@@ -67,6 +67,8 @@
         <button class="more-item" id="more-duo">👥 Выбор на двоих</button>
         <button class="more-item" data-view="quiz">🧠 Викторина дня</button>
         <button class="more-item" data-view="map">🌍 Кино-карта</button>
+        <button class="more-item" data-view="trailers">🎥 Трейлеры</button>
+        <button class="more-item" data-view="news">📰 Новости</button>
         <button class="more-item" data-view="cols">📚 Подборки</button>
         <button class="more-item" data-view="top">🏆 Топ</button>
         <button class="more-item" data-view="achievements">🎖 Достижения</button>
@@ -99,6 +101,8 @@
 
     <!-- Афиша + Моё -->
     <div id="view-catalog">
+      <div id="tonight-hero" class="t-hero hidden"></div>
+      <div id="t-links" class="t-links hidden"></div>
       <div class="today-strip" id="quick-row"></div>
       <div class="toolbar glass" id="toolbar">
         <input type="text" id="search" placeholder="🔍 Поиск или код…" />
@@ -223,6 +227,8 @@
       <main id="marathon-container"></main>
     </div>
 
+    <div id="view-play" class="hidden"><main id="play-container" class="hub-feed"></main></div>
+    <div id="view-mine" class="hidden"><main id="mine-container" class="hub-feed"></main></div>
     <div id="view-tonight" class="hidden"><main id="tonight-container"></main></div>
     <div id="view-quiz" class="hidden"><main id="quiz-container"></main></div>
 
@@ -311,6 +317,15 @@
       </button>
       <p>Разгадай код — открой фильм 🎁</p>
     </footer>
+  <nav class="bnav" id="bnav" aria-label="Разделы">
+    <button class="bn" data-bn="today"><span class="bn-i">🌙</span><span class="bn-t">Сегодня</span></button>
+    <button class="bn" data-bn="grid"><span class="bn-i">🎬</span><span class="bn-t">Афиша</span></button>
+    <button class="bn" data-bn="play"><span class="bn-i">🎮</span><span class="bn-t">Играть</span></button>
+    <button class="bn" data-bn="mine"><span class="bn-i">👤</span><span class="bn-t">Моё</span><i class="bn-dot hidden" id="bn-dot"></i></button>
+    <button class="bn" data-bn="more"><span class="bn-i">☰</span><span class="bn-t">Ещё</span></button>
+  </nav>
+
+
   </div>
 
   <!-- Экран «О боте» -->
@@ -664,7 +679,7 @@
   })();
   </script>
 
-  <script src="script.js?v=183"></script>
+  <script src="script.js?v=184"></script>
 </body>
 </html>
 
