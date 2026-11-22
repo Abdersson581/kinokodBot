@@ -1,12 +1,12 @@
 {
- "code_of_day": "424",
- "code_of_day_date": "2026-11-21",
- "updated_at": "2026-11-21",
+ "code_of_day": "441",
+ "code_of_day_date": "2026-11-22",
+ "updated_at": "2026-11-22",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 6,
-   "total": 101
+   "unlocks": 7,
+   "total": 102
   },
   {
    "rank": 2,
@@ -15,85 +15,85 @@
   },
   {
    "rank": 3,
-   "unlocks": 1,
-   "total": 5
-  },
-  {
-   "rank": 4,
    "unlocks": 0,
    "total": 140
   },
   {
-   "rank": 5,
+   "rank": 4,
    "unlocks": 0,
    "total": 19
   },
   {
-   "rank": 6,
+   "rank": 5,
    "unlocks": 0,
    "total": 16
   },
   {
-   "rank": 7,
+   "rank": 6,
    "unlocks": 0,
    "total": 14
   },
   {
-   "rank": 8,
+   "rank": 7,
    "unlocks": 0,
    "total": 12
   },
   {
-   "rank": 9,
+   "rank": 8,
    "unlocks": 0,
    "total": 10
   },
   {
-   "rank": 10,
+   "rank": 9,
    "unlocks": 0,
    "total": 8
+  },
+  {
+   "rank": 10,
+   "unlocks": 0,
+   "total": 7
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "Эдди «Орёл»",
-    "Хатико: Самый верный друг",
-    "Обливион",
-    "На цепи"
-   ]
-  },
-  {
-   "emoji": "🐁⚡🧑‍🦱💚",
-   "code": "406",
-   "options": [
-    "Дом у озера",
-    "Отец-молодец",
-    "Зеленая миля",
-    "Храброе сердце"
-   ]
-  },
-  {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Шестое чувство",
-    "Гран Торино",
+    "Миссия Сиренити",
     "Побег из Шоушенка",
-    "Тэмпл Грандин"
+    "Всевидящее око",
+    "Зодиак"
    ]
   },
   {
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Дело храбрых",
-    "Джентльмены",
-    "Истина и измена",
-    "Начало"
+    "Счастливые девочки не умирают",
+    "Эдди «Орёл»",
+    "Начало",
+    "Война миров Z"
+   ]
+  },
+  {
+   "emoji": "🐁⚡🧑‍🦱💚",
+   "code": "406",
+   "options": [
+    "Семь жизней",
+    "Константин: Повелитель тьмы",
+    "Грань будущего",
+    "Зеленая миля"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Суррогаты",
+    "Джанго освобожденный",
+    "Хатико: Самый верный друг",
+    "Первый день моей жизни"
    ]
   }
  ],
@@ -229,6 +229,12 @@
    "film_id": 621
   },
   {
+   "title": "Щелкунчик и Крысиный король",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/324206.jpg",
+   "ru_date": "2026-12-03",
+   "film_id": 324206
+  },
+  {
    "title": "Ведьмин лес",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/628328.jpg",
    "ru_date": "2026-12-03",
@@ -245,12 +251,6 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9403071.jpg",
    "ru_date": "2026-12-03",
    "film_id": 9403071
-  },
-  {
-   "title": "Сказочные выходные",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5203758.jpg",
-   "ru_date": "2026-12-03",
-   "film_id": 5203758
   }
  ]
 }
