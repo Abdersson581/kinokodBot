@@ -1,78 +1,1603 @@
-var be,ke,Se,we;const tg=window.Telegram.WebApp;tg.ready(),tg.expand();const ACCESS_KEY="kinoafisha_access",CHANNEL_URL="https://t.me/capitanKino1";function showGate(){markSessionOpen(),document.getElementById("gate").classList.remove("hidden"),document.getElementById("app").classList.add("hidden"),document.getElementById("btn-gate-channel").onclick=()=>tg.openTelegramLink(CHANNEL_URL),document.getElementById("btn-gate-check").onclick=()=>sendOrDeepLink({action:"access_check"});const t=document.getElementById("btn-gate-preview");t&&(t.onclick=()=>{track("preview"),enterApp(!0)})}function showPreviewBanner(){if(document.getElementById("preview-banner"))return;const t=document.createElement("div");t.id="preview-banner",t.className="preview-banner",t.innerHTML='<span>👀 Режим просмотра — подпишись, чтобы открывать коды</span><button type="button" id="pv-sub">Подписаться</button>';const e=document.getElementById("app");e.insertBefore(t,e.firstChild),document.getElementById("pv-sub").onclick=()=>{try{tg.openTelegramLink(CHANNEL_URL)}catch(n){window.open(CHANNEL_URL,"_blank")}}}function enterApp(t){t!==!0&&localStorage.setItem(ACCESS_KEY,"1"),markSessionOpen(),document.getElementById("gate").classList.add("hidden"),document.getElementById("app").classList.remove("hidden"),t===!0&&showPreviewBanner(),parseProfileHash(),parseUnlockedHash(),parseRestoreHash(),parseMarathonHash(),bumpDaily(),initHideToggle(),initFiltersToggle(),applyGridCols(),initSearchHist(),renderTimeChips(),initShelfArrows(),initHeaderScroll(),showSeasonalBanner(),loadMovies(),restoreProfileFromCloud().then(e=>{if(e){try{renderGrid()}catch(n){}try{updateHeaderProgress()}catch(n){}try{renderStreakStrip()}catch(n){}try{updateChallPane()}catch(n){}if(PROFILE&&view==="profile")try{renderProfile()}catch(n){}if(e.wasEmpty)try{tg.showPopup({type:"ok",title:"☁️ Профиль восстановлен",message:"Твой список, оценки и заметки подтянулись из облака Telegram — они теперь с тобой на любом устройстве."})}catch(n){}}})}const THEME_KEY="kinoafisha_theme";function tgThemeAvailable(){try{return!!(tg&&tg.themeParams&&tg.themeParams.bg_color)}catch(t){return!1}}function readTelegramTheme(){try{const t=tg.themeParams||{},e=document.documentElement.style,n=(s,i)=>{i&&e.setProperty(s,i)};n("--tg-bg",t.bg_color),n("--tg-card",t.secondary_bg_color||t.section_bg_color||t.bg_color),n("--tg-text",t.text_color),n("--tg-muted",t.hint_color),n("--tg-accent",t.button_color||t.link_color||t.accent_text_color),n("--tg-line",t.section_separator_color)}catch(t){}}function applyTheme(){let e=localStorage.getItem(THEME_KEY);if(!e){const s=new Date().getHours();e=s>=8&&s<20?"light":"dark"}e==="tg"&&!tgThemeAvailable()&&(e="dark"),document.body.classList.toggle("light",e==="light"),document.body.classList.toggle("tgtheme",e==="tg"),e==="tg"&&readTelegramTheme();const n=document.getElementById("btn-theme");n&&(n.textContent=e==="light"?"☀️":e==="tg"?"📱":"🌙",n.title=e==="light"?"Тема: светлая":e==="tg"?"Тема: как в Telegram":"Тема: тёмная")}function currentTheme(){return document.body.classList.contains("tgtheme")?"tg":document.body.classList.contains("light")?"light":"dark"}function toggleTheme(){const t=tgThemeAvailable()?["dark","light","tg"]:["dark","light"],e=t[(t.indexOf(currentTheme())+1)%t.length];localStorage.setItem(THEME_KEY,e),applyTheme(),haptic("light")}function manualTheme(){localStorage.removeItem(THEME_KEY),applyTheme(),haptic("light")}applyTheme(),tg.onEvent("themeChanged",()=>{const t=localStorage.getItem(THEME_KEY);(!t||t==="tg")&&applyTheme()});const ACCENT_KEY="kinoafisha_accent",ACCENTS=["classic","ocean","emerald","purple","neon","gold"],ACCENT_ICONS={classic:"🎨",ocean:"🌊",emerald:"🌿",purple:"🔮",neon:"💠",gold:"✨"};function applyAccent(){const t=localStorage.getItem(ACCENT_KEY)||"classic";document.body.classList.remove(...ACCENTS.filter(n=>n!=="classic").map(n=>"accent-"+n)),t!=="classic"&&document.body.classList.add("accent-"+t);const e=document.getElementById("btn-accent");e&&(e.textContent=ACCENT_ICONS[t]||"🎨"),document.querySelectorAll(".ap-swatch").forEach(n=>n.classList.toggle("active",n.dataset.a===t))}function setAccent(t){localStorage.setItem(ACCENT_KEY,ACCENTS.includes(t)?t:"classic"),applyAccent(),haptic("light")}applyAccent();const accentPop=document.getElementById("accent-pop");document.getElementById("btn-accent").addEventListener("click",t=>{t.stopPropagation();const e=accentPop.classList.contains("hidden");accentPop.classList.toggle("hidden"),e&&haptic("light")}),document.addEventListener("click",t=>{accentPop&&!accentPop.classList.contains("hidden")&&!accentPop.contains(t.target)&&t.target.id!=="btn-accent"&&accentPop.classList.add("hidden")}),document.querySelectorAll("#more-accent .ap-swatch").forEach(t=>t.addEventListener("click",()=>setAccent(t.dataset.a)));function syncMoreMute(){const t=document.getElementById("more-mute");t&&(t.innerHTML=hapticsEnabled()?"<b>🔔 Вибрации</b><i>включены</i>":"<b>🔇 Вибрации</b><i>выключены</i>")}setTimeout(syncMoreMute,0);function getSeason(t){const e=t||new Date,n=(e.getMonth()+1)*100+e.getDate();return n>=1225||n<=107?{key:"ny",emoji:"❄️",text:"С Новым годом! Пусть все коды разгадаются 🎄"}:n>=213&&n<=215?{key:"val",emoji:"💝",text:"День всех влюблённых — загадай фильм тому, кто дорог 💘"}:n>=307&&n<=309?{key:"mar8",emoji:"🌷",text:"С 8 Марта! Кино и цветы — идеальный вечер 🌷"}:n>=1029&&n<=1031?{key:"hal",emoji:"🎃",text:"Хэллоуин! Ужасы в афише уже ждут 👻"}:null}function showSeasonalBanner(){const t=document.getElementById("season-banner");if(!t)return;const e=getSeason();if(!e){t.classList.add("hidden");return}try{if(localStorage.getItem("kinoafisha_season_seen_"+e.key)==="1"){t.classList.add("hidden");return}}catch(s){}t.innerHTML=`<span class="sb-emoji">${e.emoji}</span><span class="sb-text">${esc(e.text)}</span><button class="sb-close" aria-label="Закрыть">✕</button>`,t.classList.remove("hidden");const n=()=>{t.classList.add("hidden");try{localStorage.setItem("kinoafisha_season_seen_"+e.key,"1")}catch(s){}};t.querySelector(".sb-close").addEventListener("click",n)}let ALL=[],COLLS=[],NEWS=[],PREMIERES=[],LEADERBOARD=[],LEADERBOARD_KIND="week",curTab="today",view="grid",activeGenre="",activeCountry="",onlyTrailer=!1,onlyOnline=!1;const GRID_PAGE_SIZE=30;let gridPage=1,_gridFilterKey="";const LAYOUT_KEY="kinoafisha_layout";let gridLayout=(localStorage.getItem(LAYOUT_KEY)||"grid")==="list"?"list":"grid",trailerGenre="";const FAV_KEY="kinoafisha_favs",FAV_MODE_KEY="kinoafisha_fav_mode",getFavs=()=>JSON.parse(localStorage.getItem(FAV_KEY)||"[]"),setFavs=t=>{localStorage.setItem(FAV_KEY,JSON.stringify([...t])),scheduleCloudSync()},toggleFav=t=>{const e=new Set(getFavs()),n=!e.has(t);e.has(t)?e.delete(t):e.add(t),setFavs(e),haptic(n?"ok":"light"),n&&(challDone("add_fav"),bumpWeekStat("favs"))},WATCHED_KEY="kinoafisha_watched",getWatched=()=>JSON.parse(localStorage.getItem(WATCHED_KEY)||"[]"),setWatched=t=>{localStorage.setItem(WATCHED_KEY,JSON.stringify([...t])),scheduleCloudSync()},toggleWatched=t=>{const e=new Set(getWatched());if(e.has(t)?e.delete(t):e.add(t),setWatched(e),haptic(e.has(t)?"ok":"light"),e.has(t))try{bumpWeekStat("watched")}catch(n){}return e.has(t)},NOTES_KEY="kinoafisha_notes",getNotes=()=>JSON.parse(localStorage.getItem(NOTES_KEY)||"{}"),setNote=(t,e)=>{const n=getNotes(),s=(e||"").trim();s?n[t]=s:delete n[t],localStorage.setItem(NOTES_KEY,JSON.stringify(n)),scheduleCloudSync()},MYCOLS_KEY="kinoafisha_mycols",getMyCols=()=>JSON.parse(localStorage.getItem(MYCOLS_KEY)||"[]"),setMyCols=t=>{localStorage.setItem(MYCOLS_KEY,JSON.stringify(t)),scheduleCloudSync()};function newMyCol(t){const e=getMyCols(),n="mc"+Date.now().toString(36);return e.push({id:n,title:(t||"").trim()||"Моя подборка",codes:[]}),setMyCols(e),n}function myColById(t){return getMyCols().find(e=>e.id===t)}function updateMyCol(t,e){setMyCols(getMyCols().map(n=>n.id===t?e(n):n))}const GRID_COLS_KEY="kinoafisha_grid_cols",getGridCols=()=>{const t=parseInt(localStorage.getItem(GRID_COLS_KEY)||"0",10);return[2,3,4].includes(t)?t:0},SEARCH_HIST_KEY="kinoafisha_search_hist",MAX_SEARCH_HIST=6,getSearchHist=()=>JSON.parse(localStorage.getItem(SEARCH_HIST_KEY)||"[]"),addSearchHist=t=>{if(!t)return;const e=getSearchHist().filter(n=>n.toLowerCase()!==t.toLowerCase());e.unshift(t),localStorage.setItem(SEARCH_HIST_KEY,JSON.stringify(e.slice(0,MAX_SEARCH_HIST)))},CHALL_KEY="kinoafisha_challenges",CHALLENGE_LIST=[{id:"watch_trailer",emoji:"🎥",name:"Глянь трейлер",desc:"Открой любой трейлер длиннее 2 минут",check:()=>(window._challTrailerWatched||0)>=1},{id:"open_movie",emoji:"🔍",name:"Открой карточку",desc:"Загляни в карточку любого фильма",check:()=>getRecent().length>=1},{id:"add_fav",emoji:"❤️",name:"Пополни «Моё»",desc:"Добавь фильм в «Хочу посмотреть»",check:()=>getFavs().length>=1}];function challDateKey(){const t=new Date;return`${t.getFullYear()}-${t.getMonth()+1}-${t.getDate()}`}function getChallenges(){try{const t=JSON.parse(localStorage.getItem(CHALL_KEY)||"null");if(t&&t.date===challDateKey())return t}catch(t){}return{date:challDateKey(),done:[]}}function setChallenges(t){localStorage.setItem(CHALL_KEY,JSON.stringify(t))}function challDone(t){const e=getChallenges();e.done.includes(t)||(e.done.push(t),setChallenges(e),updateChallPane())}const RECENT_KEY="kinoafisha_recent",MAX_RECENT=12,getRecent=()=>JSON.parse(localStorage.getItem(RECENT_KEY)||"[]"),addRecent=t=>{const e=getRecent().filter(n=>n!==t);e.unshift(t),localStorage.setItem(RECENT_KEY,JSON.stringify(e.slice(0,MAX_RECENT)))},OPEN_COUNT_KEY="kinoafisha_open_count",getOpenCounts=()=>{try{return JSON.parse(localStorage.getItem(OPEN_COUNT_KEY)||"{}")||{}}catch(t){return{}}};function bumpOpenCount(t){const e=getOpenCounts(),n=String(t);e[n]=(e[n]||0)+1;try{localStorage.setItem(OPEN_COUNT_KEY,JSON.stringify(e))}catch(s){}return e[n]}const TW_KEY="kinoafisha_trailer_watch",MAX_TW=12,getTrailerWatches=()=>{try{return JSON.parse(localStorage.getItem(TW_KEY)||"[]")}catch(t){return[]}},TSEEN_KEY="kino_tr_seen",getTrailerSeen=()=>{try{return new Set(JSON.parse(localStorage.getItem(TSEEN_KEY)||"[]"))}catch(t){return new Set}};function markTrailerSeen(t){try{const e=getTrailerSeen();e.add(String(t)),localStorage.setItem(TSEEN_KEY,JSON.stringify([...e].slice(-600)))}catch(e){}}function pushTrailerWatch(t){markTrailerSeen(t);const e=Date.now();let n=getTrailerWatches().filter(s=>String(s.c)!==String(t));n.unshift({c:String(t),t:e}),n=n.slice(0,MAX_TW),localStorage.setItem(TW_KEY,JSON.stringify(n))}const SESSION_KEY="kinoafisha_watch_session";function startWatchSession(t){localStorage.setItem(SESSION_KEY,JSON.stringify({c:String(t),t:Date.now()}))}function endWatchSession(){try{const t=JSON.parse(localStorage.getItem(SESSION_KEY)||"null");if(!t)return;localStorage.removeItem(SESSION_KEY);const e=Math.round((Date.now()-t.t)/1e3);if(e<2)return;let n=getTrailerWatches().filter(s=>String(s.c)!==t.c);n.unshift({c:t.c,t:Date.now(),sec:e}),localStorage.setItem(TW_KEY,JSON.stringify(n.slice(0,MAX_TW)))}catch(t){localStorage.removeItem(SESSION_KEY)}}function watchProgress(t){const e=getTrailerWatches().find(n=>String(n.c)===String(t));return e&&e.sec||0}const TPIN_KEY="kinoafisha_trailer_pins",getTrailerPins=()=>{try{return JSON.parse(localStorage.getItem(TPIN_KEY)||"[]")}catch(t){return[]}};function toggleTrailerPin(t){const e=getTrailerPins(),n=e.indexOf(String(t));let s=!0;return n>=0?(e.splice(n,1),s=!1):e.unshift(String(t)),localStorage.setItem(TPIN_KEY,JSON.stringify(e)),haptic(s?"ok":"light"),s}const WEEK_STATS_KEY="kinoafisha_week_stats",_wdayKey=(t=new Date)=>`${t.getFullYear()}-${t.getMonth()+1}-${t.getDate()}`,getWeekStats=()=>{try{return JSON.parse(localStorage.getItem(WEEK_STATS_KEY)||"{}")||{}}catch(t){return{}}};function bumpWeekStat(t,e=1){const n=getWeekStats(),s=_wdayKey();n[s]||(n[s]={open:0,trailers:0,favs:0}),n[s][t]=(n[s][t]||0)+e;const i=Object.keys(n).sort();for(;i.length>14;)delete n[i.shift()];localStorage.setItem(WEEK_STATS_KEY,JSON.stringify(n)),bumpYearStat(t)}const YEAR_LOG_KEY="kinoafisha_year_stats",_ymKey=(t=new Date)=>`${t.getFullYear()}-${t.getMonth()+1}`,getYearStats=()=>{try{return JSON.parse(localStorage.getItem(YEAR_LOG_KEY)||"{}")||{}}catch(t){return{}}};function bumpYearStat(t,e=1){const n=getYearStats(),s=_ymKey();n[s]||(n[s]={open:0,trailers:0,favs:0,rated:0}),n[s][t]=(n[s][t]||0)+e;const i=Object.keys(n).sort();for(;i.length>24;)delete n[i.shift()];localStorage.setItem(YEAR_LOG_KEY,JSON.stringify(n))}function week7(){const t=getWeekStats(),e=[];for(let n=6;n>=0;n--){const s=new Date;s.setDate(s.getDate()-n);const i=_wdayKey(s),o=t[i]||{};e.push({date:s,open:o.open||0,trailers:o.trailers||0,favs:o.favs||0,rated:o.rated||0,watched:o.watched||0})}return e}const RECO_KEY="kinoafisha_reco",getRecoHide=()=>JSON.parse(localStorage.getItem(RECO_KEY)||"[]"),setRecoHide=t=>localStorage.setItem(RECO_KEY,JSON.stringify([...t])),RATINGS_KEY="kinoafisha_ratings",getRatings=()=>{try{return JSON.parse(localStorage.getItem(RATINGS_KEY)||"{}")||{}}catch(t){return{}}},myRating=t=>getRatings()[String(t)]||0;function setRating(t,e){const n=getRatings(),s=String(t);e&&n[s]===e?delete n[s]:e?n[s]=e:delete n[s],localStorage.setItem(RATINGS_KEY,JSON.stringify(n)),haptic(e?"ok":"light"),e&&bumpWeekStat("rated"),scheduleCloudSync()}function removeRating(t){const e=getRatings();delete e[String(t)],localStorage.setItem(RATINGS_KEY,JSON.stringify(e)),haptic("light"),scheduleCloudSync()}const ratingWeight=t=>1+(parseInt(t,10)||0)*1.2,HOUR_LOG_KEY="kinoafisha_hour_log";function bumpHourLog(){try{const t=new Date().getHours(),e=JSON.parse(localStorage.getItem(HOUR_LOG_KEY)||"{}")||{};e[t]=(e[t]||0)+1,localStorage.setItem(HOUR_LOG_KEY,JSON.stringify(e))}catch(t){}}function buildInsights(){const t=[];try{const e=JSON.parse(localStorage.getItem(HOUR_LOG_KEY)||"{}")||{};if(Object.values(e).reduce((s,i)=>s+i,0)>=10){let s=0,i=-1;for(let r=0;r<24;r++)(e[r]||0)>i&&(i=e[r]||0,s=r);const o=s>=6&&s<12?"утро ☀️":s>=12&&s<18?"день 🌤":s>=18&&s<24?"вечер 🌆":"ночь 🌙";t.push(`🕐 Ты чаще заходишь <b>${o}</b> (в ${String(s).padStart(2,"0")}:00)`)}}catch(e){}try{const e=getOpenCounts(),n=Object.entries(e).filter(([,s])=>s>=2);if(n.length){n.sort((i,o)=>o[1]-i[1]);const s=ALL.find(i=>String(i.code)===String(n[0][0]));s&&t.push(`👀 Чаще всего открываешь <b>«${esc(s.title)}»</b> — ${n[0][1]} раз(а)`)}}catch(e){}try{const e=getTrailerWatches().reduce((n,s)=>n+(s.sec||0),0);e>=180&&t.push(`▶️ Посмотрел(а) трейлеров на <b>~${Math.round(e/60)} мин</b>`)}catch(e){}try{const e=favouriteGenre();e&&t.push(`🌟 Любимый жанр — <b>${esc(e)}</b>`)}catch(e){}return t.length?`
+// Telegram Web App
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+// ---------- доступ: мягкие ворота подписки ----------
+const ACCESS_KEY = 'kinoafisha_access';
+const CHANNEL_URL = 'https://t.me/capitanKino1';
+
+function showGate() {
+  markSessionOpen();   // v127: заход в приложение считаем и у ворот подписки
+  document.getElementById('gate').classList.remove('hidden');
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('btn-gate-channel').onclick = () => tg.openTelegramLink(CHANNEL_URL);
+  document.getElementById('btn-gate-check').onclick = () =>
+    sendOrDeepLink({ action: 'access_check' });
+  // v232: режим просмотра — афиша и трейлеры открыты, подписка нужна для кодов/игр
+  const pv = document.getElementById('btn-gate-preview');
+  if (pv) pv.onclick = () => { track('preview'); enterApp(true); };
+}
+// v232: баннер «режим просмотра» над шапкой (только без подтверждённой подписки)
+function showPreviewBanner() {
+  if (document.getElementById('preview-banner')) return;
+  const b = document.createElement('div');
+  b.id = 'preview-banner';
+  b.className = 'preview-banner';
+  b.innerHTML = '<span>👀 Режим просмотра — подпишись, чтобы открывать коды</span>' +
+    '<button type="button" id="pv-sub">Подписаться</button>';
+  const app = document.getElementById('app');
+  app.insertBefore(b, app.firstChild);
+  document.getElementById('pv-sub').onclick = () => {
+    try { tg.openTelegramLink(CHANNEL_URL); } catch (e) { window.open(CHANNEL_URL, '_blank'); }
+  };
+}
+function enterApp(preview) {
+  if (preview !== true) localStorage.setItem(ACCESS_KEY, '1');
+  markSessionOpen();   // v127: заход в приложение (новый, если прошёл >30 мин)
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  if (preview === true) showPreviewBanner();
+  parseProfileHash();  // до parseUnlockedHash: тот очищает location.hash
+  parseUnlockedHash();
+  parseRestoreHash();  // v76: «☁️ Восстановить из бота» — до очистки хэша другими
+parseMarathonHash(); // v78: «#marathon=…» — запуск марафона по ссылке от друга
+  bumpDaily();         // v64: ежедневная серия заходит
+  initHideToggle();
+  initFiltersToggle();
+  applyGridCols();
+  initSearchHist();
+  renderTimeChips();  // v77: чипы длительности
+  initShelfArrows();  // v77: стрелки полок (ПК)
+  initHeaderScroll(); // v77: стеклянная шапка
+  showSeasonalBanner();  // v113: праздничное приветствие (в сезон)
+  loadMovies();
+  // v121: облачный профиль — новое устройство подтягивает «Моё» само
+  restoreProfileFromCloud().then((r) => {
+    if (!r) return;
+    try { renderGrid(); } catch (e) {}
+    try { updateHeaderProgress(); } catch (e) {}
+    try { renderStreakStrip(); } catch (e) {}
+    try { updateChallPane(); } catch (e) {}
+    if (PROFILE && view === 'profile') { try { renderProfile(); } catch (e) {} }
+    if (r.wasEmpty) {
+      try {
+        tg.showPopup({
+          type: 'ok',
+          title: '☁️ Профиль восстановлен',
+          message: 'Твой список, оценки и заметки подтянулись из облака Telegram — они теперь с тобой на любом устройстве.',
+        });
+      } catch (e) { /* пусто */ }
+    }
+  });
+}
+// ВНИМАНИЕ: запуск (enterApp/showGate) перенесён в САМЫЙ КОНЕЦ файла —
+// раньше он выполнялся здесь, до объявления ALL/COLLS/обработчиков, и любое
+// падение верхнеуровневого кода оставляло приложение пустым (TDZ-гонка с fetch).
+
+// ---------- тема: авто из Telegram + ручной переключатель (3 режима) ----------
+const THEME_KEY = 'kinoafisha_theme';
+// v123: режим «как в Telegram» — цвета берём из themeParams клиента, чтобы
+// приложение сливалось с чатом (раньше тема была только своя: тёмная/светлая).
+function tgThemeAvailable() {
+  try { return !!(tg && tg.themeParams && tg.themeParams.bg_color); } catch (e) { return false; }
+}
+function readTelegramTheme() {
+  try {
+    const p = tg.themeParams || {};
+    const root = document.documentElement.style;
+    const set = (k, v) => { if (v) root.setProperty(k, v); };
+    set('--tg-bg', p.bg_color);
+    set('--tg-card', p.secondary_bg_color || p.section_bg_color || p.bg_color);
+    set('--tg-text', p.text_color);
+    set('--tg-muted', p.hint_color);
+    set('--tg-accent', p.button_color || p.link_color || p.accent_text_color);
+    set('--tg-line', p.section_separator_color);
+  } catch (e) { /* пусто */ }
+}
+function applyTheme() {
+  // Ручной переключатель имеет приоритет над авто-темой
+  const saved = localStorage.getItem(THEME_KEY);
+  let scheme = saved;
+  if (!scheme) {
+    // v94: авто-тема по времени суток, пока пользователь не выбрал вручную
+    const h = new Date().getHours();
+    scheme = (h >= 8 && h < 20) ? 'light' : 'dark';
+  }
+  if (scheme === 'tg' && !tgThemeAvailable()) scheme = 'dark';  // браузер без Telegram
+  document.body.classList.toggle('light', scheme === 'light');
+  document.body.classList.toggle('tgtheme', scheme === 'tg');
+  if (scheme === 'tg') readTelegramTheme();
+  const btn = document.getElementById('btn-theme');
+  if (btn) {
+    btn.textContent = scheme === 'light' ? '☀️' : (scheme === 'tg' ? '📱' : '🌙');
+    btn.title = scheme === 'light' ? 'Тема: светлая'
+      : (scheme === 'tg' ? 'Тема: как в Telegram' : 'Тема: тёмная');
+  }
+}
+function currentTheme() {
+  if (document.body.classList.contains('tgtheme')) return 'tg';
+  return document.body.classList.contains('light') ? 'light' : 'dark';
+}
+function toggleTheme() {
+  // Цикл: тёмная → светлая → «как в Telegram» (если клиент отдаёт themeParams)
+  const order = tgThemeAvailable() ? ['dark', 'light', 'tg'] : ['dark', 'light'];
+  const next = order[(order.indexOf(currentTheme()) + 1) % order.length];
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme();
+  haptic('light');
+}
+function manualTheme() {
+  // Возврат к авто-теме (время суток / тема клиента)
+  localStorage.removeItem(THEME_KEY);
+  applyTheme();
+  haptic('light');
+}
+applyTheme();
+tg.onEvent('themeChanged', () => {
+  // Авто-тема и режим «как в Telegram» подхватывают смену темы в клиенте
+  const saved = localStorage.getItem(THEME_KEY);
+  if (!saved || saved === 'tg') applyTheme();
+});
+
+// ---------- акцент-пресеты (classic / ocean / emerald / purple / neon / gold) ----------
+// Наборы цвета оформления; стили описаны в style.css через body.accent-*.
+const ACCENT_KEY = 'kinoafisha_accent';
+const ACCENTS = ['classic', 'ocean', 'emerald', 'purple', 'neon', 'gold'];
+const ACCENT_ICONS = { classic: '🎨', ocean: '🌊', emerald: '🌿', purple: '🔮', neon: '💠', gold: '✨' };
+function applyAccent() {
+  const cur = localStorage.getItem(ACCENT_KEY) || 'classic';
+  document.body.classList.remove(...ACCENTS.filter(a => a !== 'classic').map(a => 'accent-' + a));
+  if (cur !== 'classic') document.body.classList.add('accent-' + cur);
+  const btn = document.getElementById('btn-accent');
+  if (btn) btn.textContent = ACCENT_ICONS[cur] || '🎨';
+  // подсветка выбранного кружка в панели
+  document.querySelectorAll('.ap-swatch').forEach(s => s.classList.toggle('active', s.dataset.a === cur));
+}
+function setAccent(name) {
+  localStorage.setItem(ACCENT_KEY, ACCENTS.includes(name) ? name : 'classic');
+  applyAccent();
+  haptic('light');
+}
+applyAccent();
+// v74: кнопка 🎨 открывает панель выбора цвета (переключение кликом по кружку)
+const accentPop = document.getElementById('accent-pop');
+document.getElementById('btn-accent').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const show = accentPop.classList.contains('hidden');
+  accentPop.classList.toggle('hidden');
+  if (show) haptic('light');
+});
+document.addEventListener('click', (e) => {
+  if (accentPop && !accentPop.classList.contains('hidden') &&
+      !accentPop.contains(e.target) && e.target.id !== 'btn-accent') {
+    accentPop.classList.add('hidden');
+  }
+});
+document.querySelectorAll('#more-accent .ap-swatch').forEach(s => s.addEventListener('click', () => setAccent(s.dataset.a)));
+function syncMoreMute() {
+  const m = document.getElementById('more-mute');
+  if (m) m.innerHTML = hapticsEnabled() ? '<b>🔔 Вибрации</b><i>включены</i>' : '<b>🔇 Вибрации</b><i>выключены</i>';
+}
+setTimeout(syncMoreMute, 0);
+
+// ---------- v113: сезонный режим — праздничное приветствие в особые даты ----------
+// Новый год / 14 февраля / 8 марта / Хэллоуин: баннер-поздравление над афишей.
+// Закрывается крестиком и больше не показывается в этом сезоне (localStorage).
+function getSeason(d) {
+  const dt = d || new Date();
+  const md = (dt.getMonth() + 1) * 100 + dt.getDate();
+  if (md >= 1225 || md <= 107) return { key: 'ny', emoji: '❄️', text: 'С Новым годом! Пусть все коды разгадаются 🎄' };
+  if (md >= 213 && md <= 215) return { key: 'val', emoji: '💝', text: 'День всех влюблённых — загадай фильм тому, кто дорог 💘' };
+  if (md >= 307 && md <= 309) return { key: 'mar8', emoji: '🌷', text: 'С 8 Марта! Кино и цветы — идеальный вечер 🌷' };
+  if (md >= 1029 && md <= 1031) return { key: 'hal', emoji: '🎃', text: 'Хэллоуин! Ужасы в афише уже ждут 👻' };
+  return null;
+}
+function showSeasonalBanner() {
+  const el = document.getElementById('season-banner');
+  if (!el) return;
+  const s = getSeason();
+  if (!s) { el.classList.add('hidden'); return; }
+  try {
+    if (localStorage.getItem('kinoafisha_season_seen_' + s.key) === '1') { el.classList.add('hidden'); return; }
+  } catch (e) {}
+  el.innerHTML = `<span class="sb-emoji">${s.emoji}</span><span class="sb-text">${esc(s.text)}</span>` +
+    `<button class="sb-close" aria-label="Закрыть">✕</button>`;
+  el.classList.remove('hidden');
+  const close = () => {
+    el.classList.add('hidden');
+    try { localStorage.setItem('kinoafisha_season_seen_' + s.key, '1'); } catch (e) {}
+  };
+  el.querySelector('.sb-close').addEventListener('click', close);
+}
+
+// ---------- состояние ----------
+let ALL = [];                       // все фильмы
+let COLLS = [];                     // подборки
+let NEWS = [];                      // последние новости кино
+let PREMIERES = [];                 // v119: «Скоро в кино» — даты премьер из meta.json
+let LEADERBOARD = [];               // топ игроков сезона
+let LEADERBOARD_KIND = 'week';      // week | total — по чему ранжируем
+let curTab = 'today';              // v183: активная вкладка нижней панели / раздел
+let view = 'grid';                  // grid | cols | cols-detail | fav | detail | game | news | top | profile | trailers | achievements
+let activeGenre = '';               // выбранный жанр-фильтр ('' = все)
+let activeCountry = '';             // v89: выбранная страна-фильтр ('' = все)
+let onlyTrailer = false;            // v90: показывать только фильмы с трейлером
+let onlyOnline = false;             // v91: только фильмы с прямой ссылкой на просмотр
+const GRID_PAGE_SIZE = 30;          // v93: афиша по 30 карточек + «Показать ещё»
+let gridPage = 1;
+let _gridFilterKey = '';            // ключ текущих фильтров — при смене сбрасываем страницу
+// v94: режим афиши «Сетка» (по умолчанию) / «Список» — компактные строки
+const LAYOUT_KEY = 'kinoafisha_layout';
+let gridLayout = (localStorage.getItem(LAYOUT_KEY) || 'grid') === 'list' ? 'list' : 'grid';
+let trailerGenre = '';              // жанр-фильтр для трейлеров
+const FAV_KEY = 'kinoafisha_favs';
+const FAV_MODE_KEY = 'kinoafisha_fav_mode';  // «Моё»: fav = хочу посмотреть | done = разгаданные
+const getFavs = () => JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+const setFavs = (a) => {
+  localStorage.setItem(FAV_KEY, JSON.stringify([...a]));
+  scheduleCloudSync();   // v121: облачный профиль
+};
+const toggleFav = (code) => {
+  const f = new Set(getFavs());
+  const adding = !f.has(code);
+  f.has(code) ? f.delete(code) : f.add(code);
+  setFavs(f);
+  haptic(adding ? 'ok' : 'light');
+  if (adding) { challDone('add_fav'); bumpWeekStat('favs'); }
+};
+
+// ---------- «Я смотрел» (локальный список просмотренных) ----------
+// Помечай фильм как просмотренный — список покажется в «Моё» третьим режимом,
+// а рекомендации и статистика станут точнее.
+const WATCHED_KEY = 'kinoafisha_watched';
+const getWatched = () => JSON.parse(localStorage.getItem(WATCHED_KEY) || '[]');
+const setWatched = (a) => {
+  localStorage.setItem(WATCHED_KEY, JSON.stringify([...a]));
+  scheduleCloudSync();   // v121: облачный профиль
+};
+const toggleWatched = (code) => {
+  const w = new Set(getWatched());
+  w.has(code) ? w.delete(code) : w.add(code);
+  setWatched(w);
+  haptic(w.has(code) ? 'ok' : 'light');
+  if (w.has(code)) { try { bumpWeekStat('watched'); } catch (e) {} }
+  return w.has(code);
+};
+
+// ---------- заметки на фильмах (локально) ----------
+// Короткая заметка на карточке: сохраняется состояние прямо в приложении.
+const NOTES_KEY = 'kinoafisha_notes';
+const getNotes = () => JSON.parse(localStorage.getItem(NOTES_KEY) || '{}');
+const setNote = (code, text) => {
+  const n = getNotes();
+  const t = (text || '').trim();
+  if (t) n[code] = t; else delete n[code];
+  localStorage.setItem(NOTES_KEY, JSON.stringify(n));
+  scheduleCloudSync();   // v121: облачный профиль
+};
+
+// ---------- v106: свои подборки (локально) ----------
+// Пользователь собирает собственные коллекции фильмов. Хранятся на устройстве.
+const MYCOLS_KEY = 'kinoafisha_mycols';
+const getMyCols = () => JSON.parse(localStorage.getItem(MYCOLS_KEY) || '[]');
+const setMyCols = (a) => {
+  localStorage.setItem(MYCOLS_KEY, JSON.stringify(a));
+  scheduleCloudSync();   // v121: облачный профиль
+};
+function newMyCol(title) {
+  const cols = getMyCols();
+  const id = 'mc' + Date.now().toString(36);
+  cols.push({ id, title: (title || '').trim() || 'Моя подборка', codes: [] });
+  setMyCols(cols);
+  return id;
+}
+function myColById(id) { return getMyCols().find(c => c.id === id); }
+function updateMyCol(id, fn) {
+  setMyCols(getMyCols().map(c => c.id === id ? fn(c) : c));
+}
+
+// ---------- компактный режим афиши (2/3/4 колонки) ----------
+const GRID_COLS_KEY = 'kinoafisha_grid_cols';
+const getGridCols = () => {
+  const v = parseInt(localStorage.getItem(GRID_COLS_KEY) || '0', 10);
+  return [2, 3, 4].includes(v) ? v : 0;  // 0 = авто
+};
+
+// ---------- история поиска ----------
+const SEARCH_HIST_KEY = 'kinoafisha_search_hist';
+const MAX_SEARCH_HIST = 6;
+const getSearchHist = () => JSON.parse(localStorage.getItem(SEARCH_HIST_KEY) || '[]');
+const addSearchHist = (q) => {
+  if (!q) return;
+  const h = getSearchHist().filter(x => x.toLowerCase() !== q.toLowerCase());
+  h.unshift(q);
+  localStorage.setItem(SEARCH_HIST_KEY, JSON.stringify(h.slice(0, MAX_SEARCH_HIST)));
+};
+
+// ---------- ежедневные кино-челленджи (локальные, меняются каждый день) ----------
+// Три задания на день, выполняются собственными действиями в приложении.
+// Прогресс хранится локально и автоматически сбрасывается на новый день.
+const CHALL_KEY = 'kinoafisha_challenges';
+const CHALLENGE_LIST = [
+  { id: 'watch_trailer', emoji: '🎥', name: 'Глянь трейлер', desc: 'Открой любой трейлер длиннее 2 минут', check: () => ((window._challTrailerWatched || 0) >= 1) },
+  { id: 'open_movie', emoji: '🔍', name: 'Открой карточку', desc: 'Загляни в карточку любого фильма', check: () => (getRecent().length >= 1) },
+  { id: 'add_fav', emoji: '❤️', name: 'Пополни «Моё»', desc: 'Добавь фильм в «Хочу посмотреть»', check: () => (getFavs().length >= 1) },
+];
+function challDateKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+function getChallenges() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CHALL_KEY) || 'null');
+    if (raw && raw.date === challDateKey()) return raw;
+  } catch (e) {}
+  return { date: challDateKey(), done: [] };
+}
+function setChallenges(c) { localStorage.setItem(CHALL_KEY, JSON.stringify(c)); }
+function challDone(id) {
+  const c = getChallenges();
+  if (c.done.includes(id)) return;
+  c.done.push(id);
+  setChallenges(c);
+  updateChallPane();
+}
+
+// ---------- история просмотров (для «🕘 Недавно смотрели») ----------
+// Локальная история последних открытых карточек (макс 12). Используется
+// в полке на главной — без сервера, как «Моё».
+const RECENT_KEY = 'kinoafisha_recent';
+const MAX_RECENT = 12;
+const getRecent = () => JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+const addRecent = (code) => {
+  const r = getRecent().filter(c => c !== code);
+  r.unshift(code);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(r.slice(0, MAX_RECENT)));
+};
+
+// ---------- v93: счётчик открытий карточки ----------
+// Показывает «👀 Открывал(а) N раз» в карточке фильма — приятная «память» приложения.
+const OPEN_COUNT_KEY = 'kinoafisha_open_count';
+const getOpenCounts = () => {
+  try { return JSON.parse(localStorage.getItem(OPEN_COUNT_KEY) || '{}') || {}; }
+  catch (e) { return {}; }
+};
+function bumpOpenCount(code) {
+  const c = getOpenCounts();
+  const k = String(code);
+  c[k] = (c[k] || 0) + 1;
+  try { localStorage.setItem(OPEN_COUNT_KEY, JSON.stringify(c)); } catch (e) {}
+  return c[k];
+}
+
+// ---------- v74: история просмотренных трейлеров («Продолжить смотреть») ----------
+// Отдельно от «Недавно смотрели» — здесь только те фильмы, чей трейлер реально
+// открывали. Полка на главной позволяет продолжить с места остановки.
+const TW_KEY = 'kinoafisha_trailer_watch';
+const MAX_TW = 12;
+const getTrailerWatches = () => {
+  try { return JSON.parse(localStorage.getItem(TW_KEY) || '[]'); }
+  catch (e) { return []; }
+};
+// v167: вечный набор «уже смотрел трейлер» (история выше обрезана до 12) — для фильтра «Не смотрел»
+const TSEEN_KEY = 'kino_tr_seen';
+const getTrailerSeen = () => { try { return new Set(JSON.parse(localStorage.getItem(TSEEN_KEY) || '[]')); } catch (e) { return new Set(); } };
+function markTrailerSeen(code) {
+  try { const st = getTrailerSeen(); st.add(String(code)); localStorage.setItem(TSEEN_KEY, JSON.stringify([...st].slice(-600))); } catch (e) {}
+}
+function pushTrailerWatch(code) {
+  markTrailerSeen(code);
+  const now = Date.now();
+  let w = getTrailerWatches().filter(x => String(x.c) !== String(code));
+  w.unshift({ c: String(code), t: now });
+  w = w.slice(0, MAX_TW);
+  localStorage.setItem(TW_KEY, JSON.stringify(w));
+}
+
+// ---------- v109: «🎬 Смотрю сейчас» — прогресс просмотра трейлеров ----------
+// Те же данные, что у «Продолжить смотреть», но с длительностью сессии:
+// когда пользователь открывает трейлер, засекаем время; при закрытии пишем,
+// сколько секунд реально смотрел. На главной полка показывает мини-прогресс.
+const SESSION_KEY = 'kinoafisha_watch_session';
+function startWatchSession(code) { localStorage.setItem(SESSION_KEY, JSON.stringify({ c: String(code), t: Date.now() })); }
+function endWatchSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+    if (!s) return;
+    localStorage.removeItem(SESSION_KEY);
+    const sec = Math.round((Date.now() - s.t) / 1000);
+    if (sec < 2) return;                       // случайный клик — не считаем
+    let w = getTrailerWatches().filter(x => String(x.c) !== s.c);
+    w.unshift({ c: s.c, t: Date.now(), sec });
+    localStorage.setItem(TW_KEY, JSON.stringify(w.slice(0, MAX_TW)));
+  } catch (e) { localStorage.removeItem(SESSION_KEY); }
+}
+function watchProgress(code) {
+  const w = getTrailerWatches().find(x => String(x.c) === String(code));
+  return w ? (w.sec || 0) : 0;
+}
+
+// ---------- v109: «📌 закрепить трейлер» ----------
+// Закреплённые поднимаются в начало сетки «Трейлеры» (поверх сортировки).
+const TPIN_KEY = 'kinoafisha_trailer_pins';
+const getTrailerPins = () => {
+  try { return JSON.parse(localStorage.getItem(TPIN_KEY) || '[]'); }
+  catch (e) { return []; }
+};
+function toggleTrailerPin(code) {
+  const pins = getTrailerPins();
+  const i = pins.indexOf(String(code));
+  let nowPinned = true;
+  if (i >= 0) { pins.splice(i, 1); nowPinned = false; }
+  else pins.unshift(String(code));
+  localStorage.setItem(TPIN_KEY, JSON.stringify(pins));
+  haptic(nowPinned ? 'ok' : 'light');
+  return nowPinned;
+}
+
+// ---------- v60: локальная активность («📊 Моя неделя» в профиле) ----------
+// Счётчики по дням: открытых карточек, просмотренных трейлеров, добавлений в «Моё».
+const WEEK_STATS_KEY = 'kinoafisha_week_stats';
+const _wdayKey = (d = new Date()) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+const getWeekStats = () => {
+  try { return JSON.parse(localStorage.getItem(WEEK_STATS_KEY) || '{}') || {}; }
+  catch (e) { return {}; }
+};
+function bumpWeekStat(field, n = 1) {
+  const s = getWeekStats();
+  const k = _wdayKey();
+  if (!s[k]) s[k] = { open: 0, trailers: 0, favs: 0 };
+  s[k][field] = (s[k][field] || 0) + n;
+  // храним только последние 14 дней
+  const keys = Object.keys(s).sort();
+  while (keys.length > 14) delete s[keys.shift()];
+  localStorage.setItem(WEEK_STATS_KEY, JSON.stringify(s));
+  bumpYearStat(field);   // v74: параллельно ведём «Мой кино-год»
+}
+
+// ---------- v74: «Мой кино-год» — помесячный журнал активности ----------
+const YEAR_LOG_KEY = 'kinoafisha_year_stats';
+const _ymKey = (d = new Date()) => `${d.getFullYear()}-${d.getMonth() + 1}`;
+const getYearStats = () => {
+  try { return JSON.parse(localStorage.getItem(YEAR_LOG_KEY) || '{}') || {}; }
+  catch (e) { return {}; }
+};
+function bumpYearStat(field, n = 1) {
+  const s = getYearStats();
+  const k = _ymKey();
+  if (!s[k]) s[k] = { open: 0, trailers: 0, favs: 0, rated: 0 };
+  s[k][field] = (s[k][field] || 0) + n;
+  // храним только последние 24 месяца
+  const keys = Object.keys(s).sort();
+  while (keys.length > 24) delete s[keys.shift()];
+  localStorage.setItem(YEAR_LOG_KEY, JSON.stringify(s));
+}
+function week7() {
+  // последние 7 дней по порядку: старые → свежие
+  const s = getWeekStats();
+  const out = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const k = _wdayKey(d);
+    const v = s[k] || {};
+    out.push({ date: d, open: v.open || 0, trailers: v.trailers || 0, favs: v.favs || 0, rated: v.rated || 0, watched: v.watched || 0 });
+  }
+  return out;
+}
+
+// ---------- рекомендации («💫 Советуем вам») ----------
+// Локально: на основе жанров из «Моё» и разгаданных выбираем похожие фильмы,
+// которые пользователь ещё не смотрел и не сохранял.
+const RECO_KEY = 'kinoafisha_reco';
+const getRecoHide = () => JSON.parse(localStorage.getItem(RECO_KEY) || '[]');
+const setRecoHide = (a) => localStorage.setItem(RECO_KEY, JSON.stringify([...a]));
+
+// ---------- v64: мои оценки — прямо в приложении, без выброса в бота ----------
+const RATINGS_KEY = 'kinoafisha_ratings';
+const getRatings = () => {
+  try { return JSON.parse(localStorage.getItem(RATINGS_KEY) || '{}') || {}; }
+  catch (e) { return {}; }
+};
+const myRating = (code) => getRatings()[String(code)] || 0;
+function setRating(code, r) {
+  const all = getRatings();
+  const k = String(code);
+  if (r && all[k] === r) delete all[k];   // повторный тап по той же звезде — снять
+  else if (r) all[k] = r;
+  else delete all[k];
+  localStorage.setItem(RATINGS_KEY, JSON.stringify(all));
+  haptic(r ? 'ok' : 'light');
+  if (r) bumpWeekStat('rated');
+  scheduleCloudSync();   // v121: облачный профиль
+}
+function removeRating(code) {
+  const all = getRatings();
+  delete all[String(code)];
+  localStorage.setItem(RATINGS_KEY, JSON.stringify(all));
+  haptic('light');
+  scheduleCloudSync();   // v121: облачный профиль
+}
+// «вес» фильма во вкусе пользователя: чем выше оценка — тем сильнее сигнал
+const ratingWeight = (r) => 1 + (parseInt(r, 10) || 0) * 1.2;
+
+// ---------- v109: «🔮 Инсайты» — персональные факты из локальной истории ----------
+const HOUR_LOG_KEY = 'kinoafisha_hour_log';
+function bumpHourLog() {
+  try {
+    const h = new Date().getHours();
+    const log = JSON.parse(localStorage.getItem(HOUR_LOG_KEY) || '{}') || {};
+    log[h] = (log[h] || 0) + 1;
+    localStorage.setItem(HOUR_LOG_KEY, JSON.stringify(log));
+  } catch (e) {}
+}
+function buildInsights() {
+  const facts = [];
+  // Любимое время заходов (нужен накопленный лог >= 10 открытий)
+  try {
+    const log = JSON.parse(localStorage.getItem(HOUR_LOG_KEY) || '{}') || {};
+    const total = Object.values(log).reduce((a, b) => a + b, 0);
+    if (total >= 10) {
+      let bestH = 0, bestN = -1;
+      for (let h = 0; h < 24; h++) if ((log[h] || 0) > bestN) { bestN = log[h] || 0; bestH = h; }
+      const label = (bestH >= 6 && bestH < 12) ? 'утро ☀️'
+        : (bestH >= 12 && bestH < 18) ? 'день 🌤'
+        : (bestH >= 18 && bestH < 24) ? 'вечер 🌆' : 'ночь 🌙';
+      facts.push(`🕐 Ты чаще заходишь <b>${label}</b> (в ${String(bestH).padStart(2, '0')}:00)`);
+    }
+  } catch (e) {}
+  // Самый открываемый фильм
+  try {
+    const oc = getOpenCounts();
+    const entries = Object.entries(oc).filter(([, n]) => n >= 2);
+    if (entries.length) {
+      entries.sort((a, b) => b[1] - a[1]);
+      const m = ALL.find(x => String(x.code) === String(entries[0][0]));
+      if (m) facts.push(`👀 Чаще всего открываешь <b>«${esc(m.title)}»</b> — ${entries[0][1]} раз(а)`);
+    }
+  } catch (e) {}
+  // Суммарное время трейлеров
+  try {
+    const secSum = getTrailerWatches().reduce((a, w) => a + (w.sec || 0), 0);
+    if (secSum >= 180) facts.push(`▶️ Посмотрел(а) трейлеров на <b>~${Math.round(secSum / 60)} мин</b>`);
+  } catch (e) {}
+  // Любимый жанр
+  try {
+    const fg = favouriteGenre();
+    if (fg) facts.push(`🌟 Любимый жанр — <b>${esc(fg)}</b>`);
+  } catch (e) {}
+  if (!facts.length) return '';
+  return `
     <div class="pf-week pf-insights">
       <div class="pf-ach-head"><span>🔮 Инсайты</span><b>из твоей истории</b></div>
-      ${t.map(e=>`<div class="ins-fact">${e}</div>`).join("")}
-    </div>`:""}const DAILY_KEY="kinoafisha_daily",DAILY_MILESTONES=[3,7,14,30,60,100],_daysWord=t=>t%10===1&&t%100!==11?"день":[2,3,4].includes(t%10)&&(t%100<10||t%100>=20)?"дня":"дней";function dailyState(){try{const t=JSON.parse(localStorage.getItem(DAILY_KEY)||"null")||{};return{last:t.last||"",series:t.series||0,best:t.best||0,done:t.done||[]}}catch(t){return{last:"",series:0,best:0,done:[]}}}function bumpDaily(){const t=dailyState(),e=_wdayKey();if(t.last===e)return t;const n=new Date;n.setDate(n.getDate()-1),t.series=t.last===_wdayKey(n)?t.series+1:1,t.best=Math.max(t.best||0,t.series),t.last=e;const s=DAILY_MILESTONES.find(i=>t.series>=i&&!t.done.includes(i));return s&&(t.done.push(s),setTimeout(()=>{haptic("ok"),sparkBurst(document.getElementById("streak-strip"));try{tg.showPopup({type:"ok",title:`🔥 Серия ${s} ${_daysWord(s)}!`,message:`Ты заходишь в «Киноафишу» ${s} ${_daysWord(s)} подряд — так держать! Заходи завтра, чтобы не потерять серию.`})}catch(i){}},900)),localStorage.setItem(DAILY_KEY,JSON.stringify(t)),t}function renderStreakStrip(){const t=document.getElementById("streak-strip");if(!t)return;const e=dailyState();if(!e.series){t.classList.add("hidden");return}const n=DAILY_MILESTONES.find(o=>o>e.series),s=DAILY_MILESTONES.filter(o=>o<=e.series).pop()||0,i=n?Math.round(100*(e.series-s)/(n-s)):100;t.classList.remove("hidden"),t.innerHTML=`<span class="streak-flame">🔥</span><span class="streak-num">${e.series}</span><span class="streak-label">${_daysWord(e.series)} подряд</span>`+(n?`<span class="streak-ring" title="До ${n} 🔥 — ещё ${n-e.series}">`+ringHtml(i,{size:42,stroke:4,label:i+"%",tone:"gold"})+`</span><span class="streak-next">ещё ${n-e.series}</span>`:'<span class="streak-next">легенда афиши 🏆</span>')+`<span class="streak-best" title="Твой рекорд">🏅 ${e.best}</span>`}const UNLOCKED_KEY="kinoafisha_unlocked",HIDE_KEY="kinoafisha_hide_unlocked",getUnlocked=()=>JSON.parse(localStorage.getItem(UNLOCKED_KEY)||"[]"),PROFILE_KEY="kinoafisha_profile";let PROFILE=null;function parseProfileHash(){try{const e=new URLSearchParams((location.hash||"").replace(/^#/,"")).get("profile");e&&(PROFILE=JSON.parse(e),localStorage.setItem(PROFILE_KEY,JSON.stringify(PROFILE)))}catch(t){}if(!PROFILE)try{PROFILE=JSON.parse(localStorage.getItem(PROFILE_KEY)||"null")}catch(t){PROFILE=null}PROFILE&&view==="profile"&&renderProfile(),updateHeaderProgress()}function parseUnlockedHash(){try{const e=new URLSearchParams((location.hash||"").replace(/^#/,"")).get("unlocked");if(!e)return;const n=e.split(",").map(s=>s.trim()).filter(Boolean);if(n.length){localStorage.setItem(UNLOCKED_KEY,JSON.stringify([...new Set(n)]));const s="kinoafisha_speedrun",i=new Date().toISOString().slice(0,10);let o={};try{o=JSON.parse(localStorage.getItem(s)||"{}")}catch(r){o={}}o=o.d===i?o:{d:i,n:0},o.n=o.n+1;try{localStorage.setItem(s,JSON.stringify(o))}catch(r){}if(o.n>=5){try{tg.showPopup({type:"ok",title:"⚡ Спидраннер!",message:"5+ кодов за день — ты разгадываешь их как профессионал! 🔥"})}catch(r){}try{localStorage.setItem(s,JSON.stringify({d:i,n:999}))}catch(r){}}history.replaceState(null,"",location.pathname)}}catch(t){}}function initFiltersToggle(){const t=document.getElementById("btn-filters"),e=document.getElementById("view-catalog");!t||!e||t.dataset.wired||(t.dataset.wired="1",t.addEventListener("click",()=>{const n=e.classList.toggle("filters-open");t.setAttribute("aria-expanded",n?"true":"false"),t.classList.toggle("on",n),haptic("light")}))}function initHideToggle(){const t=document.getElementById("hide-unlocked");if(!t)return;const e=document.getElementById("hide-toggle-wrap"),n=()=>{e&&e.classList.toggle("on",t.checked)};t.checked=localStorage.getItem(HIDE_KEY)==="1",n(),t.addEventListener("change",()=>{localStorage.setItem(HIDE_KEY,t.checked?"1":""),n(),haptic("light"),renderGrid()});const s=document.getElementById("btn-sync");s&&s.addEventListener("click",()=>{haptic("light"),sendOrDeepLink({action:"sync_unlocked"})});const i=document.getElementById("btn-grid-cols");i&&i.addEventListener("click",()=>{const o=getGridCols(),r=o===0?2:o===2?3:o===3?4:0;localStorage.setItem(GRID_COLS_KEY,r?String(r):"0"),applyGridCols(),haptic("light"),renderGrid()})}function applyGridCols(){const t=document.getElementById("movies-container");if(!t)return;const e=getGridCols();t.classList.toggle("grid-cols-2",e===2),t.classList.toggle("grid-cols-3",e===3),t.classList.toggle("grid-cols-4",e===4)}function initSearchHist(t){const e=document.getElementById("search-hist");if(!e)return;const n=(t||"").trim().toLowerCase(),s=getSearchHist().filter(i=>!n||i.toLowerCase().includes(n));if(!s.length){e.classList.add("hidden");return}e.innerHTML=s.map(i=>`<button class="sh-chip" data-q="${esc(i)}">${esc(i)} ✕</button>`).join(""),e.classList.remove("hidden"),e.querySelectorAll(".sh-chip").forEach(i=>{i.addEventListener("click",()=>{const o=i.dataset.q,r=document.getElementById("search");r&&(r.value=o);const c=getSearchHist().filter(a=>a.toLowerCase()!==o.toLowerCase());localStorage.setItem(SEARCH_HIST_KEY,JSON.stringify(c)),initSearchHist(""),renderGrid(),haptic("light")})})}const esc=t=>String(t!=null?t:"").replace(/[&<>"]/g,e=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[e]),NO_HAPTIC_KEY="kinoafisha_no_haptic";function hapticsEnabled(){try{return localStorage.getItem(NO_HAPTIC_KEY)!=="1"}catch(t){return!0}}function toggleHaptics(){const t=hapticsEnabled();return localStorage.setItem(NO_HAPTIC_KEY,t?"1":"0"),t}function haptic(t="light"){var e,n;if(hapticsEnabled())try{t==="ok"||t==="error"?(e=tg.HapticFeedback)==null||e.notificationOccurred(t):(n=tg.HapticFeedback)==null||n.impactOccurred(t)}catch(s){}}const VIEW_STAT_CODES={grid:"a",fav:"b",trailers:"c",news:"d",cols:"e",top:"f",achievements:"g",profile:"h",game:"i",chain:"j",marathon:"k",year:"l",tinder:"m",mycols:"n","mycol-detail":"o"},VIEW_STATS_KEY="kino_view_stats",VIEW_STATS_PREFIX="kv1_",SESSION_STATS_KEY="kino_session_stats",SESSION_PREFIX="ks1_",SESSION_OPEN_CODE="q",VIEW_STAT_MAX=35,VIEW_OVERFLOW_CODE="p";function bumpViewStat(t){const e=VIEW_STAT_CODES[t];if(e)try{const n=JSON.parse(localStorage.getItem(VIEW_STATS_KEY)||"{}")||{},s=Number(n[e])||0;s>=VIEW_STAT_MAX?n[VIEW_OVERFLOW_CODE]=Math.min(VIEW_STAT_MAX,(Number(n[VIEW_OVERFLOW_CODE])||0)+1):n[e]=s+1,localStorage.setItem(VIEW_STATS_KEY,JSON.stringify(n))}catch(n){}}function viewStatsChunk(){try{const t=JSON.parse(localStorage.getItem(VIEW_STATS_KEY)||"{}")||{},e=Math.min(VIEW_STAT_MAX,Number(t[VIEW_OVERFLOW_CODE])||0),n=Object.keys(VIEW_STAT_CODES).filter(s=>Number(t[VIEW_STAT_CODES[s]])>0).map(s=>({c:VIEW_STAT_CODES[s],n:Math.min(VIEW_STAT_MAX,Number(t[VIEW_STAT_CODES[s]]))})).sort((s,i)=>i.n-s.n).map(s=>s.c+s.n.toString(36)).join("");return(e>0?VIEW_OVERFLOW_CODE+e.toString(36):"")+n}catch(t){return""}}function clearViewStats(){try{localStorage.removeItem(VIEW_STATS_KEY)}catch(t){}}function viewStatsPrefix(t){const e=viewStatsChunk();if(!e)return"";const n=64-VIEW_STATS_PREFIX.length-1-String(t||"").length,s=n>=2?e.slice(0,n-n%2):"";return s?VIEW_STATS_PREFIX+s+"_":""}const SESSION_LAST_KEY="kino_session_last",SESSION_GAP_MS=1800*1e3;function markSessionOpen(){try{const t=Date.now(),e=Number(localStorage.getItem(SESSION_LAST_KEY)||0);localStorage.setItem(SESSION_LAST_KEY,String(t)),(!e||t-e>SESSION_GAP_MS)&&localStorage.setItem(SESSION_STATS_KEY,"1")}catch(t){}}function sessionStatsChunk(){try{return localStorage.getItem(SESSION_STATS_KEY)?SESSION_OPEN_CODE+"1":""}catch(t){return""}}function clearSessionStats(){try{localStorage.removeItem(SESSION_STATS_KEY)}catch(t){}}function sessionStatsPrefix(t){const e=sessionStatsChunk();return e&&64-SESSION_PREFIX.length-1-String(t||"").length>=e.length?SESSION_PREFIX+e+"_":""}const ERROR_STATS_KEY="kino_error_stats",ERROR_STATS_PREFIX="ke2_",ERROR_STAT_CODES={js:"a",promise:"b",resource:"c",view:"d",data:"e",boot:"f"},ERROR_SLUG_MAX=32;function errorStatSlug(t){const e=String(t||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");return cutSlug(e,ERROR_SLUG_MAX)}function cutSlug(t,e){if(!e||e<=0)return"";if(t.length<=e)return t;const n=t.slice(0,e),s=n.lastIndexOf("-");return s>0?n.slice(0,s):n}function bumpErrorStat(t,e){const n=ERROR_STAT_CODES[t];if(n)try{const s=JSON.parse(localStorage.getItem(ERROR_STATS_KEY)||"{}")||{};s[n]=Math.min(VIEW_STAT_MAX,(Number(s[n])||0)+1);const i=errorStatSlug(e);i&&(s.slug0||(s.slug0=i),s.slug=i),localStorage.setItem(ERROR_STATS_KEY,JSON.stringify(s))}catch(s){}}function errorStatsChunk(){try{const t=JSON.parse(localStorage.getItem(ERROR_STATS_KEY)||"{}")||{};return Object.keys(ERROR_STAT_CODES).filter(e=>Number(t[ERROR_STAT_CODES[e]])>0).map(e=>ERROR_STAT_CODES[e]+Math.min(VIEW_STAT_MAX,Number(t[ERROR_STAT_CODES[e]])).toString(36)).join("")}catch(t){return""}}function errorStatsSlugs(){try{const t=JSON.parse(localStorage.getItem(ERROR_STATS_KEY)||"{}")||{},e=errorStatSlug(t.slug0),n=errorStatSlug(t.slug);return{first:e,last:n===e?"":n}}catch(t){return{first:"",last:""}}}function errorStatsSlug(){try{const t=JSON.parse(localStorage.getItem(ERROR_STATS_KEY)||"{}")||{};return errorStatSlug(t.slug||t.slug0)}catch(t){return""}}function clearErrorStats(){try{localStorage.removeItem(ERROR_STATS_KEY)}catch(t){}}function errorStatsPrefix(t){const e=errorStatsChunk();if(!e)return"";const n=errorStatsSlugs(),s=64-ERROR_STATS_PREFIX.length-3-String(t||"").length;if(s<2)return"";const i=cutSlug(n.first,ERROR_SLUG_MAX);let o=cutSlug(n.last,ERROR_SLUG_MAX);for(;o&&i.length+o.length>s;)o=cutSlug(o,o.length-4);if(i.length+o.length>s)return"";const r=s-i.length-o.length,c=e.slice(0,r-r%2);return ERROR_STATS_PREFIX+c+"_"+i+"_"+o+"_"}function sendOrDeepLink(t){let e="afisha";t.action==="open_movie"?e="movie_"+t.code:t.action==="remind_movie"?e="remind_"+t.code:t.action==="remind_premiere"?e="prem_"+t.iso+"_"+t.fid:t.action==="subscribe_code_day"?e="code_day_on":t.action==="save_favs"?e="save_favs":t.action==="access_check"?e="check_sub":t.action==="quiz_result"?e="quiz_"+t.correct+"_"+t.total:t.action==="rate_movie"?e="rate_"+t.code:t.action==="review_movie"?e="review_"+t.code:t.action==="trailer_movie"||t.action==="trailer"?e="trailer_"+t.code:t.action==="sync_unlocked"?e="sync_unlocked":t.action==="restore_backup"?e="restore_backup":t.action==="kinogod"?e="kinogod":t.action==="ask_captain"?e="ask":t.action==="toggle_optin"?e=t.on?"optin_on":"optin_off":t.action==="set_theme"&&(e="theme_"+t.theme);const n=sessionStatsPrefix(e);n&&(e=n+e);const s=errorStatsPrefix(e);s&&(e=s+e);const i=viewStatsPrefix(e);i&&(e=i+e),haptic("light");try{tg.openTelegramLink("https://t.me/kapitan_kino_bot?start="+e)}catch(o){window.open("https://t.me/kapitan_kino_bot?start="+e,"_blank")}i&&clearViewStats(),s&&clearErrorStats(),n&&clearSessionStats(),setTimeout(()=>{try{tg.close()}catch(o){}},300)}const ratingBadge=t=>{const e=parseFloat(t.rating);return e?e>=9?'<span class="badge-top">🔥 ⭐ '+e+"</span>":e>=8?'<span class="rating-chip good">⭐ '+e+"</span>":'<span class="rating-chip neutral">⭐ '+e+"</span>":'<span class="rating-chip neutral">⭐ —</span>'};function ringHtml(t,e){const n=e||{},s=n.size||44,i=n.stroke||5,o=Math.max(0,Math.min(100,Math.round(t))),r=(s-i)/2,c=2*Math.PI*r,a=c*o/100,m=n.label!=null?n.label:o+"%";return`<span class="${"ring"+(n.tone?" ring-"+n.tone:"")+(n.xs?" ring-xs":"")}" style="width:${s}px;height:${s}px">
-    <svg viewBox="0 0 ${s} ${s}" width="${s}" height="${s}" aria-hidden="true">
-      <circle class="ring-bg" cx="${s/2}" cy="${s/2}" r="${r}" fill="none" stroke-width="${i}"/>
-      <circle class="ring-fg" cx="${s/2}" cy="${s/2}" r="${r}" fill="none" stroke-width="${i}"
+      ${facts.map(f => `<div class="ins-fact">${f}</div>`).join('')}
+    </div>`;
+}
+
+// ---------- v64: ежедневная серия («🔥 заходим каждый день») ----------
+const DAILY_KEY = 'kinoafisha_daily';
+const DAILY_MILESTONES = [3, 7, 14, 30, 60, 100];
+const _daysWord = (n) => (n % 10 === 1 && n % 100 !== 11) ? 'день'
+  : ([2, 3, 4].includes(n % 10) && (n % 100 < 10 || n % 100 >= 20)) ? 'дня' : 'дней';
+function dailyState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(DAILY_KEY) || 'null') || {};
+    return { last: s.last || '', series: s.series || 0, best: s.best || 0, done: s.done || [] };
+  } catch (e) { return { last: '', series: 0, best: 0, done: [] }; }
+}
+function bumpDaily() {
+  const s = dailyState();
+  const today = _wdayKey();
+  if (s.last === today) return s;                 // сегодня уже засчитали
+  const yest = new Date(); yest.setDate(yest.getDate() - 1);
+  s.series = (s.last === _wdayKey(yest)) ? s.series + 1 : 1;   // вчера был — серия живёт
+  s.best = Math.max(s.best || 0, s.series);
+  s.last = today;
+  const reached = DAILY_MILESTONES.find(x => s.series >= x && !s.done.includes(x));
+  if (reached) {
+    s.done.push(reached);
+    setTimeout(() => {
+      haptic('ok');
+      sparkBurst(document.getElementById('streak-strip'));   // v123: салют на вехе серии
+      try {
+        tg.showPopup({ type: 'ok', title: `🔥 Серия ${reached} ${_daysWord(reached)}!`,
+          message: `Ты заходишь в «Киноафишу» ${reached} ${_daysWord(reached)} подряд — так держать! Заходи завтра, чтобы не потерять серию.` });
+      } catch (e) {}
+    }, 900);
+  }
+  localStorage.setItem(DAILY_KEY, JSON.stringify(s));
+  return s;
+}
+function renderStreakStrip() {
+  const el = document.getElementById('streak-strip');
+  if (!el) return;
+  const s = dailyState();
+  if (!s.series) { el.classList.add('hidden'); return; }
+  const next = DAILY_MILESTONES.find(x => x > s.series);
+  // v123: прогресс к следующей вехе — кольцом (компактнее строки «до 7 🔥 — ещё 4»)
+  const prevM = DAILY_MILESTONES.filter(x => x <= s.series).pop() || 0;
+  const pct = next ? Math.round(100 * (s.series - prevM) / (next - prevM)) : 100;
+  el.classList.remove('hidden');
+  el.innerHTML = `<span class="streak-flame">🔥</span>` +
+    `<span class="streak-num">${s.series}</span>` +
+    `<span class="streak-label">${_daysWord(s.series)} подряд</span>` +
+    (next
+      ? `<span class="streak-ring" title="До ${next} 🔥 — ещё ${next - s.series}">` +
+        ringHtml(pct, { size: 42, stroke: 4, label: pct + '%', tone: 'gold' }) + `</span>` +
+        `<span class="streak-next">ещё ${next - s.series}</span>`
+      : `<span class="streak-next">легенда афиши 🏆</span>`) +
+    `<span class="streak-best" title="Твой рекорд">🏅 ${s.best}</span>`;
+}
+
+// ---------- разгаданные коды (для «🙈 Скрыть разгаданные») ----------
+// Синхронизируются с ботом кнопкой 🔁: бот присылает сообщение с web_app
+// кнопкой, у которой в URL хэш `#unlocked=код,код,…`. Здесь мы читаем этот
+// хэш, сохраняем в localStorage и по чекбоксу прячем разгаданные карточки.
+const UNLOCKED_KEY = 'kinoafisha_unlocked';
+const HIDE_KEY = 'kinoafisha_hide_unlocked';
+const getUnlocked = () => JSON.parse(localStorage.getItem(UNLOCKED_KEY) || '[]');
+
+// ---------- профиль игрока (уровень/баллы/стрик) ----------
+// Приезжает тем же хэшем от кнопки 🔁: `&profile=<urlencoded json>` — снимок
+// из бота (storage.build_tma_profile): уровень, прогресс, баллы, стрик,
+// разгадано кодов, место в топе. Храним в localStorage, показываем на вкладке
+// «👤 Профиль».
+const PROFILE_KEY = 'kinoafisha_profile';
+let PROFILE = null;
+
+function parseProfileHash() {
+  // ВАЖНО: вызывается ДО parseUnlockedHash() — тот очищает location.hash.
+  try {
+    const params = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const raw = params.get('profile');
+    if (raw) {
+      PROFILE = JSON.parse(raw);
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(PROFILE));
+    }
+  } catch (e) { /* битый json — оставляем старый профиль */ }
+  if (!PROFILE) {
+    try { PROFILE = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null'); }
+    catch (e) { PROFILE = null; }
+  }
+  if (PROFILE && view === 'profile') renderProfile();
+  updateHeaderProgress();
+}
+
+function parseUnlockedHash() {
+  try {
+    const params = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const raw = params.get('unlocked');
+    if (!raw) return;
+    const codes = raw.split(',').map(s => s.trim()).filter(Boolean);
+    if (codes.length) {
+      localStorage.setItem(UNLOCKED_KEY, JSON.stringify([...new Set(codes)]));
+      // v102: «⚡ Спидраннер» — разгадал 5+ кодов за один день (счётчик локальный)
+      const SPEED_KEY = 'kinoafisha_speedrun';
+      const today = new Date().toISOString().slice(0, 10);
+      let sp = {};
+      try { sp = JSON.parse(localStorage.getItem(SPEED_KEY) || '{}'); } catch (e) { sp = {}; }
+      sp = sp.d === today ? sp : { d: today, n: 0 };
+      sp.n = sp.n + 1;
+      try { localStorage.setItem(SPEED_KEY, JSON.stringify(sp)); } catch (e) {}
+      if (sp.n >= 5) {
+        try {
+          tg.showPopup({ type: 'ok', title: '⚡ Спидраннер!', message: '5+ кодов за день — ты разгадываешь их как профессионал! 🔥' });
+        } catch (e) { /* пусто */ }
+        try { localStorage.setItem(SPEED_KEY, JSON.stringify({ d: today, n: 999 })); } catch (e) {}
+      }
+      // очищаем хэш, чтобы повторные открытия не переписывали старым списком
+      history.replaceState(null, '', location.pathname);
+    }
+  } catch (e) { /* пусто */ }
+}
+
+// v146: на телефоне вторичные фильтры (чипы времени/стран, «Разгаданные», «С трейлером»…)
+// спрятаны под кнопку «Фильтры» — афиша видна с первого экрана. Включённые фильтры
+// видны в полосе #filter-bar, так что состояние не теряется.
+function initFiltersToggle() {
+  const btn = document.getElementById('btn-filters');
+  const view = document.getElementById('view-catalog');
+  if (!btn || !view || btn.dataset.wired) return;
+  btn.dataset.wired = '1';
+  btn.addEventListener('click', () => {
+    const open = view.classList.toggle('filters-open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.classList.toggle('on', open);
+    haptic('light');
+  });
+}
+
+function initHideToggle() {
+  const box = document.getElementById('hide-unlocked');
+  if (!box) return;
+  const wrap = document.getElementById('hide-toggle-wrap');
+  const syncCls = () => { if (wrap) wrap.classList.toggle('on', box.checked); };
+  box.checked = localStorage.getItem(HIDE_KEY) === '1';
+  syncCls();
+  box.addEventListener('change', () => {
+    localStorage.setItem(HIDE_KEY, box.checked ? '1' : '');
+    syncCls();
+    haptic('light');
+    renderGrid();
+  });
+  const btn = document.getElementById('btn-sync');
+  if (btn) btn.addEventListener('click', () => {
+    haptic('light');
+    sendOrDeepLink({ action: 'sync_unlocked' });
+  });
+  // Компактность сетки: цикл 0 (авто) → 2 → 3 → 4 колонки
+  const gridBtn = document.getElementById('btn-grid-cols');
+  if (gridBtn) gridBtn.addEventListener('click', () => {
+    const cur = getGridCols();
+    const next = cur === 0 ? 2 : cur === 2 ? 3 : cur === 3 ? 4 : 0;
+    localStorage.setItem(GRID_COLS_KEY, next ? String(next) : '0');
+    applyGridCols();
+    haptic('light');
+    renderGrid();
+  });
+}
+
+// Применяет класс колонок к контейнеру афиши
+function applyGridCols() {
+  const mc = document.getElementById('movies-container');
+  if (!mc) return;
+  const cur = getGridCols();
+  mc.classList.toggle('grid-cols-2', cur === 2);
+  mc.classList.toggle('grid-cols-3', cur === 3);
+  mc.classList.toggle('grid-cols-4', cur === 4);
+}
+
+// ---------- история поиска: чипы под поиском (с автодополнением по вводу) ----------
+function initSearchHist(prefix) {
+  const chips = document.getElementById('search-hist');
+  if (!chips) return;
+  const p = (prefix || '').trim().toLowerCase();
+  const hist = getSearchHist().filter(q => !p || q.toLowerCase().includes(p));
+  if (!hist.length) { chips.classList.add('hidden'); return; }
+  chips.innerHTML = hist.map(q => `<button class="sh-chip" data-q="${esc(q)}">${esc(q)} ✕</button>`).join('');
+  chips.classList.remove('hidden');
+  chips.querySelectorAll('.sh-chip').forEach(b => {
+    b.addEventListener('click', () => {
+      const q = b.dataset.q;
+      const inp = document.getElementById('search');
+      if (inp) inp.value = q;
+      const hist2 = getSearchHist().filter(x => x.toLowerCase() !== q.toLowerCase());
+      localStorage.setItem(SEARCH_HIST_KEY, JSON.stringify(hist2));
+      initSearchHist('');
+      renderGrid();
+      haptic('light');
+    });
+  });
+}
+
+// ---------- утилиты ----------
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// Haptic-отклик: вибрация на действиях (нет поддержки — тихо пропускаем).
+// v109: «🔇 Без вибраций» — глобальный тумблер, хранится в localStorage.
+const NO_HAPTIC_KEY = 'kinoafisha_no_haptic';
+function hapticsEnabled() {
+  try { return localStorage.getItem(NO_HAPTIC_KEY) !== '1'; } catch (e) { return true; }
+}
+function toggleHaptics() {
+  const willBeOff = hapticsEnabled();   // сейчас включены → выключаем
+  localStorage.setItem(NO_HAPTIC_KEY, willBeOff ? '1' : '0');
+  return willBeOff;   // true = вибрации теперь выключены
+}
+function haptic(kind = 'light') {
+  if (!hapticsEnabled()) return;
+  try {
+    if (kind === 'ok' || kind === 'error') tg.HapticFeedback?.notificationOccurred(kind);
+    else tg.HapticFeedback?.impactOccurred(kind);
+  } catch (e) { /* пусто */ }
+}
+
+// ---------- v124–v127: телеметрия разделов, заходов и ошибок ----------
+// Отдельного канала «приложение → бот» нет: tg.sendData работает только при
+// запуске из reply-кнопки клавиатуры (и закрывает окно), а переход по разделам
+// не должен уводить в чат. Поэтому счётчики копятся локально и уезжают боту
+// вместе со следующим диплинком: ?start=ke1_<ошибки>_<слаг>_kv1_<разделы>_<payload>.
+// Формат (буква + счётчик в base36) разбирает miniapp_stats.py — буквы обязаны
+// совпадать с VIEW_NAMES/ERROR_CODES там; совпадение проверяет
+// tests/test_miniapp_view_stats.py (round-trip «JS-чанк → счётчики бота»).
+const VIEW_STAT_CODES = {
+  grid: 'a', fav: 'b', trailers: 'c', news: 'd', cols: 'e', top: 'f',
+  achievements: 'g', profile: 'h', game: 'i', chain: 'j', marathon: 'k',
+  year: 'l', tinder: 'm', mycols: 'n', 'mycol-detail': 'o',
+};
+const VIEW_STATS_KEY = 'kino_view_stats';
+const VIEW_STATS_PREFIX = 'kv1_';
+// v127: заходы в приложение. Каждое открытие боту не отправить (канала нет),
+// поэтому приложение помечает ПЕРВЫЙ переход в бота за сессию: по этой метке бот
+// считает людей, а не события, и не путает «заход» с «ещё один тап».
+const SESSION_STATS_KEY = 'kino_session_stats';
+const SESSION_PREFIX = 'ks1_';
+const SESSION_OPEN_CODE = 'q';   // a-o — разделы, 'p' — упор в предел, 'q' — заход
+const VIEW_STAT_MAX = 35;   // 'z' в base36 — один символ на счётчик
+// v126: счётчик раздела упёрся в предел — клиент пишет служебную пару вида 'p1'.
+// Буква вне карты разделов (a-o), поэтому бот читает её не как ещё один раздел,
+// а как «цифры занижены»: раньше лишние переходы исчезали молча, и по заниженным
+// цифрам можно было сделать неверный вывод о популярности раздела.
+const VIEW_OVERFLOW_CODE = 'p';
+function bumpViewStat(name) {
+  const code = VIEW_STAT_CODES[name];
+  if (!code) return;
+  try {
+    const st = JSON.parse(localStorage.getItem(VIEW_STATS_KEY) || '{}') || {};
+    const cur = Number(st[code]) || 0;
+    if (cur >= VIEW_STAT_MAX) {
+      st[VIEW_OVERFLOW_CODE] = Math.min(VIEW_STAT_MAX, (Number(st[VIEW_OVERFLOW_CODE]) || 0) + 1);
+    } else {
+      st[code] = cur + 1;
+    }
+    localStorage.setItem(VIEW_STATS_KEY, JSON.stringify(st));
+  } catch (e) { /* приватный режим / нет localStorage — просто без телеметрии */ }
+}
+function viewStatsChunk() {
+  try {
+    const st = JSON.parse(localStorage.getItem(VIEW_STATS_KEY) || '{}') || {};
+    const overflow = Math.min(VIEW_STAT_MAX, Number(st[VIEW_OVERFLOW_CODE]) || 0);
+    const body = Object.keys(VIEW_STAT_CODES)
+      .filter(n => Number(st[VIEW_STAT_CODES[n]]) > 0)
+      .map(n => ({ c: VIEW_STAT_CODES[n], n: Math.min(VIEW_STAT_MAX, Number(st[VIEW_STAT_CODES[n]])) }))
+      .sort((x, y) => y.n - x.n)   // самые «горячие» разделы выживают при обрезке
+      .map(p => p.c + p.n.toString(36))
+      .join('');
+    // Пара о переполнении идёт первой: при обрезке чанка она обязана выжить —
+    // иначе бот получит заниженные цифры и посчитает их полными.
+    return (overflow > 0 ? VIEW_OVERFLOW_CODE + overflow.toString(36) : '') + body;
+  } catch (e) { return ''; }
+}
+function clearViewStats() {
+  try { localStorage.removeItem(VIEW_STATS_KEY); } catch (e) { /* пусто */ }
+}
+function viewStatsPrefix(base) {
+  // Telegram ограничивает deep-link 64 символами: если чанк вместе с полезной
+  // частью не влезает — отдаём что помещается, остальное не портим.
+  const chunk = viewStatsChunk();
+  if (!chunk) return '';
+  const room = 64 - VIEW_STATS_PREFIX.length - 1 - String(base || '').length;
+  const fits = room >= 2 ? chunk.slice(0, room - (room % 2)) : '';
+  return fits ? VIEW_STATS_PREFIX + fits + '_' : '';
+}
+
+// ---------- v127: заходы в приложение ----------
+// Своего канала к боту у приложения нет, поэтому «заход» отмечается флагом в
+// localStorage и уезжает вместе с первым переходом в бота за сессию. Дальше бот
+// считает ЛЮДЕЙ (уникальных), а не переходы: без метки десять тапов одного
+// человека выглядели бы как десять заходов.
+const SESSION_LAST_KEY = 'kino_session_last';
+const SESSION_GAP_MS = 30 * 60 * 1000;   // пауза, после которой это уже новый заход
+function markSessionOpen() {
+  try {
+    const now = Date.now();
+    const last = Number(localStorage.getItem(SESSION_LAST_KEY) || 0);
+    localStorage.setItem(SESSION_LAST_KEY, String(now));
+    // Свернули и вернулись в течение получаса — тот же заход; закрыли и открыли
+    // позже — новый. Так метка не двоит заходы, но и не теряет возвращения.
+    if (!last || now - last > SESSION_GAP_MS) localStorage.setItem(SESSION_STATS_KEY, '1');
+  } catch (e) { /* без localStorage метку отправить нечем — просто без заходов */ }
+}
+function sessionStatsChunk() {
+  try { return localStorage.getItem(SESSION_STATS_KEY) ? SESSION_OPEN_CODE + '1' : ''; }
+  catch (e) { return ''; }
+}
+function clearSessionStats() {
+  try { localStorage.removeItem(SESSION_STATS_KEY); } catch (e) { /* пусто */ }
+}
+function sessionStatsPrefix(base) {
+  // Метка «захода» — две пары символов ('q1'), при любой полезной части влезает:
+  // если места нет совсем, ссылку не портим, а метка подождёт следующего перехода.
+  const chunk = sessionStatsChunk();
+  if (!chunk) return '';
+  const room = 64 - SESSION_PREFIX.length - 1 - String(base || '').length;
+  return room >= chunk.length ? SESSION_PREFIX + chunk + '_' : '';
+}
+
+// ---------- v126/v127: ошибки мини-аппа ----------
+// Ошибка, о которой никто не узнал, живёт до первой жалобы. Ловим шесть классов
+// сбоя (js / promise / resource / view / data / boot), копим агрегат и увозим боту
+// тем же диплинком, что и счётчики разделов. Текст ошибки превращаем в «слаг» из
+// [a-z0-9-]: в start-параметре Telegram других символов не бывает (64 символа),
+// а по слагу уже видно, что сломалось — «cannot-read-properties» читается без
+// расшифровки (буквы классов обязаны совпадать с ERROR_CODES в miniapp_stats.py).
+const ERROR_STATS_KEY = 'kino_error_stats';
+const ERROR_STATS_PREFIX = 'ke2_';   // два слага: первая ошибка сессии и последняя
+const ERROR_STAT_CODES = { js: 'a', promise: 'b', resource: 'c', view: 'd', data: 'e',
+                           boot: 'f' };
+const ERROR_SLUG_MAX = 32;   // столько же, сколько ERR_SLUG_MAX_LEN в miniapp_stats.py
+function errorStatSlug(raw) {
+  // Дефис, а не подчёркивание: подчёркивание — разделитель формата диплинка, и
+  // слаг с ним разорвал бы payload (то есть сломал бы кнопку у пользователя).
+  const s = String(raw || '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return cutSlug(s, ERROR_SLUG_MAX);
+}
+function cutSlug(s, max) {
+  if (!max || max <= 0) return '';
+  if (s.length <= max) return s;
+  // Режем по границе слова: «cannot-read-properties» читается, а обрывок
+  // «cannot-read-propert» — уже нет (в start-параметре Telegram больше 64
+  // символов всё равно не влезет, поэтому слаг экономит место).
+  const cut = s.slice(0, max);
+  const boundary = cut.lastIndexOf('-');
+  return boundary > 0 ? cut.slice(0, boundary) : cut;
+}
+function bumpErrorStat(kind, slug) {
+  const code = ERROR_STAT_CODES[kind];
+  if (!code) return;
+  try {
+    const st = JSON.parse(localStorage.getItem(ERROR_STATS_KEY) || '{}') || {};
+    st[code] = Math.min(VIEW_STAT_MAX, (Number(st[code]) || 0) + 1);
+    const s = errorStatSlug(slug);
+    if (s) {
+      // Первую ошибку сессии не перезаписываем: она чаще и есть причина, тогда
+      // как последняя нередко следствие. Обе уезжают боту отдельными сегментами.
+      if (!st.slug0) st.slug0 = s;
+      st.slug = s;
+    }
+    localStorage.setItem(ERROR_STATS_KEY, JSON.stringify(st));
+  } catch (e) { /* без localStorage — просто без телеметрии */ }
+}
+function errorStatsChunk() {
+  try {
+    const st = JSON.parse(localStorage.getItem(ERROR_STATS_KEY) || '{}') || {};
+    return Object.keys(ERROR_STAT_CODES)
+      .filter(k => Number(st[ERROR_STAT_CODES[k]]) > 0)
+      .map(k => ERROR_STAT_CODES[k] + Math.min(VIEW_STAT_MAX, Number(st[ERROR_STAT_CODES[k]])).toString(36))
+      .join('');
+  } catch (e) { return ''; }
+}
+function errorStatsSlugs() {
+  try {
+    const st = JSON.parse(localStorage.getItem(ERROR_STATS_KEY) || '{}') || {};
+    const first = errorStatSlug(st.slug0);
+    const last = errorStatSlug(st.slug);
+    return { first, last: last === first ? '' : last };
+  } catch (e) { return { first: '', last: '' }; }
+}
+function errorStatsSlug() {
+  try {
+    const st = JSON.parse(localStorage.getItem(ERROR_STATS_KEY) || '{}') || {};
+    return errorStatSlug(st.slug || st.slug0);
+  } catch (e) { return ''; }
+}
+function clearErrorStats() {
+  try { localStorage.removeItem(ERROR_STATS_KEY); } catch (e) { /* пусто */ }
+}
+function errorStatsPrefix(base) {
+  // Формат бота жёсткий: `ke2_<чанк>_<первая>_<последняя>_<payload>`. Сегменты
+  // слагов пишутся всегда (пустые — просто подчёркивания): при фиксированной
+  // арности payload со своими подчёркиваниями не спутать со служебной частью.
+  const chunk = errorStatsChunk();
+  if (!chunk) return '';
+  const slugs = errorStatsSlugs();
+  // Бюджет: 64 минус 'ke2_', три разделителя и payload. Слаги важнее чанка (тот
+  // всё равно уезжает счётчиками), но их пара может не влезть — тогда режем
+  // последнюю ошибку, а первую (причину) сохраняем целиком.
+  const budget = 64 - ERROR_STATS_PREFIX.length - 3 - String(base || '').length;
+  if (budget < 2) return '';
+  const first = cutSlug(slugs.first, ERROR_SLUG_MAX);
+  let last = cutSlug(slugs.last, ERROR_SLUG_MAX);
+  while (last && first.length + last.length > budget) {
+    last = cutSlug(last, last.length - 4);
+  }
+  if (first.length + last.length > budget) return '';   // даже причины не влезло
+  const room = budget - first.length - last.length;
+  const fits = chunk.slice(0, room - (room % 2));
+  return ERROR_STATS_PREFIX + fits + '_' + first + '_' + last + '_';
+}
+
+// ---------- отправка действий боту ----------
+// ВАЖНО: tg.sendData() работает ТОЛЬКО когда мини-апп запущен через
+// reply-кнопку клавиатуры. При запуске через menu button, inline кнопку
+// или диплинк он МОЛЧА ничего не делает (даже не бросает исключений) —
+// из-за этого кнопки «не работают». Поэтому все действия уводим через
+// ДИПЛИНК: tg.openTelegramLink открывает чат с ботом и отправляет
+// /start с параметром — это работает при любом способе запуска.
+function sendOrDeepLink(data) {
+  let start = 'afisha';
+  if (data.action === 'open_movie') start = 'movie_' + data.code;
+  else if (data.action === 'remind_movie') start = 'remind_' + data.code;
+  else if (data.action === 'remind_premiere') start = 'prem_' + data.iso + '_' + data.fid;  // v120
+  else if (data.action === 'subscribe_code_day') start = 'code_day_on';
+  else if (data.action === 'save_favs') start = 'save_favs';
+  else if (data.action === 'access_check') start = 'check_sub';
+  else if (data.action === 'quiz_result') start = 'quiz_' + data.correct + '_' + data.total;
+  else if (data.action === 'rate_movie') start = 'rate_' + data.code;
+  else if (data.action === 'review_movie') start = 'review_' + data.code;
+  else if (data.action === 'trailer_movie' || data.action === 'trailer') start = 'trailer_' + data.code;
+  else if (data.action === 'sync_unlocked') start = 'sync_unlocked';
+  else if (data.action === 'restore_backup') start = 'restore_backup';
+  else if (data.action === 'kinogod') start = 'kinogod';
+  else if (data.action === 'ask_captain') start = 'ask';
+  else if (data.action === 'toggle_optin') start = data.on ? 'optin_on' : 'optin_off';
+  else if (data.action === 'set_theme') start = 'theme_' + data.theme;
+  // v124–v127: служебные блоки уезжают боту вместе с этим же диплинком. Порядок —
+  // по важности: снаружи метка захода (по ней считаются люди), затем ошибки,
+  // ближе к payload — счётчики разделов. Каждый блок считает место с учётом уже
+  // добавленного, поэтому при нехватке 64 символов теряются менее важные метки,
+  // а сама ссылка и действие остаются рабочими.
+  const sessPrefix = sessionStatsPrefix(start);
+  if (sessPrefix) start = sessPrefix + start;
+  const errPrefix = errorStatsPrefix(start);
+  if (errPrefix) start = errPrefix + start;
+  const statsPrefix = viewStatsPrefix(start);
+  if (statsPrefix) start = statsPrefix + start;
+  haptic('light');
+  try {
+    tg.openTelegramLink('https://t.me/kapitan_kino_bot?start=' + start);
+  } catch (e) {
+    // даже openTelegramLink недоступен (открыто вне Telegram) — обычная ссылка
+    window.open('https://t.me/kapitan_kino_bot?start=' + start, '_blank');
+  }
+  // Данные уехали в диплинк — копить их дальше значит посчитать переход дважды
+  // (телефон мог быть офлайн, но двойной счёт хуже потери одного перехода).
+  // Чистим только то, что действительно уехало: не поместившееся в лимит должно
+  // дождаться следующего перехода, иначе метка потерялась бы молча.
+  if (statsPrefix) clearViewStats();
+  if (errPrefix) clearErrorStats();
+  if (sessPrefix) clearSessionStats();
+  // Сворачиваем мини-апп: пользователь сразу видит чат с ботом, куда придёт
+  // трейлер/сообщение (иначе webview висит поверх и ответ бота не виден).
+  // Небольшая задержка — дать openTelegramLink успеть начать переход.
+  setTimeout(() => { try { tg.close(); } catch (e) { /* пусто */ } }, 300);
+}
+
+const ratingBadge = (m) => {
+  const r = parseFloat(m.rating);
+  if (!r) return '<span class="rating-chip neutral">⭐ —</span>';
+  if (r >= 9) return '<span class="badge-top">🔥 ⭐ ' + r + '</span>';
+  if (r >= 8) return '<span class="rating-chip good">⭐ ' + r + '</span>';
+  return '<span class="rating-chip neutral">⭐ ' + r + '</span>';
+};
+
+// v123: кольцевой прогресс (SVG-донат) вместо полосок там, где важна компактность
+// (серия заходов, «Цель дня»). SVG, а не canvas: масштабируется, красится
+// CSS-переменными акцента и не требует перерисовки при смене темы.
+function ringHtml(pct, opt) {
+  const o = opt || {};
+  const size = o.size || 44;
+  const stroke = o.stroke || 5;
+  const val = Math.max(0, Math.min(100, Math.round(pct)));
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const dash = (c * val) / 100;
+  const label = o.label != null ? o.label : val + '%';
+  const cls = 'ring' + (o.tone ? ' ring-' + o.tone : '') + (o.xs ? ' ring-xs' : '');
+  return `<span class="${cls}" style="width:${size}px;height:${size}px">
+    <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" aria-hidden="true">
+      <circle class="ring-bg" cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke-width="${stroke}"/>
+      <circle class="ring-fg" cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke-width="${stroke}"
         stroke-linecap="round"
-        style="stroke-dasharray:${a.toFixed(2)} ${(c-a).toFixed(2)}"
-        transform="rotate(-90 ${s/2} ${s/2})"/>
+        style="stroke-dasharray:${dash.toFixed(2)} ${(c - dash).toFixed(2)}"
+        transform="rotate(-90 ${size / 2} ${size / 2})"/>
     </svg>
-    <span class="ring-txt">${m}</span>
-  </span>`}function sparkBurst(t){if(!t||_reduceMotion())return;let e=t.querySelector(".spark-layer");e||(e=document.createElement("span"),e.className="spark-layer",e.innerHTML=Array.from({length:12},(n,s)=>`<i style="--a:${s*30}deg;--dd:${(.75+s%4*.14).toFixed(2)}s"></i>`).join(""),t.appendChild(e)),e.classList.remove("go"),e.offsetWidth,e.classList.add("go")}const isNew=t=>!!t.added_at&&Date.now()-new Date(t.added_at).getTime()<720*3600*1e3,dimStyle=t=>{const e=parseFloat(t&&t.pb);return!e||e>=70?"":` style="filter:brightness(${Math.min(1.5,1+(70-e)/70).toFixed(2)})"`},FADE=`class="ld" onload="this.classList.add('ld-on')"`;function posterScrim(){return'<span class="poster-scrim"></span>'}function posterFoot(t){const e=parseFloat(t.rating),n=e>=9?" hot":e>=8?" good":"";return`<span class="poster-foot">
-    ${e?`<span class="poster-rate${n}">⭐ ${e}</span>`:""}
-    ${isNew(t)?'<span class="new-badge">🔥 Новинка</span>':""}
-  </span>`}function posterHtml(t){const e=getFavs().includes(t.code);return`<div class="poster-wrap">
-    ${t.poster?`<img src="${esc(t.poster)}" alt="${esc(t.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(t)}
-           onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`:`<div class="poster-placeholder"><span>🎬</span><em>${esc(t.title)}</em></div>`}
+    <span class="ring-txt">${label}</span>
+  </span>`;
+}
+
+// v123: «искры» — короткое празднование (серия дней, закрытая цель дня).
+// Двенадцать частиц на CSS: без canvas и библиотек; при «уменьшить анимации» не летит.
+function sparkBurst(host) {
+  if (!host || _reduceMotion()) return;
+  let layer = host.querySelector('.spark-layer');
+  if (!layer) {
+    layer = document.createElement('span');
+    layer.className = 'spark-layer';
+    layer.innerHTML = Array.from({ length: 12 }, (_, i) =>
+      `<i style="--a:${i * 30}deg;--dd:${(0.75 + (i % 4) * 0.14).toFixed(2)}s"></i>`).join('');
+    host.appendChild(layer);
+  }
+  layer.classList.remove('go');
+  void layer.offsetWidth;      // перезапуск анимации при повторном праздновании
+  layer.classList.add('go');
+}
+
+// «Новинка» — фильм добавлен в базу в последние 30 дней
+const isNew = (m) =>
+  !!m.added_at && (Date.now() - new Date(m.added_at).getTime()) < 30 * 24 * 3600 * 1000;
+
+// Очень тёмные постеры («Гран Торино», «Последний самурай»…) в маленьких
+// карточках выглядят чёрным пятном. Слегка подсвечиваем их через CSS-фильтр:
+// pb — средняя яркость постера 0..255 (считает _fix_thumbs2.py в movies.json).
+const dimStyle = (m) => {
+  const pb = parseFloat(m && m.pb);
+  if (!pb || pb >= 70) return '';
+  return ` style="filter:brightness(${Math.min(1.5, 1 + (70 - pb) / 70).toFixed(2)})"`;
+};
+
+// Картинка появляется мягко (fade-in) — пока грузится, видна shimmer-заглушка,
+// а не «чёрный квадрат».
+const FADE = `class="ld" onload="this.classList.add('ld-on')"`;
+
+
+// v123: «кинематографичный» низ постера. Скрим-градиент даёт бейджам читаемость
+// на светлых постерах, а рейтинг живёт в левом нижнем углу: правый низ занят
+// кнопкой «▶️ Смотреть», верх — кодом и ❤️. Раньше рейтинг был только текстом
+// под постером, и по сетке нельзя было оценить фильм «одним взглядом».
+function posterScrim() {
+  return '<span class="poster-scrim"></span>';
+}
+function posterFoot(m) {
+  const r = parseFloat(m.rating);
+  const tone = r >= 9 ? ' hot' : (r >= 8 ? ' good' : '');
+  return `<span class="poster-foot">
+    ${r ? `<span class="poster-rate${tone}">⭐ ${r}</span>` : ''}
+    ${isNew(m) ? '<span class="new-badge">🔥 Новинка</span>' : ''}
+  </span>`;
+}
+
+function posterHtml(m) {
+  const fav = getFavs().includes(m.code);
+  return `<div class="poster-wrap">
+    ${m.poster
+      ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(m)}
+           onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+      : `<div class="poster-placeholder"><span>🎬</span><em>${esc(m.title)}</em></div>`}
     ${posterScrim()}
-    <span class="code-badge">🔑 ${esc(String(t.code))}</span>
-    ${getNotes()[t.code]?'<span class="note-badge" title="Заметка">📝</span>':""}
-    ${e?'<span class="fav-badge">❤️</span>':""}
-    ${posterFoot(t)}
-  </div>`}function posterHtmlQuick(t,e){const n=getFavs().includes(t.code),s=getWatched().includes(String(t.code)),i=!!getNotes()[t.code],o=!e||e.foot!==!1;return`<div class="poster-wrap">
-    ${t.poster?`<img src="${esc(t.poster)}" alt="${esc(t.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(t)}
-           onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`:`<div class="poster-placeholder"><span>🎬</span><em>${esc(t.title)}</em></div>`}
+    <span class="code-badge">🔑 ${esc(String(m.code))}</span>
+    ${getNotes()[m.code] ? '<span class="note-badge" title="Заметка">📝</span>' : ''}
+    ${fav ? '<span class="fav-badge">❤️</span>' : ''}
+    ${posterFoot(m)}
+  </div>`;
+}
+
+// Быстрая кнопка «❤️/🤍» на карточке фильма (в сетке и полках) — без открытия
+// opts.foot === false — постер без подвала с рейтингом (полка трендов: там свой
+// оверлей с названием и рейтингом, пилюля в углу дублировала бы его).
+function posterHtmlQuick(m, opts) {
+  const fav = getFavs().includes(m.code);
+  const watched = getWatched().includes(String(m.code));
+  const hasNote = !!getNotes()[m.code];
+  const showFoot = !opts || opts.foot !== false;
+  return `<div class="poster-wrap">
+    ${m.poster
+      ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(m)}
+           onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+      : `<div class="poster-placeholder"><span>🎬</span><em>${esc(m.title)}</em></div>`}
     ${posterScrim()}
-    <span class="code-badge">🔑 ${esc(String(t.code))}</span>
-    ${o?"":isNew(t)?'<span class="new-badge">🔥 Новинка</span>':""}
-    ${s?'<span class="watched-badge" title="Просмотрено">👁</span>':""}
-    ${i?'<span class="note-badge" title="Заметка">📝</span>':""}
-    <button class="fav-quick ${n?"active":""}" data-code="${esc(t.code)}" aria-label="Моё" title="В «Моё»">${n?"♥︎":"♡"}</button>
-    ${t.link?`<button class="watch-quick" data-code="${esc(t.code)}" aria-label="Смотреть" title="Смотреть фильм"></button>`:""}
-    ${o?posterFoot(t):""}
-  </div>`}function listRowHtml(t,e){const n=getFavs().includes(t.code),s=getRatings()[String(t.code)]||0,i=[t.year,(t.genres||[]).slice(0,3).join(" · "),durOf(t)?`⏱ ${durOf(t)} мин`:""].filter(Boolean).join(" · "),o=t.poster?`<img src="${esc(t.poster)}" alt="" loading="lazy" decoding="async" ${FADE}${dimStyle(t)}
-         onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`:'<div class="poster-placeholder"><span>🎬</span></div>';return`<div class="movie-row" data-code="${esc(t.code)}">
+    <span class="code-badge">🔑 ${esc(String(m.code))}</span>
+    ${showFoot ? '' : (isNew(m) ? '<span class="new-badge">🔥 Новинка</span>' : '')}
+    ${watched ? '<span class="watched-badge" title="Просмотрено">👁</span>' : ''}
+    ${hasNote ? '<span class="note-badge" title="Заметка">📝</span>' : ''}
+    <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '♥\uFE0E' : '♡'}</button>
+    ${m.link ? `<button class="watch-quick" data-code="${esc(m.code)}" aria-label="Смотреть" title="Смотреть фильм"></button>` : ''}
+    ${showFoot ? posterFoot(m) : ''}
+  </div>`;
+}
+// v94: строка компактного списка — альтернатива карточке-постеру (афиша → «☰ Список»)
+function listRowHtml(m, q) {
+  const fav = getFavs().includes(m.code);
+  const myR = getRatings()[String(m.code)] || 0;
+  const meta = [m.year, (m.genres || []).slice(0, 3).join(' · '),
+    durOf(m) ? `⏱ ${durOf(m)} мин` : ''].filter(Boolean).join(' · ');
+  const poster = m.poster
+    ? `<img src="${esc(m.poster)}" alt="" loading="lazy" decoding="async" ${FADE}${dimStyle(m)}
+         onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+    : `<div class="poster-placeholder"><span>🎬</span></div>`;
+  return `<div class="movie-row" data-code="${esc(m.code)}">
     <div class="row-poster">
-      ${o}
-      <span class="code-badge">🔑 ${esc(String(t.code))}</span>
+      ${poster}
+      <span class="code-badge">🔑 ${esc(String(m.code))}</span>
     </div>
     <div class="row-info">
-      <h3>${hlTitle(t.title,e)}</h3>
-      ${i?`<div class="row-meta">${esc(i)}</div>`:""}
-      <span class="rating">${ratingBadge(t)}${s?`<span class="my-stars">${"★".repeat(s)}</span>`:""}</span>
+      <h3>${hlTitle(m.title, q)}</h3>
+      ${meta ? `<div class="row-meta">${esc(meta)}</div>` : ''}
+      <span class="rating">${ratingBadge(m)}${myR ? `<span class="my-stars">${'★'.repeat(myR)}</span>` : ''}</span>
     </div>
     <div class="row-actions">
-      <button class="fav-quick${n?" active":""}" data-code="${esc(t.code)}" aria-label="Моё" title="В «Моё»">${n?"♥︎":"♡"}</button>
-      ${t.link?`<button class="watch-quick" data-code="${esc(t.code)}" aria-label="Смотреть" title="Смотреть фильм"></button>`:""}
+      <button class="fav-quick${fav ? ' active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '♥\uFE0E' : '♡'}</button>
+      ${m.link ? `<button class="watch-quick" data-code="${esc(m.code)}" aria-label="Смотреть" title="Смотреть фильм"></button>` : ''}
       <span class="row-chev">›</span>
     </div>
-  </div>`}function wireFavQuick(t){t&&(t.querySelectorAll(".fav-quick").forEach(e=>{e.addEventListener("click",n=>{n.stopPropagation(),toggleFav(e.dataset.code);const s=getFavs().includes(e.dataset.code);e.textContent=s?"♥︎":"♡",e.classList.toggle("active",s),e.classList.remove("pop"),e.offsetWidth,e.classList.add("pop"),view==="fav"&&localStorage.getItem(FAV_MODE_KEY)!=="done"&&(renderGrid(),haptic("ok"))})}),t.querySelectorAll(".watch-quick").forEach(e=>{e.addEventListener("click",n=>{n.stopPropagation();const s=ALL.find(i=>String(i.code)===String(e.dataset.code));s&&(haptic("light"),openWatchLink(s))})}))}const _unlockedSet=()=>new Set(getUnlocked());function renderCodeWallet(){const t=document.getElementById("code-wallet");if(!t)return;const e=_unlockedSet(),n=ALL.length,s=ALL.filter(r=>e.has(String(r.code))).length,i=n-s;if(!s){t.classList.add("hidden");return}t.classList.remove("hidden"),t.innerHTML=`<div class="cw-row">
+  </div>`;
+}
+function wireFavQuick(container) {
+  if (!container) return;
+  container.querySelectorAll('.fav-quick').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFav(btn.dataset.code);
+      const fav = getFavs().includes(btn.dataset.code);
+      btn.textContent = fav ? '♥\uFE0E' : '♡';
+      btn.classList.toggle('active', fav);
+      // v59: «взрыв сердечка» — короткая анимация нажатия
+      btn.classList.remove('pop');
+      void btn.offsetWidth;
+      btn.classList.add('pop');
+      // В «Моё» (режим «хочу посмотреть») карточка должна пропасть из списка
+      if (view === 'fav' && localStorage.getItem(FAV_MODE_KEY) !== 'done') {
+        renderGrid();
+        haptic('ok');
+      }
+    });
+  });
+  // v67: быстрая кнопка «▶️ Смотреть» на постере — прямая ссылка на фильм
+  container.querySelectorAll('.watch-quick').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const m = ALL.find(x => String(x.code) === String(btn.dataset.code));
+      if (!m) return;
+      haptic('light');
+      openWatchLink(m);
+    });
+  });
+}
+
+// ---------- v88: «Коллекция кодов» — охота за неразгаданными ----------
+// Показываем прогресс разгаданных кодов (данные приходят от бота кнопкой 🔁).
+// Скрыт, пока не разгадан ни один код.
+const _unlockedSet = () => new Set(getUnlocked());
+function renderCodeWallet() {
+  const c = document.getElementById('code-wallet');
+  if (!c) return;
+  const unlocked = _unlockedSet();
+  const total = ALL.length;
+  const done = ALL.filter(m => unlocked.has(String(m.code))).length;
+  const left = total - done;
+  if (!done) { c.classList.add('hidden'); return; }
+  c.classList.remove('hidden');
+  c.innerHTML = `<div class="cw-row">
       <span class="cw-icon">🗝</span>
-      <div class="cw-info"><b>${s}</b> из ${n} · ${i?"осталось "+i:"все собраны! 🎉"}</div>
-      ${i?'<button class="cw-btn" id="cw-hunt">🎯 Охота</button>':'<button class="cw-btn" id="cw-hunt">🏆 Всё собрано</button>'}
-    </div>`;const o=document.getElementById("cw-hunt");o&&(o.onclick=()=>{const r=document.getElementById("hide-unlocked");r&&(r.checked=!0,localStorage.setItem(HIDE_KEY,"1"),initHideToggle()),haptic("light"),openView("grid")})}const MOODS=[{k:"party",e:"🎉",t:"Праздник",g:["комедия","мультфильм","семейный","музыка"]},{k:"drive",e:"⚡",t:"Драйв",g:["боевик","триллер","фантастика","приключения"]},{k:"sleep",e:"😴",t:"Перед сном",g:["драма","мелодрама","детектив","исторический"]},{k:"light",e:"🍿",t:"Лёгкое",g:["комедия","мелодрама","мультфильм"]},{k:"scary",e:"👻",t:"Щекотка нервов",g:["ужасы","триллер","детектив"]},{k:"epic",e:"⚔️",t:"Эпик на вечер",g:["фантастика","приключения","боевик","драма"]}];function moodPrefScore(t){let e=0;const n=myRating(t.code);return n>=4?e+=3:n>=2&&(e+=1),getFavs().includes(t.code)&&(e+=2),(getWatched().includes(String(t.code))||_unlockedSet().has(String(t.code)))&&(e+=1),e}function whyLine(t){const e=myRating(t.code);if(e>=4)return"⭐ ты оценил похожее (рейтинг "+e+")";if(getFavs().includes(t.code))return"❤️ уже в твоём «Моём»";if(getWatched().includes(String(t.code)))return"👁 ты уже смотрел";const n=(t.genres||[])[0];return n?"совпадает с твоим вкусом ("+n+")":"высокий рейтинг"}function renderEvening(){const t=document.getElementById("evening-panel");t&&(t.classList.remove("hidden"),t.innerHTML=`<div class="evening-head">🌙 <b>Что посмотреть?</b> <span class="evening-sub">по настроению</span></div>
-    <div class="evening-chips">${MOODS.map(e=>`<button class="evening-chip" data-mood="${e.k}">${e.e} ${e.t}</button>`).join("")}</div>`,t.querySelectorAll(".evening-chip").forEach(e=>e.addEventListener("click",()=>{haptic("light"),openMood(e.dataset.mood)})))}function openMood(t){const e=MOODS.find(a=>a.k===t);if(!e)return;const s=ALL.filter(a=>a.genres&&a.genres.some(m=>e.g.includes(String(m).toLowerCase()))).map(a=>({m:a,sc:moodPrefScore(a)+(parseFloat(a.rating)||0)*.3})).sort((a,m)=>m.sc-a.sc).slice(0,4),i=document.getElementById("mood-list"),o=document.getElementById("mood-title"),r=document.getElementById("mood-modal");if(!i||!o||!r)return;o.textContent=e.e+" "+e.t,i.innerHTML=s.length?s.map(({m:a})=>`
-      <div class="ew-item" data-code="${esc(a.code)}">
-        <div class="ew-poster">${a.poster?`<img src="${esc(a.poster)}" alt="" loading="lazy" ${dimStyle(a)} onerror="this.style.display='none'"/>`:'<span class="ew-ph">🎬</span>'}</div>
+      <div class="cw-info"><b>${done}</b> из ${total} · ${left ? 'осталось ' + left : 'все собраны! 🎉'}</div>
+      ${left ? '<button class="cw-btn" id="cw-hunt">🎯 Охота</button>'
+             : '<button class="cw-btn" id="cw-hunt">🏆 Всё собрано</button>'}
+    </div>`;
+  const btn = document.getElementById('cw-hunt');
+  if (btn) btn.onclick = () => {
+    // «Охота» = показать только неразгаданные: включаем «🙈 Разгаданные»
+    const box = document.getElementById('hide-unlocked');
+    if (box) { box.checked = true; localStorage.setItem(HIDE_KEY, '1'); initHideToggle(); }
+    haptic('light');
+    openView('grid');
+  };
+}
+
+// ---------- v88: «Что посмотреть?» — подбор по настроению ----------
+// 6 настроений → 4 фильма под вкус пользователя (оценки/«Моё»/просмотренные)
+// с коротким «почему». Работает полностью на локальных данных.
+const MOODS = [
+  { k: 'party',  e: '🎉', t: 'Праздник',        g: ['комедия', 'мультфильм', 'семейный', 'музыка'] },
+  { k: 'drive',  e: '⚡', t: 'Драйв',           g: ['боевик', 'триллер', 'фантастика', 'приключения'] },
+  { k: 'sleep',  e: '😴', t: 'Перед сном',      g: ['драма', 'мелодрама', 'детектив', 'исторический'] },
+  { k: 'light',  e: '🍿', t: 'Лёгкое',          g: ['комедия', 'мелодрама', 'мультфильм'] },
+  { k: 'scary',  e: '👻', t: 'Щекотка нервов',  g: ['ужасы', 'триллер', 'детектив'] },
+  { k: 'epic',   e: '⚔️', t: 'Эпик на вечер',   g: ['фантастика', 'приключения', 'боевик', 'драма'] },
+];
+function moodPrefScore(m) {
+  let s = 0;
+  const r = myRating(m.code);
+  if (r >= 4) s += 3; else if (r >= 2) s += 1;
+  if (getFavs().includes(m.code)) s += 2;
+  if (getWatched().includes(String(m.code)) || _unlockedSet().has(String(m.code))) s += 1;
+  return s;
+}
+function whyLine(m) {
+  const r = myRating(m.code);
+  if (r >= 4) return '⭐ ты оценил похожее (рейтинг ' + r + ')';
+  if (getFavs().includes(m.code)) return '❤️ уже в твоём «Моём»';
+  if (getWatched().includes(String(m.code))) return '👁 ты уже смотрел';
+  const g = (m.genres || [])[0];
+  return g ? 'совпадает с твоим вкусом (' + g + ')' : 'высокий рейтинг';
+}
+function renderEvening() {
+  const c = document.getElementById('evening-panel');
+  if (!c) return;
+  c.classList.remove('hidden');
+  c.innerHTML = `<div class="evening-head">🌙 <b>Что посмотреть?</b> <span class="evening-sub">по настроению</span></div>
+    <div class="evening-chips">${MOODS.map(mo => `<button class="evening-chip" data-mood="${mo.k}">${mo.e} ${mo.t}</button>`).join('')}</div>`;
+  c.querySelectorAll('.evening-chip').forEach(b =>
+    b.addEventListener('click', () => { haptic('light'); openMood(b.dataset.mood); }));  // v125: чип отзывается
+}
+function openMood(k) {
+  const mo = MOODS.find(x => x.k === k);
+  if (!mo) return;
+  const pool = ALL.filter(m => m.genres && m.genres.some(g => mo.g.includes(String(g).toLowerCase())));
+  const ranked = pool
+    .map(m => ({ m, sc: moodPrefScore(m) + (parseFloat(m.rating) || 0) * 0.3 }))
+    .sort((a, b) => b.sc - a.sc)
+    .slice(0, 4);
+  const list = document.getElementById('mood-list');
+  const title = document.getElementById('mood-title');
+  const modal = document.getElementById('mood-modal');
+  if (!list || !title || !modal) return;
+  title.textContent = mo.e + ' ' + mo.t;
+  list.innerHTML = ranked.length
+    ? ranked.map(({ m }) => `
+      <div class="ew-item" data-code="${esc(m.code)}">
+        <div class="ew-poster">${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" ${dimStyle(m)} onerror="this.style.display='none'"/>` : `<span class="ew-ph">🎬</span>`}</div>
         <div class="ew-body">
-          <div class="ew-name">${esc(a.title)}</div>
-          <div class="ew-meta">${ratingBadge(a)}${a.duration?" · ⏱ "+esc(fmtDuration(a.duration)):""}</div>
-          <div class="ew-why">${whyLine(a)}</div>
+          <div class="ew-name">${esc(m.title)}</div>
+          <div class="ew-meta">${ratingBadge(m)}${m.duration ? ' · ⏱ ' + esc(fmtDuration(m.duration)) : ''}</div>
+          <div class="ew-why">${whyLine(m)}</div>
         </div>
-      </div>`).join(""):'<div class="ew-empty">Под это настроение пока пусто — Капитан уже ищет, загляни позже 🔎</div>',r.classList.remove("hidden"),r.querySelectorAll(".ew-item").forEach(a=>a.addEventListener("click",()=>{r.classList.add("hidden"),openDetail(a.dataset.code)}));const c=r.querySelector(".modal-close");c&&(c.onclick=()=>r.classList.add("hidden"))}const DATA_CACHE_KEY="kinoafisha_data_cache";function getSyncedAt(){try{const t=JSON.parse(localStorage.getItem(DATA_CACHE_KEY)||"null");return t&&t.synced_at||0}catch(t){return 0}}function freshLineHtml(){const t=getSyncedAt();if(!t)return"";const e=Math.round((Date.now()-t)/6e4);let n;e<=2?n="только что":e<60?n=e+" мин назад":e<1440?n=Math.floor(e/60)+" ч назад":e<2880?n="вчера":n=Math.floor(e/1440)+" дн. назад";const s=navigator.onLine===!1?" · 📴 офлайн":"";return`<div class="fresh-line">🔄 Афиша обновлена: ${esc(n)}${s}</div>`}function plFilms(t){t=Math.abs(parseInt(t,10)||0);const e=t%100,n=t%10;return e>=11&&e<=14?t+" фильмов":n===1?t+" фильм":n>=2&&n<=4?t+" фильма":t+" фильмов"}function applyData(t){const e=i=>Array.isArray(i)?i:typeof i=="string"&&i.trim()?i.split(/\s*[,;]\s*/).filter(Boolean):[],n=i=>{const o=String(i||"").trim();let r=o.replace(/\s*\((?:[^()]*?(?:19|20)\d{2}|[A-Za-z0-9 .:,'&!\-]+)\)\s*$/,"").trim();const c=r.match(/^«([^»]+)»$/);return c&&(r=c[1].trim()),(r.match(/«/g)||[]).length!==(r.match(/»/g)||[]).length&&(r=r.replace(/[«»]/g,"").trim()),r&&/^[а-яё]/.test(r)&&(r=r[0].toUpperCase()+r.slice(1)),r||o};ALL=(t.all||[]).map(i=>(i._raw===void 0&&(i._raw=i.title,i.title=n(i.title)),i.actors=e(i.actors),i.genres=e(i.genres),i.countries=e(i.countries),i.director&&typeof i.director!="string"&&(i.director=String(i.director)),i)),COLLS=t.cols||[];const s=t.meta||{};EMOJI_RIDDLES=Array.isArray(s.emoji_riddles)?s.emoji_riddles:[],NEWS=Array.isArray(s.recent_news)?s.recent_news:[],PREMIERES=onlyFilms(s.premieres),LEADERBOARD=Array.isArray(s.leaderboard)?s.leaderboard:[],LEADERBOARD_KIND=s.leaderboard_kind==="total"?"total":"week",updateSubtitle(),renderGenreChips(),renderCountryChips(),showCodeDay(s),renderFilmDay(),renderEvening(),renderCodeWallet(),renderHero(),renderNewCodes(),renderTodayShelf(s),renderRecentShelf(),renderTrailerShelf(),renderRecoShelf(),renderPremieres(s),addMarathonButtons(),renderGrid(),view==="marathon"?renderMarathonView():view==="top"&&renderLeaderboard(),updateChallPane(),updateHeaderProgress(),renderStreakStrip(),parseRiddleHash(),parseMovieHash()}async function loadMovies(){try{const t=JSON.parse(localStorage.getItem(DATA_CACHE_KEY)||"null");t&&Array.isArray(t.all)&&t.all.length&&applyData(t)}catch(t){}try{const[t,e,n]=await Promise.all([fetch("./data/movies.json",{cache:"no-cache"}),fetch("./data/collections.json",{cache:"no-cache"}).catch(()=>null),fetch("./data/meta.json",{cache:"no-cache"}).catch(()=>null)]),s={all:await t.json(),cols:e?await e.json():[],meta:n?await n.json():{}};try{localStorage.setItem(DATA_CACHE_KEY,JSON.stringify({...s,synced_at:Date.now()}))}catch(o){}applyData(s),updateMoreBadge();let i=null;try{i=localStorage.getItem(LAST_VIEW_KEY)}catch(o){}openView(i&&i!=="grid"?i:"today",{restore:!0})}catch(t){if(bumpErrorStat("data",t&&t.message||"movies_load"),ALL.length)return;document.getElementById("movies-container").innerHTML='<div class="error-box"><p class="error">Не удалось загрузить афишу 😔</p><button class="btn-secondary" id="btn-retry">🔁 Повторить</button></div>';const e=document.getElementById("btn-retry");e&&(e.onclick=()=>{e.disabled=!0,e.textContent="⏳ Загружаю…",loadMovies()})}}function updateHeaderProgress(){const t=document.getElementById("header-progress");if(!t)return;if(!PROFILE||!PROFILE.lvl){t.classList.add("hidden");return}const e=parseInt(PROFILE.str,10)||0,n=Math.max(0,Math.min(100,parseInt(PROFILE.pct,10)||0)),s=parseInt(PROFILE.lvl_next,10)||0;t.classList.remove("hidden"),t.innerHTML=`<span class="hp-streak" title="Серия дней в боте">🔥 ${e}</span><span class="hp-level">${esc(PROFILE.lvl)}${s?` · −${s} 🔑`:""}</span><span class="hp-bar"><i style="width:${n}%"></i></span>`}function renderSkeletons(){const t=document.getElementById("movies-container");t.innerHTML=Array.from({length:8},()=>'<div class="movie-card skeleton-card"><div class="skel poster"></div><div class="skel line"></div><div class="skel line short"></div></div>').join("")}renderSkeletons();function _levDist(t,e){if(t=String(t),e=String(e),t===e)return 0;if(!t.length)return e.length;if(!e.length)return t.length;const n=new Array(e.length+1),s=new Array(e.length+1);for(let i=0;i<=e.length;i++)n[i]=i;for(let i=1;i<=t.length;i++){s[0]=i;for(let o=1;o<=e.length;o++){const r=t[i-1]===e[o-1]?0:1;s[o]=Math.min(n[o]+1,s[o-1]+1,n[o-1]+r)}for(let o=0;o<=e.length;o++)n[o]=s[o]}return n[e.length]}const CHALL_COLLAPSE_KEY="kinoafisha_chall_collapsed";let _challSparkKey="";const _challDayKey=()=>new Date().toDateString();function updateChallPane(){const t=document.getElementById("chall-pane");if(!t)return;const e=getChallenges(),n=document.getElementById("chall-list"),s=document.getElementById("chall-count"),i=localStorage.getItem(CHALL_COLLAPSE_KEY)!=="0",o=CHALLENGE_LIST.map(m=>{const b=e.done.includes(m.id)||m.check();return`<div class="chall-item ${b?"done":""}">
-      <span class="chall-emoji">${m.emoji}</span>
+      </div>`).join('')
+    : '<div class="ew-empty">Под это настроение пока пусто — Капитан уже ищет, загляни позже 🔎</div>';
+  modal.classList.remove('hidden');
+  modal.querySelectorAll('.ew-item').forEach(it =>
+    it.addEventListener('click', () => { modal.classList.add('hidden'); openDetail(it.dataset.code); }));
+  const closeBtn = modal.querySelector('.modal-close');
+  if (closeBtn) closeBtn.onclick = () => modal.classList.add('hidden');
+}
+
+// ---------- загрузка ----------
+const DATA_CACHE_KEY = 'kinoafisha_data_cache';
+
+// ---------- v118: свежесть афиши — когда последний раз тянули данные с сервера ----------
+function getSyncedAt() {
+  try {
+    const c = JSON.parse(localStorage.getItem(DATA_CACHE_KEY) || 'null');
+    return (c && c.synced_at) || 0;
+  } catch (e) { return 0; }
+}
+function freshLineHtml() {
+  const ts = getSyncedAt();
+  if (!ts) return '';
+  const mins = Math.round((Date.now() - ts) / 60000);
+  let txt;
+  if (mins <= 2) txt = 'только что';
+  else if (mins < 60) txt = mins + ' мин назад';
+  else if (mins < 60 * 24) txt = Math.floor(mins / 60) + ' ч назад';
+  else if (mins < 60 * 48) txt = 'вчера';
+  else txt = Math.floor(mins / 1440) + ' дн. назад';
+  const off = (navigator.onLine === false) ? ' · 📴 офлайн' : '';
+  return `<div class="fresh-line">🔄 Афиша обновлена: ${esc(txt)}${off}</div>`;
+}
+
+// Применяем порцию данных (из кэша или сети) ко всему интерфейсу
+function plFilms(n) {
+  n = Math.abs(parseInt(n, 10) || 0);
+  const a = n % 100, b = n % 10;
+  if (a >= 11 && a <= 14) return n + ' фильмов';
+  if (b === 1) return n + ' фильм';
+  if (b >= 2 && b <= 4) return n + ' фильма';
+  return n + ' фильмов';
+}
+
+function applyData(data) {
+  // v69: нормализация полей — старый кэш/синк мог отдать actors/genres/countries строкой
+  const toArr = (v) => Array.isArray(v) ? v
+    : (typeof v === 'string' && v.trim() ? v.split(/\s*[,;]\s*/).filter(Boolean) : []);
+  // v146: «Название» (Original, 2012) → «Название»; полное имя остаётся в _raw для поиска
+  const prettyTitle = (raw) => {
+    const r = String(raw || '').trim();
+    let t = r.replace(/\s*\((?:[^()]*?(?:19|20)\d{2}|[A-Za-z0-9 .:,'&!\-]+)\)\s*$/, '').trim();
+    const q = t.match(/^«([^»]+)»$/);
+    if (q) t = q[1].trim();
+    // v189: одиночные «» (без пары) убираем, первую букву — заглавной
+    if ((t.match(/«/g) || []).length !== (t.match(/»/g) || []).length) t = t.replace(/[«»]/g, '').trim();
+    if (t && /^[а-яё]/.test(t)) t = t[0].toUpperCase() + t.slice(1);
+    return t || r;
+  };
+  ALL = (data.all || []).map(m => {
+    if (m._raw === undefined) { m._raw = m.title; m.title = prettyTitle(m.title); }
+    m.actors = toArr(m.actors);
+    m.genres = toArr(m.genres);
+    m.countries = toArr(m.countries);
+    if (m.director && typeof m.director !== 'string') m.director = String(m.director);
+    return m;
+  });
+  COLLS = data.cols || [];
+  const meta = data.meta || {};
+  EMOJI_RIDDLES = Array.isArray(meta.emoji_riddles) ? meta.emoji_riddles : [];
+  NEWS = Array.isArray(meta.recent_news) ? meta.recent_news : [];
+  PREMIERES = onlyFilms(meta.premieres);  // v119 (v151: без театра/оперы/концертов)
+  LEADERBOARD = Array.isArray(meta.leaderboard) ? meta.leaderboard : [];
+  LEADERBOARD_KIND = meta.leaderboard_kind === 'total' ? 'total' : 'week';
+  updateSubtitle();
+  renderGenreChips();
+  renderCountryChips();  // v89: фильтр по стране (флаги)
+  showCodeDay(meta);
+  renderFilmDay();
+  renderEvening();      // v88: «Что посмотреть?» по настроению
+  renderCodeWallet();   // v88: коллекция разгаданных кодов
+  renderHero();
+  renderNewCodes();      // v102: «🆕 Новые коды»
+  renderTodayShelf(meta);
+  renderRecentShelf();
+  renderTrailerShelf();   // v74: «Продолжить смотреть»
+  renderRecoShelf();
+  renderPremieres(meta);
+  addMarathonButtons();   // v74: кнопки «🎬 Марафон» на полках
+  renderGrid();
+  // v124: «Марафон»/«Топ» могли открыть до прихода базы — там остались
+  // скелетоны; как только данные приехали, перерисовываем открытый раздел
+  if (view === 'marathon') renderMarathonView();
+  else if (view === 'top') renderLeaderboard();
+  updateChallPane();
+  updateHeaderProgress();
+  renderStreakStrip();
+  parseRiddleHash();
+  parseMovieHash();
+}
+
+async function loadMovies() {
+  // Мгновенный старт: сразу рисуем закэшированные данные, свежак тянем фоном
+  try {
+    const cached = JSON.parse(localStorage.getItem(DATA_CACHE_KEY) || 'null');
+    if (cached && Array.isArray(cached.all) && cached.all.length) applyData(cached);
+  } catch (e) {}
+  try {
+    const [r, rc, rm] = await Promise.all([
+      fetch('./data/movies.json', { cache: 'no-cache' }),
+      fetch('./data/collections.json', { cache: 'no-cache' }).catch(() => null),
+      fetch('./data/meta.json', { cache: 'no-cache' }).catch(() => null)
+    ]);
+    const data = {
+      all: await r.json(),
+      cols: rc ? await rc.json() : [],
+      meta: rm ? await rm.json() : {},
+    };
+    try { localStorage.setItem(DATA_CACHE_KEY, JSON.stringify({ ...data, synced_at: Date.now() })); } catch (e) {}
+    applyData(data);
+    // Бейдж новых достижений на кнопке «Ещё» + восстановление последнего
+    // открытого раздела (пусто/«grid» — обычная афиша).
+    updateMoreBadge();
+    let saved = null;
+    try { saved = localStorage.getItem(LAST_VIEW_KEY); } catch (e) {}
+    openView((saved && saved !== 'grid') ? saved : 'today', { restore: true });
+  } catch (e) {
+    // v126: сбой загрузки данных считаем всегда, даже когда показан кэш: «видишь
+    // старое вместо свежего» — та же поломка, а по отчёту видно её частоту.
+    bumpErrorStat('data', (e && e.message) || 'movies_load');
+    if (ALL.length) return; // уже показан кэш — не пугаем ошибкой
+    document.getElementById('movies-container').innerHTML =
+      '<div class="error-box"><p class="error">Не удалось загрузить афишу 😔</p>' +
+      '<button class="btn-secondary" id="btn-retry">🔁 Повторить</button></div>';
+    const rb = document.getElementById('btn-retry');
+    if (rb) rb.onclick = () => {
+      rb.disabled = true;
+      rb.textContent = '⏳ Загружаю…';
+      loadMovies();
+    };
+  }
+}
+
+// Полоска «🔥 стрик · уровень · прогресс» в шапке — после синхронизации с ботом
+function updateHeaderProgress() {
+  const el = document.getElementById('header-progress');
+  if (!el) return;
+  if (!PROFILE || !PROFILE.lvl) { el.classList.add('hidden'); return; }
+  const strk = parseInt(PROFILE.str, 10) || 0;
+  const pct = Math.max(0, Math.min(100, parseInt(PROFILE.pct, 10) || 0));
+  const next = parseInt(PROFILE.lvl_next, 10) || 0;
+  el.classList.remove('hidden');
+  el.innerHTML = `<span class="hp-streak" title="Серия дней в боте">🔥 ${strk}</span>` +
+    `<span class="hp-level">${esc(PROFILE.lvl)}${next ? ` · −${next} 🔑` : ''}</span>` +
+    `<span class="hp-bar"><i style="width:${pct}%"></i></span>`;
+}
+
+// ---------- скелетоны (заглушки до загрузки данных) ----------
+function renderSkeletons() {
+  const c = document.getElementById('movies-container');
+  c.innerHTML = Array.from({ length: 8 }, () =>
+    '<div class="movie-card skeleton-card"><div class="skel poster"></div><div class="skel line"></div><div class="skel line short"></div></div>'
+  ).join('');
+}
+renderSkeletons();
+
+// Расстояние Левенштейна — для нечёткого поиска по названиям
+function _levDist(a, b) {
+  a = String(a); b = String(b);
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  const prev = new Array(b.length + 1);
+  const cur = new Array(b.length + 1);
+  for (let j = 0; j <= b.length; j++) prev[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    cur[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+    }
+    for (let j = 0; j <= b.length; j++) prev[j] = cur[j];
+  }
+  return prev[b.length];
+}
+
+// ---------- ежедневные челленджи: панель на главной ----------
+// v109: панель стала «Целью дня» — сворачивается, помнит состояние,
+// а когда всё выполнено — кнопка забрать баллы в боте.
+const CHALL_COLLAPSE_KEY = 'kinoafisha_chall_collapsed';
+// v123: салют при закрытии всех задач дня — один раз за день за сессию
+let _challSparkKey = '';
+const _challDayKey = () => new Date().toDateString();
+function updateChallPane() {
+  const pane = document.getElementById('chall-pane');
+  if (!pane) return;
+  const c = getChallenges();
+  const listEl = document.getElementById('chall-list');
+  const countEl = document.getElementById('chall-count');
+  // v146: по умолчанию «Цель дня» свёрнута — афиша выше; раскрытие запоминается
+  const collapsed = localStorage.getItem(CHALL_COLLAPSE_KEY) !== '0';
+  const items = CHALLENGE_LIST.map(ch => {
+    const ok = c.done.includes(ch.id) || ch.check();
+    return `<div class="chall-item ${ok ? 'done' : ''}">
+      <span class="chall-emoji">${ch.emoji}</span>
       <div class="chall-body">
-        <b>${esc(m.name)}</b>
-        <span>${esc(m.desc)}</span>
+        <b>${esc(ch.name)}</b>
+        <span>${esc(ch.desc)}</span>
       </div>
-      <span class="chall-check">${b?"✅":"○"}</span>
-    </div>`}).join("");n.innerHTML=o,i?n.classList.add("hidden"):n.classList.remove("hidden");const r=CHALLENGE_LIST.filter(m=>e.done.includes(m.id)||m.check()).length;if(s){const m=r===CHALLENGE_LIST.length;s.innerHTML=ringHtml(Math.round(100*r/CHALLENGE_LIST.length),{size:34,stroke:4,xs:!0,tone:m?"done":"",label:`${r}/${CHALLENGE_LIST.length}`}),s.title=`${r} из ${CHALLENGE_LIST.length} задач закрыто`,m&&_challSparkKey!==_challDayKey()&&(_challSparkKey=_challDayKey(),sparkBurst(t))}const c=document.getElementById("chall-reward");if(c){const m=r===CHALLENGE_LIST.length;c.classList.toggle("hidden",!m),m&&!e.done.includes("reward_sent")?c.onclick=()=>{haptic("ok"),sendOrDeepLink({action:"quiz_result",correct:CHALLENGE_LIST.length,total:CHALLENGE_LIST.length});try{const b=getChallenges();b.done.push("reward_sent"),setChallenges(b),c.classList.add("hidden")}catch(b){}}:m&&(c.textContent="✅ Баллы за цель дня уже забраны",c.onclick=null)}const a=document.getElementById("chall-head");a&&!a.dataset.wired&&(a.dataset.wired="1",a.addEventListener("click",m=>{if(m.target.closest("#chall-reward"))return;const b=localStorage.getItem(CHALL_COLLAPSE_KEY)==="0";localStorage.setItem(CHALL_COLLAPSE_KEY,b?"1":"0"),haptic("light"),updateChallPane()})),t.classList.remove("hidden"),r===CHALLENGE_LIST.length&&!e.done.includes("all_done")&&(e.done.push("all_done"),setChallenges(e))}function renderCodeCollection(){var o;const t=document.getElementById("code-collection");if(!t)return;const e=getUnlocked(),n=new Set(e.map(String)),s=[...ALL].sort((r,c)=>(+r.code||0)-(+c.code||0));if(s.length<2){t.classList.add("hidden");return}const i=s.length?Math.round(100*e.length/s.length):0;t.classList.remove("hidden"),t.innerHTML=`
+      <span class="chall-check">${ok ? '✅' : '○'}</span>
+    </div>`;
+  }).join('');
+  listEl.innerHTML = items;
+  if (collapsed) listEl.classList.add('hidden');
+  else listEl.classList.remove('hidden');
+  const doneCount = CHALLENGE_LIST.filter(ch => c.done.includes(ch.id) || ch.check()).length;
+  if (countEl) {
+    // v123: «Цель дня» — кольцевой прогресс вместо текста «2/3»: видно и сколько
+    // закрыто, и сколько осталось, без чтения мелкой дроби
+    const full = doneCount === CHALLENGE_LIST.length;
+    countEl.innerHTML = ringHtml(Math.round(100 * doneCount / CHALLENGE_LIST.length), {
+      size: 34, stroke: 4, xs: true, tone: full ? 'done' : '',
+      label: `${doneCount}/${CHALLENGE_LIST.length}`,
+    });
+    countEl.title = `${doneCount} из ${CHALLENGE_LIST.length} задач закрыто`;
+    if (full && _challSparkKey !== _challDayKey()) {
+      _challSparkKey = _challDayKey();
+      sparkBurst(pane);
+    }
+  }
+  // v109: кнопка награды — видна, когда выполнены все три задания
+  const rewardEl = document.getElementById('chall-reward');
+  if (rewardEl) {
+    const allDone = doneCount === CHALLENGE_LIST.length;
+    rewardEl.classList.toggle('hidden', !allDone);
+    if (allDone && !c.done.includes('reward_sent')) {
+      rewardEl.onclick = () => {
+        haptic('ok');
+        sendOrDeepLink({ action: 'quiz_result', correct: CHALLENGE_LIST.length, total: CHALLENGE_LIST.length });
+        try {
+          const cc = getChallenges();
+          cc.done.push('reward_sent');
+          setChallenges(cc);
+          rewardEl.classList.add('hidden');
+        } catch (e) {}
+      };
+    } else if (allDone) {
+      rewardEl.textContent = '✅ Баллы за цель дня уже забраны';
+      rewardEl.onclick = null;
+    }
+  }
+  // v109: тумблер сворачивания
+  const head = document.getElementById('chall-head');
+  if (head && !head.dataset.wired) {
+    head.dataset.wired = '1';
+    head.addEventListener('click', (e) => {
+      if (e.target.closest('#chall-reward')) return;
+      const nowCollapsed = !(localStorage.getItem(CHALL_COLLAPSE_KEY) !== '0');
+      localStorage.setItem(CHALL_COLLAPSE_KEY, nowCollapsed ? '1' : '0');
+      haptic('light');
+      updateChallPane();
+    });
+  }
+  pane.classList.remove('hidden');
+  // после показа — если все сделаны, добавим поздравление
+  if (doneCount === CHALLENGE_LIST.length && !c.done.includes('all_done')) {
+    c.done.push('all_done');
+    setChallenges(c);
+  }
+}
+
+// ---------- коллекция кодов (сетка всех кодов в Дастижениях) ----------
+function renderCodeCollection() {
+  const wrap = document.getElementById('code-collection');
+  if (!wrap) return;
+  const unlocked = getUnlocked();
+  const unlockedSet = new Set(unlocked.map(String));
+  const all = [...ALL].sort((a, b) => (+a.code || 0) - (+b.code || 0));
+  if (all.length < 2) { wrap.classList.add('hidden'); return; }
+  const openPct = all.length ? Math.round(100 * unlocked.length / all.length) : 0;
+  wrap.classList.remove('hidden');
+  wrap.innerHTML = `
     <div class="coll-head">
       <h3>🔑 Коллекция кодов</h3>
-      <span>${e.length}/${s.length} · ${i}%</span>
+      <span>${unlocked.length}/${all.length} · ${openPct}%</span>
     </div>
     <div class="cap-scene" id="cap-scene">
       <canvas aria-label="Капитан Кино идёт и собирает коды"></canvas>
@@ -80,12 +1605,496 @@ var be,ke,Se,we;const tg=window.Telegram.WebApp;tg.ready(),tg.expand();const ACC
       <div class="cap-count">Тапни — Капитан прыгнет</div>
       <button class="cap-play" id="btn-cap-play">▶ Играть</button>
     </div>
-    <div class="coll-grid">${s.map(r=>{const c=n.has(String(r.code));return`<span class="coll-cell ${c?"on":""}" title="${esc(r.title)}"
-          data-code="${esc(r.code)}">${c?"🎬":"❔"}</span>`}).join("")}</div>`,t.querySelectorAll(".coll-cell.on").forEach(r=>r.addEventListener("click",()=>openDetail(r.dataset.code)));try{startCaptainScene(t.querySelector("#cap-scene"),e,s)}catch(r){}(o=t.querySelector("#btn-cap-play"))==null||o.addEventListener("click",r=>{r.stopPropagation(),haptic("light"),openCaptainGame()})}let CAP_STOP=null,CAP_GAME_STOP=null;const CAP_ZONE_SEC=15,CAP_ZONES=[null,{name:"🎞 Кинозал",c:["#2b0d12","#5a1a24","#7a2a35","#2a0f14"]},{name:"🌟 Красная дорожка",c:["#0b0b14","#1b1b2e","#2c2c4a","#7a1426"]}],CAP_START_PALS=[["#0b1230","#1d2b5a","#243a6e","#10182f"],["#2a1245","#6a2f6e","#4b2a63","#1a0d2b"],["#07262b","#14505a","#1c5f6b","#0a1c20"]];function capHexToRgb(t){return[1,3,5].map(e=>parseInt(t.slice(e,e+2),16))}function capMix(t,e,n){const s=capHexToRgb(t),i=capHexToRgb(e);return"#"+s.map((o,r)=>Math.round(o+(i[r]-o)*n).toString(16).padStart(2,"0")).join("")}function capDayStr(t){return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0")}function capGoalStreak(){try{const t=JSON.parse(localStorage.getItem(CAP_GOAL_KEY)||"null");return!t||!t.day?0:(t.day===capDayStr(new Date)||t.day===capDayStr(new Date(Date.now()-864e5)))&&t.n||0}catch(t){return 0}}const CAP_SOUND_KEY="kino_cap_sound";let _capAudio=null;function capSoundOn(){try{return localStorage.getItem(CAP_SOUND_KEY)==="1"}catch(t){return!1}}function capSfx(t){if(capSoundOn())try{if(!_capAudio){const s=window.AudioContext||window.webkitAudioContext;if(!s)return;_capAudio=new s}const e=_capAudio;e.state==="suspended"&&e.resume();const n=(s,i,o,r,c,a)=>{const m=e.currentTime+(a||0),b=e.createOscillator(),w=e.createGain();b.type=r||"sine",b.frequency.setValueAtTime(s,m),b.frequency.exponentialRampToValueAtTime(Math.max(30,i),m+o),w.gain.setValueAtTime(c||.08,m),w.gain.exponentialRampToValueAtTime(1e-4,m+o),b.connect(w),w.connect(e.destination),b.start(m),b.stop(m+o+.02)};t==="jump"?n(320,620,.12,"square",.04):t==="coin"?(n(880,880,.07,"triangle",.08),n(1320,1320,.11,"triangle",.08,.06)):t==="ticket"?[523,659,784,1047].forEach((s,i)=>n(s,s,.1,"triangle",.08,i*.07)):t==="hit"?n(220,70,.22,"sawtooth",.07):t==="tick"?n(660,660,.08,"sine",.07):t==="go"?n(990,1320,.22,"triangle",.09):t==="win"?[523,659,784,1047,1319].forEach((s,i)=>n(s,s,.16,"triangle",.08,i*.09)):t==="end"&&[392,330].forEach((s,i)=>n(s,s,.2,"triangle",.07,i*.14))}catch(e){}}const CAP_BEST_KEY="kino_cap_best",CAP_ROUND_SEC=45,CAP_GOAL=600,CAP_GOAL_KEY="kino_cap_goal";function startCaptainScene(t,e,n,s={}){const i=!!s.game;i?CAP_GAME_STOP&&CAP_GAME_STOP():CAP_STOP&&CAP_STOP();const o=t.querySelector("canvas"),r=t.querySelector(".cap-bubble"),c=t.querySelector(".cap-count");if(!o||!o.getContext)return()=>{};const a=o.getContext("2d"),m=s.H||150,b=m-26,w=!i&&window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches,$=new Map(n.map(B=>[String(B.code),B])),p=e.map(String).filter(B=>$.has(B)),f=p.length;let v=0,u=1;function S(){v=Math.max(240,t.clientWidth||320),u=Math.min(2,window.devicePixelRatio||1),o.width=Math.round(v*u),o.height=Math.round(m*u),o.style.height=m+"px",a.setTransform(u,0,0,u,0,0)}S();let g=0,L=0,H=0,M=0,nt=0,lt=0,Q=performance.now(),it=0,U=0,Y=0,W=0,dt=0,mt=!1,rt=!1,C=0,tt=!1,T=!1,j=!1,J=!1;if(i)try{C=parseInt(localStorage.getItem(CAP_BEST_KEY)||"0",10)||0}catch(B){}let A=0,F=0,z=!1;const x=i?CAP_START_PALS[Math.floor(Math.random()*CAP_START_PALS.length)]:CAP_START_PALS[0];let V=x.slice(),K=x.slice(),X=0,ct=9;const St=capGoalStreak(),pt=[],gt=[],at=[],ut=[];let Et=1/0,Lt=Math.floor(Math.random()*Math.max(1,p.length)),_t=v*.75,It=v*1.1;function Ot(){let B=Math.random()<.4;B&&at.some(E=>Math.abs(E.x-_t)<80)&&(B=!1);const d={x:_t,y:b-(B?92:40),high:B,got:!1};i&&Math.random()<.1?d.ticket=!0:p.length?(d.code=p[Lt%p.length],Lt++):d.lock=!0,pt.push(d),_t+=120+Math.random()*90}function Bt(){let B=It;pt.some(d=>!d.high&&Math.abs(d.x-B)<45)&&(B+=70),at.some(d=>Math.abs(d.x-B)<130)&&(B+=140),gt.push({x:B,hit:!1}),It=B+230+Math.random()*170}function Ft(){let B=Et;gt.some(d=>Math.abs(d.x-B)<130)&&(B+=140),pt.some(d=>d.high&&Math.abs(d.x-B)<80)&&(B+=90),at.push({x:B,hit:!1,y:b-80}),Et=B+340+Math.random()*260}for(;_t<v*2;)Ot();if(i)for(;It<v*2;)Bt();function bt(B,d,E){r&&(r.innerHTML=B,r.dataset.code=d||"",r.classList.add("show"),lt=E||2.6)}function ee(){mt||s.ctl&&s.ctl.hold||(H===0&&M===0?(M=330,A=1,haptic("light"),i&&capSfx("jump")):A===1&&(M=290,A=2,i&&capSfx("jump"),At(v*.28,b-30-H,"#ffffff",6),haptic("light")))}o.onpointerdown=ee,r&&(r.onclick=()=>{const B=r.dataset.code;B&&(s.onOpen&&s.onOpen(),openDetail(B))});function At(B,d,E,_=9){for(let O=0;O<_;O++){const G=Math.random()*6.28,R=40+Math.random()*70;ut.push({x:B,y:d,vx:Math.cos(G)*R,vy:Math.sin(G)*R-30,life:.6,color:E})}}function qt(B,d,E){a.save(),a.translate(B,d),a.rotate(E),a.fillStyle="#16264a",a.fillRect(-2.5,0,5,13),a.fillStyle="#2b1b12",a.fillRect(-3,12,8,4),a.restore()}function Kt(B,d,E){a.save(),a.translate(B,d),a.rotate(E),a.fillStyle="#244a86",a.fillRect(-2,0,4,11),a.fillStyle="#f2c9a0",a.beginPath(),a.arc(0,12,2.6,0,6.28),a.fill(),a.restore()}function Gt(B,d,E){const _=E?0:Math.abs(Math.sin(L))*2,O=E?.9:Math.sin(L)*.7,G=W>0?Math.sin(Y*40)*.08:0,R=d-_;if(a.fillStyle="rgba(0,0,0,.28)",a.beginPath(),a.ellipse(B,b+2,Math.max(6,13-H/12),3.5,0,0,6.28),a.fill(),a.save(),a.translate(B,R),a.rotate(G),a.translate(-B,-R),f>=100){const Z=Math.sin(L*2)*3;a.fillStyle="#2d4fa8",a.beginPath(),a.moveTo(B-8,R-40),a.lineTo(B+2,R-40),a.lineTo(B-8-16-Z,R-12),a.lineTo(B-8-6-Z,R-8),a.closePath(),a.fill()}if(Kt(B-9,R-36,-O),qt(B-3,R-14,O),qt(B+3,R-14,-O),a.fillStyle="#1f3a68",a.beginPath(),a.roundRect?a.roundRect(B-10,R-40,20,27,5):a.rect(B-10,R-40,20,27),a.fill(),a.fillStyle="#f5c542",a.beginPath(),a.arc(B+2,R-33,1.6,0,6.28),a.arc(B+2,R-27,1.6,0,6.28),a.fill(),a.fillStyle="#0f1c38",a.fillRect(B-10,R-19,20,3),f>=25&&(a.fillStyle="#e24b4b",a.beginPath(),a.arc(B-5,R-33,2.6,0,6.28),a.fill(),a.fillStyle="#ffd96a",a.fillRect(B-5.7,R-37,1.4,3)),f>=50){const Z=Math.sin(L*2+1)*3;a.fillStyle="#d93b3b",a.fillRect(B-9,R-42,18,4),a.beginPath(),a.moveTo(B-9,R-40),a.lineTo(B-24-Z,R-36-Z/2),a.lineTo(B-23-Z,R-31-Z/2),a.lineTo(B-8,R-36),a.closePath(),a.fill()}Kt(B+9,R-36,O),a.fillStyle="#f2c9a0",a.beginPath(),a.arc(B,R-49,9,0,6.28),a.fill(),a.fillStyle="#222",a.beginPath(),a.arc(B+3.5,R-50,1.3,0,6.28),a.fill(),St>=3&&(a.fillStyle="#0d0d12",a.fillRect(B-1,R-52.5,11,4),a.fillStyle="rgba(255,255,255,.45)",a.fillRect(B+1,R-52,3,1.2)),a.strokeStyle="#8a4b2a",a.lineWidth=1.6,a.beginPath(),a.moveTo(B+1,R-45),a.quadraticCurveTo(B+6,R-44,B+9,R-46),a.stroke(),a.fillStyle="#ffffff",a.beginPath(),a.arc(B,R-53,9.5,Math.PI,0),a.fill(),a.fillStyle=f>=10?"#d9a521":"#16264a",a.fillRect(B-9.5,R-55,19,4),a.fillStyle="#111",a.fillRect(B+1,R-51.5,12,2.4),a.fillStyle="#f5c542",a.beginPath(),a.arc(B,R-57,2.3,0,6.28),a.fill(),a.restore()}function Vt(B){const d=B.x-g,E=B.y+Math.sin((B.x+g*.3)/18)*3;if(a.save(),B.ticket){a.translate(d,E),a.rotate(-.12),a.fillStyle="#e24b4b",a.fillRect(-16,-10,32,20),a.fillStyle="#0b1230",a.beginPath(),a.arc(-16,0,4,0,6.28),a.arc(16,0,4,0,6.28),a.fill(),a.fillStyle="#fff",a.font="700 10px system-ui, sans-serif",a.textAlign="center",a.textBaseline="middle",a.fillText("🧲",0,1),a.restore();return}a.fillStyle=B.lock?"#56607a":"#f5c542",a.strokeStyle=B.lock?"#7a859f":"#fff2b0",a.lineWidth=2,a.beginPath(),a.arc(d,E,13,0,6.28),a.fill(),a.stroke(),a.fillStyle=B.lock?"#d5dbea":"#4a3200",a.font="700 11px system-ui, sans-serif",a.textAlign="center",a.textBaseline="middle",a.fillText(B.lock?"?":String(B.code).slice(0,4),d,E+.5),a.restore()}function Xt(B){const d=B.x-g,E=b;a.save(),a.globalAlpha=B.hit?.35:1,a.fillStyle="#fff3d0";for(const[_,O,G]of[[-7,-27,5],[0,-30,6],[7,-27,5],[-3,-24,5],[4,-24,5]])a.beginPath(),a.arc(d+_,E+O,G,0,6.28),a.fill();a.beginPath(),a.moveTo(d-12,E-24),a.lineTo(d+12,E-24),a.lineTo(d+9,E),a.lineTo(d-9,E),a.closePath(),a.fillStyle="#fff",a.fill(),a.fillStyle="#d93b3b";for(let _=-1;_<=1;_++)a.beginPath(),a.moveTo(d+_*8-3,E-24),a.lineTo(d+_*8+3,E-24),a.lineTo(d+_*6+2,E),a.lineTo(d+_*6-2,E),a.closePath(),a.fill();a.restore()}function ne(B){const d=B.x-g,E=B.y+Math.sin(Y*4+B.x)*4;a.save(),a.globalAlpha=B.hit?.35:1,a.translate(d,E),a.fillStyle="#1b1b1f",a.fillRect(-15,-4,30,16),a.fillStyle="#f4f4f4",a.save(),a.rotate(-.25+Math.sin(Y*8+B.x)*.12),a.fillRect(-15,-12,30,8),a.fillStyle="#1b1b1f";for(let _=-12;_<14;_+=8)a.beginPath(),a.moveTo(_,-12),a.lineTo(_+4,-12),a.lineTo(_,-4),a.lineTo(_-4,-4),a.closePath(),a.fill();a.restore(),a.fillStyle="#e24b4b",a.fillRect(-12,2,10,2),a.fillRect(-12,6,20,2),a.restore()}function zt(){const B=a.createLinearGradient(0,0,0,m);B.addColorStop(0,V[0]),B.addColorStop(1,V[1]),a.fillStyle=B,a.fillRect(0,0,v,m),a.fillStyle="rgba(255,255,255,.55)";for(let d=0;d<18;d++){const E=((d*97-g*.08)%(v+20)+(v+20))%(v+20)-10;a.fillRect(E,12+d*37%Math.max(60,m-90),1.5,1.5)}a.fillStyle="rgba(255,255,255,.07)",a.fillRect(0,22,v,20);for(let d=-(g*.25%16);d<v;d+=16)a.clearRect(d+4,25,8,4),a.clearRect(d+4,35,8,4);a.fillStyle=V[2];for(let d=0;d<6;d++){const E=((d*140-g*.35)%(v+160)+(v+160))%(v+160)-80;a.fillRect(E,b-26-d%3*10,46,26+d%3*10)}if(i&&X===2){const d=Math.min(1,ct/1.5)*.1;a.fillStyle=`rgba(255,230,160,${d})`;for(let E=0;E<2;E++){const _=v*(.25+.5*E)+Math.sin(Y*.9+E*2)*40;a.beginPath(),a.moveTo(_-6,0),a.lineTo(_+6,0),a.lineTo(_+70,b),a.lineTo(_-70,b),a.closePath(),a.fill()}}a.fillStyle=V[3],a.fillRect(0,b,v,m-b),a.fillStyle="#f5c542";for(let d=-(g%40);d<v;d+=40)a.fillRect(d,b+12,18,3)}function se(){a.save(),a.font="700 13px system-ui, sans-serif",a.textBaseline="top",a.fillStyle="#fff",a.textAlign="left",a.fillText(`Счёт ${Math.floor(it)}`,10,8),U>=2&&(a.fillStyle="#ffd96a",a.fillText(`комбо ×${Math.min(U,5)}`,10,26)),F>0&&(a.textAlign="center",a.fillStyle="#ffd96a",a.fillText(`🧲 ${Math.ceil(F)}`,v/2,8)),a.textAlign="right",a.fillStyle="#fff",a.fillText(`⏱ ${Math.max(0,Math.ceil(CAP_ROUND_SEC-Y))}`,v-10,8);const B=Math.min(1,it/CAP_GOAL);a.fillStyle="rgba(255,255,255,.18)",a.fillRect(10,44,v-20,3),a.fillStyle=B>=1?"#7be07b":"#ffd96a",a.fillRect(10,44,(v-20)*B,3),z&&(a.textAlign="left",a.fillStyle="#8cdcff",a.fillText("🛡",10,26+(U>=2?18:0)),a.textAlign="center"),T&&(a.textAlign="center",a.fillStyle="#ff9f43",a.fillText("×2",v/2,26)),a.restore()}function ie(){mt=!0;const B=Math.floor(it);let d=0;try{d=parseInt(localStorage.getItem(CAP_BEST_KEY)||"0",10)||0}catch(h){}const E=B>d;if(E)try{localStorage.setItem(CAP_BEST_KEY,String(B))}catch(h){}const _=h=>h.getFullYear()+"-"+String(h.getMonth()+1).padStart(2,"0")+"-"+String(h.getDate()).padStart(2,"0"),O=_(new Date),G=_(new Date(Date.now()-864e5));let R={day:"",n:0};try{R=JSON.parse(localStorage.getItem(CAP_GOAL_KEY)||"")||R}catch(h){}const Z=R.day===O;let ht=!1;if(B>=CAP_GOAL&&!Z){R={day:O,n:R.day===G?(R.n||0)+1:1};try{localStorage.setItem(CAP_GOAL_KEY,JSON.stringify(R))}catch(h){}ht=!0}const l=f<10?[10,"золотой околыш"]:f<25?[25,"медаль"]:f<50?[50,"красный шарф"]:f<100?[100,"синий плащ"]:null;haptic(E||ht?"ok":"light"),capSfx(E||ht?"win":"end"),s.onEnd&&s.onEnd({score:B,got:nt,best:Math.max(d,B),record:E,goalDone:Z||ht,goalNew:ht,goalLeft:Math.max(0,CAP_GOAL-B),streak:R.n||0,outfitLeft:l?l[0]-f:0,outfitName:l?l[1]:""})}function ae(){const B=p.map(Z=>$.get(Z)).filter(Z=>Z&&parseInt(Z.year,10)>1900);if(J=!0,B.length<3||!t)return;const d=B[Math.floor(Math.random()*B.length)],E=parseInt(d.year,10),_=new Set([E]),O=[-3,-2,-1,1,2,3,4].sort(()=>Math.random()-.5);for(const Z of O){if(_.size>=3)break;E+Z<=new Date().getFullYear()&&_.add(E+Z)}const G=[..._].sort(()=>Math.random()-.5);j=!0;const R=document.createElement("div");R.className="cap-q",R.innerHTML=`<div class="cap-q-card"><div class="cap-q-tag">🎬 Вопрос от Капитана · +150</div>
-      <div class="cap-q-text">В каком году вышел фильм<br><b>«${esc(d.title)}»</b>?</div>
-      <div class="cap-q-opts">${G.map(Z=>`<button data-y="${Z}">${Z}</button>`).join("")}</div></div>`,t.appendChild(R),R.querySelectorAll("button").forEach(Z=>Z.addEventListener("click",ht=>{ht.stopPropagation();const l=parseInt(Z.dataset.y,10)===E;R.querySelectorAll("button").forEach(h=>{h.disabled=!0,parseInt(h.dataset.y,10)===E&&h.classList.add("ok")}),l||Z.classList.add("bad"),l?(it+=150,haptic("ok"),capSfx("win")):(haptic("light"),capSfx("hit")),setTimeout(()=>{R.remove(),j=!1,Q=performance.now(),bt(l?"✅ Верно! +150 очков":`Это был ${E} год 🙂`,"",1.8)},1100)}))}function oe(B){const d=i?(70+Math.min(70,Y*1.6))*(W>0?.4:1):55;if(g+=d*B,L+=d*B/9,i){if(Y+=B,!J&&Y>=20&&Y<CAP_ROUND_SEC-10){ae();return}Y>=CAP_ROUND_SEC-8&&!T&&(T=!0,bt("🏁 Финишный рывок · очки ×2","",2),capSfx("ticket")),it+=d*B/10*(T?2:1),!tt&&C>0&&it>C&&(tt=!0,bt("🏆 Это новый рекорд! Не останавливайся","",2),haptic("medium"));const O=Math.min(CAP_ZONES.length-1,Math.floor(Y/CAP_ZONE_SEC));if(O!==X&&(K=V.slice(),X=O,ct=0,bt(`${CAP_ZONES[O].name} · скорость растёт`,"",1.8)),ct+=B,X>0){const G=Math.min(1,ct/1.5);V=CAP_ZONES[X].c.map((R,Z)=>capMix(K[Z],R,G))}if(W>0&&(W-=B),dt>0&&(dt-=B),Y>=CAP_ROUND_SEC){ie();return}}(M!==0||H>0)&&(M-=900*B,H+=M*B,H<=0&&(H=0,M=0,A=0));const E=v*.28;if(F>0){F-=B;for(const _ of pt){if(_.got||_.ticket)continue;const O=_.x-g-E;Math.abs(O)<160&&(_.x-=O*B*3.5,_.y+=(b-30-H-_.y)*B*4)}}for(const _ of pt){if(_.got)continue;const O=_.x-g;if(Math.abs(O-E)<20&&Math.abs(_.y-(b-30-H))<34){if(_.got=!0,_.ticket){F=6,capSfx("ticket"),At(O,_.y,"#ff8a8a",12),bt("🎟 Билет! Жетоны сами летят к Капитану","",1.8),haptic("medium");continue}if(nt++,At(O,_.y,_.lock?"#9aa6c6":"#ffd96a"),i&&(U++,U===5&&!z&&(z=!0,bt("🛡 Комбо ×5 — щит! Один удар не страшен","",1.8)),it+=(_.lock?5:20*Math.min(U,5))*(T?2:1),capSfx("coin")),_.lock)(!i||!rt)&&(rt=!0,bt("Пока пусто 🔍 Пришлите боту код — Капитан его подберёт."));else{const G=$.get(String(_.code));bt(`🔑 <b>${esc(G.title)}</b> · код ${esc(_.code)}`,_.code),haptic("light")}c&&!i&&(c.textContent=`В пути подобрано: ${nt}`)}}if(i){for(const _ of gt)_.hit||Math.abs(_.x-g-E)<16&&H<22&&(_.hit=!0,At(_.x-g,b-20,"#fff3d0",12),z?(z=!1,bt("🛡 Щит выдержал удар!","",1.4),capSfx("ticket"),haptic("light")):(U=0,W=.5,dt=.25,bt("Ой, попкорн! 🍿 Прыгай заранее","",1.4),capSfx("hit"),haptic("medium")));for(;gt.length&&gt[0].x-g<-40;)gt.shift();for(;It-g<v*1.6;)Bt();if(Y>10&&!isFinite(Et)&&(Et=g+v*1.3),isFinite(Et))for(;Et-g<v*1.6;)Ft();for(const _ of at)_.hit||Math.abs(_.x-g-E)<18&&H>10&&H<95&&(_.hit=!0,At(_.x-g,_.y,"#ffffff",12),z?(z=!1,bt("🛡 Щит выдержал удар!","",1.4),capSfx("ticket"),haptic("light")):(U=0,W=.5,dt=.25,bt("Ой, хлопушка! 🎬 Под ней не прыгай — просто беги","",1.6),capSfx("hit"),haptic("medium")));for(;at.length&&at[0].x-g<-40;)at.shift()}for(;pt.length&&pt[0].x-g<-40;)pt.shift();for(;_t-g<v*1.6;)Ot();for(const _ of ut)_.x+=_.vx*B,_.y+=_.vy*B,_.vy+=160*B,_.life-=B;for(let _=ut.length-1;_>=0;_--)ut[_].life<=0&&ut.splice(_,1);lt>0&&(lt-=B,lt<=0&&r&&r.classList.remove("show"))}function kt(){zt(),gt.forEach(Xt),at.forEach(ne),pt.forEach(B=>{B.got||Vt(B)}),Gt(v*.28,b-H,H>0),i&&z&&(a.strokeStyle=`rgba(140,220,255,${.55+.25*Math.sin(Y*6)})`,a.lineWidth=2,a.beginPath(),a.arc(v*.28,b-H-28,34,0,6.28),a.stroke());for(const B of ut)a.globalAlpha=Math.max(0,B.life/.6),a.fillStyle=B.color,a.fillRect(B.x,B.y,3,3);a.globalAlpha=1,dt>0&&(a.fillStyle=`rgba(255,80,80,${dt})`,a.fillRect(0,0,v,m)),i&&se()}let Rt=0,Jt=!1,Nt=!0,Yt=null;function Ht(){Jt=!0,cancelAnimationFrame(Rt),Yt&&Yt.disconnect()}function Qt(B){if(Jt)return;if(!document.body.contains(o)){Ht();return}const d=Math.min(.05,(B-Q)/1e3);if(Q=B,Nt&&!document.hidden&&!mt&&(Math.abs(t.clientWidth-v)>4&&t.clientWidth&&S(),!(s.ctl&&s.ctl.hold)&&!j&&oe(d),kt()),mt){kt(),Ht();return}Rt=requestAnimationFrame(Qt)}return"IntersectionObserver"in window&&(Yt=new IntersectionObserver(B=>{Nt=B[0].isIntersecting,Q=performance.now()}),Yt.observe(o)),w?(kt(),Ht):(i?CAP_GAME_STOP=Ht:CAP_STOP=Ht,Rt=requestAnimationFrame(Qt),Ht)}function openCaptainGame(){CAP_STOP&&(CAP_STOP(),CAP_STOP=null);let t=document.getElementById("cap-game");t&&t.remove(),t=document.createElement("div"),t.id="cap-game",t.className="cap-game",t.innerHTML=`
+    <div class="coll-grid">${all.map(m => {
+      const ok = unlockedSet.has(String(m.code));
+      return `<span class="coll-cell ${ok ? 'on' : ''}" title="${esc(m.title)}"
+          data-code="${esc(m.code)}">${ok ? '🎬' : '❔'}</span>`;
+    }).join('')}</div>`;
+  wrap.querySelectorAll('.coll-cell.on').forEach(cell =>
+    cell.addEventListener('click', () => openDetail(cell.dataset.code)));
+  try { startCaptainScene(wrap.querySelector('#cap-scene'), unlocked, all); } catch (e) {}
+  wrap.querySelector('#btn-cap-play')?.addEventListener('click', (e) => { e.stopPropagation(); haptic('light'); openCaptainGame(); });
+}
+
+// ---------- v155: «Капитан в пути» — 2D-игра: Капитан идёт и подбирает ваши открытые коды ----------
+// Canvas без библиотек. Золотые жетоны — реальные открытые коды пользователя; подобрал —
+// над головой всплывает название фильма (тап по облачку открывает карточку).
+// Тап — прыжок. Два режима: спокойная сцена в «Достижениях» (без препятствий) и раунд на 45 секунд
+// (кнопка «Играть»): очки за путь и жетоны, комбо, препятствия-попкорн, личный рекорд на устройстве.
+// Баллы бота за игру не начисляются — только рекорд и удовольствие.
+let CAP_STOP = null, CAP_GAME_STOP = null;
+// Локации раунда: каждые 15 секунд меняется фон (ночной город → кинозал → красная дорожка).
+// Цвета: [небо сверху, небо снизу, силуэты, дорога].
+const CAP_ZONE_SEC = 15;
+const CAP_ZONES = [
+  null,   // нулевая — случайная из CAP_START_PALS
+  { name: '🎞 Кинозал', c: ['#2b0d12', '#5a1a24', '#7a2a35', '#2a0f14'] },
+  { name: '🌟 Красная дорожка', c: ['#0b0b14', '#1b1b2e', '#2c2c4a', '#7a1426'] },
+];
+const CAP_START_PALS = [['#0b1230', '#1d2b5a', '#243a6e', '#10182f'], ['#2a1245', '#6a2f6e', '#4b2a63', '#1a0d2b'], ['#07262b', '#14505a', '#1c5f6b', '#0a1c20']];
+function capHexToRgb(h) { return [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); }
+function capMix(a, b, t) {
+  const A = capHexToRgb(a), B = capHexToRgb(b);
+  return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join('');
+}
+function capDayStr(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function capGoalStreak() {       // серия дней цели, если она ещё «жива» (выполнена сегодня или вчера)
+  try {
+    const g = JSON.parse(localStorage.getItem(CAP_GOAL_KEY) || 'null');
+    if (!g || !g.day) return 0;
+    return (g.day === capDayStr(new Date()) || g.day === capDayStr(new Date(Date.now() - 86400000))) ? (g.n || 0) : 0;
+  } catch (e) { return 0; }
+}
+// Звук игры: синтез WebAudio, без файлов. По умолчанию ВЫКЛ (ключ kino_cap_sound = '1' включает).
+const CAP_SOUND_KEY = 'kino_cap_sound';
+let _capAudio = null;
+function capSoundOn() { try { return localStorage.getItem(CAP_SOUND_KEY) === '1'; } catch (e) { return false; } }
+function capSfx(name) {
+  if (!capSoundOn()) return;
+  try {
+    if (!_capAudio) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; _capAudio = new AC(); }
+    const a = _capAudio; if (a.state === 'suspended') a.resume();
+    const tone = (f0, f1, dur, type, vol, delay) => {
+      const t0 = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain();
+      o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
+      g.gain.setValueAtTime(vol || 0.08, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+    };
+    if (name === 'jump') tone(320, 620, 0.12, 'square', 0.04);
+    else if (name === 'coin') { tone(880, 880, 0.07, 'triangle', 0.08); tone(1320, 1320, 0.11, 'triangle', 0.08, 0.06); }
+    else if (name === 'ticket') { [523, 659, 784, 1047].forEach((f, i) => tone(f, f, 0.1, 'triangle', 0.08, i * 0.07)); }
+    else if (name === 'hit') tone(220, 70, 0.22, 'sawtooth', 0.07);
+    else if (name === 'tick') tone(660, 660, 0.08, 'sine', 0.07);
+    else if (name === 'go') tone(990, 1320, 0.22, 'triangle', 0.09);
+    else if (name === 'win') { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, f, 0.16, 'triangle', 0.08, i * 0.09)); }
+    else if (name === 'end') { [392, 330].forEach((f, i) => tone(f, f, 0.2, 'triangle', 0.07, i * 0.14)); }
+  } catch (e) { /* звук не критичен */ }
+}
+const CAP_BEST_KEY = 'kino_cap_best';
+const CAP_ROUND_SEC = 45;
+const CAP_GOAL = 600;                 // цель дня: очков за раунд
+const CAP_GOAL_KEY = 'kino_cap_goal';  // {day, n}: последний день выполнения цели и серия дней
+function startCaptainScene(wrap, unlocked, all, opts = {}) {
+  const game = !!opts.game;
+  if (game) { if (CAP_GAME_STOP) CAP_GAME_STOP(); } else if (CAP_STOP) CAP_STOP();
+  const canvas = wrap.querySelector('canvas');
+  const bubble = wrap.querySelector('.cap-bubble');
+  const counter = wrap.querySelector('.cap-count');
+  if (!canvas || !canvas.getContext) return () => {};
+  const ctx = canvas.getContext('2d');
+  const H = opts.H || 150, GY = H - 26;
+  const reduce = !game && window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const byCode = new Map(all.map(m => [String(m.code), m]));
+  const codes = unlocked.map(String).filter(c => byCode.has(c));
+  const level = codes.length;           // наряд растёт вместе с коллекцией
+  let W = 0, dpr = 1;
+  function fit() {
+    W = Math.max(240, wrap.clientWidth || 320);
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  fit();
+
+  let off = 0, ph = 0, jumpY = 0, vy = 0, got = 0, bubbleTimer = 0, last = performance.now();
+  let score = 0, combo = 0, elapsed = 0, stumble = 0, flash = 0, over = false, hintShown = false;
+  let bestStart = 0, recSaid = false, sprint = false, qActive = false, qDone = false;
+  if (game) { try { bestStart = parseInt(localStorage.getItem(CAP_BEST_KEY) || '0', 10) || 0; } catch (e) {} }
+  let jumps = 0, magnet = 0, shield = false;
+  const zone0 = game ? CAP_START_PALS[Math.floor(Math.random() * CAP_START_PALS.length)] : CAP_START_PALS[0];
+  let pal = zone0.slice(), prevPal = zone0.slice(), zone = 0, zoneT = 9;
+  const streakDays = capGoalStreak();   // очки — за серию цели 3+ дня
+  const tokens = [], obstacles = [], flyers = [], sparks = [];
+  let nextFly = Infinity;
+  let cursor = Math.floor(Math.random() * Math.max(1, codes.length));
+  let nextX = W * 0.75, nextObs = W * 1.1;
+  function spawn() {
+    let high = Math.random() < 0.4;
+    if (high && flyers.some(f => Math.abs(f.x - nextX) < 80)) high = false;   // под хлопушкой высоко не прыгают
+    const t = { x: nextX, y: GY - (high ? 92 : 40), high, got: false };
+    if (game && Math.random() < 0.1) t.ticket = true;                 // 🎟 билет-магнит
+    else if (codes.length) { t.code = codes[cursor % codes.length]; cursor++; } else { t.lock = true; }
+    tokens.push(t);
+    nextX += 120 + Math.random() * 90;
+  }
+  function spawnObstacle() {
+    let x = nextObs;
+    if (tokens.some(t => !t.high && Math.abs(t.x - x) < 45)) x += 70;   // не поверх жетона у земли
+    if (flyers.some(f => Math.abs(f.x - x) < 130)) x += 140;            // и не рядом с хлопушкой
+    obstacles.push({ x, hit: false });
+    nextObs = x + 230 + Math.random() * 170;
+  }
+  function spawnFlyer() {
+    let x = nextFly;
+    if (obstacles.some(o => Math.abs(o.x - x) < 130)) x += 140;
+    if (tokens.some(t => t.high && Math.abs(t.x - x) < 80)) x += 90;
+    flyers.push({ x, hit: false, y: GY - 80 });
+    nextFly = x + 340 + Math.random() * 260;
+  }
+  while (nextX < W * 2) spawn();
+  if (game) while (nextObs < W * 2) spawnObstacle();
+
+  function say(html, code, secs) {
+    if (!bubble) return;
+    bubble.innerHTML = html; bubble.dataset.code = code || '';
+    bubble.classList.add('show'); bubbleTimer = secs || 2.6;
+  }
+  function jump() {
+    if (over || (opts.ctl && opts.ctl.hold)) return;
+    if (jumpY === 0 && vy === 0) { vy = 330; jumps = 1; haptic('light'); if (game) capSfx('jump'); }
+    else if (jumps === 1) { vy = 290; jumps = 2; if (game) capSfx('jump'); sparkle(W * 0.28, GY - 30 - jumpY, '#ffffff', 6); haptic('light'); }   // двойной прыжок
+  }
+  canvas.onpointerdown = jump;
+  if (bubble) bubble.onclick = () => { const c = bubble.dataset.code; if (c) { if (opts.onOpen) opts.onOpen(); openDetail(c); } };
+
+  function sparkle(x, y, color, n = 9) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * 6.28, s = 40 + Math.random() * 70;
+      sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 30, life: 0.6, color });
+    }
+  }
+  function leg(x, y, ang) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+    ctx.fillStyle = '#16264a'; ctx.fillRect(-2.5, 0, 5, 13);
+    ctx.fillStyle = '#2b1b12'; ctx.fillRect(-3, 12, 8, 4);
+    ctx.restore();
+  }
+  function arm(x, y, ang) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+    ctx.fillStyle = '#244a86'; ctx.fillRect(-2, 0, 4, 11);
+    ctx.fillStyle = '#f2c9a0'; ctx.beginPath(); ctx.arc(0, 12, 2.6, 0, 6.28); ctx.fill();
+    ctx.restore();
+  }
+  function drawCaptain(cx, base, airborne) {
+    const bob = airborne ? 0 : Math.abs(Math.sin(ph)) * 2;
+    const sw = airborne ? 0.9 : Math.sin(ph) * 0.7;
+    const tilt = stumble > 0 ? Math.sin(elapsed * 40) * 0.08 : 0;
+    const y0 = base - bob;
+    ctx.fillStyle = 'rgba(0,0,0,.28)';
+    ctx.beginPath(); ctx.ellipse(cx, GY + 2, Math.max(6, 13 - jumpY / 12), 3.5, 0, 0, 6.28); ctx.fill();
+    ctx.save(); ctx.translate(cx, y0); ctx.rotate(tilt); ctx.translate(-cx, -y0);
+    if (level >= 100) {                     // синий плащ — за 100 открытых кодов
+      const wv = Math.sin(ph * 2) * 3;
+      ctx.fillStyle = '#2d4fa8';
+      ctx.beginPath(); ctx.moveTo(cx - 8, y0 - 40); ctx.lineTo(cx + 2, y0 - 40);
+      ctx.lineTo(cx - 8 - 16 - wv, y0 - 12); ctx.lineTo(cx - 8 - 6 - wv, y0 - 8); ctx.closePath(); ctx.fill();
+    }
+    arm(cx - 9, y0 - 36, -sw);
+    leg(cx - 3, y0 - 14, sw); leg(cx + 3, y0 - 14, -sw);
+    ctx.fillStyle = '#1f3a68';
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(cx - 10, y0 - 40, 20, 27, 5) : ctx.rect(cx - 10, y0 - 40, 20, 27);
+    ctx.fill();
+    ctx.fillStyle = '#f5c542';
+    ctx.beginPath(); ctx.arc(cx + 2, y0 - 33, 1.6, 0, 6.28); ctx.arc(cx + 2, y0 - 27, 1.6, 0, 6.28); ctx.fill();
+    ctx.fillStyle = '#0f1c38'; ctx.fillRect(cx - 10, y0 - 19, 20, 3);
+    if (level >= 25) {                      // медаль — за 25 открытых кодов
+      ctx.fillStyle = '#e24b4b'; ctx.beginPath(); ctx.arc(cx - 5, y0 - 33, 2.6, 0, 6.28); ctx.fill();
+      ctx.fillStyle = '#ffd96a'; ctx.fillRect(cx - 5.7, y0 - 37, 1.4, 3);
+    }
+    if (level >= 50) {                      // красный шарф — за 50 открытых кодов
+      const wv = Math.sin(ph * 2 + 1) * 3;
+      ctx.fillStyle = '#d93b3b'; ctx.fillRect(cx - 9, y0 - 42, 18, 4);
+      ctx.beginPath(); ctx.moveTo(cx - 9, y0 - 40); ctx.lineTo(cx - 24 - wv, y0 - 36 - wv / 2); ctx.lineTo(cx - 23 - wv, y0 - 31 - wv / 2); ctx.lineTo(cx - 8, y0 - 36); ctx.closePath(); ctx.fill();
+    }
+    arm(cx + 9, y0 - 36, sw);
+    ctx.fillStyle = '#f2c9a0';
+    ctx.beginPath(); ctx.arc(cx, y0 - 49, 9, 0, 6.28); ctx.fill();
+    ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(cx + 3.5, y0 - 50, 1.3, 0, 6.28); ctx.fill();
+    if (streakDays >= 3) { ctx.fillStyle = '#0d0d12'; ctx.fillRect(cx - 1, y0 - 52.5, 11, 4); ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fillRect(cx + 1, y0 - 52, 3, 1.2); }   // очки — за серию цели 3+ дня
+    ctx.strokeStyle = '#8a4b2a'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(cx + 1, y0 - 45); ctx.quadraticCurveTo(cx + 6, y0 - 44, cx + 9, y0 - 46); ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(cx, y0 - 53, 9.5, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = level >= 10 ? '#d9a521' : '#16264a'; ctx.fillRect(cx - 9.5, y0 - 55, 19, 4);   // золотой околыш — за 10 кодов
+    ctx.fillStyle = '#111'; ctx.fillRect(cx + 1, y0 - 51.5, 12, 2.4);
+    ctx.fillStyle = '#f5c542'; ctx.beginPath(); ctx.arc(cx, y0 - 57, 2.3, 0, 6.28); ctx.fill();
+    ctx.restore();
+  }
+  function drawToken(t) {
+    const x = t.x - off, y = t.y + Math.sin((t.x + off * 0.3) / 18) * 3;
+    ctx.save();
+    if (t.ticket) {
+      ctx.translate(x, y); ctx.rotate(-0.12);
+      ctx.fillStyle = '#e24b4b'; ctx.fillRect(-16, -10, 32, 20);
+      ctx.fillStyle = '#0b1230'; ctx.beginPath(); ctx.arc(-16, 0, 4, 0, 6.28); ctx.arc(16, 0, 4, 0, 6.28); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = '700 10px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('🧲', 0, 1);
+      ctx.restore(); return;
+    }
+    ctx.fillStyle = t.lock ? '#56607a' : '#f5c542';
+    ctx.strokeStyle = t.lock ? '#7a859f' : '#fff2b0'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, 13, 0, 6.28); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = t.lock ? '#d5dbea' : '#4a3200';
+    ctx.font = '700 11px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(t.lock ? '?' : String(t.code).slice(0, 4), x, y + 0.5);
+    ctx.restore();
+  }
+  function drawObstacle(o) {       // ведёрко попкорна
+    const x = o.x - off, y = GY;
+    ctx.save();
+    ctx.globalAlpha = o.hit ? 0.35 : 1;
+    ctx.fillStyle = '#fff3d0';
+    for (const [dx, dy, r] of [[-7, -27, 5], [0, -30, 6], [7, -27, 5], [-3, -24, 5], [4, -24, 5]]) {
+      ctx.beginPath(); ctx.arc(x + dx, y + dy, r, 0, 6.28); ctx.fill();
+    }
+    ctx.beginPath(); ctx.moveTo(x - 12, y - 24); ctx.lineTo(x + 12, y - 24); ctx.lineTo(x + 9, y); ctx.lineTo(x - 9, y); ctx.closePath();
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.fillStyle = '#d93b3b';
+    for (let i = -1; i <= 1; i++) {
+      ctx.beginPath(); ctx.moveTo(x + i * 8 - 3, y - 24); ctx.lineTo(x + i * 8 + 3, y - 24);
+      ctx.lineTo(x + i * 6 + 2, y); ctx.lineTo(x + i * 6 - 2, y); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawFlyer(f) {          // летающая хлопушка 🎬
+    const x = f.x - off, y = f.y + Math.sin(elapsed * 4 + f.x) * 4;
+    ctx.save(); ctx.globalAlpha = f.hit ? 0.35 : 1; ctx.translate(x, y);
+    ctx.fillStyle = '#1b1b1f'; ctx.fillRect(-15, -4, 30, 16);
+    ctx.fillStyle = '#f4f4f4';
+    ctx.save(); ctx.rotate(-0.25 + Math.sin(elapsed * 8 + f.x) * 0.12);
+    ctx.fillRect(-15, -12, 30, 8);
+    ctx.fillStyle = '#1b1b1f';
+    for (let i = -12; i < 14; i += 8) { ctx.beginPath(); ctx.moveTo(i, -12); ctx.lineTo(i + 4, -12); ctx.lineTo(i, -4); ctx.lineTo(i - 4, -4); ctx.closePath(); ctx.fill(); }
+    ctx.restore();
+    ctx.fillStyle = '#e24b4b'; ctx.fillRect(-12, 2, 10, 2); ctx.fillRect(-12, 6, 20, 2);
+    ctx.restore();
+  }
+  function drawScene() {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, pal[0]); g.addColorStop(1, pal[1]);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    for (let i = 0; i < 18; i++) {
+      const sx = ((i * 97 - off * 0.08) % (W + 20) + (W + 20)) % (W + 20) - 10;
+      ctx.fillRect(sx, 12 + (i * 37) % Math.max(60, H - 90), 1.5, 1.5);
+    }
+    ctx.fillStyle = 'rgba(255,255,255,.07)';
+    ctx.fillRect(0, 22, W, 20);
+    for (let x = -((off * 0.25) % 16); x < W; x += 16) ctx.clearRect(x + 4, 25, 8, 4), ctx.clearRect(x + 4, 35, 8, 4);
+    ctx.fillStyle = pal[2];
+    for (let i = 0; i < 6; i++) {
+      const bx = ((i * 140 - off * 0.35) % (W + 160) + (W + 160)) % (W + 160) - 80;
+      ctx.fillRect(bx, GY - 26 - (i % 3) * 10, 46, 26 + (i % 3) * 10);
+    }
+    if (game && zone === 2) {                              // прожекторы красной дорожки
+      const a = Math.min(1, zoneT / 1.5) * 0.10;
+      ctx.fillStyle = `rgba(255,230,160,${a})`;
+      for (let k = 0; k < 2; k++) {
+        const bx = W * (0.25 + 0.5 * k) + Math.sin(elapsed * 0.9 + k * 2) * 40;
+        ctx.beginPath(); ctx.moveTo(bx - 6, 0); ctx.lineTo(bx + 6, 0); ctx.lineTo(bx + 70, GY); ctx.lineTo(bx - 70, GY); ctx.closePath(); ctx.fill();
+      }
+    }
+    ctx.fillStyle = pal[3]; ctx.fillRect(0, GY, W, H - GY);
+    ctx.fillStyle = '#f5c542';
+    for (let x = -(off % 40); x < W; x += 40) ctx.fillRect(x, GY + 12, 18, 3);
+  }
+  function drawHud() {
+    ctx.save();
+    ctx.font = '700 13px system-ui, sans-serif'; ctx.textBaseline = 'top';
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
+    ctx.fillText(`Счёт ${Math.floor(score)}`, 10, 8);
+    if (combo >= 2) { ctx.fillStyle = '#ffd96a'; ctx.fillText(`комбо ×${Math.min(combo, 5)}`, 10, 26); }
+    if (magnet > 0) { ctx.textAlign = 'center'; ctx.fillStyle = '#ffd96a'; ctx.fillText(`🧲 ${Math.ceil(magnet)}`, W / 2, 8); }
+    ctx.textAlign = 'right'; ctx.fillStyle = '#fff';
+    ctx.fillText(`⏱ ${Math.max(0, Math.ceil(CAP_ROUND_SEC - elapsed))}`, W - 10, 8);
+    const gp = Math.min(1, score / CAP_GOAL);                     // полоска цели дня
+    ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(10, 44, W - 20, 3);
+    ctx.fillStyle = gp >= 1 ? '#7be07b' : '#ffd96a'; ctx.fillRect(10, 44, (W - 20) * gp, 3);
+    if (shield) { ctx.textAlign = 'left'; ctx.fillStyle = '#8cdcff'; ctx.fillText('🛡', 10, 26 + (combo >= 2 ? 18 : 0)); ctx.textAlign = 'center'; }
+    if (sprint) { ctx.textAlign = 'center'; ctx.fillStyle = '#ff9f43'; ctx.fillText('×2', W / 2, 26); }
+    ctx.restore();
+  }
+  function finish() {
+    over = true;
+    const final = Math.floor(score);
+    let best = 0;
+    try { best = parseInt(localStorage.getItem(CAP_BEST_KEY) || '0', 10) || 0; } catch (e) {}
+    const record = final > best;
+    if (record) { try { localStorage.setItem(CAP_BEST_KEY, String(final)); } catch (e) {} }
+    // цель дня: серия дней подряд, когда набрано CAP_GOAL очков
+    const dayStr = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const today = dayStr(new Date()), yest = dayStr(new Date(Date.now() - 86400000));
+    let goal = { day: '', n: 0 };
+    try { goal = JSON.parse(localStorage.getItem(CAP_GOAL_KEY) || '') || goal; } catch (e) {}
+    const doneBefore = goal.day === today;
+    let goalNew = false;
+    if (final >= CAP_GOAL && !doneBefore) {
+      goal = { day: today, n: goal.day === yest ? (goal.n || 0) + 1 : 1 };
+      try { localStorage.setItem(CAP_GOAL_KEY, JSON.stringify(goal)); } catch (e) {}
+      goalNew = true;
+    }
+    const nextOutfit = level < 10 ? [10, 'золотой околыш'] : level < 25 ? [25, 'медаль'] : level < 50 ? [50, 'красный шарф'] : level < 100 ? [100, 'синий плащ'] : null;
+    haptic(record || goalNew ? 'ok' : 'light'); capSfx(record || goalNew ? 'win' : 'end');
+    if (opts.onEnd) opts.onEnd({ score: final, got, best: Math.max(best, final), record,
+      goalDone: doneBefore || goalNew, goalNew, goalLeft: Math.max(0, CAP_GOAL - final), streak: goal.n || 0,
+      outfitLeft: nextOutfit ? nextOutfit[0] - level : 0, outfitName: nextOutfit ? nextOutfit[1] : '' });
+  }
+  // v168: вопрос по фильму из коллекции — раз за раунд, на ~20-й секунде; игра ждёт ответа
+  function askFilmQ() {
+    const pool = codes.map(c => byCode.get(c)).filter(m => m && parseInt(m.year, 10) > 1900);
+    qDone = true;
+    if (pool.length < 3 || !wrap) return;
+    const m = pool[Math.floor(Math.random() * pool.length)];
+    const y = parseInt(m.year, 10);
+    const opt = new Set([y]);
+    const near = [-3, -2, -1, 1, 2, 3, 4].sort(() => Math.random() - 0.5);
+    for (const d of near) { if (opt.size >= 3) break; if (y + d <= new Date().getFullYear()) opt.add(y + d); }
+    const list = [...opt].sort(() => Math.random() - 0.5);
+    qActive = true;
+    const box = document.createElement('div');
+    box.className = 'cap-q';
+    box.innerHTML = `<div class="cap-q-card"><div class="cap-q-tag">🎬 Вопрос от Капитана · +150</div>
+      <div class="cap-q-text">В каком году вышел фильм<br><b>«${esc(m.title)}»</b>?</div>
+      <div class="cap-q-opts">${list.map(v => `<button data-y="${v}">${v}</button>`).join('')}</div></div>`;
+    wrap.appendChild(box);
+    box.querySelectorAll('button').forEach(b => b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const ok = parseInt(b.dataset.y, 10) === y;
+      box.querySelectorAll('button').forEach(x => { x.disabled = true; if (parseInt(x.dataset.y, 10) === y) x.classList.add('ok'); });
+      if (!ok) b.classList.add('bad');
+      if (ok) { score += 150; haptic('ok'); capSfx('win'); } else { haptic('light'); capSfx('hit'); }
+      setTimeout(() => {
+        box.remove(); qActive = false; last = performance.now();
+        say(ok ? '✅ Верно! +150 очков' : `Это был ${y} год 🙂`, '', 1.8);
+      }, 1100);
+    }));
+  }
+  function frame(dt) {
+    const speed = game ? (70 + Math.min(70, elapsed * 1.6)) * (stumble > 0 ? 0.4 : 1) : 55;
+    off += speed * dt; ph += speed * dt / 9;
+    if (game) {
+      elapsed += dt;
+      if (!qDone && elapsed >= 20 && elapsed < CAP_ROUND_SEC - 10) { askFilmQ(); return; }
+      const sprintNow = elapsed >= CAP_ROUND_SEC - 8;          // финишный рывок: последние 8 секунд — очки ×2
+      if (sprintNow && !sprint) { sprint = true; say('🏁 Финишный рывок · очки ×2', '', 2); capSfx('ticket'); }
+      score += speed * dt / 10 * (sprint ? 2 : 1);
+      if (!recSaid && bestStart > 0 && score > bestStart) { recSaid = true; say('🏆 Это новый рекорд! Не останавливайся', '', 2); haptic('medium'); }
+      const z = Math.min(CAP_ZONES.length - 1, Math.floor(elapsed / CAP_ZONE_SEC));
+      if (z !== zone) {
+        prevPal = pal.slice(); zone = z; zoneT = 0;
+        say(`${CAP_ZONES[z].name} · скорость растёт`, '', 1.8);
+      }
+      zoneT += dt;
+      if (zone > 0) { const t = Math.min(1, zoneT / 1.5); pal = CAP_ZONES[zone].c.map((c, i) => capMix(prevPal[i], c, t)); }
+      if (stumble > 0) stumble -= dt;
+      if (flash > 0) flash -= dt;
+      if (elapsed >= CAP_ROUND_SEC) { finish(); return; }
+    }
+    if (vy !== 0 || jumpY > 0) {
+      vy -= 900 * dt; jumpY += vy * dt;
+      if (jumpY <= 0) { jumpY = 0; vy = 0; jumps = 0; }
+    }
+    const capX = W * 0.28;
+    if (magnet > 0) {
+      magnet -= dt;
+      for (const t of tokens) {
+        if (t.got || t.ticket) continue;
+        const dx = t.x - off - capX;
+        if (Math.abs(dx) < 160) { t.x -= dx * dt * 3.5; t.y += ((GY - 30 - jumpY) - t.y) * dt * 4; }
+      }
+    }
+    for (const t of tokens) {
+      if (t.got) continue;
+      const tx = t.x - off;
+      if (Math.abs(tx - capX) < 20 && Math.abs(t.y - (GY - 30 - jumpY)) < 34) {
+        t.got = true;
+        if (t.ticket) {
+          magnet = 6; capSfx('ticket'); sparkle(tx, t.y, '#ff8a8a', 12);
+          say('🎟 Билет! Жетоны сами летят к Капитану', '', 1.8); haptic('medium');
+          continue;
+        }
+        got++;
+        sparkle(tx, t.y, t.lock ? '#9aa6c6' : '#ffd96a');
+        if (game) { combo++; if (combo === 5 && !shield) { shield = true; say('🛡 Комбо ×5 — щит! Один удар не страшен', '', 1.8); } score += (t.lock ? 5 : 20 * Math.min(combo, 5)) * (sprint ? 2 : 1); capSfx('coin'); }
+        if (t.lock) {
+          if (!game || !hintShown) { hintShown = true; say('Пока пусто 🔍 Пришлите боту код — Капитан его подберёт.'); }
+        } else {
+          const m = byCode.get(String(t.code));
+          say(`🔑 <b>${esc(m.title)}</b> · код ${esc(t.code)}`, t.code);
+          haptic('light');
+        }
+        if (counter && !game) counter.textContent = `В пути подобрано: ${got}`;
+      }
+    }
+    if (game) {
+      for (const o of obstacles) {
+        if (o.hit) continue;
+        if (Math.abs(o.x - off - capX) < 16 && jumpY < 22) {
+          o.hit = true;
+          sparkle(o.x - off, GY - 20, '#fff3d0', 12);
+          if (shield) { shield = false; say('🛡 Щит выдержал удар!', '', 1.4); capSfx('ticket'); haptic('light'); }
+          else { combo = 0; stumble = 0.5; flash = 0.25; say('Ой, попкорн! 🍿 Прыгай заранее', '', 1.4); capSfx('hit'); haptic('medium'); }
+        }
+      }
+      while (obstacles.length && obstacles[0].x - off < -40) obstacles.shift();
+      while (nextObs - off < W * 1.6) spawnObstacle();
+      if (elapsed > 10 && !isFinite(nextFly)) nextFly = off + W * 1.3;       // хлопушки появляются после 10-й секунды
+      if (isFinite(nextFly)) while (nextFly - off < W * 1.6) spawnFlyer();
+      for (const f of flyers) {
+        if (f.hit) continue;
+        if (Math.abs(f.x - off - capX) < 18 && jumpY > 10 && jumpY < 95) {
+          f.hit = true;
+          sparkle(f.x - off, f.y, '#ffffff', 12);
+          if (shield) { shield = false; say('🛡 Щит выдержал удар!', '', 1.4); capSfx('ticket'); haptic('light'); }
+          else { combo = 0; stumble = 0.5; flash = 0.25; say('Ой, хлопушка! 🎬 Под ней не прыгай — просто беги', '', 1.6); capSfx('hit'); haptic('medium'); }
+        }
+      }
+      while (flyers.length && flyers[0].x - off < -40) flyers.shift();
+    }
+    while (tokens.length && tokens[0].x - off < -40) tokens.shift();
+    while (nextX - off < W * 1.6) spawn();
+    for (const s of sparks) { s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 160 * dt; s.life -= dt; }
+    for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
+    if (bubbleTimer > 0) { bubbleTimer -= dt; if (bubbleTimer <= 0 && bubble) bubble.classList.remove('show'); }
+  }
+  function draw() {
+    drawScene();
+    obstacles.forEach(drawObstacle);
+    flyers.forEach(drawFlyer);
+    tokens.forEach(t => { if (!t.got) drawToken(t); });
+    drawCaptain(W * 0.28, GY - jumpY, jumpY > 0);
+    if (game && shield) { ctx.strokeStyle = `rgba(140,220,255,${0.55 + 0.25 * Math.sin(elapsed * 6)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(W * 0.28, GY - jumpY - 28, 34, 0, 6.28); ctx.stroke(); }
+    for (const s of sparks) { ctx.globalAlpha = Math.max(0, s.life / 0.6); ctx.fillStyle = s.color; ctx.fillRect(s.x, s.y, 3, 3); }
+    ctx.globalAlpha = 1;
+    if (flash > 0) { ctx.fillStyle = `rgba(255,80,80,${flash})`; ctx.fillRect(0, 0, W, H); }
+    if (game) drawHud();
+  }
+
+  let raf = 0, stopped = false, visible = true, io = null;
+  function stop() { stopped = true; cancelAnimationFrame(raf); if (io) io.disconnect(); }
+  function loop(now) {
+    if (stopped) return;
+    if (!document.body.contains(canvas)) { stop(); return; }
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (visible && !document.hidden && !over) {
+      if (Math.abs(wrap.clientWidth - W) > 4 && wrap.clientWidth) fit();
+      if (!(opts.ctl && opts.ctl.hold) && !qActive) frame(dt);
+      draw();
+    }
+    if (over) { draw(); stop(); return; }
+    raf = requestAnimationFrame(loop);
+  }
+  if ('IntersectionObserver' in window) {
+    io = new IntersectionObserver(es => { visible = es[0].isIntersecting; last = performance.now(); });
+    io.observe(canvas);
+  }
+  if (reduce) { draw(); return stop; }
+  if (game) CAP_GAME_STOP = stop; else CAP_STOP = stop;
+  raf = requestAnimationFrame(loop);
+  return stop;
+}
+
+// Раунд на 45 секунд в полноэкранной панели: заставка «Готов?» → отсчёт 3-2-1 → игра.
+function openCaptainGame() {
+  if (CAP_STOP) { CAP_STOP(); CAP_STOP = null; }
+  let ov = document.getElementById('cap-game');
+  if (ov) ov.remove();
+  ov = document.createElement('div');
+  ov.id = 'cap-game'; ov.className = 'cap-game';
+  ov.innerHTML = `
     <div class="cap-game-card">
-      <button class="cap-game-snd" aria-label="Звук">${capSoundOn()?"🔊":"🔇"}</button>
+      <button class="cap-game-snd" aria-label="Звук">${capSoundOn() ? '🔊' : '🔇'}</button>
       <button class="cap-game-x" aria-label="Закрыть">✕</button>
       <h3>🎮 Капитан в пути</h3>
       <p class="cap-game-hint">Тапай — Капитан прыгает, тап в воздухе — второй прыжок. Бери жетоны (твои коды), лови 🎟 билеты-магниты, перепрыгивай попкорн, а под летающими хлопушками 🎬 просто беги. Комбо ×5 даёт щит, на 20-й секунде — вопрос про твой фильм (+150), в конце очки ×2. Цель дня — ${CAP_GOAL} очков. Раунд ${CAP_ROUND_SEC} сек.</p>
@@ -95,95 +2104,833 @@ var be,ke,Se,we;const tg=window.Telegram.WebApp;tg.ready(),tg.expand();const ACC
         <div class="cap-ready hidden"></div>
       </div>
       <div class="cap-result hidden"></div>
-    </div>`,document.body.appendChild(t);const e=t.querySelector("#cap-game-scene"),n=t.querySelector(".cap-result"),s=t.querySelector(".cap-ready"),i=Math.max(170,Math.min(300,Math.round(window.innerHeight*.4))),o=getUnlocked();let r=()=>{},c=[];function a(){c.forEach(clearTimeout),c=[]}function m(){a(),r(),CAP_GAME_STOP&&CAP_GAME_STOP(),t.remove(),document.getElementById("view-achievements").classList.contains("hidden")||renderCodeCollection()}function b($){s.classList.remove("hidden"),["3","2","1","Поехали!"].forEach((f,v)=>c.push(setTimeout(()=>{s.innerHTML=`<span class="cap-count-num">${f}</span>`,haptic("light"),capSfx(v===3?"go":"tick"),v===3&&($.hold=!1,c.push(setTimeout(()=>s.classList.add("hidden"),450)))},v*650)))}function w($){a(),n.classList.add("hidden"),n.innerHTML="";const p={hold:!0};r=startCaptainScene(e,o,ALL,{game:!0,H:i,ctl:p,onOpen:()=>{m()},onEnd:f=>{const v="https://t.me/share/url?url="+encodeURIComponent("https://t.me/kapitan_kino_bot")+"&text="+encodeURIComponent(`Я набрал ${f.score} очков в игре «Капитан в пути» 🎬 Сможешь больше?`);n.innerHTML=`
-          <div class="cap-res-score">${f.score} <small>очков</small></div>
-          <div class="cap-res-line">${f.record?"🏆 Новый рекорд!":`Рекорд: ${f.best}`} · жетонов: ${f.got}</div>
-          <div class="cap-res-line cap-goal ${f.goalDone?"done":""}">${f.goalDone?`🎯 Цель дня выполнена${f.goalNew?"!":""}${f.streak>1?` · серия ${f.streak} дн.`:""}`:`🎯 Цель дня ${CAP_GOAL}: ещё ${f.goalLeft} очков`}</div>
-          ${f.outfitLeft?`<div class="cap-res-line cap-outfit">👒 Открой ещё ${f.outfitLeft} ${f.outfitLeft%10===1&&f.outfitLeft%100!==11?"код":[2,3,4].includes(f.outfitLeft%10)&&![12,13,14].includes(f.outfitLeft%100)?"кода":"кодов"} — и Капитан получит ${f.outfitName}</div>`:""}
+    </div>`;
+  document.body.appendChild(ov);
+  const scene = ov.querySelector('#cap-game-scene');
+  const result = ov.querySelector('.cap-result');
+  const ready = ov.querySelector('.cap-ready');
+  const H = Math.max(170, Math.min(300, Math.round(window.innerHeight * 0.4)));
+  const unlocked = getUnlocked();
+  let stopGame = () => {}, timers = [];
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function close() {
+    clearTimers(); stopGame(); if (CAP_GAME_STOP) CAP_GAME_STOP();
+    ov.remove();
+    if (!document.getElementById('view-achievements').classList.contains('hidden')) renderCodeCollection();
+  }
+  function countdown(ctl) {
+    ready.classList.remove('hidden');
+    const steps = ['3', '2', '1', 'Поехали!'];
+    steps.forEach((t, i) => timers.push(setTimeout(() => {
+      ready.innerHTML = `<span class="cap-count-num">${t}</span>`;
+      haptic('light'); capSfx(i === 3 ? 'go' : 'tick');
+      if (i === 3) { ctl.hold = false; timers.push(setTimeout(() => ready.classList.add('hidden'), 450)); }
+    }, i * 650)));
+  }
+  function run(withIntro) {
+    clearTimers();
+    result.classList.add('hidden'); result.innerHTML = '';
+    const ctl = { hold: true };
+    stopGame = startCaptainScene(scene, unlocked, ALL, {
+      game: true, H, ctl, onOpen: () => { close(); },
+      onEnd: (r) => {
+        const share = 'https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') +
+          '&text=' + encodeURIComponent(`Я набрал ${r.score} очков в игре «Капитан в пути» 🎬 Сможешь больше?`);
+        result.innerHTML = `
+          <div class="cap-res-score">${r.score} <small>очков</small></div>
+          <div class="cap-res-line">${r.record ? '🏆 Новый рекорд!' : `Рекорд: ${r.best}`} · жетонов: ${r.got}</div>
+          <div class="cap-res-line cap-goal ${r.goalDone ? 'done' : ''}">${r.goalDone
+            ? `🎯 Цель дня выполнена${r.goalNew ? '!' : ''}${r.streak > 1 ? ` · серия ${r.streak} дн.` : ''}`
+            : `🎯 Цель дня ${CAP_GOAL}: ещё ${r.goalLeft} очков`}</div>
+          ${r.outfitLeft ? `<div class="cap-res-line cap-outfit">👒 Открой ещё ${r.outfitLeft} ${(r.outfitLeft % 10 === 1 && r.outfitLeft % 100 !== 11) ? 'код' : ([2, 3, 4].includes(r.outfitLeft % 10) && ![12, 13, 14].includes(r.outfitLeft % 100)) ? 'кода' : 'кодов'} — и Капитан получит ${r.outfitName}</div>` : ''}
           <div class="cap-res-btns">
             <button class="btn-primary" data-act="again">Ещё раз</button>
             <button class="btn-secondary" data-act="share">Поделиться</button>
-          </div>`,n.classList.remove("hidden"),n.querySelector("[data-act=again]").onclick=()=>{haptic("light"),w(!1)},n.querySelector("[data-act=share]").onclick=()=>{haptic("light");try{tg.openTelegramLink(v)}catch(u){}},scheduleCloudSync(3e3)}}),s.classList.remove("hidden"),$?(s.innerHTML='<span class="cap-ready-title">Готов?</span><button class="btn-primary cap-go">▶ Поехали</button>',s.querySelector(".cap-go").onclick=f=>{f.stopPropagation(),haptic("light"),s.innerHTML="",b(p)}):(s.innerHTML="",b(p))}t.querySelector(".cap-game-x").onclick=m,t.querySelector(".cap-game-snd").onclick=$=>{const p=!capSoundOn();try{localStorage.setItem(CAP_SOUND_KEY,p?"1":"0")}catch(f){}$.currentTarget.textContent=p?"🔊":"🔇",p&&capSfx("coin")},t.addEventListener("click",$=>{$.target===t&&m()}),w(!0)}function updateSubtitle(){const t=document.getElementById("subtitle");if(!t)return;const e=[plFilms(ALL.length)];COLLS.length&&e.push(`${COLLS.length} подборок`),t.textContent=e.join(" · ")}let LAST_TOP_GENRES=[];function renderGenreChips(){const t=document.getElementById("genre-chips");if(!t)return;const e=new Map;ALL.forEach(s=>(s.genres||[]).forEach(i=>e.set(i,(e.get(i)||0)+1)));const n=[...e.entries()].filter(([,s])=>s>=3).sort((s,i)=>i[1]-s[1]).slice(0,10);LAST_TOP_GENRES=n.map(([s])=>s),n.length&&(t.innerHTML=`<button class="chip chip-rnd" data-g="__rnd__" title="Случайный жанр">🎲</button><button class="chip${activeGenre===""?" active":""}" data-g="">Все</button>`+n.map(([s,i])=>`<button class="chip${activeGenre===s?" active":""}" data-g="${esc(s)}">${esc(s)} <em>${i}</em></button>`).join(""),t.classList.remove("hidden"),t.querySelectorAll(".chip").forEach(s=>s.addEventListener("click",()=>{if(haptic("light"),s.dataset.g==="__rnd__"){const i=LAST_TOP_GENRES.filter(o=>o!==activeGenre);if(!i.length)return;activeGenre=i[Math.floor(Math.random()*i.length)]}else activeGenre=s.dataset.g;renderGenreChips(),renderGrid()})))}function renderCountryChips(){const t=document.getElementById("country-chips");if(!t)return;const e=new Map;ALL.forEach(s=>(s.countries||[]).forEach(i=>e.set(i,(e.get(i)||0)+1)));const n=[...e.entries()].filter(([,s])=>s>=4).sort((s,i)=>i[1]-s[1]).slice(0,9);if(!n.length){t.classList.add("hidden");return}t.innerHTML=`<button class="chip${activeCountry===""?" active":""}" data-c="">🌍 Все</button>`+n.map(([s,i])=>`<button class="chip${activeCountry===s?" active":""}" data-c="${esc(s)}">${flagOf(s)} ${esc(s)} <em>${i}</em></button>`).join(""),t.classList.remove("hidden"),t.querySelectorAll(".chip").forEach(s=>s.addEventListener("click",()=>{haptic("light"),activeCountry=s.dataset.c||"",renderCountryChips(),renderGrid()}))}function renderHero(){const t=[...ALL].filter(n=>n.poster&&parseFloat(n.rating)).sort((n,s)=>(parseFloat(s.rating)||0)-(parseFloat(n.rating)||0)).slice(0,5),e=document.getElementById("hero-shelf");t.length<3||!e||(document.getElementById("hero-row").innerHTML=t.map((n,s)=>`
-    <div class="hero-card" data-code="${esc(n.code)}">
-      ${posterHtmlQuick(n,{foot:!1})}
-      <span class="hero-rank">#${s+1}</span>
+          </div>`;
+        result.classList.remove('hidden');
+        result.querySelector('[data-act=again]').onclick = () => { haptic('light'); run(false); };
+        result.querySelector('[data-act=share]').onclick = () => { haptic('light'); try { tg.openTelegramLink(share); } catch (e) {} };
+        scheduleCloudSync(3000);   // рекорд и цель дня уезжают в облако профиля
+      },
+    });
+    ready.classList.remove('hidden');
+    if (withIntro) {
+      ready.innerHTML = '<span class="cap-ready-title">Готов?</span><button class="btn-primary cap-go">▶ Поехали</button>';
+      ready.querySelector('.cap-go').onclick = (e) => { e.stopPropagation(); haptic('light'); ready.innerHTML = ''; countdown(ctl); };
+    } else { ready.innerHTML = ''; countdown(ctl); }
+  }
+  ov.querySelector('.cap-game-x').onclick = close;
+  ov.querySelector('.cap-game-snd').onclick = (e) => {
+    const on = !capSoundOn();
+    try { localStorage.setItem(CAP_SOUND_KEY, on ? '1' : '0'); } catch (err) {}
+    e.currentTarget.textContent = on ? '🔊' : '🔇';
+    if (on) capSfx('coin');
+  };
+  ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+  run(true);
+}
+
+// ---------- hero-полка «Сейчас в тренде» ----------
+// Живая строка статистики в шапке
+function updateSubtitle() {
+  const el = document.getElementById('subtitle');
+  if (!el) return;
+  const parts = [plFilms(ALL.length)];   // v189: короткая строка — не переносится на 2 строки
+  if (COLLS.length) parts.push(`${COLLS.length} подборок`);
+  el.textContent = parts.join(' · ');
+}
+
+// Чипы жанров: собираются из витрины, тап — фильтр сетки
+let LAST_TOP_GENRES = [];
+function renderGenreChips() {
+  const wrap = document.getElementById('genre-chips');
+  if (!wrap) return;
+  const counter = new Map();
+  ALL.forEach(m => (m.genres || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1)));
+  const top = [...counter.entries()].filter(([, n]) => n >= 3)
+    .sort((a, b) => b[1] - a[1]).slice(0, 10);
+  LAST_TOP_GENRES = top.map(([g]) => g);
+  if (!top.length) return;
+  wrap.innerHTML = `<button class="chip chip-rnd" data-g="__rnd__" title="Случайный жанр">🎲</button>` +
+    `<button class="chip${activeGenre === '' ? ' active' : ''}" data-g="">Все</button>` +
+    top.map(([g, n]) =>
+      `<button class="chip${activeGenre === g ? ' active' : ''}" data-g="${esc(g)}">${esc(g)} <em>${n}</em></button>`
+    ).join('');
+  wrap.classList.remove('hidden');
+  wrap.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+    haptic('light');
+    if (ch.dataset.g === '__rnd__') {
+      const pool = LAST_TOP_GENRES.filter(g => g !== activeGenre);
+      if (!pool.length) return;
+      activeGenre = pool[Math.floor(Math.random() * pool.length)];
+    } else {
+      activeGenre = ch.dataset.g;
+    }
+    renderGenreChips();
+    renderGrid();
+  }));
+}
+function renderCountryChips() {
+  const wrap = document.getElementById('country-chips');
+  if (!wrap) return;
+  const counter = new Map();
+  ALL.forEach(m => (m.countries || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1)));
+  const top = [...counter.entries()].filter(([, n]) => n >= 4)
+    .sort((a, b) => b[1] - a[1]).slice(0, 9);
+  if (!top.length) { wrap.classList.add('hidden'); return; }
+  wrap.innerHTML = `<button class="chip${activeCountry === '' ? ' active' : ''}" data-c="">🌍 Все</button>` +
+    top.map(([c, n]) =>
+      `<button class="chip${activeCountry === c ? ' active' : ''}" data-c="${esc(c)}">${flagOf(c)} ${esc(c)} <em>${n}</em></button>`
+    ).join('');
+  wrap.classList.remove('hidden');
+  wrap.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => {
+    haptic('light');
+    activeCountry = ch.dataset.c || '';
+    renderCountryChips();
+    renderGrid();
+  }));
+}
+function renderHero() {
+  const top = [...ALL]
+    .filter(m => m.poster && parseFloat(m.rating))
+    .sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0))
+    .slice(0, 5);
+  const shelf = document.getElementById('hero-shelf');
+  if (top.length < 3 || !shelf) return;
+  document.getElementById('hero-row').innerHTML = top.map((m, i) => `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      ${posterHtmlQuick(m, { foot: false })}
+      <span class="hero-rank">#${i + 1}</span>
       <div class="hero-overlay">
-        <h3>${esc(n.title)}</h3>
-        ${ratingBadge(n)}
+        <h3>${esc(m.title)}</h3>
+        ${ratingBadge(m)}
       </div>
-    </div>`).join(""),e.classList.remove("hidden"),e.querySelectorAll(".hero-card").forEach(n=>n.addEventListener("click",()=>openDetail(n.dataset.code))),wireFavQuick(e))}function renderNewCodes(){const t=document.getElementById("new-codes-shelf");if(!t)return;let e=[...ALL].filter(o=>o.added_at).sort((o,r)=>new Date(r.added_at).getTime()-new Date(o.added_at).getTime()).slice(0,8);const n=e.length<3;if(n&&(e=[...ALL].filter(o=>/^\d+$/.test(String(o.code))).sort((o,r)=>parseInt(r.code,10)-parseInt(o.code,10)).slice(0,8)),e.length<3||!t){t.classList.add("hidden");return}const s=o=>n?99:Math.max(0,Math.floor((Date.now()-new Date(o.added_at).getTime())/864e5)),i=document.getElementById("new-codes-row");i.innerHTML=e.map(o=>{const r=s(o),c=r<=1?"🔥 сегодня":r<=7?`🕒 ${r} дн. назад`:"";return`
-    <div class="hero-card" data-code="${esc(o.code)}">
-      ${posterHtmlQuick(o)}
-      <span class="hero-rank">🔑 ${esc(String(o.code))}</span>
-      ${c?`<span class="new-badge">${c}</span>`:""}
+    </div>`).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.code)));
+  wireFavQuick(shelf);
+}
+
+// v102: полка «🆕 Новинки недели» — последние добавленные фильмы. Сортировка по added_at,
+// чтобы игроки сразу видели свежие коды канала. v109: бейдж давности «N дн.».
+function renderNewCodes() {
+  const shelf = document.getElementById('new-codes-shelf');
+  if (!shelf) return;
+  let items = [...ALL]
+    .filter(m => m.added_at)
+    .sort((a, b) => new Date(b.added_at).getTime() - new Date(a.added_at).getTime())
+    .slice(0, 8);
+  // v152: в данных поле added_at часто пустое — тогда «новыми» считаем самые большие
+  // номера кодов (коды выдаются по порядку добавления), без подписи «N дн. назад».
+  const byCode = items.length < 3;
+  if (byCode) {
+    items = [...ALL]
+      .filter(m => /^\d+$/.test(String(m.code)))
+      .sort((a, b) => parseInt(b.code, 10) - parseInt(a.code, 10))
+      .slice(0, 8);
+  }
+  if (items.length < 3 || !shelf) { shelf.classList.add('hidden'); return; }
+  const daysAgo = (m) => byCode ? 99 : Math.max(0, Math.floor((Date.now() - new Date(m.added_at).getTime()) / 86400000));
+  const row = document.getElementById('new-codes-row');
+  row.innerHTML = items.map(m => {
+    const d = daysAgo(m);
+    const fresh = d <= 1 ? '🔥 сегодня' : (d <= 7 ? `🕒 ${d} дн. назад` : '');
+    return `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      ${posterHtmlQuick(m)}
+      <span class="hero-rank">🔑 ${esc(String(m.code))}</span>
+      ${fresh ? `<span class="new-badge">${fresh}</span>` : ''}
       <div class="hero-overlay">
-        <h3>${esc(o.title)}</h3>
-        ${ratingBadge(o)}
+        <h3>${esc(m.title)}</h3>
+        ${ratingBadge(m)}
       </div>
-    </div>`}).join(""),t.classList.remove("hidden"),t.querySelectorAll(".hero-card").forEach(o=>o.addEventListener("click",()=>openDetail(o.dataset.code))),wireFavQuick(t)}function ruDayMonth(t){const e=String(t||"").slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!e)return String(t||"").slice(0,10);const n=["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"][parseInt(e[2],10)-1];return n?`${parseInt(e[3],10)} ${n}`:String(t).slice(0,10)}const NON_FILM_RE=/театр|(?:^|[^а-яё])опер[аыу](?![а-яё])|балет|концерт|спектакл|трансляц|metropolitan|bolshoi|ток-?шоу|(?:^|\s)live(?:\s|$)/i;function onlyFilms(t){return(Array.isArray(t)?t:[]).filter(e=>!NON_FILM_RE.test(String(e&&e.title||"")))}function renderTodayShelf(t){const e=document.getElementById("today-shelf");if(!e)return;const n=onlyFilms(t&&t.premieres),s=new Date;s.setHours(0,0,0,0);const i=new Date(s);i.setDate(i.getDate()+1);const o=n.filter(c=>{const a=c.ru_date?new Date(String(c.ru_date).slice(0,10)+"T00:00:00"):null;return a&&(a.getTime()===s.getTime()||a.getTime()===i.getTime())});if(o.length===0){e.classList.add("hidden");return}const r=document.getElementById("today-row");r.innerHTML=o.map(c=>`
-    <div class="hero-card" data-title="${esc(c.title||"")}">
-      ${c.poster?`<img src="${esc(c.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`:'<div class="poster-placeholder"><span>⭐</span></div>'}
+    </div>`}).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.code)));
+  wireFavQuick(shelf);
+}
+
+// Полка «🍿 Скоро в кино» — премьеры текущего месяца от бота/КП
+// «⭐ Сегодня и завтра в кино» — премьеры с датой сегодня/завтра
+// «2026-11-05» → «5 ноября» (v148)
+function ruDayMonth(iso) {
+  const m = String(iso || '').slice(0, 10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return String(iso || '').slice(0, 10);
+  const mon = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'][parseInt(m[2], 10) - 1];
+  return mon ? `${parseInt(m[3], 10)} ${mon}` : String(iso).slice(0, 10);
+}
+
+// Не-фильмы в премьерах (театральные трансляции, опера, балет, концерты):
+// Кинопоиск отдаёт их как «премьеры», но в «Сегодня и завтра в кино» им не место.
+const NON_FILM_RE = /театр|(?:^|[^а-яё])опер[аыу](?![а-яё])|балет|концерт|спектакл|трансляц|metropolitan|bolshoi|ток-?шоу|(?:^|\s)live(?:\s|$)/i;
+function onlyFilms(list) {
+  return (Array.isArray(list) ? list : []).filter(p => !NON_FILM_RE.test(String(p && p.title || '')));
+}
+
+function renderTodayShelf(meta) {
+  const shelf = document.getElementById('today-shelf');
+  if (!shelf) return;
+  const items = onlyFilms(meta && meta.premieres);
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+  const soon = items.filter(p => {
+    const d = p.ru_date ? new Date(String(p.ru_date).slice(0, 10) + 'T00:00:00') : null;
+    return d && (d.getTime() === now.getTime() || d.getTime() === tomorrow.getTime());
+  });
+  if (soon.length === 0) { shelf.classList.add('hidden'); return; }
+  const row = document.getElementById('today-row');
+  row.innerHTML = soon.map(p => `
+    <div class="hero-card" data-title="${esc(p.title || '')}">
+      ${p.poster
+        ? `<img src="${esc(p.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+        : `<div class="poster-placeholder"><span>⭐</span></div>`}
       <span class="hero-rank">⭐</span>
       <div class="hero-overlay">
-        <h3>${esc(c.title||"")}</h3>
-        <span class="rating">📅 ${ruDayMonth(c.ru_date)}</span>
+        <h3>${esc(p.title || '')}</h3>
+        <span class="rating">📅 ${ruDayMonth(p.ru_date)}</span>
       </div>
-    </div>`).join(""),e.classList.remove("hidden"),r.querySelectorAll(".hero-card").forEach(c=>c.addEventListener("click",()=>{const a=(c.dataset.title||"").toLowerCase().replace(/ё/g,"е"),m=ALL.find(b=>(b.title||"").toLowerCase().replace(/ё/g,"е")===a);m?openDetail(m.code):tg.showPopup({type:"ok",title:"⭐ Сегодня в кино",message:"В кинотеатрах уже идёт! Увидимся на сеансе 🎟"})}))}let _fdManual=null;function filmDayPick(){let t=ALL.filter(s=>(parseFloat(s.rating)||0)>=7.3&&s.poster);if(t.length<5)return null;try{const s=new Set(getWatched()),i=t.filter(o=>!s.has(o.code));i.length>=3&&(t=i)}catch(s){}if(_fdManual&&t.some(s=>s.code===_fdManual)){const s=t.find(i=>i.code===_fdManual);if(s)return s}const e=new Date,n=e.getFullYear()*373+(e.getMonth()+1)*31+e.getDate();return t[n%t.length]}function renderFilmDay(){const t=document.getElementById("filmday-banner");if(!t)return;const e=view==="fav"?null:filmDayPick();if(!e){t.classList.add("hidden");return}const n=getFavs().includes(e.code),s=(e.genres||[]).slice(0,3).join(" · ");t.classList.remove("hidden"),t.innerHTML=`
-    <div class="fd-poster">${e.poster?`<img src="${esc(e.poster)}" alt="" loading="lazy" decoding="async" ${FADE}${dimStyle(e)} onerror="this.style.display='none';this.parentElement.classList.add('fd-noposter')"/>`:'<div class="fd-ph">🎬</div>'}</div>
+    </div>`).join('');
+  shelf.classList.remove('hidden');
+  row.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => {
+    const title = (el.dataset.title || '').toLowerCase().replace(/ё/g, 'е');
+    const m = ALL.find(x => (x.title || '').toLowerCase().replace(/ё/g, 'е') === title);
+    if (m) openDetail(m.code);
+    else tg.showPopup({ type: 'ok', title: '⭐ Сегодня в кино', message: 'В кинотеатрах уже идёт! Увидимся на сеансе 🎟' });
+  }));
+}
+
+// «⭐ Фильм дня» — hero-баннер на главной: детерминированно выбираем фильм
+// по дате (у всех пользователей в один день — один и тот же фильм)
+let _fdManual = null;  // v89: локальная «перебросанная» версия дня (только у этого пользователя)
+function filmDayPick() {
+  let cands = ALL.filter(m => (parseFloat(m.rating) || 0) >= 7.3 && m.poster);
+  if (cands.length < 5) return null;
+  // v191: фильм дня — из ещё не просмотренных (если все просмотрены — из всех)
+  try { const seen = new Set(getWatched()); const fresh = cands.filter(m => !seen.has(m.code)); if (fresh.length >= 3) cands = fresh; } catch (e) {}
+  if (_fdManual && cands.some(x => x.code === _fdManual)) {
+    const m = cands.find(x => x.code === _fdManual);
+    if (m) return m;
+  }
+  const d = new Date();
+  const seed = d.getFullYear() * 373 + (d.getMonth() + 1) * 31 + d.getDate();
+  return cands[seed % cands.length];
+}
+function renderFilmDay() {
+  const el = document.getElementById('filmday-banner');
+  if (!el) return;
+  const m = (view === 'fav') ? null : filmDayPick();  // в «Моём» баннер лишний
+  if (!m) { el.classList.add('hidden'); return; }
+  const fav = getFavs().includes(m.code);
+  const genres = (m.genres || []).slice(0, 3).join(' · ');
+  el.classList.remove('hidden');
+  el.innerHTML = `
+    <div class="fd-poster">${m.poster
+      ? `<img src="${esc(m.poster)}" alt="" loading="lazy" decoding="async" ${FADE}${dimStyle(m)} onerror="this.style.display='none';this.parentElement.classList.add('fd-noposter')"/>`
+      : '<div class="fd-ph">🎬</div>'}</div>
     <div class="fd-info">
         <span class="fd-badge">⭐ Фильм дня</span>
-        <div class="fd-title">${esc(e.title)}</div>
-        <div class="fd-meta">${esc(String(e.year||""))}${e.year&&e.rating?" · ":""}⭐ ${esc(String(e.rating||""))}${s?" · "+esc(s):""}</div>
+        <div class="fd-title">${esc(m.title)}</div>
+        <div class="fd-meta">${esc(String(m.year || ''))}${m.year && m.rating ? ' · ' : ''}⭐ ${esc(String(m.rating || ''))}${genres ? ' · ' + esc(genres) : ''}</div>
       </div>
       <button class="fd-roll" id="fd-roll" title="Другой фильм дня">🎲</button>
-      <button class="fav-quick ${n?"active":""}" data-code="${esc(e.code)}" aria-label="Моё" title="В «Моё»">${n?"♥︎":"♡"}</button>`,t.onclick=o=>{o.target.closest("#fd-roll")||o.target.closest(".fav-quick")||openDetail(e.code)};const i=document.getElementById("fd-roll");i&&(i.onclick=o=>{o.stopPropagation(),haptic("light");const r=ALL.filter(c=>(parseFloat(c.rating)||0)>=7.3&&c.poster&&String(c.code)!==String(e.code));r.length&&(_fdManual=r[Math.floor(Math.random()*r.length)].code,renderFilmDay())}),wireFavQuick(t)}function renderRecentShelf(){const t=document.getElementById("recent-shelf");if(!t)return;const e=getRecent().filter(s=>ALL.some(i=>i.code===s));if(e.length<2){t.classList.add("hidden");return}const n=e.slice(0,10).map(s=>ALL.find(i=>i.code===s));t.querySelector("#recent-row").innerHTML=n.map(s=>`
-    <div class="hero-card" data-code="${esc(s.code)}">
-      ${posterHtmlQuick(s)}
+      <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '♥\uFE0E' : '♡'}</button>`;
+  el.onclick = (e) => {
+    if (e.target.closest('#fd-roll')) return;  // кнопка «другой» не открывает карточку
+    if (e.target.closest('.fav-quick')) return;
+    openDetail(m.code);
+  };
+  const rollBtn = document.getElementById('fd-roll');
+  if (rollBtn) rollBtn.onclick = (ev) => {
+    ev.stopPropagation();
+    haptic('light');
+    const cands = ALL.filter(x => (parseFloat(x.rating) || 0) >= 7.3 && x.poster && String(x.code) !== String(m.code));
+    if (!cands.length) return;
+    _fdManual = cands[Math.floor(Math.random() * cands.length)].code;
+    renderFilmDay();
+  };
+  wireFavQuick(el);
+}
+
+// «🕘 Недавно смотрели» — история из localStorage, показываем на главной
+function renderRecentShelf() {
+  const shelf = document.getElementById('recent-shelf');
+  if (!shelf) return;
+  const codes = getRecent().filter(c => ALL.some(x => x.code === c));
+  if (codes.length < 2) { shelf.classList.add('hidden'); return; }
+  const items = codes.slice(0, 10).map(code => ALL.find(x => x.code === code));
+  shelf.querySelector('#recent-row').innerHTML = items.map(m => `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      ${posterHtmlQuick(m)}
       <div class="hero-overlay">
-        <h3>${esc(s.title)}</h3>
-        <span class="rating">${ratingBadge(s)}</span>
+        <h3>${esc(m.title)}</h3>
+        <span class="rating">${ratingBadge(m)}</span>
       </div>
-    </div>`).join(""),t.classList.remove("hidden"),t.querySelectorAll(".hero-card").forEach(s=>s.addEventListener("click",()=>openDetail(s.dataset.code))),wireFavQuick(t)}function renderTrailerShelf(){const t=document.getElementById("continue-shelf");if(!t)return;if(view!=="grid"&&view!=="fav"){t.classList.add("hidden");return}const e=getTrailerWatches().filter(i=>ALL.some(o=>String(o.code)===String(i.c))).slice(0,10);if(e.length<1){t.classList.add("hidden");return}const n=e.map(i=>ALL.find(o=>String(o.code)===String(i.c))).filter(Boolean).filter(i=>i.trailer_yt||i.trailer_file_id);if(!n.length){t.classList.add("hidden");return}const s=t.querySelector("#continue-row");s.innerHTML=n.map((i,o)=>{const r=e[o],c=r&&r.sec||watchProgress(i.code),a=c>=3?`<span class="watch-bar" style="width:${Math.min(100,Math.round(100*c/180))}%"></span>`:"";return`
-    <div class="hero-card" data-code="${esc(i.code)}">
-      ${posterHtmlQuick(i)}
-      <span class="continue-chip">▶️ ${c>=60?"посмотрел(а) "+Math.round(c/60)+" мин":c>=3?"смотрел(а) "+c+" сек":"продолжить"}</span>
-      ${a}
+    </div>`).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => openDetail(el.dataset.code)));
+  wireFavQuick(shelf);
+}
+
+// v74: «🎬 Продолжить смотреть» — последние просмотренные трейлеры.
+// Живая полка: тап по карточке переоткрывает трейлер (с хронологией свежих сверху).
+function renderTrailerShelf() {
+  const shelf = document.getElementById('continue-shelf');
+  if (!shelf) return;
+  if (view !== 'grid' && view !== 'fav') { shelf.classList.add('hidden'); return; }
+  const tw = getTrailerWatches().filter(x => ALL.some(m => String(m.code) === String(x.c))).slice(0, 10);
+  if (tw.length < 1) { shelf.classList.add('hidden'); return; }
+  const items = tw.map(x => ALL.find(m => String(m.code) === String(x.c))).filter(Boolean)
+    .filter(m => m.trailer_yt || m.trailer_file_id);
+  if (!items.length) { shelf.classList.add('hidden'); return; }
+  const row = shelf.querySelector('#continue-row');
+  row.innerHTML = items.map((m, i) => {
+    // v109: мини-прогресс просмотра (секунды), если трейлер реально смотрели
+    const x = tw[i];
+    const sec = (x && x.sec) || watchProgress(m.code);
+    const bar = sec >= 3 ? `<span class="watch-bar" style="width:${Math.min(100, Math.round(100 * sec / 180))}%"></span>` : '';
+    return `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      ${posterHtmlQuick(m)}
+      <span class="continue-chip">▶️ ${sec >= 60 ? 'посмотрел(а) ' + Math.round(sec / 60) + ' мин' : (sec >= 3 ? 'смотрел(а) ' + sec + ' сек' : 'продолжить')}</span>
+      ${bar}
       <div class="hero-overlay">
-        <h3>${esc(i.title)}</h3>
-        <span class="rating">${ratingBadge(i)}</span>
+        <h3>${esc(m.title)}</h3>
+        <span class="rating">${ratingBadge(m)}</span>
       </div>
-    </div>`}).join(""),t.classList.remove("hidden"),s.querySelectorAll(".hero-card").forEach(i=>i.addEventListener("click",()=>{const o=ALL.find(r=>String(r.code)===String(i.dataset.code));o&&openTrailer(o)})),wireFavQuick(t)}function renderRecoShelf(){const t=document.getElementById("reco-shelf");if(!t||view==="profile"||view==="game")return;const e=getFavs(),n=getUnlocked(),s=getWatched(),i=getRatings(),o=new Set([...e,...n,...s,...getRecent().slice(0,4)].map(f=>String(f))),r=new Map,c=new Map,a=(f,v)=>{const u=ALL.find(S=>String(S.code)===String(f));u&&((u.genres||[]).forEach(S=>r.set(S,(r.get(S)||0)+v)),(u.actors||[]).slice(0,5).forEach(S=>c.set(S,(c.get(S)||0)+v*.6)))};Object.entries(i).forEach(([f,v])=>a(f,ratingWeight(v))),e.forEach(f=>a(f,2.2)),n.forEach(f=>a(f,1.8)),s.forEach(f=>a(f,1.2));const m=r.size>0||c.size>0,b=new Set(getRecoHide()),w=ALL.filter(f=>!o.has(String(f.code))&&!b.has(f.code));let $=[];if(m){const f=w.map(v=>{let u=0;return(v.genres||[]).forEach(S=>{u+=r.get(S)||0}),(v.actors||[]).forEach(S=>{u+=(c.get(S)||0)*.8}),u+=Math.max(0,(parseFloat(v.rating)||0)-6.5),{m:v,score:u}});f.sort((v,u)=>u.score-v.score),$=f.slice(0,8).map(v=>v.m)}else $=[...w].sort((f,v)=>(parseFloat(v.rating)||0)-(parseFloat(f.rating)||0)).slice(0,8);const p=t.querySelector(".shelf-title");if(p&&(p.textContent=m?"💫 Подобрано по твоим оценкам":"💫 Лучшее в афише"),$.length<2){t.classList.add("hidden");return}t.querySelector("#reco-row").innerHTML=$.map(f=>`
-    <div class="hero-card" data-code="${esc(f.code)}">
-      ${posterHtmlQuick(f)}
-      ${f.genres&&f.genres.length?`<span class="hero-rank reco-chip">${esc(f.genres[0])}</span>`:""}
-      <button class="reco-hide" data-code="${esc(f.code)}" aria-label="Не рекомендовать" title="Скрыть">✕</button>
+    </div>`}).join('');
+  shelf.classList.remove('hidden');
+  row.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => {
+    const m = ALL.find(x => String(x.code) === String(el.dataset.code));
+    if (m) openTrailer(m);
+  }));
+  wireFavQuick(shelf);
+}
+
+// «💫 Советуем вам» — v64: персональные рекомендации на основе твоих оценок,
+// «Моё», разгаданных и просмотренных (жанры + актёры), без выхода из аппа.
+function renderRecoShelf() {
+  const shelf = document.getElementById('reco-shelf');
+  if (!shelf) return;
+  if (view === 'profile' || view === 'game') return;
+  const favs = getFavs();
+  const unlocked = getUnlocked();
+  const watched = getWatched();
+  const ratings = getRatings();
+  const seen = new Set([...favs, ...unlocked, ...watched, ...getRecent().slice(0, 4)]
+    .map(c => String(c)));
+  // «вкус»: жанры и актёры из того, что ты оценил/сохранил/разгадал.
+  // Высокая оценка — сильный сигнал, низкая — почти нейтральный.
+  const genreScore = new Map(), actorScore = new Map();
+  const feed = (code, w) => {
+    const m = ALL.find(x => String(x.code) === String(code));
+    if (!m) return;
+    (m.genres || []).forEach(g => genreScore.set(g, (genreScore.get(g) || 0) + w));
+    (m.actors || []).slice(0, 5).forEach(a => actorScore.set(a, (actorScore.get(a) || 0) + w * 0.6));
+  };
+  Object.entries(ratings).forEach(([code, r]) => feed(code, ratingWeight(r)));
+  favs.forEach(code => feed(code, 2.2));
+  unlocked.forEach(code => feed(code, 1.8));
+  watched.forEach(code => feed(code, 1.2));
+  const hasTaste = genreScore.size > 0 || actorScore.size > 0;
+  const hidden = new Set(getRecoHide());
+  const cands = ALL.filter(m => !seen.has(String(m.code)) && !hidden.has(m.code));
+  let picks = [];
+  if (hasTaste) {
+    const scored = cands.map(m => {
+      let score = 0;
+      (m.genres || []).forEach(g => { score += genreScore.get(g) || 0; });
+      (m.actors || []).forEach(a => { score += (actorScore.get(a) || 0) * 0.8; });
+      score += Math.max(0, (parseFloat(m.rating) || 0) - 6.5);   // бонус качества
+      return { m, score };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    picks = scored.slice(0, 8).map(x => x.m);
+  } else {
+    // у новичка ещё нет вкуса — показываем лучшее по рейтингу КП
+    picks = [...cands]
+      .sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0))
+      .slice(0, 8);
+  }
+  const title = shelf.querySelector('.shelf-title');
+  if (title) title.textContent = hasTaste ? '💫 Подобрано по твоим оценкам' : '💫 Лучшее в афише';
+  if (picks.length < 2) { shelf.classList.add('hidden'); return; }
+  shelf.querySelector('#reco-row').innerHTML = picks.map(m => `
+    <div class="hero-card" data-code="${esc(m.code)}">
+      ${posterHtmlQuick(m)}
+      ${m.genres && m.genres.length ? `<span class="hero-rank reco-chip">${esc(m.genres[0])}</span>` : ''}
+      <button class="reco-hide" data-code="${esc(m.code)}" aria-label="Не рекомендовать" title="Скрыть">✕</button>
       <div class="hero-overlay">
-        <h3>${esc(f.title)}</h3>
-        <span class="rating">${ratingBadge(f)}</span>
+        <h3>${esc(m.title)}</h3>
+        <span class="rating">${ratingBadge(m)}</span>
       </div>
-    </div>`).join(""),t.classList.remove("hidden"),t.querySelectorAll(".hero-card").forEach(f=>f.addEventListener("click",()=>openDetail(f.dataset.code))),wireFavQuick(t),t.querySelectorAll(".reco-hide").forEach(f=>{f.addEventListener("click",v=>{v.stopPropagation(),haptic("light");const u=new Set(getRecoHide());u.add(f.dataset.code),setRecoHide([...u]),renderRecoShelf()})})}const _normTitle=t=>(t||"").toLowerCase().replace(/ё/g,"е").replace(/[^a-zа-я0-9]+/gi," ").trim();function premiereForTitle(t){const e=_normTitle(t);if(!e)return null;const n=new Date;n.setHours(0,0,0,0);const s=(PREMIERES||[]).find(m=>_normTitle(m.title)===e);if(!s||!s.ru_date)return null;const i=new Date(String(s.ru_date).slice(0,10)+"T00:00:00");if(isNaN(i)||i<n)return null;const o=Math.round((i-n)/864e5),r=String(i.getDate()).padStart(2,"0"),c=String(i.getMonth()+1).padStart(2,"0"),a=o===0?"сегодня":o===1?"завтра":o<=4?`через ${o} дня`:`через ${o} дней`;return{date:`${r}.${c}`,iso:String(s.ru_date).slice(0,10),fid:s.film_id?String(s.film_id):"",days:o,human:a}}function renderPremieres(t){const e=document.getElementById("premieres-shelf");if(!e)return;const n=onlyFilms(t&&t.premieres),s=new Date;s.setHours(0,0,0,0);const i=n.filter(o=>{const r=o.ru_date?new Date(String(o.ru_date).slice(0,10)+"T00:00:00"):null;return!r||r>=s}).slice(0,10);if(i.length<2){e.classList.add("hidden");return}document.getElementById("premieres-row").innerHTML=i.map(o=>{const r=o.title||"",c=premiereForTitle(r),a=c?`${c.date} · 🎬 ${c.human}`:o.ru_date?String(o.ru_date).slice(0,10):o.date||"";return`
-    <div class="hero-card" data-title="${esc(r)}" data-fid="${esc(o.film_id?String(o.film_id):"")}" data-iso="${o.ru_date?esc(String(o.ru_date).slice(0,10)):""}">
-      ${o.poster?`<img src="${esc(o.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`:'<div class="poster-placeholder"><span>🍿</span></div>'}
+    </div>`).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => openDetail(el.dataset.code)));
+  wireFavQuick(shelf);
+  shelf.querySelectorAll('.reco-hide').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      haptic('light');
+      const h = new Set(getRecoHide());
+      h.add(btn.dataset.code);
+      setRecoHide([...h]);
+      renderRecoShelf();
+    });
+  });
+}
+
+// ---------- v119: счётчик дней до премьеры («через 5 дней», «завтра») ----------
+const _normTitle = (t) => (t || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9]+/gi, ' ').trim();
+function premiereForTitle(title) {
+  const q = _normTitle(title);
+  if (!q) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const p = (PREMIERES || []).find(x => _normTitle(x.title) === q);
+  if (!p || !p.ru_date) return null;
+  const d = new Date(String(p.ru_date).slice(0, 10) + 'T00:00:00');
+  if (isNaN(d) || d < today) return null;  // прошлое/сегодня в прошлом — не премьера
+  const days = Math.round((d - today) / 86400000);
+  const dd = String(d.getDate()).padStart(2, '0'), mm = String(d.getMonth() + 1).padStart(2, '0');
+  const human = days === 0 ? 'сегодня' : days === 1 ? 'завтра' : days <= 4 ? `через ${days} дня` : `через ${days} дней`;
+  // v120: iso — для диплинка напоминания, fid — film_id КП (бот по нему найдёт название)
+  return { date: `${dd}.${mm}`, iso: String(p.ru_date).slice(0, 10), fid: p.film_id ? String(p.film_id) : '', days, human };
+}
+
+function renderPremieres(meta) {
+  const shelf = document.getElementById('premieres-shelf');
+  if (!shelf) return;
+  const items = onlyFilms(meta && meta.premieres);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const pending = items.filter(p => {
+    const d = p.ru_date ? new Date(String(p.ru_date).slice(0, 10) + 'T00:00:00') : null;
+    return !d || d >= today;
+  }).slice(0, 10);
+  if (pending.length < 2) { shelf.classList.add('hidden'); return; }
+  document.getElementById('premieres-row').innerHTML = pending.map(p => {
+    const title = p.title || '';
+    // v119: «17.09 · через 5 дней» вместо сырой даты
+    const pi = premiereForTitle(title);
+    const dateText = pi ? `${pi.date} · 🎬 ${pi.human}`
+      : (p.ru_date ? String(p.ru_date).slice(0, 10) : (p.date || ''));
+    return `
+    <div class="hero-card" data-title="${esc(title)}" data-fid="${esc(p.film_id ? String(p.film_id) : '')}" data-iso="${p.ru_date ? esc(String(p.ru_date).slice(0, 10)) : ''}">
+      ${p.poster
+        ? `<img src="${esc(p.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+        : `<div class="poster-placeholder"><span>🍿</span></div>`}
       <span class="hero-rank">🍿</span>
       <div class="hero-overlay">
-        <h3>${esc(r)}</h3>
-        <span class="rating">${esc(a?"📅 "+a:"")}</span>
+        <h3>${esc(title)}</h3>
+        <span class="rating">${esc(dateText ? '📅 ' + dateText : '')}</span>
       </div>
-    </div>`}).join(""),e.classList.remove("hidden"),e.querySelectorAll(".hero-card").forEach(o=>o.addEventListener("click",()=>{const r=(o.dataset.title||"").toLowerCase().replace(/ё/g,"е"),c=ALL.find(a=>(a.title||"").toLowerCase().replace(/ё/g,"е")===r);c?openDetail(c.code):o.dataset.fid&&o.dataset.iso?sendOrDeepLink({action:"remind_premiere",iso:o.dataset.iso,fid:o.dataset.fid}):(haptic("light"),tg.showPopup({type:"ok",title:"🍿 Скоро в кино",message:"Фильм ещё не в афише — следи за постами канала!"}))}))}function showCodeDay(t){const e=t&&t.code_of_day||"",n=document.getElementById("code-day-banner");if(!e||!n)return;const s=ALL.find(o=>o.code===e);n.innerHTML=`
+    </div>`;
+  }).join('');
+  shelf.classList.remove('hidden');
+  shelf.querySelectorAll('.hero-card').forEach(el => el.addEventListener('click', () => {
+    const title = (el.dataset.title || '').toLowerCase().replace(/ё/g, 'е');
+    const m = ALL.find(x => (x.title || '').toLowerCase().replace(/ё/g, 'е') === title);
+    if (m) openDetail(m.code);
+    else if (el.dataset.fid && el.dataset.iso) {
+      // v120: премьеры ещё нет в афише — самое полезное действие: напомнить о ней
+      sendOrDeepLink({ action: 'remind_premiere', iso: el.dataset.iso, fid: el.dataset.fid });
+    }
+    else { haptic('light'); tg.showPopup({ type: 'ok', title: '🍿 Скоро в кино', message: 'Фильм ещё не в афише — следи за постами канала!' }); }
+  }));
+}
+
+function showCodeDay(meta) {
+  const code = (meta && meta.code_of_day) || '';
+  const banner = document.getElementById('code-day-banner');
+  if (!code || !banner) return;
+  const m = ALL.find(x => x.code === code);
+  banner.innerHTML = `
     <div class="code-day-inner">
       <span class="code-day-label">🎁 Код дня</span>
-      <span class="code-day-code">🔑 ${esc(e)}</span>
-      ${s?`<span class="code-day-title"> • ${esc(s.title)}</span>`:""}
+      <span class="code-day-code">🔑 ${esc(code)}</span>
+      ${m ? `<span class="code-day-title"> • ${esc(m.title)}</span>` : ''}
       <button class="kd-open-btn" id="btn-cod-open">Открыть</button>
       <button class="btn-bell" id="btn-cod-bell" title="Напоминать каждый день">🔔</button>
-    </div>`,n.classList.remove("hidden"),document.getElementById("btn-cod-open").onclick=()=>openDetail(e);const i=document.getElementById("btn-cod-bell");i&&(i.onclick=()=>{haptic("ok"),sendOrDeepLink({action:"subscribe_code_day"})})}const MARATHON_SECONDS=120,MAR_WATCH_MIN_SEC=15;let _mar={list:[],i:0,paused:!1,timer:null,creditTimer:null,secLeft:MARATHON_SECONDS,deadline:0,watchStart:0,credited:!1};const MAR_SEEN_KEY="kinoafisha_marathon_seen",MAR_RESUME_KEY="kinoafisha_marathon_resume",MAR_ACH_KEY="kinoafisha_marathon_ach",getMarSeen=()=>new Set(JSON.parse(localStorage.getItem(MAR_SEEN_KEY)||"[]").map(String)),MAR_ACHS=[[10,"🏅 Марафонец","10 трейлеров в марафонах"],[25,"🔥 Киноман","25 трейлеров в марафонах"],[50,"👑 Легенда марафона","50 трейлеров в марафонах"]];function _marathonBump(t){let e=[];try{e=JSON.parse(localStorage.getItem(MAR_SEEN_KEY)||"[]")}catch(s){e=[]}e.map(String).includes(String(t))||e.push(t),localStorage.setItem(MAR_SEEN_KEY,JSON.stringify(e));let n=[];try{n=JSON.parse(localStorage.getItem(MAR_ACH_KEY)||"[]")}catch(s){n=[]}MAR_ACHS.forEach(([s,i,o])=>{if(e.length>=s&&!n.includes(s)){n.push(s);try{tg.showPopup({type:"ok",title:i,message:"Ачивка получена: "+o+"! 🎉"})}catch(r){}}}),localStorage.setItem(MAR_ACH_KEY,JSON.stringify(n))}function openMarathon(t,e="",n=0){const s=t.filter(o=>o&&(o.trailer_yt||o.trailer_file_id));if(s.length<1)return;if(s.length<2){openTrailer(s[0]);return}_mar={list:s,i:Math.max(0,Math.min(n|0,s.length-1)),paused:!1,timer:null,creditTimer:null,secLeft:MARATHON_SECONDS,deadline:0,watchStart:0,credited:!1,label:e};const i=document.getElementById("marathon-modal");if(i){i.classList.remove("hidden");try{enterAppFullscreen()}catch(o){}_marathonGo()}}function _marathonGo(){const t=_mar.list[_mar.i];if(!t)return closeMarathon(!1);const e=document.getElementById("marathon-frame"),n=document.getElementById("marathon-name"),s=document.getElementById("marathon-meta"),i=document.getElementById("marathon-count"),o=document.getElementById("marathon-title");o&&(o.textContent="🎬 Кино-марафон"+(_mar.label?" · "+_mar.label:"")),e&&(t.trailer_yt?(e.classList.remove("hidden"),e.src="https://www.youtube.com/embed/"+t.trailer_yt+"?autoplay=1&rel=0&playsinline=1&fs=1"):(e.classList.add("hidden"),e.src="about:blank",sendOrDeepLink({action:"trailer_movie",code:t.code}))),n&&(n.textContent=t.title||"");const r=(t.genres||[]).slice(0,2).map(marGenreLabel).join(" · ");s&&(s.textContent=[t.year,t.rating?"⭐ "+t.rating:"",r].filter(Boolean).join(" · ")),i&&(i.textContent=_mar.i+1+" / "+_mar.list.length);const c=document.getElementById("mar-dots");c&&(_mar.list.length<=20?(c.innerHTML=_mar.list.map((m,b)=>`<span class="mar-dot${b<_mar.i?" done":""}${b===_mar.i?" cur":""}"></span>`).join(""),c.classList.remove("hidden")):c.classList.add("hidden")),pushTrailerWatch(t.code),clearTimeout(_mar.creditTimer),_mar.watchStart=Date.now(),_mar.credited=!1,_mar.creditTimer=setTimeout(_marathonCredit,MAR_WATCH_MIN_SEC*1e3),_mar.secLeft=MARATHON_SECONDS,_mar.deadline=Date.now()+MARATHON_SECONDS*1e3,_mar.paused=!1;const a=document.getElementById("btn-marathon-pause");a&&(a.textContent="⏸ Пауза"),_marathonTick()}function _marathonCredit(){const t=_mar.list[_mar.i];!t||_mar.credited||Date.now()-(_mar.watchStart||0)<MAR_WATCH_MIN_SEC*1e3||(_mar.credited=!0,clearTimeout(_mar.creditTimer),_marathonBump(t.code),bumpWeekStat("trailers"))}function _marathonTick(){clearTimeout(_mar.timer),_mar.timer=setTimeout(()=>{if(_mar.paused)return;_mar.secLeft=Math.max(0,Math.round((_mar.deadline-Date.now())/1e3));const t=document.getElementById("mt-bar"),e=document.getElementById("mt-label");if(t&&(t.style.width=Math.max(0,100*_mar.secLeft/MARATHON_SECONDS)+"%"),e&&(e.textContent=_mar.secLeft<=0?"⏭ далее…":_mar.secLeft+" с"),_mar.secLeft<=0){_marathonNext();return}_marathonTick()},1e3)}function _marathonTogglePause(){_mar.paused=!_mar.paused,_mar.paused?_mar.secLeft=Math.max(0,Math.round((_mar.deadline-Date.now())/1e3)):_mar.deadline=Date.now()+_mar.secLeft*1e3;const t=document.getElementById("btn-marathon-pause");t&&(t.textContent=_mar.paused?"▶️ Продолжить":"⏸ Пауза");const e=document.getElementById("mt-label");e&&(e.textContent=_mar.paused?"⏸ Пауза":_mar.secLeft+" с"),_mar.paused||_marathonTick(),haptic("light")}function _marathonNext(){_marathonCredit(),_mar.i<_mar.list.length-1?(_mar.i++,_marathonGo()):closeMarathon(!0)}function _marathonPrev(){_marathonCredit(),_mar.i>0&&(_mar.i--,_marathonGo())}function closeMarathon(t=!1){clearTimeout(_mar.timer),_marathonCredit(),clearTimeout(_mar.creditTimer);try{!t&&_mar.list.length>=2&&_mar.i<_mar.list.length-1?localStorage.setItem(MAR_RESUME_KEY,JSON.stringify({codes:_mar.list.map(s=>s.code),i:_mar.i,label:_mar.label||""})):localStorage.removeItem(MAR_RESUME_KEY)}catch(s){}const e=document.getElementById("marathon-modal"),n=document.getElementById("marathon-frame");n&&(n.src="about:blank"),e&&e.classList.add("hidden");try{exitAppFullscreen()}catch(s){}if(t)try{tg.showPopup({type:"ok",title:"🎬 Марафон завершён!",message:"Все трейлеры просмотрены. Запустить ещё раз? ▶️"})}catch(s){}}document.addEventListener("visibilitychange",()=>{if(!document.hidden)return;const t=document.getElementById("marathon-modal");if(!t||t.classList.contains("hidden")||!_mar.list.length||_mar.paused)return;_mar.secLeft=Math.max(0,Math.round((_mar.deadline-Date.now())/1e3)),_mar.paused=!0,clearTimeout(_mar.timer);const e=document.getElementById("btn-marathon-pause");e&&(e.textContent="▶️ Продолжить");const n=document.getElementById("mt-label");n&&(n.textContent="⏸ Пауза"),_marathonCredit()}),(()=>{const t=document.getElementById("marathon-modal");if(!t)return;let e=0,n=0,s=!1;t.addEventListener("touchstart",i=>{t.classList.contains("hidden")||(e=i.touches[0].clientX,n=i.touches[0].clientY,s=!0)},{passive:!0}),t.addEventListener("touchend",i=>{if(!s||(s=!1,t.classList.contains("hidden")))return;const o=i.changedTouches[0].clientX-e,r=i.changedTouches[0].clientY-n;Math.abs(o)<70||Math.abs(r)>45||(haptic("light"),o<0?_marathonNext():_marathonPrev())},{passive:!0}),document.addEventListener("keydown",i=>{t.classList.contains("hidden")||i.target&&/^(INPUT|TEXTAREA|SELECT)$/.test(i.target.tagName)||(i.key==="ArrowRight"?(haptic("light"),_marathonNext()):i.key==="ArrowLeft"&&(haptic("light"),_marathonPrev()))})})();function marathonCandidates(){return ALL.filter(t=>t.trailer_yt||t.trailer_file_id)}const MAR_GENRE_ICONS={боевик:"💥",триллер:"🔪",ужасы:"👻",комедия:"😂",драма:"🎭",фантастика:"🚀",криминал:"🔫",детектив:"🔍",мелодрама:"💕",романтика:"💕",приключения:"🗺",фэнтези:"🐉",мистика:"🔮",история:"🏛",исторический:"🏛",военный:"🎖",спорт:"🏆",музыка:"🎵",биография:"📖",семейный:"👨‍👩‍👧",вестерн:"🤠",документальный:"🎥",мультфильм:"🧸",аниме:"🎴"};function marGenreIcon(t){return MAR_GENRE_ICONS[String(t||"").toLowerCase().trim()]||"🎬"}function marGenreLabel(t){const e=String(t||"").trim();return e&&e.charAt(0).toUpperCase()+e.slice(1)}function marPlural(t){const e=Math.abs(parseInt(t,10)||0),n=e%100;if(n>=11&&n<=14)return" трейлеров";const s=e%10;return s===1?" трейлер":s>=2&&s<=4?" трейлера":" трейлеров"}const MAR_GENRE_PAGE=12;let marGenreLimit=MAR_GENRE_PAGE,marRndSize=5;function renderMarathonView(){const t=document.getElementById("marathon-container");if(!t)return;if(!ALL.length){t.innerHTML=`
+    </div>`;
+  banner.classList.remove('hidden');
+  document.getElementById('btn-cod-open').onclick = () => openDetail(code);
+  const bell = document.getElementById('btn-cod-bell');
+  if (bell) bell.onclick = () => {
+    haptic('ok');
+    sendOrDeepLink({ action: 'subscribe_code_day' });
+  };
+}
+
+// ---------- v74: «🎬 Кино-марафон» — трейлеры подряд ----------
+const MARATHON_SECONDS = 120;              // таймер авто-далее (~2 мин на трейлер)
+// v122: трейлер считается «просмотренным» только после MAR_WATCH_MIN_SEC секунд
+// на шаге — иначе стрелки «Далее» накручивали прогресс жанров и ачивки марафона.
+const MAR_WATCH_MIN_SEC = 15;
+let _mar = {
+  list: [], i: 0, paused: false, timer: null, creditTimer: null,
+  secLeft: MARATHON_SECONDS, deadline: 0, watchStart: 0, credited: false,
+};
+// v82: прогресс марафона — виденные коды, «досмотреть позже», ачивки-мильстоуны
+const MAR_SEEN_KEY = 'kinoafisha_marathon_seen';
+const MAR_RESUME_KEY = 'kinoafisha_marathon_resume';
+const MAR_ACH_KEY = 'kinoafisha_marathon_ach';
+const getMarSeen = () => new Set(JSON.parse(localStorage.getItem(MAR_SEEN_KEY) || '[]').map(String));
+const MAR_ACHS = [
+  [10, '🏅 Марафонец', '10 трейлеров в марафонах'],
+  [25, '🔥 Киноман', '25 трейлеров в марафонах'],
+  [50, '👑 Легенда марафона', '50 трейлеров в марафонах'],
+];
+function _marathonBump(code) {
+  let seen = [];
+  try { seen = JSON.parse(localStorage.getItem(MAR_SEEN_KEY) || '[]'); } catch (e) { seen = []; }
+  if (!seen.map(String).includes(String(code))) seen.push(code);
+  localStorage.setItem(MAR_SEEN_KEY, JSON.stringify(seen));
+  let achs = [];
+  try { achs = JSON.parse(localStorage.getItem(MAR_ACH_KEY) || '[]'); } catch (e) { achs = []; }
+  MAR_ACHS.forEach(([n, title, sub]) => {
+    if (seen.length >= n && !achs.includes(n)) {
+      achs.push(n);
+      try { tg.showPopup({ type: 'ok', title: title, message: 'Ачивка получена: ' + sub + '! 🎉' }); } catch (e) { /* пусто */ }
+    }
+  });
+  localStorage.setItem(MAR_ACH_KEY, JSON.stringify(achs));
+}
+
+function openMarathon(list, label = '', startIdx = 0) {
+  const items = list.filter(m => m && (m.trailer_yt || m.trailer_file_id));
+  if (items.length < 1) return;
+  if (items.length < 2) { openTrailer(items[0]); return; }
+  _mar = {
+    list: items, i: Math.max(0, Math.min(startIdx | 0, items.length - 1)),
+    paused: false, timer: null, creditTimer: null, secLeft: MARATHON_SECONDS,
+    deadline: 0, watchStart: 0, credited: false, label,
+  };
+  const modal = document.getElementById('marathon-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  // v132: марафон — это тоже кинорежим, поэтому сразу на весь экран
+  // (внутри section_06 определён enterAppFullscreen; try — на случай порядка
+  // инициализации секций).
+  try { enterAppFullscreen(); } catch (e) { /* пусто */ }
+  _marathonGo();
+}
+
+function _marathonGo() {
+  const m = _mar.list[_mar.i];
+  if (!m) return closeMarathon(false);
+  const frame = document.getElementById('marathon-frame');
+  const name = document.getElementById('marathon-name');
+  const metaEl = document.getElementById('marathon-meta');
+  const count = document.getElementById('marathon-count');
+  const title = document.getElementById('marathon-title');
+  if (title) title.textContent = '🎬 Кино-марафон' + (_mar.label ? ' · ' + _mar.label : '');
+  if (frame) {
+    if (m.trailer_yt) {
+      frame.classList.remove('hidden');
+      frame.src = 'https://www.youtube.com/embed/' + m.trailer_yt + '?autoplay=1&rel=0&playsinline=1&fs=1';
+    } else {
+      frame.classList.add('hidden');
+      frame.src = 'about:blank';
+      sendOrDeepLink({ action: 'trailer_movie', code: m.code });
+    }
+  }
+  if (name) name.textContent = m.title || '';
+  const g = (m.genres || []).slice(0, 2).map(marGenreLabel).join(' · ');
+  if (metaEl) metaEl.textContent = [m.year, m.rating ? '⭐ ' + m.rating : '', g].filter(Boolean).join(' · ');
+  if (count) count.textContent = (_mar.i + 1) + ' / ' + _mar.list.length;
+  // v97: точки-позиции плейлиста (короткие марафоны) — видно, где находишься
+  const dots = document.getElementById('mar-dots');
+  if (dots) {
+    if (_mar.list.length <= 20) {
+      dots.innerHTML = _mar.list.map((_, k) =>
+        `<span class="mar-dot${k < _mar.i ? ' done' : ''}${k === _mar.i ? ' cur' : ''}"></span>`).join('');
+      dots.classList.remove('hidden');
+    } else {
+      dots.classList.add('hidden');
+    }
+  }
+  pushTrailerWatch(m.code);     // v74: «Продолжить смотреть» — трейлер открыт, пишем сразу
+  // v122: «просмотрено» начисляем не по факту открытия, а по времени на шаге
+  // (см. _marathonCredit) — листание стрелками больше не даёт ложный прогресс.
+  clearTimeout(_mar.creditTimer);
+  _mar.watchStart = Date.now();
+  _mar.credited = false;
+  _mar.creditTimer = setTimeout(_marathonCredit, MAR_WATCH_MIN_SEC * 1000);
+  _mar.secLeft = MARATHON_SECONDS;
+  _mar.deadline = Date.now() + MARATHON_SECONDS * 1000;
+  _mar.paused = false;
+  const p = document.getElementById('btn-marathon-pause');
+  if (p) p.textContent = '⏸ Пауза';
+  _marathonTick();
+}
+
+// v122: засчитывает текущий трейлер просмотренным, если на нём провели не меньше
+// MAR_WATCH_MIN_SEC секунд. Идемпотентна (флаг credited), поэтому зовётся и по
+// таймеру, и при переходе «Далее/Назад», и при закрытии марафона.
+function _marathonCredit() {
+  const m = _mar.list[_mar.i];
+  if (!m || _mar.credited) return;
+  if (Date.now() - (_mar.watchStart || 0) < MAR_WATCH_MIN_SEC * 1000) return;
+  _mar.credited = true;
+  clearTimeout(_mar.creditTimer);
+  _marathonBump(m.code);      // v82: прогресс марафона + ачивки
+  bumpWeekStat('trailers');   // «Моя неделя» / «Мой год»
+}
+
+function _marathonTick() {
+  clearTimeout(_mar.timer);
+  _mar.timer = setTimeout(() => {
+    if (_mar.paused) return;
+    // v122: остаток считаем по стенным часам, а не вычитанием единичек — свёрнутый
+    // WebView глушит setTimeout, и после возврата марафон проскакивал сразу
+    // несколько трейлеров.
+    _mar.secLeft = Math.max(0, Math.round((_mar.deadline - Date.now()) / 1000));
+    const bar = document.getElementById('mt-bar');
+    const lab = document.getElementById('mt-label');
+    if (bar) bar.style.width = Math.max(0, 100 * _mar.secLeft / MARATHON_SECONDS) + '%';
+    if (lab) lab.textContent = _mar.secLeft <= 0 ? '⏭ далее…' : (_mar.secLeft + ' с');
+    if (_mar.secLeft <= 0) { _marathonNext(); return; }
+    _marathonTick();
+  }, 1000);
+}
+
+function _marathonTogglePause() {
+  _mar.paused = !_mar.paused;
+  if (_mar.paused) {
+    // v122: фиксируем остаток и останавливаем отсчёт — на паузе время не «убегает»
+    _mar.secLeft = Math.max(0, Math.round((_mar.deadline - Date.now()) / 1000));
+  } else {
+    _mar.deadline = Date.now() + _mar.secLeft * 1000;
+  }
+  const b = document.getElementById('btn-marathon-pause');
+  if (b) b.textContent = _mar.paused ? '▶️ Продолжить' : '⏸ Пауза';
+  const lab = document.getElementById('mt-label');
+  if (lab) lab.textContent = _mar.paused ? '⏸ Пауза' : (_mar.secLeft + ' с');
+  if (!_mar.paused) _marathonTick();
+  haptic('light');
+}
+
+function _marathonNext() {
+  _marathonCredit();   // v122: шаг успевает засчитаться при ручном «Далее»
+  if (_mar.i < _mar.list.length - 1) { _mar.i++; _marathonGo(); }
+  else closeMarathon(true);
+}
+function _marathonPrev() {
+  _marathonCredit();
+  if (_mar.i > 0) { _mar.i--; _marathonGo(); }
+}
+function closeMarathon(done = false) {
+  clearTimeout(_mar.timer);
+  _marathonCredit();             // v122: шаг, на котором досмотрели 15+ секунд, засчитываем
+  clearTimeout(_mar.creditTimer);
+  // v82: недосмотренный марафон сохраняем — на экране марафона появится «досмотреть позже»
+  try {
+    if (!done && _mar.list.length >= 2 && _mar.i < _mar.list.length - 1) {
+      localStorage.setItem(MAR_RESUME_KEY, JSON.stringify({
+        codes: _mar.list.map(m => m.code), i: _mar.i, label: _mar.label || '',
+      }));
+    } else {
+      localStorage.removeItem(MAR_RESUME_KEY);
+    }
+  } catch (e) { /* пусто */ }
+  const modal = document.getElementById('marathon-modal');
+  const frame = document.getElementById('marathon-frame');
+  if (frame) frame.src = 'about:blank';
+  if (modal) modal.classList.add('hidden');
+  // v132: вышли из кинорежима — вернуть мини-апп в обычный размер.
+  try { exitAppFullscreen(); } catch (e) { /* пусто */ }
+  if (done) {
+    try {
+      tg.showPopup({ type: 'ok', title: '🎬 Марафон завершён!', message: 'Все трейлеры просмотрены. Запустить ещё раз? ▶️' });
+    } catch (e) { /* пусто */ }
+  }
+}
+
+// v122: свернул апп на середине марафона — ставим авто-паузу. WebView глушит
+// таймеры в фоне, а встроенное видео обычно останавливается: без этого зритель
+// возвращался уже на «следующем» трейлере, пропустив кусок текущего.
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) return;
+  const modal = document.getElementById('marathon-modal');
+  if (!modal || modal.classList.contains('hidden')) return;
+  if (!_mar.list.length || _mar.paused) return;
+  _mar.secLeft = Math.max(0, Math.round((_mar.deadline - Date.now()) / 1000));
+  _mar.paused = true;
+  clearTimeout(_mar.timer);
+  const b = document.getElementById('btn-marathon-pause');
+  if (b) b.textContent = '▶️ Продолжить';
+  const lab = document.getElementById('mt-label');
+  if (lab) lab.textContent = '⏸ Пауза';
+  _marathonCredit();   // время на трейлере уже могли набрать — не теряем зачёт
+});
+
+// ---------- v97: навигация марафона — свайпы на телефоне, стрелки на ПК ----------
+// Свайп влево = следующий трейлер, вправо = предыдущий (в модалке марафона).
+// На ПК то же самое делают клавиши ← и →. Вертикальные жесты не трогаем —
+// свайп вниз по шапке по-прежнему закрывает модалку (универсальный хендлер).
+(() => {
+  const modal = document.getElementById('marathon-modal');
+  if (!modal) return;
+  let sx = 0, sy = 0, on = false;
+  modal.addEventListener('touchstart', (e) => {
+    if (modal.classList.contains('hidden')) return;
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    on = true;
+  }, { passive: true });
+  modal.addEventListener('touchend', (e) => {
+    if (!on) return;
+    on = false;
+    if (modal.classList.contains('hidden')) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > 45) return;
+    haptic('light');
+    if (dx < 0) _marathonNext(); else _marathonPrev();
+  }, { passive: true });
+  document.addEventListener('keydown', (e) => {
+    if (modal.classList.contains('hidden')) return;
+    if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight') { haptic('light'); _marathonNext(); }
+    else if (e.key === 'ArrowLeft') { haptic('light'); _marathonPrev(); }
+  });
+})();
+
+// ---------- v78: марафон по жанру + шаринг марафона ----------
+// Чип «жанр · N трейлеров» собирает плейлист из всех фильмов жанра с трейлерами
+// (сортировка по рейтингу), «🎲 Случайный» — вперемешку. Ссылкой можно
+// поделиться: друг откроет афишу и марафон запустится сам (см. parseMarathonHash).
+function marathonCandidates() {
+  return ALL.filter(m => m.trailer_yt || m.trailer_file_id);
+}
+
+// v120: карточки марафона — иконки жанров, читаемые подписи и метрики.
+// Ключи — так, как жанр пишет Кинопоиск (нижний регистр); неизвестный жанр
+// получает общий 🎬, чтобы карточка никогда не оставалась без иконки.
+const MAR_GENRE_ICONS = {
+  'боевик': '💥', 'триллер': '🔪', 'ужасы': '👻', 'комедия': '😂', 'драма': '🎭',
+  'фантастика': '🚀', 'криминал': '🔫', 'детектив': '🔍', 'мелодрама': '💕',
+  'романтика': '💕', 'приключения': '🗺', 'фэнтези': '🐉', 'мистика': '🔮',
+  'история': '🏛', 'исторический': '🏛', 'военный': '🎖', 'спорт': '🏆',
+  'музыка': '🎵', 'биография': '📖', 'семейный': '👨‍👩‍👧', 'вестерн': '🤠',
+  'документальный': '🎥', 'мультфильм': '🧸', 'аниме': '🎴',
+};
+function marGenreIcon(g) {
+  return MAR_GENRE_ICONS[String(g || '').toLowerCase().trim()] || '🎬';
+}
+// «драма» из базы → «Драма»: жанры в базе в нижнем регистре, в UI это выглядит
+// неопрятно, поэтому заголовок карточки всегда капитализируем.
+function marGenreLabel(g) {
+  const s = String(g || '').trim();
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+// «1 трейлер / 2 трейлера / 12 трейлеров» — без кривых «1 трейлеров».
+function marPlural(n) {
+  const num = Math.abs(parseInt(n, 10) || 0);
+  const t = num % 100;
+  if (t >= 11 && t <= 14) return ' трейлеров';
+  const d = num % 10;
+  if (d === 1) return ' трейлер';
+  if (d >= 2 && d <= 4) return ' трейлера';
+  return ' трейлеров';
+}
+// v122: жанров в базе больше двух экранов — сначала показываем первые
+// MAR_GENRE_PAGE, остальные открываются кнопкой «Показать все».
+const MAR_GENRE_PAGE = 12;
+let marGenreLimit = MAR_GENRE_PAGE;
+// v122: размер случайного марафона выбирает пользователь (по умолчанию 5).
+let marRndSize = 5;
+
+function renderMarathonView() {
+  const box = document.getElementById('marathon-container');
+  if (!box) return;
+  if (!ALL.length) {
+    // v124: база ещё грузится — показываем структуру раздела (скелетон), а не
+    // пустой экран с нулями по всем жанрам
+    box.innerHTML = `
       <div class="chain-card marathon-intro">
         <div class="mar-hero">
           <div class="skel mar-line"></div>
           <div class="skel mar-line short"></div>
         </div>
-        <div class="mar-genre-grid">${Array.from({length:6},()=>'<div class="skel mar-card"></div>').join("")}</div>
-      </div>`;return}const e=marathonCandidates(),n={};e.forEach(u=>(u.genres||[]).forEach(S=>{const g=S.trim();g&&(n[g]=n[g]||[]).push(u)}));const s=Object.entries(n).filter(([,u])=>u.length>=2).sort((u,S)=>S[1].length-u[1].length),i=s.slice(0,Math.max(MAR_GENRE_PAGE,marGenreLimit)),o=u=>u.rating_kp||u.rating||0;let r=null;try{const u=JSON.parse(localStorage.getItem(MAR_RESUME_KEY)||"null");if(u&&Array.isArray(u.codes)){const S=u.codes.map(g=>ALL.find(L=>String(L.code)===String(g))).filter(g=>g&&(g.trailer_yt||g.trailer_file_id));S.length>=2&&u.i>=0&&u.i<S.length&&(r={list:S,i:Math.min(u.i,S.length-1),label:u.label||""})}}catch(u){}const c=getMarSeen(),a=e.length,m=e.filter(u=>!c.has(String(u.code))),b=MAR_ACHS.find(([u])=>c.size<u)||null;t.innerHTML=`
+        <div class="mar-genre-grid">${Array.from({ length: 6 }, () =>
+          '<div class="skel mar-card"></div>').join('')}</div>
+      </div>`;
+    return;
+  }
+  const withTr = marathonCandidates();
+  const byGenre = {};
+  withTr.forEach(m => (m.genres || []).forEach(g => {
+    const k = g.trim();
+    if (!k) return;
+    (byGenre[k] = byGenre[k] || []).push(m);
+  }));
+  const allGenres = Object.entries(byGenre)
+    .filter(([, arr]) => arr.length >= 2)
+    .sort((a, b) => b[1].length - a[1].length);
+  const rows = allGenres.slice(0, Math.max(MAR_GENRE_PAGE, marGenreLimit));
+  const withR = m => m.rating_kp || m.rating || 0;
+  // v82: «досмотреть позже» + прогресс по жанрам
+  let resume = null;
+  try {
+    const r = JSON.parse(localStorage.getItem(MAR_RESUME_KEY) || 'null');
+    if (r && Array.isArray(r.codes)) {
+      const rl = r.codes.map(c => ALL.find(x => String(x.code) === String(c)))
+        .filter(x => x && (x.trailer_yt || x.trailer_file_id));
+      if (rl.length >= 2 && r.i >= 0 && r.i < rl.length) {
+        resume = { list: rl, i: Math.min(r.i, rl.length - 1), label: r.label || '' };
+      }
+    }
+  } catch (e) { /* пусто */ }
+  const seen = getMarSeen();
+  const trCount = withTr.length;
+  // v122: «новое» — то, что ещё ни разу не попадало в марафоны: именно его
+  // подсовываем в случайный набор, чтобы марафон открывал фильмы, а не повторял.
+  const unseen = withTr.filter(m => !seen.has(String(m.code)));
+  // v122: прогресс до следующей марафонской ачивки (10/25/50) — вехи из section_02
+  const achNext = MAR_ACHS.find(([n]) => seen.size < n) || null;
+  box.innerHTML = `
     <div class="chain-card marathon-intro">
       <div class="mar-hero">
         <div class="mar-hero-top">
@@ -194,517 +2941,3444 @@ var be,ke,Se,we;const tg=window.Telegram.WebApp;tg.ready(),tg.expand();const ACC
           </div>
         </div>
         <div class="mar-hero-stats">
-          <span class="mar-stat">🎞 <b>${s.length}</b> жанров</span>
-          <span class="mar-stat">▶️ <b>${a}</b>${marPlural(a)}</span>
-          ${m.length?`<span class="mar-stat">🆕 <b>${m.length}</b> новых</span>`:""}
-          <span class="mar-stat mar-stat-gold">🏅 <b>${c.size}</b> пройдено</span>
+          <span class="mar-stat">🎞 <b>${allGenres.length}</b> жанров</span>
+          <span class="mar-stat">▶️ <b>${trCount}</b>${marPlural(trCount)}</span>
+          ${unseen.length ? `<span class="mar-stat">🆕 <b>${unseen.length}</b> новых</span>` : ''}
+          <span class="mar-stat mar-stat-gold">🏅 <b>${seen.size}</b> пройдено</span>
         </div>
         <div class="mar-ach">
           <div class="mar-ach-top">
-            <span class="mar-ach-name">${b?b[1]:"👑 Все ачивки марафона"}</span>
-            <span class="mar-ach-count">${b?c.size+" / "+b[0]:c.size}</span>
+            <span class="mar-ach-name">${achNext ? achNext[1] : '👑 Все ачивки марафона'}</span>
+            <span class="mar-ach-count">${achNext ? seen.size + ' / ' + achNext[0] : seen.size}</span>
           </div>
-          <span class="mar-prog-track"><i style="width:${b?Math.min(100,Math.round(100*c.size/b[0])):100}%"></i></span>
-          <span class="mar-ach-sub">${b?"До ачивки: "+(b[0]-c.size)+marPlural(b[0]-c.size):"Ты прошёл все марафонские рубежи!"}</span>
+          <span class="mar-prog-track"><i style="width:${achNext ? Math.min(100, Math.round(100 * seen.size / achNext[0])) : 100}%"></i></span>
+          <span class="mar-ach-sub">${achNext ? 'До ачивки: ' + (achNext[0] - seen.size) + marPlural(achNext[0] - seen.size) : 'Ты прошёл все марафонские рубежи!'}</span>
         </div>
       </div>
       <div class="mar-rnd">
         <span class="mar-rnd-label">🎲 Случайный марафон — сколько трейлеров?</span>
         <div class="mar-rnd-sizes">
           <span class="mar-rnd-cap">Длина</span>
-          ${[3,5,10].map(u=>`<button class="mar-size${marRndSize===u?" active":""}" data-n="${u}">${u}</button>`).join("")}
+          ${[3, 5, 10].map(n => `<button class="mar-size${marRndSize === n ? ' active' : ''}" data-n="${n}">${n}</button>`).join('')}
         </div>
       </div>
-      <button class="btn-primary" id="btn-marathon-rnd">🎲 Собрать марафон (${Math.min(marRndSize,a)})</button>
+      <button class="btn-primary" id="btn-marathon-rnd">🎲 Собрать марафон (${Math.min(marRndSize, trCount)})</button>
     </div>
-    ${r?`
+    ${resume ? `
     <div class="chain-card mar-resume">
       <div class="mar-resume-head">
         <span class="mar-resume-icon">⏸</span>
         <div class="mar-resume-text">
           <h3 class="mar-resume-title">Досмотреть позже</h3>
-          <p class="mar-resume-sub">${r.label?"«"+esc(r.label)+"»":"Твой марафон"}</p>
+          <p class="mar-resume-sub">${resume.label ? '«' + esc(resume.label) + '»' : 'Твой марафон'}</p>
         </div>
-        <span class="mar-resume-count">${r.i+1} / ${r.list.length}</span>
+        <span class="mar-resume-count">${resume.i + 1} / ${resume.list.length}</span>
       </div>
-      <span class="mar-prog-track mar-prog-lg"><i style="width:${Math.round(100*(r.i+1)/r.list.length)}%"></i></span>
+      <span class="mar-prog-track mar-prog-lg"><i style="width:${Math.round(100 * (resume.i + 1) / resume.list.length)}%"></i></span>
       <button class="btn-primary" id="btn-marathon-resume">▶️ Продолжить марафон</button>
       <button class="mar-resume-x" id="btn-marathon-resume-x">✕ Убрать</button>
-    </div>`:""}
+    </div>` : ''}
     <div class="chain-card">
       <h3 class="chain-sub mar-section-head">🔥 По жанрам</h3>
       <div class="mar-genre-grid">
-        ${i.map(([u,S])=>{const g=S.filter(M=>c.has(String(M.code))).length,L=Math.round(100*g/S.length),H=g>=S.length;return`
-          <button class="mar-genre" data-g="${esc(u)}">
+        ${rows.map(([g, arr]) => {
+          const prog = arr.filter(m => seen.has(String(m.code))).length;
+          const pct = Math.round(100 * prog / arr.length);
+          const done = prog >= arr.length;
+          return `
+          <button class="mar-genre" data-g="${esc(g)}">
             <span class="mar-genre-head">
-              <span class="mar-genre-icon">${marGenreIcon(u)}</span>
-              <span class="mar-genre-name">${esc(marGenreLabel(u))}</span>
+              <span class="mar-genre-icon">${marGenreIcon(g)}</span>
+              <span class="mar-genre-name">${esc(marGenreLabel(g))}</span>
             </span>
             <span class="mar-genre-chips">
-              <span class="mar-chip">🎬 ${S.length}${marPlural(S.length)}</span>
-              <span class="mar-chip mar-chip-gold">⭐ до ${Math.max(...S.map(o)).toFixed(1)}</span>
+              <span class="mar-chip">🎬 ${arr.length}${marPlural(arr.length)}</span>
+              <span class="mar-chip mar-chip-gold">⭐ до ${Math.max(...arr.map(withR)).toFixed(1)}</span>
             </span>
             <span class="mar-genre-foot">
-              <span class="mar-genre-progress${H?" done":""}">${g?H?`✅ пройден · ${g} / ${S.length}`:`✅ ${g} / ${S.length}`:"⬜ ещё не начат"}</span>
-              <span class="mar-prog-track">${g?`<i style="width:${L}%"></i>`:""}</span>
+              <span class="mar-genre-progress${done ? ' done' : ''}">${prog ? (done ? `✅ пройден · ${prog} / ${arr.length}` : `✅ ${prog} / ${arr.length}`) : '⬜ ещё не начат'}</span>
+              <span class="mar-prog-track">${prog ? `<i style="width:${pct}%"></i>` : ''}</span>
             </span>
-          </button>`}).join("")}
+          </button>`;
+        }).join('')}
       </div>
-      ${s.length>MAR_GENRE_PAGE?`<button class="mar-more" id="btn-mar-more">${marGenreLimit>=s.length?"⬆️ Свернуть список":"⬇️ Показать все жанры ("+s.length+")"}</button>`:""}
-    </div>`;const w=document.getElementById("btn-marathon-resume");w&&w.addEventListener("click",()=>{haptic("ok"),openMarathon(r.list,r.label,r.i)});const $=document.getElementById("btn-marathon-resume-x");$&&$.addEventListener("click",()=>{localStorage.removeItem(MAR_RESUME_KEY),haptic("light"),renderMarathonView()});const p=u=>{const S=(n[u]||[]).slice().sort((g,L)=>o(L)-o(g));haptic("ok"),openMarathon(S,"Жанр: "+marGenreLabel(u))},f=document.getElementById("btn-mar-more");f&&f.addEventListener("click",()=>{marGenreLimit=marGenreLimit>=s.length?MAR_GENRE_PAGE:s.length,haptic("light"),renderMarathonView()}),t.querySelectorAll(".mar-genre").forEach(u=>u.addEventListener("click",()=>p(u.dataset.g))),t.querySelectorAll(".mar-size").forEach(u=>u.addEventListener("click",()=>{marRndSize=parseInt(u.dataset.n,10)||5,haptic("light"),renderMarathonView()}));const v=document.getElementById("btn-marathon-rnd");v&&v.addEventListener("click",()=>{const u=m.slice().sort(()=>Math.random()-.5),S=e.filter(L=>c.has(String(L.code))).sort(()=>Math.random()-.5),g=u.concat(S).slice(0,Math.min(marRndSize,a));haptic("ok"),openMarathon(g,"Случайный набор")})}function shareMarathon(){if(!_mar.list.length)return;const e=location.origin+location.pathname+"#marathon="+_mar.list.map(i=>i.code).join(","),s="🎬 Кино-марафон"+(_mar.label?" «"+_mar.label+"»":"")+" — "+_mar.list.length+" трейлеров подряд! Открой и смотри ▶️";haptic("light");try{tg.openTelegramLink("https://t.me/share/url?url="+encodeURIComponent(e)+"&text="+encodeURIComponent(s))}catch(i){try{navigator.clipboard.writeText(e),tg.showPopup({type:"ok",message:"Ссылка скопирована 📋"})}catch(o){}}}function parseAccessHash(){if(!/(^|[#&])access=1/.test(location.hash||""))return!1;try{localStorage.setItem(ACCESS_KEY,"1")}catch(t){}try{history.replaceState(null,"",location.pathname+location.search)}catch(t){location.hash=""}return!0}function parseMarathonHash(){const t=(location.hash||"").match(/#marathon=([A-Za-z0-9,_-]+)/);if(!t)return;const e=t[1].split(",").map(o=>o.trim()).filter(Boolean);try{history.replaceState(null,"",location.pathname+location.search)}catch(o){location.hash=""}const n=()=>{const o=e.map(r=>ALL.find(c=>String(c.code)===String(r))).filter(Boolean).filter(r=>r.trailer_yt||r.trailer_file_id);o.length>=2&&openMarathon(o,"Марафон друга 🎁")};let s=0;const i=setInterval(()=>{(ALL.length||++s>50)&&(clearInterval(i),n())},300)}function addMarathonButtons(){document.querySelectorAll("#view-catalog .hero-shelf").forEach(t=>{if(!["hero-shelf","recent","reco","today"].some(c=>t.id.includes(c))||t.querySelector(".marathon-sm"))return;const e=t.querySelector(".hero-row");if(!e)return;const s=Array.from(e.querySelectorAll(".hero-card")).map(c=>c.dataset.code).filter(Boolean).filter(c=>{const a=ALL.find(m=>String(m.code)===String(c));return a&&(a.trailer_yt||a.trailer_file_id)});if(s.length<2)return;const i=t.querySelector(".shelf-title");if(!i)return;const o=document.createElement("div");o.className="shelf-title-row",i.parentElement.insertBefore(o,i),o.appendChild(i);const r=document.createElement("button");r.className="marathon-sm",r.textContent="🎬 ▶️ Марафон",r.addEventListener("click",()=>{haptic("light");const c=s.map(a=>ALL.find(m=>String(m.code)===String(a))).filter(Boolean);openMarathon(c,i.textContent)}),o.appendChild(r)})}(function(){const e=document.getElementById("marathon-modal");if(!e)return;e.addEventListener("click",c=>{c.target===e&&closeMarathon(!1)});const n=document.getElementById("btn-marathon-close");n&&n.addEventListener("click",()=>closeMarathon(!1));const s=document.getElementById("btn-marathon-next");s&&s.addEventListener("click",()=>{haptic("light"),_marathonNext()});const i=document.getElementById("btn-marathon-prev");i&&i.addEventListener("click",()=>{haptic("light"),_marathonPrev()});const o=document.getElementById("btn-marathon-pause");o&&o.addEventListener("click",_marathonTogglePause);const r=document.getElementById("btn-marathon-share");r&&r.addEventListener("click",shareMarathon)})();const _GENRE_EMOJI={драма:"🎭",комедия:"😂",боевик:"💥",триллер:"😱",ужасы:"👻",фантастика:"🚀",фэнтези:"🧙",детектив:"🔍",мелодрама:"💕",приключения:"🗺️",мультфильм:"🎨",аниме:"🌸",криминал:"🕵️",биография:"📜",военный:"🎖️",история:"🏛️",документальный:"📽️",семейный:"👨‍👩‍👧",спорт:"🏅",музыка:"🎵",вестерн:"🤠"};function _genreEmoji(t){return _GENRE_EMOJI[(t||"").toLowerCase()]||"🎬"}function genreShelvesHTML(){const t={};ALL.forEach(i=>(i.genres||[]).forEach(o=>{t[o]=(t[o]||0)+1}));const e=getUnlocked(),n=Object.entries(t).filter(([,i])=>i>=3).sort((i,o)=>o[1]-i[1]||i[0].localeCompare(o[0],"ru")).slice(0,12);return n.length?`
+      ${allGenres.length > MAR_GENRE_PAGE ? `<button class="mar-more" id="btn-mar-more">${marGenreLimit >= allGenres.length ? '⬆️ Свернуть список' : '⬇️ Показать все жанры (' + allGenres.length + ')'}</button>` : ''}
+    </div>`;
+  const rs = document.getElementById('btn-marathon-resume');
+  if (rs) rs.addEventListener('click', () => {
+    haptic('ok');
+    openMarathon(resume.list, resume.label, resume.i);
+  });
+  const rsx = document.getElementById('btn-marathon-resume-x');
+  if (rsx) rsx.addEventListener('click', () => {
+    localStorage.removeItem(MAR_RESUME_KEY);
+    haptic('light');
+    renderMarathonView();
+  });
+  const startGenre = (g) => {
+    const arr = (byGenre[g] || []).slice().sort((a, b) => withR(b) - withR(a));
+    haptic('ok');
+    openMarathon(arr, 'Жанр: ' + marGenreLabel(g));
+  };
+  const more = document.getElementById('btn-mar-more');
+  if (more) more.addEventListener('click', () => {
+    marGenreLimit = marGenreLimit >= allGenres.length ? MAR_GENRE_PAGE : allGenres.length;
+    haptic('light');
+    renderMarathonView();
+  });
+  box.querySelectorAll('.mar-genre').forEach(b => b.addEventListener('click', () => startGenre(b.dataset.g)));
+  // v122: чипы длины марафона (3/5/10) — выбор запоминается на время сессии
+  box.querySelectorAll('.mar-size').forEach(b => b.addEventListener('click', () => {
+    marRndSize = parseInt(b.dataset.n, 10) || 5;
+    haptic('light');
+    renderMarathonView();
+  }));
+  const rnd = document.getElementById('btn-marathon-rnd');
+  if (rnd) rnd.addEventListener('click', () => {
+    // v122: сперва непросмотренные — марафон должен открывать новое, а уже
+    // пройденное идёт добором, если новинок не хватает до выбранной длины.
+    const fresh = unseen.slice().sort(() => Math.random() - 0.5);
+    const rest = withTr.filter(m => seen.has(String(m.code))).sort(() => Math.random() - 0.5);
+    const pool = fresh.concat(rest).slice(0, Math.min(marRndSize, trCount));
+    haptic('ok');
+    openMarathon(pool, 'Случайный набор');
+  });
+}
+
+function shareMarathon() {
+  if (!_mar.list.length) return;
+  const base = location.origin + location.pathname;
+  const url = base + '#marathon=' + _mar.list.map(m => m.code).join(',');
+  const label = _mar.label ? ' «' + _mar.label + '»' : '';
+  const text = '🎬 Кино-марафон' + label + ' — ' + _mar.list.length +
+    ' трейлеров подряд! Открой и смотри ▶️';
+  haptic('light');
+  try {
+    tg.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text));
+  } catch (e) {
+    try { navigator.clipboard.writeText(url); tg.showPopup({ type: 'ok', message: 'Ссылка скопирована 📋' }); }
+    catch (e2) { /* пусто */ }
+  }
+}
+
+// v96: подтверждение подписки от бота — бот после успешной проверки открывает
+// апп с хэшем #access=1, это единственный способ пройти гейт (обход убран).
+function parseAccessHash() {
+  if (!/(^|[#&])access=1/.test(location.hash || '')) return false;
+  try { localStorage.setItem(ACCESS_KEY, '1'); } catch (e) {}
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; }
+  return true;
+}
+
+function parseMarathonHash() {
+  const m = (location.hash || '').match(/#marathon=([A-Za-z0-9,_-]+)/);
+  if (!m) return;
+  const codes = m[1].split(',').map(s => s.trim()).filter(Boolean);
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; }
+  const apply = () => {
+    const list = codes.map(c => ALL.find(x => String(x.code) === String(c))).filter(Boolean)
+      .filter(x => x.trailer_yt || x.trailer_file_id);
+    if (list.length >= 2) openMarathon(list, 'Марафон друга 🎁');
+  };
+  // данных может ещё не быть на момент загрузки — ждём коротким опросом
+  let tries = 0;
+  const t = setInterval(() => {
+    if (ALL.length || ++tries > 50) { clearInterval(t); apply(); }
+  }, 300);
+}
+
+// Кнопка «🎬 Марафон» в шапке каждой живой полки на главной (тренд/сегодня/недавно/рекомендации).
+// Добавляем только если в полке ≥2 фильмов с трейлерами.
+function addMarathonButtons() {
+  document.querySelectorAll('#view-catalog .hero-shelf').forEach(shelf => {
+    if (!['hero-shelf', 'recent', 'reco', 'today'].some(k => shelf.id.includes(k))) return;
+    if (shelf.querySelector('.marathon-sm')) return;
+    const row = shelf.querySelector('.hero-row');
+    if (!row) return;
+    const codes = Array.from(row.querySelectorAll('.hero-card')).map(el => el.dataset.code).filter(Boolean);
+    const withTr = codes.filter(c => {
+      const m = ALL.find(x => String(x.code) === String(c));
+      return m && (m.trailer_yt || m.trailer_file_id);
+    });
+    if (withTr.length < 2) return;
+    const title = shelf.querySelector('.shelf-title');
+    if (!title) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'shelf-title-row';
+    title.parentElement.insertBefore(wrap, title);
+    wrap.appendChild(title);
+    const bt = document.createElement('button');
+    bt.className = 'marathon-sm';
+    bt.textContent = '🎬 ▶️ Марафон';
+    bt.addEventListener('click', () => {
+      haptic('light');
+      const items = withTr.map(c => ALL.find(x => String(x.code) === String(c))).filter(Boolean);
+      openMarathon(items, title.textContent);
+    });
+    wrap.appendChild(bt);
+  });
+}
+
+// ---------- обработчики модалки марафона ----------
+(function initMarathonModal() {
+  const bg = document.getElementById('marathon-modal');
+  if (!bg) return;
+  bg.addEventListener('click', (e) => { if (e.target === bg) closeMarathon(false); });
+  const close = document.getElementById('btn-marathon-close');
+  if (close) close.addEventListener('click', () => closeMarathon(false));
+  const next = document.getElementById('btn-marathon-next');
+  if (next) next.addEventListener('click', () => { haptic('light'); _marathonNext(); });
+  const prev = document.getElementById('btn-marathon-prev');
+  if (prev) prev.addEventListener('click', () => { haptic('light'); _marathonPrev(); });
+  const pause = document.getElementById('btn-marathon-pause');
+  if (pause) pause.addEventListener('click', _marathonTogglePause);
+  const share = document.getElementById('btn-marathon-share');
+  if (share) share.addEventListener('click', shareMarathon);
+})();
+
+// ---------- 🗂 Коллекции по жанрам (визуальный трекер «собрано/всего») ----------
+// v128: кураторские подборки (COLLS) показывают прогресс, но нет ОБЗОРА по
+// жанрам — «сколько драм/триллеров всего и сколько я собрал». Этот блок даёт
+// цель «собери жанр»: тап по жанру открывает афишу, отфильтрованную им.
+// Живёт внутри view 'cols' (НЕ новый view — буквы статистики a-o исчерпаны,
+// 'p' зарезервирован под overflow; см. VIEW_STAT_CODES в section_01).
+const _GENRE_EMOJI = {
+  'драма': '🎭', 'комедия': '😂', 'боевик': '💥', 'триллер': '😱', 'ужасы': '👻',
+  'фантастика': '🚀', 'фэнтези': '🧙', 'детектив': '🔍', 'мелодрама': '💕',
+  'приключения': '🗺️', 'мультфильм': '🎨', 'аниме': '🌸', 'криминал': '🕵️',
+  'биография': '📜', 'военный': '🎖️', 'история': '🏛️', 'документальный': '📽️',
+  'семейный': '👨‍👩‍👧', 'спорт': '🏅', 'музыка': '🎵', 'вестерн': '🤠',
+};
+function _genreEmoji(g) { return _GENRE_EMOJI[(g || '').toLowerCase()] || '🎬'; }
+
+function genreShelvesHTML() {
+  const counts = {};
+  ALL.forEach(m => (m.genres || []).forEach(g => { counts[g] = (counts[g] || 0) + 1; }));
+  const unlocked = getUnlocked();
+  const rows = Object.entries(counts)
+    .filter(([, n]) => n >= 3)   // жанры-однодневки не показываем
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ru'))
+    .slice(0, 12);
+  if (!rows.length) return '';
+  const cards = rows.map(([g, total]) => {
+    const owned = ALL.filter(m => (m.genres || []).includes(g) && unlocked.includes(String(m.code))).length;
+    const pct = total ? Math.round(100 * owned / total) : 0;
+    const left = total - owned;
+    const label = left > 0 ? `🔓 ${owned}/${total} · осталось ${left}` : `🔓 ${owned}/${total} — собрано! 🏆`;
+    return `
+    <div class="col-card genre-shelf" data-g="${esc(g)}">
+      <span class="col-emoji">${_genreEmoji(g)}</span>
+      <div class="col-body">
+        <h3>${esc(g)}</h3>
+        <p>${plFilms(total)}</p>
+        <div class="col-progress"><i style="width:${pct}%"></i></div>
+        <p class="col-progress-label">${label}</p>
+      </div>
+    </div>`;
+  }).join('');
+  return `
   <div class="shelves-block">
     <h2 class="shelves-title">🗂 Коллекции по жанрам</h2>
     <p class="shelves-hint">Собирай жанры целиком — тапни, чтобы открыть афишу по жанру</p>
-    <div class="cols-list">${n.map(([i,o])=>{const r=ALL.filter(b=>(b.genres||[]).includes(i)&&e.includes(String(b.code))).length,c=o?Math.round(100*r/o):0,a=o-r,m=a>0?`🔓 ${r}/${o} · осталось ${a}`:`🔓 ${r}/${o} — собрано! 🏆`;return`
-    <div class="col-card genre-shelf" data-g="${esc(i)}">
-      <span class="col-emoji">${_genreEmoji(i)}</span>
+    <div class="cols-list">${cards}</div>
+  </div>`;
+}
+
+// ---------- подборки ----------
+function renderCols() {
+  const c = document.getElementById('cols-container');
+  if (!COLLS.length) {
+    c.innerHTML = `<p class="error">Подборки появятся скоро 📚</p>`;
+    return;
+  }
+  c.innerHTML = genreShelvesHTML() + COLLS.map(col => {
+    const posters = col.codes
+      .map(cd => ALL.find(m => m.code === cd))
+      .filter(m => m && m.poster)
+      .slice(0, 3);
+    const fan = posters.length
+      ? `<div class="col-fan">${posters.map((p, i) =>
+          `<img src="${esc(p.poster)}" alt="" style="z-index:${3 - i};transform:rotate(${(i - 1) * 6}deg) translateX(${(i - 1) * 8}px)" loading="lazy"/>`
+        ).join('')}</div>`
+      : `<span class="col-emoji">${esc(col.emoji || '📚')}</span>`;
+    // v116: прогресс сбора подборки — разгаданные коды + «Моё»
+    const codesStr = col.codes.map(String);
+    const owned = codesStr.filter(cd => getUnlocked().includes(cd) || getFavs().includes(cd)).length;
+    const pct = codesStr.length ? Math.round(100 * owned / codesStr.length) : 0;
+    return `
+    <div class="col-card" data-col="${esc(col.code)}">
+      ${fan}
       <div class="col-body">
-        <h3>${esc(i)}</h3>
-        <p>${plFilms(o)}</p>
-        <div class="col-progress"><i style="width:${c}%"></i></div>
-        <p class="col-progress-label">${m}</p>
+        <h3>${esc(col.emoji || '📚')} ${esc(col.title)}</h3>
+        <p>${plFilms(col.codes.length)}</p>
+        <div class="col-progress"><i style="width:${pct}%"></i></div>
+        <p class="col-progress-label">🔓 ${owned}/${col.codes.length} в коллекции</p>
       </div>
-    </div>`}).join("")}</div>
-  </div>`:""}function renderCols(){const t=document.getElementById("cols-container");if(!COLLS.length){t.innerHTML='<p class="error">Подборки появятся скоро 📚</p>';return}t.innerHTML=genreShelvesHTML()+COLLS.map(e=>{const n=e.codes.map(c=>ALL.find(a=>a.code===c)).filter(c=>c&&c.poster).slice(0,3),s=n.length?`<div class="col-fan">${n.map((c,a)=>`<img src="${esc(c.poster)}" alt="" style="z-index:${3-a};transform:rotate(${(a-1)*6}deg) translateX(${(a-1)*8}px)" loading="lazy"/>`).join("")}</div>`:`<span class="col-emoji">${esc(e.emoji||"📚")}</span>`,i=e.codes.map(String),o=i.filter(c=>getUnlocked().includes(c)||getFavs().includes(c)).length,r=i.length?Math.round(100*o/i.length):0;return`
-    <div class="col-card" data-col="${esc(e.code)}">
-      ${s}
-      <div class="col-body">
-        <h3>${esc(e.emoji||"📚")} ${esc(e.title)}</h3>
-        <p>${plFilms(e.codes.length)}</p>
-        <div class="col-progress"><i style="width:${r}%"></i></div>
-        <p class="col-progress-label">🔓 ${o}/${e.codes.length} в коллекции</p>
-      </div>
-      <button class="btn-share-sm" data-share="${esc(e.code)}" title="Поделиться">📤</button>
-    </div>`}).join(""),t.querySelectorAll(".col-card").forEach(e=>e.addEventListener("click",n=>{if(n.target.closest(".btn-share-sm"))return;const s=COLLS.find(c=>c.code===e.dataset.col);if(!s)return;view="cols-detail",showView("cols");const i=ALL.filter(c=>s.codes.includes(c.code)),o=i.filter(c=>c.trailer_yt||c.trailer_file_id);t.innerHTML=`
+      <button class="btn-share-sm" data-share="${esc(col.code)}" title="Поделиться">📤</button>
+    </div>`;
+  }).join('');
+  c.querySelectorAll('.col-card').forEach(el =>
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-share-sm')) return;
+      const col = COLLS.find(x => x.code === el.dataset.col);
+      if (!col) return;
+      view = 'cols-detail';
+      showView('cols');
+      const list = ALL.filter(m => col.codes.includes(m.code));
+      const trList = list.filter(m => m.trailer_yt || m.trailer_file_id);
+      c.innerHTML = `
         <button class="btn-back" id="btn-cols-back">◀️ Все подборки</button>
-        ${o.length>=2?`<button class="btn-primary" id="btn-cols-marathon" style="margin-top:8px">🎬 ▶️ Марафон трейлеров (${o.length})</button>`:""}
-        <div class="movies-grid">${i.map(c=>`
-          <div class="movie-card" data-code="${esc(c.code)}">
-            ${posterHtml(c)}
+        ${trList.length >= 2
+          ? `<button class="btn-primary" id="btn-cols-marathon" style="margin-top:8px">🎬 ▶️ Марафон трейлеров (${trList.length})</button>`
+          : ''}
+        <div class="movies-grid">${list.map(m => `
+          <div class="movie-card" data-code="${esc(m.code)}">
+            ${posterHtml(m)}
             <div class="movie-info">
-              <h3>${esc(c.title)}</h3>
-              <span class="rating">${ratingBadge(c)}</span>
+              <h3>${esc(m.title)}</h3>
+              <span class="rating">${ratingBadge(m)}</span>
             </div>
-          </div>`).join("")}
-        </div>`,document.getElementById("btn-cols-back").onclick=()=>{view="cols",renderCols()};const r=document.getElementById("btn-cols-marathon");r&&(r.onclick=()=>openMarathon(o,s.title)),t.querySelectorAll(".movie-card").forEach(c=>c.addEventListener("click",()=>openDetail(c.dataset.code)))})),t.querySelectorAll(".genre-shelf").forEach(e=>e.addEventListener("click",()=>{haptic("light"),activeGenre=e.dataset.g||"",view="grid",showView("catalog"),renderGenreChips(),renderGrid(),window.scrollTo({top:0,behavior:"smooth"})})),t.querySelectorAll(".btn-share-sm").forEach(e=>e.addEventListener("click",()=>{const n=COLLS.find(i=>i.code===e.dataset.share);if(!n)return;const s=`У меня в «Киноафише» подборка ${n.emoji||"📚"} «${n.title}» — ${n.codes.length} фильмов! Угадай их по кодам в боте «Капитан Кино» 🎬`;tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent("https://t.me/kapitan_kino_bot")}&text=${encodeURIComponent(s)}`)}))}let _curMyCol=null;function renderMyCols(){const t=document.getElementById("mycols-container");if(!t)return;const e=getMyCols(),n='<div class="mycols-head"><h2>🗂 Мои подборки</h2></div>';if(!e.length){t.innerHTML=n+`
+          </div>`).join('')}
+        </div>`;
+      document.getElementById('btn-cols-back').onclick = () => { view = 'cols'; renderCols(); };
+      const mar = document.getElementById('btn-cols-marathon');
+      if (mar) mar.onclick = () => openMarathon(trList, col.title);
+      c.querySelectorAll('.movie-card').forEach(elc =>
+        elc.addEventListener('click', () => openDetail(elc.dataset.code)));
+    }));
+  // Тап по жанровой полке → афиша, отфильтрованная этим жанром (как чип жанра)
+  c.querySelectorAll('.genre-shelf').forEach(el =>
+    el.addEventListener('click', () => {
+      haptic('light');
+      activeGenre = el.dataset.g || '';
+      view = 'grid';
+      showView('catalog');
+      renderGenreChips();
+      renderGrid();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }));
+  c.querySelectorAll('.btn-share-sm').forEach(b =>
+    b.addEventListener('click', () => {
+      const col = COLLS.find(x => x.code === b.dataset.share);
+      if (!col) return;
+      const text = `У меня в «Киноафише» подборка ${col.emoji || '📚'} «${col.title}» — ${col.codes.length} фильмов! Угадай их по кодам в боте «Капитан Кино» 🎬`;
+      tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent('https://t.me/kapitan_kino_bot')}&text=${encodeURIComponent(text)}`);
+    }));
+}
+
+// ---------- v106: свои подборки ----------
+let _curMyCol = null;  // id открытой подборки (для детального вида)
+function renderMyCols() {
+  const c = document.getElementById('mycols-container');
+  if (!c) return;
+  const cols = getMyCols();
+  const head = `<div class="mycols-head"><h2>🗂 Мои подборки</h2></div>`;
+  if (!cols.length) {
+    c.innerHTML = head + `
       <div class="mycols-empty">
         <p>Собери свою коллекцию: выбери название, добавь фильмы — и подборка всегда под рукой.</p>
         <button class="btn-primary" id="btn-mc-create">➕ Создать подборку</button>
-      </div>`,document.getElementById("btn-mc-create").onclick=promptNewMyCol;return}t.innerHTML=n+e.map(s=>{const i=s.codes.map(r=>ALL.find(c=>c.code===r)).filter(r=>r&&r.poster).slice(0,3),o=i.length?`<div class="col-fan">${i.map((r,c)=>`<img src="${esc(r.poster)}" alt="" style="z-index:${3-c};transform:rotate(${(c-1)*6}deg) translateX(${(c-1)*8}px)" loading="lazy"/>`).join("")}</div>`:'<span class="col-emoji">🗂</span>';return`
-    <div class="col-card" data-mc="${esc(s.id)}">
-      ${o}
+      </div>`;
+    document.getElementById('btn-mc-create').onclick = promptNewMyCol;
+    return;
+  }
+  c.innerHTML = head + cols.map(col => {
+    const posters = col.codes
+      .map(cd => ALL.find(m => m.code === cd))
+      .filter(m => m && m.poster)
+      .slice(0, 3);
+    const fan = posters.length
+      ? `<div class="col-fan">${posters.map((p, i) =>
+          `<img src="${esc(p.poster)}" alt="" style="z-index:${3 - i};transform:rotate(${(i - 1) * 6}deg) translateX(${(i - 1) * 8}px)" loading="lazy"/>`
+        ).join('')}</div>`
+      : `<span class="col-emoji">🗂</span>`;
+    return `
+    <div class="col-card" data-mc="${esc(col.id)}">
+      ${fan}
       <div class="col-body">
-        <h3>🗂 ${esc(s.title)}</h3>
-        <p>${plFilms(s.codes.length)} · моя</p>
+        <h3>🗂 ${esc(col.title)}</h3>
+        <p>${plFilms(col.codes.length)} · моя</p>
       </div>
-      <button class="btn-share-sm" data-mcshare="${esc(s.id)}" title="Поделиться">📤</button>
-    </div>`}).join("")+`
-    <button class="btn-secondary" id="btn-mc-create" style="width:100%;margin-top:10px">➕ Создать подборку</button>`,document.getElementById("btn-mc-create").onclick=promptNewMyCol,t.querySelectorAll(".col-card").forEach(s=>s.addEventListener("click",i=>{i.target.closest(".btn-share-sm")||(_curMyCol=s.dataset.mc,view="mycol-detail",showView("mycol-detail"),renderMyColDetail())})),t.querySelectorAll(".btn-share-sm").forEach(s=>s.addEventListener("click",()=>{const i=myColById(s.dataset.mcshare);if(!i)return;const o=i.codes.map(a=>ALL.find(m=>m.code===a)).filter(Boolean),r=o.slice(0,3).map(a=>`🎬 «${a.title}»`).join(", "),c=`🗂 Моя подборка «${i.title}» — ${o.length} фильмов: ${r}… Собери свою в «Киноафише» Капитана Кино!`;tg.openTelegramLink("https://t.me/share/url?url="+encodeURIComponent("https://t.me/kapitan_kino_bot")+"&text="+encodeURIComponent(c))}))}function promptNewMyCol(){try{tg.showPopup({type:"prompt",title:"➕ Новая подборка",message:"Придумай название своей коллекции.",placeholder:"Например: «Кино на вечер», «Ужасы 90-х»…",text:"",callback:(t,e)=>{t==="ok"&&e&&e.trim()&&(newMyCol(e.trim()),haptic("ok"),renderMyCols())}})}catch(t){const e=prompt("Название подборки:");e&&e.trim()&&(newMyCol(e.trim()),renderMyCols())}}function renderMyColDetail(){const t=document.getElementById("view-mycol-detail");if(!t)return;const e=myColById(_curMyCol);if(!e){view="mycols",showView("mycols"),renderMyCols();return}const n=ALL.filter(o=>e.codes.includes(o.code)||e.codes.includes(String(o.code))),s='<button class="btn-secondary" id="btn-mc-add" style="width:100%">➕ Добавить фильм</button>',i='<button class="btn-secondary danger" id="btn-mc-del">🗑 Удалить подборку</button>';t.innerHTML=`
+      <button class="btn-share-sm" data-mcshare="${esc(col.id)}" title="Поделиться">📤</button>
+    </div>`;
+  }).join('') + `
+    <button class="btn-secondary" id="btn-mc-create" style="width:100%;margin-top:10px">➕ Создать подборку</button>`;
+  document.getElementById('btn-mc-create').onclick = promptNewMyCol;
+  c.querySelectorAll('.col-card').forEach(el =>
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-share-sm')) return;
+      _curMyCol = el.dataset.mc;
+      view = 'mycol-detail';
+      showView('mycol-detail');
+      renderMyColDetail();
+    }));
+  c.querySelectorAll('.btn-share-sm').forEach(b =>
+    b.addEventListener('click', () => {
+      const col = myColById(b.dataset.mcshare);
+      if (!col) return;
+      const ms = col.codes.map(cd => ALL.find(m => m.code === cd)).filter(Boolean);
+      const top = ms.slice(0, 3).map(m => `🎬 «${m.title}»`).join(', ');
+      const text = `🗂 Моя подборка «${col.title}» — ${ms.length} фильмов: ${top}… Собери свою в «Киноафише» Капитана Кино!`;
+      tg.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') + '&text=' + encodeURIComponent(text));
+    }));
+}
+
+function promptNewMyCol() {
+  try {
+    tg.showPopup({
+      type: 'prompt',
+      title: '➕ Новая подборка',
+      message: 'Придумай название своей коллекции.',
+      placeholder: 'Например: «Кино на вечер», «Ужасы 90-х»…',
+      text: '',
+      callback: (btnId, value) => {
+        if (btnId === 'ok' && value && value.trim()) {
+          newMyCol(value.trim());
+          haptic('ok');
+          renderMyCols();
+        }
+      }
+    });
+  } catch (e) {
+    const name = prompt('Название подборки:');
+    if (name && name.trim()) { newMyCol(name.trim()); renderMyCols(); }
+  }
+}
+
+// Детальный вид своей подборки: список фильмов, добавление и удаление
+function renderMyColDetail() {
+  const box = document.getElementById('view-mycol-detail');
+  if (!box) return;
+  const col = myColById(_curMyCol);
+  if (!col) { view = 'mycols'; showView('mycols'); renderMyCols(); return; }
+  const list = ALL.filter(m => col.codes.includes(m.code) || col.codes.includes(String(m.code)));
+  const addBtn = `<button class="btn-secondary" id="btn-mc-add" style="width:100%">➕ Добавить фильм</button>`;
+  const delBtn = `<button class="btn-secondary danger" id="btn-mc-del">🗑 Удалить подборку</button>`;
+  box.innerHTML = `
     <div class="mycol-detail-head">
       <button class="btn-back" id="btn-mc-back">◀️ Все подборки</button>
-      <h2>🗂 ${esc(e.title)}</h2>
+      <h2>🗂 ${esc(col.title)}</h2>
     </div>
-    ${n.length?`<div class="movies-grid">${n.map(o=>`
-          <div class="movie-card" data-code="${esc(o.code)}">
-            ${posterHtml(o)}
+    ${list.length
+      ? `<div class="movies-grid">${list.map(m => `
+          <div class="movie-card" data-code="${esc(m.code)}">
+            ${posterHtml(m)}
             <div class="movie-info">
-              <h3>${esc(o.title)}</h3>
-              <span class="rating">${ratingBadge(o)}</span>
+              <h3>${esc(m.title)}</h3>
+              <span class="rating">${ratingBadge(m)}</span>
             </div>
-          </div>`).join("")}</div>`:'<div class="mycols-empty"><p>Подборка пока пустая. Добавь первый фильм — остальные подтянутся 🎞</p></div>'}
-    ${s}
-    ${i}`,document.getElementById("btn-mc-back").onclick=()=>{view="mycols",showView("mycols"),renderMyCols()},document.getElementById("btn-mc-add").onclick=()=>showMyColAddPanel(e),document.getElementById("btn-mc-del").onclick=()=>{try{(tg.showConfirm||tg.showPopup)(`Удалить подборку «${e.title}»?`,r=>{r&&(setMyCols(getMyCols().filter(c=>c.id!==e.id)),haptic("ok"),view="mycols",showView("mycols"),renderMyCols())})}catch(o){setMyCols(getMyCols().filter(r=>r.id!==e.id)),view="mycols",showView("mycols"),renderMyCols()}},t.querySelectorAll(".movie-card").forEach(o=>o.addEventListener("click",()=>openDetail(o.dataset.code)))}function showMyColAddPanel(t){const e=document.getElementById("view-mycol-detail");if(!e)return;const n=document.createElement("div");n.className="mycol-add-panel",n.innerHTML=`
-    <div class="mycol-detail-head"><h2>➕ К «${esc(t.title)}»</h2></div>
+          </div>`).join('')}</div>`
+      : `<div class="mycols-empty"><p>Подборка пока пустая. Добавь первый фильм — остальные подтянутся 🎞</p></div>`}
+    ${addBtn}
+    ${delBtn}`;
+  document.getElementById('btn-mc-back').onclick = () => { view = 'mycols'; showView('mycols'); renderMyCols(); };
+  document.getElementById('btn-mc-add').onclick = () => showMyColAddPanel(col);
+  document.getElementById('btn-mc-del').onclick = () => {
+    try {
+      const confirm = tg.showConfirm || tg.showPopup;
+      confirm(`Удалить подборку «${col.title}»?`, (ok) => {
+        if (ok) {
+          setMyCols(getMyCols().filter(x => x.id !== col.id));
+          haptic('ok');
+          view = 'mycols'; showView('mycols'); renderMyCols();
+        }
+      });
+    } catch (e) {
+      setMyCols(getMyCols().filter(x => x.id !== col.id));
+      view = 'mycols'; showView('mycols'); renderMyCols();
+    }
+  };
+  box.querySelectorAll('.movie-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.code)));
+}
+
+// Панель выбора: поиск + список фильмов с галочкой «есть в подборке»
+function showMyColAddPanel(col) {
+  const box = document.getElementById('view-mycol-detail');
+  if (!box) return;
+  const panel = document.createElement('div');
+  panel.className = 'mycol-add-panel';
+  panel.innerHTML = `
+    <div class="mycol-detail-head"><h2>➕ К «${esc(col.title)}»</h2></div>
     <input class="mycol-add-input" id="mc-add-q" type="text" placeholder="🔍 Найти фильм…"/>
     <div class="mycol-add-list" id="mc-add-list"></div>
-    <button class="btn-primary" id="btn-mc-add-done">Готово</button>`,e.prepend(n);const s=document.getElementById("mc-add-list"),i=c=>t.codes.includes(c)||t.codes.includes(String(c)),o=()=>{const c=(document.getElementById("mc-add-q").value||"").toLowerCase().trim(),a=ALL.filter(m=>!c||String(m.title).toLowerCase().includes(c)||String(m.code)===c||String(m.code).includes(c));s.innerHTML=a.slice(0,60).map(m=>`
-      <button class="mycol-add-item ${i(m.code)?"in-col":""}" data-code="${esc(m.code)}">
-        ${m.poster?`<img src="${esc(m.poster)}" alt="" loading="lazy"/>`:"<span>🎬</span>"}
+    <button class="btn-primary" id="btn-mc-add-done">Готово</button>`;
+  box.prepend(panel);
+  const listEl = document.getElementById('mc-add-list');
+  const inCol = (code) => col.codes.includes(code) || col.codes.includes(String(code));
+  const draw = () => {
+    const q = (document.getElementById('mc-add-q').value || '').toLowerCase().trim();
+    const pool = ALL.filter(m => !q
+      || String(m.title).toLowerCase().includes(q)
+      || String(m.code) === q || String(m.code).includes(q));
+    listEl.innerHTML = (pool.slice(0, 60).map(m => `
+      <button class="mycol-add-item ${inCol(m.code) ? 'in-col' : ''}" data-code="${esc(m.code)}">
+        ${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy"/>` : '<span>🎬</span>'}
         <span>${esc(m.title)}</span>
-        <span class="add-plus">${i(m.code)?"✓":"+"}</span>
-      </button>`).join("")||'<p class="mycols-empty">Ничего не нашлось 🤷</p>',s.querySelectorAll(".mycol-add-item").forEach(m=>m.addEventListener("click",()=>{const b=m.dataset.code,w=!i(b);updateMyCol(t.id,$=>{const p=new Set($.codes);return w?p.add(b):p.delete(b),$.codes=[...p],$}),haptic(w?"ok":"light"),o()}))},r=document.getElementById("mc-add-q");r&&r.addEventListener("input",o),document.getElementById("btn-mc-add-done").onclick=()=>{view="mycol-detail",showView("mycol-detail"),renderMyColDetail()},o()}function renderNews(){const t=document.getElementById("news-container");if(!t)return;if(!NEWS.length){t.innerHTML='<p class="error">Пока нет новостей — загляните позже 📰</p>';return}let e=[...NEWS].reverse();e.some(s=>s.text)&&(e=e.filter(s=>s.text));const n=parseFloat(localStorage.getItem(NEWS_SEEN_KEY))||0;t.innerHTML='<div class="top-header"><h2>📰 Новости кино</h2><p class="top-subtitle">Свежее от Капитана Кино — кратко и по делу</p></div>'+e.map(s=>{const i=_newsWhen(s.ts),o=s.image?`<div class="np-img"><img src="${esc(s.image)}" alt="" loading="lazy" onerror="this.parentElement.remove()"/></div>`:"",r=String(s.text||"").split(/\n{2,}/).map(a=>a.trim()).filter(Boolean),c=r.map((a,m)=>{if(/^💡/.test(a)){const b=a.replace(/^💡\s*/,""),w=b.match(/^([^:]{3,40}:)\s*([\s\S]*)$/);return`<div class="np-take"><span class="np-take-ico">💡</span><div>${w?`<b>${esc(w[1])}</b> ${esc(w[2])}`:esc(b)}</div></div>`}return m===0&&r.length>1&&a.length<=140?`<p class="np-hook">${esc(a)}</p>`:`<p>${esc(a)}</p>`}).join("");return`
-      <article class="news-post">
-        ${o}
-        <div class="np-body">
-          <div class="np-meta"><span>📰 Капитан Кино${s.ts&&s.ts>n?' <b class="np-new">НОВОЕ</b>':""}</span><span>${esc(i)}</span></div>
-          <h3 class="np-title">${esc(s.title||"Новость")}</h3>
-          ${c}
-        </div>
-      </article>`}).join("");try{localStorage.setItem(NEWS_SEEN_KEY,String(newsMaxTs()))}catch(s){}updateMoreBadge()}function _newsWhen(t){if(!t)return"";const e=Date.now()-t*1e3,n=Math.floor(e/6e4);if(n<1)return"только что";if(n<60)return n+" мин назад";const s=Math.floor(n/60);if(s<24)return s+" ч назад";const i=Math.floor(s/24);return i<7?i+" дн назад":new Date(t*1e3).toLocaleDateString("ru-RU")}function renderLeaderboard(){const t=document.getElementById("top-container");if(!t)return;if(!ALL.length){t.innerHTML=`<div class="top-header"><h2>🏆 Топ игроков</h2></div>
-      <div class="top-list">${Array.from({length:6},()=>'<div class="skel top-line"></div>').join("")}</div>`;return}if(!LEADERBOARD.length){t.innerHTML='<p class="error">Пока нет данных — угадывай фильмы и поднимайся в рейтинге! 🏆</p>';return}const e=["🥇","🥈","🥉"],n=LEADERBOARD_KIND==="week",s=PROFILE&&parseInt(PROFILE.rank,10)||0,i=PROFILE&&parseInt(PROFILE.unl,10)||0,o=r=>n?`${r.unlocks} за 7 дней${r.total?` · всего ${r.total}`:""}`:`${r.unlocks} кодов`;t.innerHTML=`
-    <div class="top-header">
-      <h2>${n?"🏆 Топ недели":"🏆 Топ игроков"}</h2>
-      <p class="top-subtitle">${n?"Кто угадал больше всех за последние 7 дней":"Кто угадал больше всех — тот и лидер!"}</p>
-    </div>
-    ${s>0?`<div class="top-you">📍 Вы — №${s} в общем топе · разгадано ${i}</div>`:""}
-    <div class="top-list">
-      ${LEADERBOARD.map((r,c)=>`
-        <div class="top-row ${c<3?"top-row-gold":""}">
-          <div class="top-rank">${e[c]||c+1}</div>
-          <div class="top-player">
-            <span class="top-name">Игрок №${r.rank}</span>
-            <span class="top-count">${esc(o(r))}</span>
-          </div>
-          ${c===0?'<span class="top-crown">👑</span>':""}
-        </div>`).join("")}
-    </div>`}function _inviteFriend(){haptic("light");const e="https://t.me/kapitan_kino_bot"+(PROFILE&&PROFILE.uid?"?start=ref_"+PROFILE.uid:""),n="https://t.me/share/url?url="+encodeURIComponent(e)+"&text="+encodeURIComponent("🎬 Угадывай фильмы по кодам у «Капитана Кино» — афиша, тренажёр и достижения!");try{tg.openTelegramLink(n)}catch(s){}}function copyFavsList(){haptic("light");const t=(window._favTitlesCache||[]).map(s=>`🔑 ${s}`).join(`
-`),e=`🎬 Мои фильмы (${getFavs().length}):
-${t}
+        <span class="add-plus">${inCol(m.code) ? '✓' : '+'}</span>
+      </button>`).join('') || '<p class="mycols-empty">Ничего не нашлось 🤷</p>');
+    listEl.querySelectorAll('.mycol-add-item').forEach(b =>
+      b.addEventListener('click', () => {
+        const code = b.dataset.code;
+        const adding = !inCol(code);
+        updateMyCol(col.id, c => {
+          const s = new Set(c.codes);
+          adding ? s.add(code) : s.delete(code);
+          c.codes = [...s];
+          return c;
+        });
+        haptic(adding ? 'ok' : 'light');
+        draw();
+      }));
+  };
+  const qEl = document.getElementById('mc-add-q');
+  if (qEl) qEl.addEventListener('input', draw);
+  document.getElementById('btn-mc-add-done').onclick = () => {
+    view = 'mycol-detail';
+    showView('mycol-detail');
+    renderMyColDetail();
+  };
+  draw();
+}
 
-Угадывай фильмы по кодам у «Капитана Кино»!`,n=()=>{try{tg.HapticFeedback.impactOccurred("light")}catch(s){}tg.showPopup({type:"ok",title:"📋 Список скопирован",message:"Отправь его другу — пусть тоже угадывает фильмы!"})};navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(e).then(n).catch(n):n()}function favouriteGenre(){const t=getFavs(),e=new Map;ALL.forEach(o=>{[...t.includes(o.code)?[o.code]:[]].length&&(o.genres||[]).forEach(c=>e.set(c,(e.get(c)||0)+1))});const n=getUnlocked();ALL.forEach(o=>{n.includes(String(o.code))&&(o.genres||[]).forEach(r=>e.set(r,(e.get(r)||0)+1))});let s="",i=0;return e.forEach((o,r)=>{o>i&&(i=o,s=r)}),i>=2?s:""}function levelEmoji(t){const e=[...String(t||"")][0]||"🎬";return/\p{Extended_Pictographic}/u.test(e)?e:"🎬"}function fmtDuration(t){const e=parseInt(t,10);if(!e||e<1)return"";const n=Math.floor(e/60);return(n?n+" ч":"")+(e%60?(n?" ":"")+e%60+" мин":"")}function tasteLine(){const t=getRatings(),e=Object.values(t).map(Number).filter(r=>r>0);if(!e.length)return"";const n=(e.reduce((r,c)=>r+c,0)/e.length).toFixed(1),s=new Map;Object.entries(t).forEach(([r,c])=>{if(Number(c)<4)return;const a=ALL.find(m=>String(m.code)===String(r));(a&&a.actors||[]).forEach(m=>s.set(m,(s.get(m)||0)+1))});let i="",o=0;return s.forEach((r,c)=>{r>o&&(o=r,i=c)}),`<div class="pf-taste">⭐ Средняя оценка: <b>${n}</b> <span class="pf-taste-sub">(${e.length})</span>`+(i?` · 🌟 Любимый актёр: <b>${esc(i)}</b>`:"")+"</div>"}function renderProfile(){var j,J,A,F,z,x,V;const t=document.getElementById("profile-container");if(!t)return;const e=week7(),n=e.map(K=>(K.open||0)+(K.trailers||0)+(K.favs||0)+(K.rated||0)),s=Math.max(1,...n),i=e.reduce((K,X)=>K+X.open,0),o=e.reduce((K,X)=>K+X.trailers,0),r=e.reduce((K,X)=>K+X.favs,0),c=e.reduce((K,X)=>K+(X.rated||0),0),a=e.map((K,X)=>{const ct=Math.round(6+34*n[X]/s);return`<div class="wk-col" title="${K.date.getDate()}.${K.date.getMonth()+1}: ${n[X]} действий"><i style="height:${ct}px"></i><span>${K.date.getDate()}</span></div>`}).join(""),m=dailyState(),b=`
+// ---------- лента «📰 Новости кино» ----------
+function renderNews() {
+  const c = document.getElementById('news-container');
+  if (!c) return;
+  if (!NEWS.length) {
+    c.innerHTML = '<p class="error">Пока нет новостей — загляните позже 📰</p>';
+    return;
+  }
+  // v150: новости — как посты канала: картинка, заголовок, наш текст. Без ссылок
+  // на чужие сайты. У старых записей (без текста) показываем только заголовок.
+  let items = [...NEWS].reverse();
+  // старые записи без текста прячем, как только появились новые — с текстом
+  if (items.some(n => n.text)) items = items.filter(n => n.text);
+  const seenTs = parseFloat(localStorage.getItem(NEWS_SEEN_KEY)) || 0;   // v233: «новое» — то, чего ещё не видели
+  c.innerHTML = '<div class="top-header"><h2>📰 Новости кино</h2><p class="top-subtitle">Свежее от Капитана Кино — кратко и по делу</p></div>' + items.map(n => {
+    const when = _newsWhen(n.ts);
+    const img = n.image
+      ? `<div class="np-img"><img src="${esc(n.image)}" alt="" loading="lazy" onerror="this.parentElement.remove()"/></div>`
+      : '';
+    const paras = String(n.text || '').split(/\n{2,}/).map(x => x.trim()).filter(Boolean);
+    const body = paras.map((t, i) => {
+      if (/^💡/.test(t)) {
+        const rest = t.replace(/^💡\s*/, '');
+        const m = rest.match(/^([^:]{3,40}:)\s*([\s\S]*)$/);
+        return `<div class="np-take"><span class="np-take-ico">💡</span><div>${
+          m ? `<b>${esc(m[1])}</b> ${esc(m[2])}` : esc(rest)}</div></div>`;
+      }
+      if (i === 0 && paras.length > 1 && t.length <= 140) return `<p class="np-hook">${esc(t)}</p>`;
+      return `<p>${esc(t)}</p>`;
+    }).join('');
+    return `
+      <article class="news-post">
+        ${img}
+        <div class="np-body">
+          <div class="np-meta"><span>📰 Капитан Кино${n.ts && n.ts > seenTs ? ' <b class="np-new">НОВОЕ</b>' : ''}</span><span>${esc(when)}</span></div>
+          <h3 class="np-title">${esc(n.title || 'Новость')}</h3>
+          ${body}
+        </div>
+      </article>`;
+  }).join('');
+  // Пользователь видел новости — фиксируем и обновляем бейдж на «Ещё»
+  try { localStorage.setItem(NEWS_SEEN_KEY, String(newsMaxTs())); } catch (e) {}
+  updateMoreBadge();
+}
+
+function _newsWhen(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts * 1000;
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return 'только что';
+  if (min < 60) return min + ' мин назад';
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return hr + ' ч назад';
+  const d = Math.floor(hr / 24);
+  if (d < 7) return d + ' дн назад';
+  return new Date(ts * 1000).toLocaleDateString('ru-RU');
+}
+
+// ---------- лидерборд «🏆 Топ» ----------
+function renderLeaderboard() {
+  const c = document.getElementById('top-container');
+  if (!c) return;
+  if (!ALL.length) {
+    // v124: рейтинг приезжает вместе с базой. Пока грузится — скелетон:
+    // «Пока нет данных — угадывай фильмы» на старте было просто неправдой
+    c.innerHTML = `<div class="top-header"><h2>🏆 Топ игроков</h2></div>
+      <div class="top-list">${Array.from({ length: 6 }, () =>
+        '<div class="skel top-line"></div>').join('')}</div>`;
+    return;
+  }
+  if (!LEADERBOARD.length) {
+    c.innerHTML = '<p class="error">Пока нет данных — угадывай фильмы и поднимайся в рейтинге! 🏆</p>';
+    return;
+  }
+  const medals = ['🥇', '🥈', '🥉'];
+  const weekly = LEADERBOARD_KIND === 'week';
+  // Место пользователя в общем топе приезжает из профиля бота (PROFILE.rank)
+  const myRank = PROFILE ? (parseInt(PROFILE.rank, 10) || 0) : 0;
+  const myUnl = PROFILE ? (parseInt(PROFILE.unl, 10) || 0) : 0;
+  const countLabel = (p) => weekly
+    ? `${p.unlocks} за 7 дней${p.total ? ` · всего ${p.total}` : ''}`
+    : `${p.unlocks} кодов`;
+  c.innerHTML = `
+    <div class="top-header">
+      <h2>${weekly ? '🏆 Топ недели' : '🏆 Топ игроков'}</h2>
+      <p class="top-subtitle">${weekly
+        ? 'Кто угадал больше всех за последние 7 дней'
+        : 'Кто угадал больше всех — тот и лидер!'}</p>
+    </div>
+    ${myRank > 0 ? `<div class="top-you">📍 Вы — №${myRank} в общем топе · разгадано ${myUnl}</div>` : ''}
+    <div class="top-list">
+      ${LEADERBOARD.map((p, i) => `
+        <div class="top-row ${i < 3 ? 'top-row-gold' : ''}">
+          <div class="top-rank">${medals[i] || (i + 1)}</div>
+          <div class="top-player">
+            <span class="top-name">Игрок №${p.rank}</span>
+            <span class="top-count">${esc(countLabel(p))}</span>
+          </div>
+          ${i === 0 ? '<span class="top-crown">👑</span>' : ''}
+        </div>`).join('')}
+    </div>`;
+}
+
+// ---------- профиль «👤» (уровень/баллы/стрик) ----------
+// Данные приезжают от кнопки 🔁 (хэш &profile=…) — см. parseProfileHash().
+
+// 📣 Пригласить друга — шеринг персональной реф-ссылки на бота:
+// переход друга по ?start=ref_<id> засчитывается в реферальные достижения.
+function _inviteFriend() {
+  haptic('light');
+  const ref = (PROFILE && PROFILE.uid) ? ('?start=ref_' + PROFILE.uid) : '';
+  const botUrl = 'https://t.me/kapitan_kino_bot' + ref;
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(botUrl) +
+    '&text=' + encodeURIComponent('🎬 Угадывай фильмы по кодам у «Капитана Кино» — афиша, тренажёр и достижения!');
+  try { tg.openTelegramLink(url); } catch (e) {}
+}
+
+// 📋 «Скопировать список» из «Моё» — коды+названия в буфер обмена
+function copyFavsList() {
+  haptic('light');
+  const lines = (window._favTitlesCache || []).map(l => `🔑 ${l}`).join('\n');
+  const text = `🎬 Мои фильмы (${getFavs().length}):\n${lines}\n\nУгадывай фильмы по кодам у «Капитана Кино»!`;
+  const done = () => {
+    try { tg.HapticFeedback.impactOccurred('light'); } catch (e) {}
+    tg.showPopup({ type: 'ok', title: '📋 Список скопирован', message: 'Отправь его другу — пусть тоже угадывает фильмы!' });
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(done);
+  } else done();
+}
+
+function favouriteGenre() {
+  // Любимый жанр: берём из разгаданных кодов + избранного
+  const favs = getFavs();
+  const counter = new Map();
+  ALL.forEach(m => {
+    const codes = [...(favs.includes(m.code) ? [m.code] : [])];
+    if (codes.length) (m.genres || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1));
+  });
+  // Из профиля можем взять историю разгадок через unlocked
+  const unlocked = getUnlocked();
+  ALL.forEach(m => {
+    if (unlocked.includes(String(m.code))) {
+      (m.genres || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1));
+    }
+  });
+  let best = '', bestN = 0;
+  counter.forEach((n, g) => { if (n > bestN) { bestN = n; best = g; } });
+  return bestN >= 2 ? best : '';
+}
+function levelEmoji(lvl) {
+  const first = [...String(lvl || '')][0] || '🎬';
+  return /\p{Extended_Pictographic}/u.test(first) ? first : '🎬';
+}
+
+function fmtDuration(mins) {
+  const m = parseInt(mins, 10);
+  if (!m || m < 1) return '';
+  const h = Math.floor(m / 60);
+  return (h ? h + ' ч' : '') + (m % 60 ? (h ? ' ' : '') + (m % 60) + ' мин' : '');
+}
+
+// v90: вкусовая строка профиля — средняя оценка и любимый актёр (по локальным данным)
+function tasteLine() {
+  const ratings = getRatings();
+  const vals = Object.values(ratings).map(Number).filter(v => v > 0);
+  if (!vals.length) return '';
+  const avg = (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
+  const cnt = new Map();
+  Object.entries(ratings).forEach(([code, v]) => {
+    if (Number(v) < 4) return;
+    const m = ALL.find(x => String(x.code) === String(code));
+    ((m && m.actors) || []).forEach(a => cnt.set(a, (cnt.get(a) || 0) + 1));
+  });
+  let actor = '', best = 0;
+  cnt.forEach((n, a) => { if (n > best) { best = n; actor = a; } });
+  return `<div class="pf-taste">⭐ Средняя оценка: <b>${avg}</b> <span class="pf-taste-sub">(${vals.length})</span>`
+    + (actor ? ` · 🌟 Любимый актёр: <b>${esc(actor)}</b>` : '') + `</div>`;
+}
+
+// (функция сброса локальных данных удалена — по запросу пользователя)
+
+function renderProfile() {
+  const c = document.getElementById('profile-container');
+  if (!c) return;
+  // «📊 Моя неделя» — локальная активность за 7 дней (считается в самом аппе,
+  // работает и без синка с ботом)
+  const w7 = week7();
+  const wAct = w7.map(d => (d.open || 0) + (d.trailers || 0) + (d.favs || 0) + (d.rated || 0));
+  const maxAct = Math.max(1, ...wAct);
+  const sumOpen = w7.reduce((a, d) => a + d.open, 0);
+  const sumTr = w7.reduce((a, d) => a + d.trailers, 0);
+  const sumFv = w7.reduce((a, d) => a + d.favs, 0);
+  const sumRt = w7.reduce((a, d) => a + (d.rated || 0), 0);
+  const wkBars = w7.map((d, i) => {
+    const h = Math.round(6 + 34 * wAct[i] / maxAct);
+    return `<div class="wk-col" title="${d.date.getDate()}.${d.date.getMonth() + 1}: ${wAct[i]} действий"><i style="height:${h}px"></i><span>${d.date.getDate()}</span></div>`;
+  }).join('');
+  const dState = dailyState();
+  const weekBlock = `
     <div class="pf-week">
-      <div class="pf-ach-head"><span>📊 Моя неделя</span><b>${i+o+r+c} действий</b></div>
-      <div class="wk-chart">${a}</div>
-      <div class="wk-legend"><span>🔍 ${i}</span><span>▶️ ${o}</span><span>❤️ ${r}</span><span>⭐ ${c}</span></div>
-      <div class="wk-streak">🔥 Серия заходов: <b>${m.series}</b> ${_daysWord(m.series||1)} · рекорд <b>${Math.max(m.best,m.series)}</b></div>
-    </div>`;if(!PROFILE){t.innerHTML=`
+      <div class="pf-ach-head"><span>📊 Моя неделя</span><b>${sumOpen + sumTr + sumFv + sumRt} действий</b></div>
+      <div class="wk-chart">${wkBars}</div>
+      <div class="wk-legend"><span>🔍 ${sumOpen}</span><span>▶️ ${sumTr}</span><span>❤️ ${sumFv}</span><span>⭐ ${sumRt}</span></div>
+      <div class="wk-streak">🔥 Серия заходов: <b>${dState.series}</b> ${_daysWord(dState.series || 1)} · рекорд <b>${Math.max(dState.best, dState.series)}</b></div>
+    </div>`;
+  if (!PROFILE) {
+    c.innerHTML = `
       <div class="profile-card">
         <div class="pf-ava">👤</div>
         <h2>Мой профиль</h2>
         <p class="pf-hint">Уровень, кинобаллы и стрик хранятся в боте.<br/>
         Синхронизируй — и они появятся здесь.</p>
         ${tasteLine()}
-        ${rankCardHtml()}${b}
+        ${rankCardHtml()}${weekBlock}
         ${buildInsights()}
         <button class="btn-primary" id="pf-sync">🔁 Синхронизировать с ботом</button>
         <button class="btn-secondary pf-invite" id="pf-invite">📣 Пригласить друга</button>
-      </div>`,document.getElementById("pf-sync").onclick=()=>sendOrDeepLink({action:"sync_unlocked"});const K=document.getElementById("pf-invite");K&&(K.onclick=_inviteFriend);return}const w=PROFILE,$=parseInt(w.unl,10)||0,p=Math.max(0,Math.min(100,parseInt(w.pct,10)||0)),f=w.lvl_next==null?"👑 Максимальный уровень!":`Ещё ${w.lvl_next} код(ов) до следующего уровня`,v=parseInt(w.rank,10)||0,u=parseInt((j=w.refc)!=null?j:0,10)||0,S=w.vip?'<span class="pf-vip">⭐ VIP</span>':"",g=w.tit?`<div class="pf-title">🏷 ${esc(String(w.tit))}</div>`:"",L=parseInt(w.ach&&w.ach[0],10)||0,H=parseInt(w.ach&&w.ach[1],10)||0,M=H?Math.round(100*L/H):0,nt=`
+      </div>`;
+    document.getElementById('pf-sync').onclick = () => sendOrDeepLink({ action: 'sync_unlocked' });
+    const inv0 = document.getElementById('pf-invite');
+    if (inv0) inv0.onclick = _inviteFriend;
+    return;
+  }
+  const p = PROFILE;
+  const unl = parseInt(p.unl, 10) || 0;
+  const pct = Math.max(0, Math.min(100, parseInt(p.pct, 10) || 0));
+  const nextNote = (p.lvl_next == null)
+    ? '👑 Максимальный уровень!'
+    : `Ещё ${p.lvl_next} код(ов) до следующего уровня`;
+  const rank = parseInt(p.rank, 10) || 0;
+  const refc = parseInt(p.refc ?? 0, 10) || 0;   // D1/v126: приведено друзей
+
+  // VIP-бейдж
+  const vipBadge = p.vip
+    ? '<span class="pf-vip">⭐ VIP</span>' : '';
+
+  // Активный титул
+  const titleLine = p.tit
+    ? `<div class="pf-title">🏷 ${esc(String(p.tit))}</div>` : '';
+
+  // Достижения (ачивки)
+  const achDone = parseInt(p.ach && p.ach[0], 10) || 0;
+  const achTotal = parseInt(p.ach && p.ach[1], 10) || 0;
+  const achPct = achTotal ? Math.round(100 * achDone / achTotal) : 0;
+  const achBlock = `
     <div class="pf-ach">
       <div class="pf-ach-head">
         <span>🏆 Достижения</span>
-        <b>${L}/${H}</b>
+        <b>${achDone}/${achTotal}</b>
       </div>
-      <div class="pf-progress pf-progress-sm"><i style="width:${M}%"></i></div>
-      <p class="pf-ach-hint">${H-L>0?"Осталось "+(H-L)+" — угадывай фильмы, ставь оценки, приглашай друзей!":"Все достижения открыты! 🎉"}</p>
-    </div>`;let lt="";if(w.wg&&w.wg.target){const K=Math.min(parseInt(w.wg.done,10)||0,parseInt(w.wg.target,10)),X=parseInt(w.wg.target,10),ct=X?Math.round(100*K/X):0,St=w.wg.genre?` жанра «${esc(w.wg.genre)}»`:"";lt=`
+      <div class="pf-progress pf-progress-sm"><i style="width:${achPct}%"></i></div>
+      <p class="pf-ach-hint">${achTotal - achDone > 0 ? 'Осталось ' + (achTotal - achDone) + ' — угадывай фильмы, ставь оценки, приглашай друзей!' : 'Все достижения открыты! 🎉'}</p>
+    </div>`;
+
+  // Недельная цель
+  let wgBlock = '';
+  if (p.wg && p.wg.target) {
+    const wgDone = Math.min(parseInt(p.wg.done, 10) || 0, parseInt(p.wg.target, 10));
+    const wgTarget = parseInt(p.wg.target, 10);
+    const wgPct = wgTarget ? Math.round(100 * wgDone / wgTarget) : 0;
+    const wgGenre = p.wg.genre ? ` жанра «${esc(p.wg.genre)}»` : '';
+    wgBlock = `
       <div class="pf-wg">
         <div class="pf-wg-head">
           <span>🎯 Цель недели</span>
-          <b>${K}/${X}</b>
+          <b>${wgDone}/${wgTarget}</b>
         </div>
-        <div class="pf-progress pf-progress-sm"><i style="width:${ct}%"></i></div>
-        <p class="pf-wg-hint">Разгадай ${X} код(ов)${St} за неделю — получишь +15 💰</p>
-      </div>`}const it=`
+        <div class="pf-progress pf-progress-sm"><i style="width:${wgPct}%"></i></div>
+        <p class="pf-wg-hint">Разгадай ${wgTarget} код(ов)${wgGenre} за неделю — получишь +15 💰</p>
+      </div>`;
+  }
+
+  // Opt-in на публичный топ
+  const optChecked = p.opt ? 'checked' : '';
+  const optBlock = `
     <label class="pf-opt">
-      <input type="checkbox" id="pf-opt-in" ${w.opt?"checked":""}/>
+      <input type="checkbox" id="pf-opt-in" ${optChecked}/>
       <span class="pf-opt-pill">🏆 Показывать меня в общем топе</span>
-    </label>`,U=parseInt((J=w.refu)!=null?J:0,10)||0,Y=parseInt((A=w.refn)!=null?A:-1,10),W=w.refv,dt=K=>{const X=K%10,ct=K%100;return X===1&&ct!==11?"друга":(X>=2&&X<=4&&(ct<12||ct>14),"друзей")};let mt="";if(Y>=0||U>0||W){const K=Y>0?Math.round(100*Math.min(1,(3-Y)/3)):100;let X="";Y===0?X+=`<p class="pf-ref-hint">🎁 Следующее открытие уже можно получить — позови ещё ${dt(1)}!</p>`:Y>0&&(X+=`<p class="pf-ref-hint">🎁 Ещё ${Y} ${dt(Y)} — и получишь бесплатное открытие кода.</p>`),X+=U>0?`<p class="pf-ref-hint">🎟 Готовые открытия: <b>${U}</b> — они применятся сами при вводе следующего кода.</p>`:"",W&&(X+=W.left>0?`<p class="pf-ref-hint">👑 Ещё ${W.left} ${dt(W.left)} — и получишь VIP (${W.at}+ друзей) на 2-10 дней!</p>`:`<p class="pf-ref-hint">👑 Порог VIP (${W.at}+ друзей) достигнут — награда уже начислена ботом!</p>`),mt=`
+    </label>`;
+
+  // D2/v127: «Реферальные бонусы» — прогресс до следующего 🎁/👑 за друзей
+  const refuN = parseInt(p.refu ?? 0, 10) || 0;   // накоплено бесплатных открытий
+  const refnN = parseInt(p.refn ?? -1, 10);       // ещё N друзей до следующего 🎁
+  const refvN = p.refv;                           // {at, left} до VIP или null
+  const _fw = n => {
+    const m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return 'друга';
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return 'друзей';
+    return 'друзей';
+  };
+  let refBlock = '';
+  if (refnN >= 0 || refuN > 0 || refvN) {
+    const refBar = (refnN > 0) ? Math.round(100 * Math.min(1, (3 - refnN) / 3)) : 100;
+    let refBody = '';
+    if (refnN === 0) {
+      refBody += `<p class="pf-ref-hint">🎁 Следующее открытие уже можно получить — позови ещё ${_fw(1)}!</p>`;
+    } else if (refnN > 0) {
+      refBody += `<p class="pf-ref-hint">🎁 Ещё ${refnN} ${_fw(refnN)} — и получишь бесплатное открытие кода.</p>`;
+    }
+    refBody += refuN > 0
+      ? `<p class="pf-ref-hint">🎟 Готовые открытия: <b>${refuN}</b> — они применятся сами при вводе следующего кода.</p>`
+      : '';
+    if (refvN) {
+      refBody += refvN.left > 0
+        ? `<p class="pf-ref-hint">👑 Ещё ${refvN.left} ${_fw(refvN.left)} — и получишь VIP (${refvN.at}+ друзей) на 2-10 дней!</p>`
+        : `<p class="pf-ref-hint">👑 Порог VIP (${refvN.at}+ друзей) достигнут — награда уже начислена ботом!</p>`;
+    }
+    refBlock = `
     <div class="pf-ref">
       <div class="pf-ref-head">
         <span>🎁 Реферальные бонусы</span>
-        <b>${U>0?"+🎟"+U:Y>=0?Y+" до 🎁":""}</b>
+        <b>${refuN > 0 ? '+🎟' + refuN : (refnN >= 0 ? refnN + ' до 🎁' : '')}</b>
       </div>
-      <div class="pf-progress pf-progress-sm"><i style="width:${K}%"></i></div>
-      ${X}
-    </div>`}const rt=Array.isArray(w.fa)&&w.fa.length?w.fa:[],C=rt.length?`
+      <div class="pf-progress pf-progress-sm"><i style="width:${refBar}%"></i></div>
+      ${refBody}
+    </div>`;
+  }
+
+// D3/v128: лента «👥 Друзья угадали» — последние разгадки друзей
+  // (тех, кто пришёл по реферальной ссылке). Приезжает в p.fa из синхронизации.
+  const faN = (Array.isArray(p.fa) && p.fa.length) ? p.fa : [];
+  const friendsList = faN.length ? `
     <div class="pf-friends">
       <div class="pf-friends-head">
         <span>👥 Друзья угадали</span>
-        <b>${Math.min(5,rt.length)}</b>
+        <b>${Math.min(5, faN.length)}</b>
       </div>
       <div class="pf-friends-list">
-        ${rt.slice(0,5).map(K=>{const X=String(K.date||"").replace(/-/g,"."),ct=esc(String(K.title||"фильм"));return`<a class="pf-friend" data-code="${esc(String(K.code))}">📅 ${X} · ${ct}</a>`}).join("")}
+        ${faN.slice(0, 5).map(f => {
+          const d = String(f.date || '').replace(/-/g, '.');
+          const t = esc(String(f.title || 'фильм'));
+          return `<a class="pf-friend" data-code="${esc(String(f.code))}">📅 ${d} · ${t}</a>`;
+        }).join('')}
       </div>
       <p class="pf-friends-hint">Твои друзья уже разгадывают коды — открывай и ты!</p>
-    </div>`:"";t.innerHTML=`
+    </div>` : '';
+  c.innerHTML = `
     <div class="profile-card">
-      <div class="pf-ava">${esc(levelEmoji(w.lvl))}</div>
-      ${S}
-      <h2>${esc(String(w.lvl||"Игрок"))}</h2>
-      ${g}
-      <div class="pf-progress"><i style="width:${p}%"></i></div>
-      <p class="pf-note">${esc(f)}</p>
+      <div class="pf-ava">${esc(levelEmoji(p.lvl))}</div>
+      ${vipBadge}
+      <h2>${esc(String(p.lvl || 'Игрок'))}</h2>
+      ${titleLine}
+      <div class="pf-progress"><i style="width:${pct}%"></i></div>
+      <p class="pf-note">${esc(nextNote)}</p>
       <div class="pf-stats">
-        <div class="pf-stat"><b>💰 ${esc(String((F=w.pts)!=null?F:0))}</b><span>кинобаллов</span></div>
-        <div class="pf-stat"><b>🔥 ${esc(String((z=w.str)!=null?z:0))}</b><span>стрик · рекорд ${esc(String((x=w.bst)!=null?x:0))}</span></div>
-        <div class="pf-stat"><b>🔓 ${esc(String($))}</b><span>из ${esc(String((V=w.tot)!=null?V:ALL.length))} фильмов</span></div>
-        <div class="pf-stat"><b>🤝 ${esc(String(u))}</b><span>приглашено друзей</span></div>
+        <div class="pf-stat"><b>💰 ${esc(String(p.pts ?? 0))}</b><span>кинобаллов</span></div>
+        <div class="pf-stat"><b>🔥 ${esc(String(p.str ?? 0))}</b><span>стрик · рекорд ${esc(String(p.bst ?? 0))}</span></div>
+        <div class="pf-stat"><b>🔓 ${esc(String(unl))}</b><span>из ${esc(String(p.tot ?? ALL.length))} фильмов</span></div>
+        <div class="pf-stat"><b>🤝 ${esc(String(refc))}</b><span>приглашено друзей</span></div>
         <div class="pf-stat"><b>👁 ${esc(String(getWatched().length))}</b><span>просмотрено</span></div>
-        <div class="pf-stat"><b>${v?"🏆 №"+v:"🏆 —"}</b><span>${v?"в общем топе":"ещё не в топе"}</span></div>
+        <div class="pf-stat"><b>${rank ? '🏆 №' + rank : '🏆 —'}</b><span>${rank ? 'в общем топе' : 'ещё не в топе'}</span></div>
       </div>
-      ${nt}
-      ${rankCardHtml()}${b}
-      ${mt}
-      ${C}
+      ${achBlock}
+      ${rankCardHtml()}${weekBlock}
+      ${refBlock}
+      ${friendsList}
       ${buildInsights()}
-      ${favouriteGenre()?`<div class="pf-favgenre">🌟 Любимый жанр: <b>${esc(favouriteGenre())}</b></div>`:""}
+      ${favouriteGenre() ? `<div class="pf-favgenre">🌟 Любимый жанр: <b>${esc(favouriteGenre())}</b></div>` : ''}
       ${tasteLine()}
-      ${lt}
-      ${it}
+      ${wgBlock}
+      ${optBlock}
       <div class="pf-actions">
         <button class="btn-secondary" id="pf-sync2">🔁 Обновить</button>
         <button class="btn-secondary" id="pf-bot">🏅 Профиль в боте</button>
       </div>
       <button class="btn-secondary pf-invite" id="pf-invite">📣 Пригласить друга</button>
-    </div>`,document.getElementById("pf-sync2").onclick=()=>sendOrDeepLink({action:"sync_unlocked"});const tt=document.getElementById("pf-invite");tt&&(tt.onclick=_inviteFriend),document.querySelectorAll(".pf-friends-list .pf-friend").forEach(K=>{K.addEventListener("click",()=>{haptic("light"),openDetail(K.dataset.code),showView("detail")})}),document.getElementById("pf-bot").onclick=()=>{haptic("light");try{tg.openTelegramLink("https://t.me/kapitan_kino_bot")}catch(K){window.open("https://t.me/kapitan_kino_bot","_blank")}};const T=document.getElementById("pf-opt-in");T&&T.addEventListener("change",()=>{haptic("light"),sendOrDeepLink({action:"toggle_optin",on:T.checked})})}const MONTH_NAMES=["","янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];function renderYear(){const t=document.getElementById("year-container");if(!t)return;const e=new Date().getFullYear(),n=humanYearWord(e),s="kinoafisha_year_goal",i=()=>{try{return parseInt(localStorage.getItem(s)||"",10)||0}catch(A){return 0}},o=getYearStats(),r=A=>Object.values(o).reduce((F,z)=>F+(z&&z[A]||0),0),c=r("open"),a=r("trailers"),m=r("favs"),b=r("rated"),w=c+a+m+b,$=getRatings(),p=Object.keys($).length,f=getWatched().length,v=getFavs().length,u=getUnlocked().length,S=[12,24,36,50],g=i(),L=g?Math.min(100,Math.round(100*u/g)):0,H=g&&u>=g,M=`
-    <div class="yr-goal${H?" done":""}">
+    </div>`;
+  document.getElementById('pf-sync2').onclick = () => sendOrDeepLink({ action: 'sync_unlocked' });
+  const inv = document.getElementById('pf-invite');
+  if (inv) inv.onclick = _inviteFriend;
+  // D3/v128: тап по фильму в ленте друзей — открываем карточку фильма
+  document.querySelectorAll('.pf-friends-list .pf-friend').forEach(a => {
+    a.addEventListener('click', () => {
+      haptic('light');
+      openDetail(a.dataset.code);
+      showView('detail');
+    });
+  });
+  document.getElementById('pf-bot').onclick = () => {
+    haptic('light');
+    try { tg.openTelegramLink('https://t.me/kapitan_kino_bot'); }
+    catch (e) { window.open('https://t.me/kapitan_kino_bot', '_blank'); }
+  };
+  const optIn = document.getElementById('pf-opt-in');
+  if (optIn) {
+    optIn.addEventListener('change', () => {
+      haptic('light');
+      sendOrDeepLink({ action: 'toggle_optin', on: optIn.checked });
+    });
+  }
+}
+
+// ---------- v74: «Мой кино-год» — личный отчёт по активности ----------
+// Считаем по локальным данным: помесячный журнал (open/trailers/favs/rated)
+// + текущие списки (Моё, оценки, просмотренные, разгаданные).
+const MONTH_NAMES = ['', 'янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+function renderYear() {
+  const c = document.getElementById('year-container');
+  if (!c) return;
+  const year = new Date().getFullYear();
+  const fmtYear = humanYearWord(year);
+  // v99: «Цель года» — хранится локально (число кодов: 12/24/36/50)
+  const YEAR_GOAL_KEY = 'kinoafisha_year_goal';
+  const getYearGoal = () => { try { return parseInt(localStorage.getItem(YEAR_GOAL_KEY) || '', 10) || 0; } catch (e) { return 0; } };
+
+  const sm = getYearStats();
+  const sumOf = (f) => Object.values(sm).reduce((a, m) => a + ((m && m[f]) || 0), 0);
+  const totOpen = sumOf('open');
+  const totTr = sumOf('trailers');
+  const totFv = sumOf('favs');
+  const totRt = sumOf('rated');
+  const totAct = totOpen + totTr + totFv + totRt;
+
+  const ratings = getRatings();
+  const ratCount = Object.keys(ratings).length;
+  const watchedCnt = getWatched().length;
+  const favCnt = getFavs().length;
+  const unlCnt = getUnlocked().length;
+
+  // v99: «Цель года» — разгадай N кодов. Локально, прогресс по разгаданным.
+  const GOAL_CHOICES = [12, 24, 36, 50];
+  const goal = getYearGoal();
+  const goalPct = goal ? Math.min(100, Math.round(100 * unlCnt / goal)) : 0;
+  const goalDone = goal && unlCnt >= goal;
+  const goalBlock = `
+    <div class="yr-goal${goalDone ? ' done' : ''}">
       <h3>🎯 Цель года</h3>
-      ${g?H?`<p class="yr-goal-msg">🎉 Цель ${g} выполнена! Разгадано ${u}. Так держать — есть куда расти 😎</p>`:`<div class="yr-goal-bar"><i style="width:${L}%"></i></div>
-               <p class="yr-goal-msg">${u} из ${g} разгадано · осталось ${Math.max(0,g-u)}</p>`:`<p class="yr-goal-msg">Разгадаешь N кодов за ${e} год? Прогресс-бар будет виден здесь.</p>
+      ${goal
+        ? (goalDone
+            ? `<p class="yr-goal-msg">🎉 Цель ${goal} выполнена! Разгадано ${unlCnt}. Так держать — есть куда расти 😎</p>`
+            : `<div class="yr-goal-bar"><i style="width:${goalPct}%"></i></div>
+               <p class="yr-goal-msg">${unlCnt} из ${goal} разгадано · осталось ${Math.max(0, goal - unlCnt)}</p>`)
+        : `<p class="yr-goal-msg">Разгадаешь N кодов за ${year} год? Прогресс-бар будет виден здесь.</p>
            <div class="yr-goal-chips">
-             ${S.map(A=>`<button class="ls-btn" data-g="${A}">${A} кодов</button>`).join("")}
+             ${GOAL_CHOICES.map(n => `<button class="ls-btn" data-g="${n}">${n} кодов</button>`).join('')}
              <button class="ls-btn" data-g="0">Позже</button>
            </div>`}
-      ${g?'<button class="btn-secondary yr-goal-edit" id="yr-goal-edit">Изменить</button>':""}
-    </div>`,nt=()=>{t.querySelectorAll(".yr-goal-chips .ls-btn").forEach(F=>F.addEventListener("click",()=>{var z;try{localStorage.setItem(s,F.dataset.g)}catch(x){}if(haptic("light"),F.dataset.g==="0"){(z=t.querySelector(".yr-goal"))==null||z.remove();return}renderYear()}));const A=document.getElementById("yr-goal-edit");A&&(A.onclick=()=>{try{localStorage.removeItem(s)}catch(F){}renderYear()})},lt=new Map,Q=(A,F)=>{const z=ALL.find(x=>String(x.code)===String(A));z&&(z.genres||[]).forEach(x=>lt.set(x,(lt.get(x)||0)+F))};Object.keys($).forEach(A=>Q(A,2)),getFavs().forEach(A=>Q(A,1.5)),getWatched().forEach(A=>Q(A,1)),getUnlocked().forEach(A=>Q(A,1));const it=[...lt.entries()].sort((A,F)=>F[1]-A[1]).slice(0,6).map(([A])=>A);let U=null;Object.entries($).forEach(([A,F])=>{const z=ALL.find(x=>String(x.code)===String(A));z&&(!U||F>U.r||F===U.r&&(parseFloat(z.rating)||0)>(parseFloat(U.m.rating)||0))&&(U={m:z,r:F})});const Y=[],W=new Date;for(let A=11;A>=0;A--){const F=new Date(W.getFullYear(),W.getMonth()-A,1),z=F.getFullYear()+"-"+(F.getMonth()+1),x=o[z];Y.push({label:MONTH_NAMES[F.getMonth()+1]||"",year:F.getFullYear(),act:x?(x.open||0)+(x.trailers||0)+(x.favs||0)+(x.rated||0):0})}const dt=Math.max(1,...Y.map(A=>A.act)),rt=`
+      ${goal ? '<button class="btn-secondary yr-goal-edit" id="yr-goal-edit">Изменить</button>' : ''}
+    </div>`;
+  const wireYearGoal = () => {
+    c.querySelectorAll('.yr-goal-chips .ls-btn').forEach(b => b.addEventListener('click', () => {
+      try { localStorage.setItem(YEAR_GOAL_KEY, b.dataset.g); } catch (e) {}
+      haptic('light');
+      if (b.dataset.g === '0') { c.querySelector('.yr-goal')?.remove(); return; }
+      renderYear();
+    }));
+    const ed = document.getElementById('yr-goal-edit');
+    if (ed) ed.onclick = () => { try { localStorage.removeItem(YEAR_GOAL_KEY); } catch (e) {} renderYear(); };
+  };
+
+  // Любимые жанры: из оценок (вес 2) + «Моё» (вес 1.5) + просмотренных (вес 1) + разгаданных (1)
+  const gScore = new Map();
+  const feedG = (code, w) => {
+    const m = ALL.find(x => String(x.code) === String(code));
+    if (!m) return;
+    (m.genres || []).forEach(g => gScore.set(g, (gScore.get(g) || 0) + w));
+  };
+  Object.keys(ratings).forEach(code => feedG(code, 2));
+  getFavs().forEach(code => feedG(code, 1.5));
+  getWatched().forEach(code => feedG(code, 1));
+  getUnlocked().forEach(code => feedG(code, 1));
+  const topGenres = [...gScore.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([g]) => g);
+
+  // Лучший фильм по моей оценке (при равенстве — выше рейтинг КП)
+  let best = null;
+  Object.entries(ratings).forEach(([code, r]) => {
+    const m = ALL.find(x => String(x.code) === String(code));
+    if (!m) return;
+    if (!best || r > best.r || (r === best.r && (parseFloat(m.rating) || 0) > (parseFloat(best.m.rating) || 0))) {
+      best = { m, r };
+    }
+  });
+
+  // Гистограмма: последние 12 месяцев (включая текущий), считаем активность
+  const months = [];
+  const now = new Date();
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const k = d.getFullYear() + '-' + (d.getMonth() + 1);
+    const m = sm[k];
+    months.push({
+      label: MONTH_NAMES[d.getMonth() + 1] || '', year: d.getFullYear(),
+      act: m ? ((m.open || 0) + (m.trailers || 0) + (m.favs || 0) + (m.rated || 0)) : 0,
+    });
+  }
+  const maxAct = Math.max(1, ...months.map(x => x.act));
+  const chart = months.map(x => {
+    const h = Math.max(3, Math.round(44 * x.act / maxAct));
+    return `<span class="yr-col" title="${x.label} ${x.year}: ${x.act}">` +
+      `<i style="height:${h}px"></i><em>${x.label}</em></span>`;
+  }).join('');
+  const chartBlock = `
     <div class="yr-mnt">
       <h3>📅 Активность по месяцам</h3>
-      <div class="yr-chart">${Y.map(A=>{const F=Math.max(3,Math.round(44*A.act/dt));return`<span class="yr-col" title="${A.label} ${A.year}: ${A.act}"><i style="height:${F}px"></i><em>${A.label}</em></span>`}).join("")}</div>
-    </div>`,C=U?`<div class="yr-best">
+      <div class="yr-chart">${chart}</div>
+    </div>`;
+  const bestBlock = best
+    ? `<div class="yr-best">
         <h3>⭐ Лучший по твоей оценке</h3>
-        <div class="yr-best-card" data-code="${esc(U.m.code)}">
-          ${U.m.poster?`<img src="${esc(U.m.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none'"/>`:'<span style="font-size:26px">🎬</span>'}
+        <div class="yr-best-card" data-code="${esc(best.m.code)}">
+          ${best.m.poster
+            ? `<img src="${esc(best.m.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none'"/>`
+            : '<span style="font-size:26px">🎬</span>'}
           <div style="flex:1;min-width:0">
-            <b>${esc(U.m.title)}</b>
-            <span>${"★".repeat(U.r)} · ⭐ ${esc(String(U.m.rating||"—"))}</span>
+            <b>${esc(best.m.title)}</b>
+            <span>${'★'.repeat(best.r)} · ⭐ ${esc(String(best.m.rating || '—'))}</span>
           </div>
         </div>
-      </div>`:"",tt=w>=5?'<button class="btn-primary yr-share" id="yr-share">📤 Поделиться итогом года</button>':"";if(w===0&&p===0&&f===0){t.innerHTML=`
-      <div class="year-head"><h2>🏆 Мой кино-год — ${e}</h2></div>
+      </div>`
+    : '';
+
+  const shareBtn = totAct >= 5
+    ? `<button class="btn-primary yr-share" id="yr-share">📤 Поделиться итогом года</button>`
+    : '';
+
+  if (totAct === 0 && ratCount === 0 && watchedCnt === 0) {
+    c.innerHTML = `
+      <div class="year-head"><h2>🏆 Мой кино-год — ${year}</h2></div>
       <div class="yr-empty">Здесь будет личный отчёт: сколько фильмов открыл, трейлеров посмотрел, оценок поставил.<br/><br/>
       Статистика начнёт копиться сама — просто пользуйся приложением! 🎬</div>
-      ${M}
-      <button class="btn-primary" style="width:100%;margin-top:10px" id="yr-go">🎬 Перейти в афишу</button>`,document.getElementById("yr-go").onclick=()=>openView("grid"),nt();return}t.innerHTML=`
+      ${goalBlock}
+      <button class="btn-primary" style="width:100%;margin-top:10px" id="yr-go">🎬 Перейти в афишу</button>`;
+    document.getElementById('yr-go').onclick = () => openView('grid');
+    wireYearGoal();
+    return;
+  }
+
+  c.innerHTML = `
     <div class="year-head">
-      <h2>🏆 Мой кино-год — ${e}</h2>
-      <p class="year-sub">${n} · ${w} действий · статистика считается на этом устройстве</p>
+      <h2>🏆 Мой кино-год — ${year}</h2>
+      <p class="year-sub">${fmtYear} · ${totAct} действий · статистика считается на этом устройстве</p>
     </div>
-    ${M}
+    ${goalBlock}
     <div class="yr-stats">
-      <div class="yr-stat"><b>🔍 ${c}</b><span>карточек фильмов открыто</span></div>
-      <div class="yr-stat"><b>▶️ ${a}</b><span>трейлеров просмотрено</span></div>
-      <div class="yr-stat"><b>❤️ ${m}</b><span>раз добавлено в «Моё»</span></div>
-      <div class="yr-stat"><b>⭐ ${b}</b><span>оценок поставлено</span></div>
-      <div class="yr-stat"><b>⭐ ${p}</b><span>фильмов оценено</span></div>
-      <div class="yr-stat"><b>👁 ${f}</b><span>отмечено просмотренными</span></div>
-      <div class="yr-stat"><b>🔓 ${u}</b><span>кодов разгадано</span></div>
-      <div class="yr-stat"><b>🔑 ${v}</b><span>в «Хочу посмотреть»</span></div>
+      <div class="yr-stat"><b>🔍 ${totOpen}</b><span>карточек фильмов открыто</span></div>
+      <div class="yr-stat"><b>▶️ ${totTr}</b><span>трейлеров просмотрено</span></div>
+      <div class="yr-stat"><b>❤️ ${totFv}</b><span>раз добавлено в «Моё»</span></div>
+      <div class="yr-stat"><b>⭐ ${totRt}</b><span>оценок поставлено</span></div>
+      <div class="yr-stat"><b>⭐ ${ratCount}</b><span>фильмов оценено</span></div>
+      <div class="yr-stat"><b>👁 ${watchedCnt}</b><span>отмечено просмотренными</span></div>
+      <div class="yr-stat"><b>🔓 ${unlCnt}</b><span>кодов разгадано</span></div>
+      <div class="yr-stat"><b>🔑 ${favCnt}</b><span>в «Хочу посмотреть»</span></div>
     </div>
-    ${rt}
-    ${it.length?`<div class="yr-genres">
+    ${chartBlock}
+    ${topGenres.length ? `<div class="yr-genres">
         <h3>🎭 Твои жанры</h3>
-        <div class="yr-tags">${it.map(A=>`<span class="yr-tag">${esc(A)}</span>`).join("")}</div>
-      </div>`:""}
-    ${C}
-    ${tt}
-    ${w>=5?'<button class="btn-secondary yr-share" id="yr-card" style="width:100%;margin-top:8px">🖼 Скачать открытку года</button>':""}`;const T=document.querySelector(".yr-best-card");T&&T.addEventListener("click",()=>openDetail(T.dataset.code));const j=document.getElementById("yr-card");j&&(j.onclick=openYearCard),nt();const J=document.getElementById("yr-share");J&&(J.onclick=()=>{haptic("light");const A=`🎬 Мой кино-${e} в «Киноафише» Капитана Кино:
-🔍 ${c} открытий · ▶️ ${a} трейлеров · ⭐ ${b} оценок · ❤️ ${m} «Моё»
-Любимые жанры: ${it.slice(0,3).join(", ")||"—"}`,F="https://t.me/share/url?url="+encodeURIComponent("https://t.me/kapitan_kino_bot")+"&text="+encodeURIComponent(A);try{tg.openTelegramLink(F)}catch(z){window.open(F,"_blank")}})}function humanYearWord(t){const e=t%100;if(e>=11&&e<=14)return`За ${t} год`;const n=e%10;return n===1?`За ${t} год`:n>=2&&n<=4?`За ${t} года`:`За ${t} лет`}function drawYearCard(t){let s,i;try{s=document.createElement("canvas"),s.width=500,s.height=750,i=s.getContext("2d")}catch(b){t(null);return}i.fillStyle="#10131f",i.fillRect(0,0,500,750),i.strokeStyle="rgba(255,193,7,.6)",i.lineWidth=3,i.strokeRect(6,6,488,738),i.fillStyle="rgba(255,193,7,.95)",i.font="bold 26px Manrope, Arial",i.textAlign="center",i.fillText("МОЙ КИНО-ГОД",500/2,54);const o=getYearStats(),r=b=>Object.values(o).reduce((w,$)=>w+($&&$[b]||0),0),c={открытий:r("open"),трейлеров:r("trailers"),оценок:r("rated")};i.fillStyle="rgba(255,255,255,.85)",i.font="bold 16px Manrope, Arial";const a=Object.keys(c);let m=96;a.forEach(b=>{i.fillText(`🔹 ${b}: ${c[b]}`,500/2,m),m+=32}),i.fillStyle="rgba(255,255,255,.5)",i.font="bold 13px Manrope, Arial",i.fillText("🎬 КАПИТАН КИНО",500/2,736),t(s)}function openYearCard(){const t=document.getElementById("sharecard-modal");if(!t)return;t.classList.remove("hidden");const e=document.getElementById("sharecard-preview");e.innerHTML='<p class="modal-muted">🎨 Рисуем открытку…</p>',drawYearCard(n=>{if(!n){e.innerHTML='<p class="modal-muted">Открытку не удалось собрать</p>';return}try{const s=n.toDataURL?n.toDataURL("image/png"):"";if(!s){e.innerHTML='<p class="modal-muted">Открытку не удалось собрать</p>';return}e.innerHTML=`<img src="${s}" alt="Мой кино-год"/>`;const i=document.getElementById("btn-sharecard-download");i&&(i.onclick=()=>{try{const o=document.createElement("a");o.href=s,o.download="kinokod_year.png",o.click()}catch(o){window.open(s,"_blank")}})}catch(s){e.innerHTML='<p class="modal-muted">Открытку не удалось собрать</p>'}})}let _trailerSearchTimer=null,_trailerPage=1;const TRAILERS_PER_PAGE=20;let trailerQuick=new Set;function renderTrailerGenreChips(){const t=document.getElementById("trailer-genre-chips");if(!t)return;const e=ALL.filter(o=>o.trailer_yt||o.trailer_file_id),n=new Map;e.forEach(o=>(o.genres||[]).forEach(r=>n.set(r,(n.get(r)||0)+1)));const s=[...n.entries()].filter(([,o])=>o>=2).sort((o,r)=>r[1]-o[1]).slice(0,8),i=[["short","⏱ до 2 ч"],["new","🆕 за неделю"],["unseen","👀 не смотрел"]];t.innerHTML=i.map(([o,r])=>`<button class="chip chip-q${trailerQuick.has(o)?" active":""}" data-q="${o}">${r}</button>`).join("")+`<span class="chip-sep"></span><button class="chip${trailerGenre===""?" active":""}" data-g="">Все</button>`+s.map(([o,r])=>`<button class="chip${trailerGenre===o?" active":""}" data-g="${esc(o)}">${esc(o)} <em>${r}</em></button>`).join(""),t.classList.remove("hidden"),t.querySelectorAll(".chip-q").forEach(o=>o.addEventListener("click",()=>{haptic("light");const r=o.dataset.q;trailerQuick.has(r)?trailerQuick.delete(r):trailerQuick.add(r),_trailerPage=1,renderTrailerGenreChips(),renderTrailers()})),t.querySelectorAll(".chip:not(.chip-q)").forEach(o=>o.addEventListener("click",()=>{haptic("light"),trailerGenre=o.dataset.g||"",_trailerPage=1,renderTrailerGenreChips(),renderTrailers()}))}function renderTrailers(){const t=document.getElementById("trailers-container");if(!t)return;if(!ALL.length){t.innerHTML=`<div class="trailers-grid">${Array.from({length:6},()=>'<div class="trailer-card skeleton-card"><div class="skel poster"></div><div class="skel line"></div></div>').join("")}</div>`;return}const e=(document.getElementById("trailer-search").value||"").trim().toLowerCase(),n=document.getElementById("trailer-sort").value;let s=ALL.filter(p=>p.trailer_yt||p.trailer_file_id);if(trailerGenre&&(s=s.filter(p=>(p.genres||[]).includes(trailerGenre))),trailerQuick.has("short")&&(s=s.filter(p=>{const f=parseInt(p.duration,10)||0;return f>0&&f<=120})),trailerQuick.has("new")&&(s=s.filter(p=>p.added_at&&Date.now()-new Date(p.added_at).getTime()<7*864e5)),trailerQuick.has("unseen")){const p=getTrailerSeen();s=s.filter(f=>!p.has(String(f.code)))}if(e){const p=e.replace(/ё/g,"е"),f=/^\d+$/.test(p.replace(/\s+/g,"")),v=p.replace(/\D/g,""),u=g=>(g||"").toLowerCase().replace(/ё/g,"е"),S=p.split(/\s+/).filter(Boolean);s=s.filter(g=>{if(f&&v&&String(g.code||"").includes(v))return!0;const L=u(g._raw||g.title);if(S.every(M=>L.includes(M)))return!0;const H=[...g.actors||[],...g.director?[g.director]:[]].map(u).join(" ");return H&&S.every(M=>H.includes(M))?!0:(g.genres||[]).some(M=>u(M).includes(p))})}s.sort((p,f)=>{if(n==="rating")return(parseFloat(f.rating)||0)-(parseFloat(p.rating)||0);if(n==="new"){const v=new Date(p.added_at||0).getTime();return new Date(f.added_at||0).getTime()-v}return(p.title||"").localeCompare(f.title||"","ru")});const i=getTrailerPins();if(i.length&&s.sort((p,f)=>{const v=i.includes(String(p.code))?0:1,u=i.includes(String(f.code))?0:1;return v-u}),!s.length){t.innerHTML='<p class="error">Нет трейлеров по запросу 🎬<br><small>Сними один из быстрых фильтров.</small></p>';return}const o=Math.max(1,Math.ceil(s.length/TRAILERS_PER_PAGE));_trailerPage>o&&(_trailerPage=o),_trailerPage<1&&(_trailerPage=1);const r=s.slice((_trailerPage-1)*TRAILERS_PER_PAGE,_trailerPage*TRAILERS_PER_PAGE),c=o>1?`<div class="pager">
-      <button class="pg-btn" data-pg="prev" ${_trailerPage===1?"disabled":""} aria-label="Назад">◀</button>
-      ${Array.from({length:o},(p,f)=>`<button class="pg-btn${f+1===_trailerPage?" active":""}" data-pg="${f+1}">${f+1}</button>`).join("")}
-      <button class="pg-btn" data-pg="next" ${_trailerPage===o?"disabled":""} aria-label="Вперёд">▶</button>
-      <span class="pg-info">🎬 ${s.length}</span>
-    </div>`:"",a=p=>p.trailer_thumb||p.poster||(p.trailer_yt?`https://i.ytimg.com/vi/${encodeURIComponent(p.trailer_yt)}/0.jpg`:""),m=p=>p.poster||(p.trailer_yt?`https://i.ytimg.com/vi/${encodeURIComponent(p.trailer_yt)}/hqdefault.jpg`:""),b=getTrailerPins(),w=getTrailerSeen();let $="";if(!e&&!trailerGenre&&!trailerQuick.size&&_trailerPage===1&&s.length>=6){const p=new Date,f=p.getFullYear()*400+p.getMonth()*31+p.getDate(),v=s.filter(S=>(parseFloat(S.rating)||0)>=7&&a(S)),u=v.length?v[f%v.length]:null;if(u){const S=(u.genres||[]).slice(0,2).join(" · ");$=`<div class="tr-hero" data-code="${esc(u.code)}">
-        <div class="tr-hero-bg" style="background-image:url('${esc(a(u))}')"></div>
-        <img class="tr-hero-poster" src="${esc(a(u))}" alt="" onerror="this.style.display='none'"/>
+        <div class="yr-tags">${topGenres.map(g => `<span class="yr-tag">${esc(g)}</span>`).join('')}</div>
+      </div>` : ''}
+    ${bestBlock}
+    ${shareBtn}
+    ${totAct >= 5 ? '<button class="btn-secondary yr-share" id="yr-card" style="width:100%;margin-top:8px">🖼 Скачать открытку года</button>' : ''}`;
+
+  const bestCard = document.querySelector('.yr-best-card');
+  if (bestCard) bestCard.addEventListener('click', () => openDetail(bestCard.dataset.code));
+  const yrCardBtn = document.getElementById('yr-card');
+  if (yrCardBtn) yrCardBtn.onclick = openYearCard;
+  wireYearGoal();
+  const share = document.getElementById('yr-share');
+  if (share) {
+    share.onclick = () => {
+      haptic('light');
+      const text = `🎬 Мой кино-${year} в «Киноафише» Капитана Кино:\n` +
+        `🔍 ${totOpen} открытий · ▶️ ${totTr} трейлеров · ⭐ ${totRt} оценок · ❤️ ${totFv} «Моё»\n` +
+        `Любимые жанры: ${topGenres.slice(0, 3).join(', ') || '—'}`;
+      const url = 'https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') +
+        '&text=' + encodeURIComponent(text);
+      try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+    };
+  }
+}
+function humanYearWord(y) {
+  const r = y % 100;
+  if (r >= 11 && r <= 14) return `За ${y} год`;
+  const d = r % 10;
+  if (d === 1) return `За ${y} год`;
+  if (d >= 2 && d <= 4) return `За ${y} года`;
+  return `За ${y} лет`;
+}
+
+// ---------- v110: «Киногод картинкой» — canvas-открытка года ----------
+function drawYearCard(cb) {
+  const W = 500, H = 750;
+  let cv, ctx;
+  try {
+    cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    ctx = cv.getContext('2d');
+  } catch (e) { cb(null); return; }
+  ctx.fillStyle = '#10131f';
+  ctx.fillRect(0, 0, W, H);
+  // рамка
+  ctx.strokeStyle = 'rgba(255,193,7,.6)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(6, 6, W - 12, H - 12);
+  // заголовок
+  ctx.fillStyle = 'rgba(255,193,7,.95)';
+  ctx.font = 'bold 26px Manrope, Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('МОЙ КИНО-ГОД', W / 2, 54);
+  const _ys = getYearStats();
+  const _ysv = (f) => Object.values(_ys).reduce((a, m) => a + ((m && m[f]) || 0), 0);
+  const sums = {
+    открытий: _ysv('open'),
+    трейлеров: _ysv('trailers'),
+    оценок: _ysv('rated'),
+  };
+  ctx.fillStyle = 'rgba(255,255,255,.85)';
+  ctx.font = 'bold 16px Manrope, Arial';
+  const keys = Object.keys(sums);
+  let y = 96;
+  keys.forEach(k => { ctx.fillText(`🔹 ${k}: ${sums[k]}`, W / 2, y); y += 32; });
+  ctx.fillStyle = 'rgba(255,255,255,.5)';
+  ctx.font = 'bold 13px Manrope, Arial';
+  ctx.fillText('🎬 КАПИТАН КИНО', W / 2, H - 14);
+  cb(cv);
+}
+function openYearCard() {
+  const modal = document.getElementById('sharecard-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const prev = document.getElementById('sharecard-preview');
+  prev.innerHTML = '<p class="modal-muted">🎨 Рисуем открытку…</p>';
+  drawYearCard((cv) => {
+    if (!cv) { prev.innerHTML = '<p class="modal-muted">Открытку не удалось собрать</p>'; return; }
+    try {
+      const url = cv.toDataURL ? cv.toDataURL('image/png') : '';
+      if (!url) { prev.innerHTML = '<p class="modal-muted">Открытку не удалось собрать</p>'; return; }
+      prev.innerHTML = `<img src="${url}" alt="Мой кино-год"/>`;
+      const dl = document.getElementById('btn-sharecard-download');
+      if (dl) dl.onclick = () => {
+        try {
+          const a = document.createElement('a');
+          a.href = url; a.download = 'kinokod_year.png'; a.click();
+        } catch (e) { window.open(url, '_blank'); }
+      };
+    } catch (e) { prev.innerHTML = '<p class="modal-muted">Открытку не удалось собрать</p>'; }
+  });
+}
+// ---------- трейлеры «🎥» ----------
+// Все трейлеры в одном месте — с поиском, сортировкой и фильтром по жанру.
+let _trailerSearchTimer = null;
+let _trailerPage = 1;                 // текущая страница сетки трейлеров
+const TRAILERS_PER_PAGE = 20;         // фильмов на одной странице
+
+let trailerQuick = new Set();   // быстрые фильтры: short / new / unseen
+function renderTrailerGenreChips() {
+  const wrap = document.getElementById('trailer-genre-chips');
+  if (!wrap) return;
+  const withTrailers = ALL.filter(m => m.trailer_yt || m.trailer_file_id);
+  const counter = new Map();
+  withTrailers.forEach(m => (m.genres || []).forEach(g => counter.set(g, (counter.get(g) || 0) + 1)));
+  const top = [...counter.entries()].filter(([, n]) => n >= 2)
+    .sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const QUICK = [['short', '⏱ до 2 ч'], ['new', '🆕 за неделю'], ['unseen', '👀 не смотрел']];
+  wrap.innerHTML = QUICK.map(([k, t]) => `<button class="chip chip-q${trailerQuick.has(k) ? ' active' : ''}" data-q="${k}">${t}</button>`).join('') +
+    '<span class="chip-sep"></span>' +
+    `<button class="chip${trailerGenre === '' ? ' active' : ''}" data-g="">Все</button>` +
+    top.map(([g, n]) =>
+      `<button class="chip${trailerGenre === g ? ' active' : ''}" data-g="${esc(g)}">${esc(g)} <em>${n}</em></button>`
+    ).join('');
+  wrap.classList.remove('hidden');
+  wrap.querySelectorAll('.chip-q').forEach(ch => ch.addEventListener('click', () => {
+    haptic('light');
+    const k = ch.dataset.q;
+    if (trailerQuick.has(k)) trailerQuick.delete(k); else trailerQuick.add(k);
+    _trailerPage = 1;
+    renderTrailerGenreChips();
+    renderTrailers();
+  }));
+  wrap.querySelectorAll('.chip:not(.chip-q)').forEach(ch => ch.addEventListener('click', () => {
+    haptic('light');
+    trailerGenre = ch.dataset.g || '';
+    _trailerPage = 1;
+    renderTrailerGenreChips();
+    renderTrailers();
+  }));
+}
+
+function renderTrailers() {
+  const c = document.getElementById('trailers-container');
+  if (!c) return;
+  if (!ALL.length) {
+    // Первый визит, данные ещё грузятся — скелетоны вместо пустоты
+    c.innerHTML = `<div class="trailers-grid">${Array.from({ length: 6 }, () =>
+      '<div class="trailer-card skeleton-card"><div class="skel poster"></div><div class="skel line"></div></div>'
+    ).join('')}</div>`;
+    return;
+  }
+  const qRaw = (document.getElementById('trailer-search').value || '').trim().toLowerCase();
+  const sort = document.getElementById('trailer-sort').value;
+  let list = ALL.filter(m => m.trailer_yt || m.trailer_file_id);
+  if (trailerGenre) list = list.filter(m => (m.genres || []).includes(trailerGenre));
+  if (trailerQuick.has('short')) list = list.filter(m => { const d = parseInt(m.duration, 10) || 0; return d > 0 && d <= 120; });
+  if (trailerQuick.has('new')) list = list.filter(m => m.added_at && Date.now() - new Date(m.added_at).getTime() < 7 * 86400000);
+  if (trailerQuick.has('unseen')) { const seen = getTrailerSeen(); list = list.filter(m => !seen.has(String(m.code))); }
+  if (qRaw) {
+    // v64: ё-нормализация + все слова запроса + код (если запрос целиком число)
+    // v109: ищем и по актёрам/режиссёру — как в афише
+    const q = qRaw.replace(/ё/g, 'е');
+    const isCode = /^\d+$/.test(q.replace(/\s+/g, ''));
+    const digits = q.replace(/\D/g, '');
+    const norm = (t) => (t || '').toLowerCase().replace(/ё/g, 'е');
+    const tks = q.split(/\s+/).filter(Boolean);
+    list = list.filter(m => {
+      if (isCode && digits && String(m.code || '').includes(digits)) return true;
+      const t = norm(m._raw || m.title);
+      if (tks.every(w => t.includes(w))) return true;
+      const people = [...(m.actors || []), ...(m.director ? [m.director] : [])].map(norm).join(' ');
+      if (people && tks.every(w => people.includes(w))) return true;
+      return (m.genres || []).some(g => norm(g).includes(q));
+    });
+  }
+  list.sort((a, b) => {
+    if (sort === 'rating') return (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0);
+    if (sort === 'new') {
+      const da = new Date(a.added_at || 0).getTime();
+      const db = new Date(b.added_at || 0).getTime();
+      return db - da;
+    }
+    return (a.title || '').localeCompare(b.title || '', 'ru');
+  });
+  // v109: закреплённые (📌) трейлеры всегда первыми
+  const pins = getTrailerPins();
+  if (pins.length) {
+    list.sort((a, b) => {
+      const pa = pins.includes(String(a.code)) ? 0 : 1;
+      const pb = pins.includes(String(b.code)) ? 0 : 1;
+      return pa - pb;
+    });
+  }
+  if (!list.length) {
+    c.innerHTML = '<p class="error">Нет трейлеров по запросу 🎬<br><small>Сними один из быстрых фильтров.</small></p>';
+    return;
+  }
+  // v54: пагинация — по TRAILERS_PER_PAGE фильмов на страницу
+  const pages = Math.max(1, Math.ceil(list.length / TRAILERS_PER_PAGE));
+  if (_trailerPage > pages) _trailerPage = pages;
+  if (_trailerPage < 1) _trailerPage = 1;
+  const pageItems = list.slice((_trailerPage - 1) * TRAILERS_PER_PAGE, _trailerPage * TRAILERS_PER_PAGE);
+  const pager = pages > 1 ? `<div class="pager">
+      <button class="pg-btn" data-pg="prev" ${_trailerPage === 1 ? 'disabled' : ''} aria-label="Назад">◀</button>
+      ${Array.from({ length: pages }, (_, i) =>
+        `<button class="pg-btn${i + 1 === _trailerPage ? ' active' : ''}" data-pg="${i + 1}">${i + 1}</button>`).join('')}
+      <button class="pg-btn" data-pg="next" ${_trailerPage === pages ? 'disabled' : ''} aria-label="Вперёд">▶</button>
+      <span class="pg-info">🎬 ${list.length}</span>
+    </div>` : '';
+  const thumbSrc = (m) => m.trailer_thumb || m.poster || (m.trailer_yt ? `https://i.ytimg.com/vi/${encodeURIComponent(m.trailer_yt)}/0.jpg` : '');
+  const thumbFb = (m) => m.poster || (m.trailer_yt ? `https://i.ytimg.com/vi/${encodeURIComponent(m.trailer_yt)}/hqdefault.jpg` : '');
+  const pinSet = getTrailerPins();
+  const seenSet = getTrailerSeen();
+  // v164: «Трейлер дня» — широкая карточка сверху (без поиска/фильтра, на первой странице)
+  let hero = '';
+  if (!qRaw && !trailerGenre && !trailerQuick.size && _trailerPage === 1 && list.length >= 6) {
+    const d = new Date(); const seed = d.getFullYear() * 400 + d.getMonth() * 31 + d.getDate();
+    const pool = list.filter(m => (parseFloat(m.rating) || 0) >= 7 && thumbSrc(m));
+    const hm = pool.length ? pool[seed % pool.length] : null;
+    if (hm) {
+      const gs = (hm.genres || []).slice(0, 2).join(' · ');
+      hero = `<div class="tr-hero" data-code="${esc(hm.code)}">
+        <div class="tr-hero-bg" style="background-image:url('${esc(thumbSrc(hm))}')"></div>
+        <img class="tr-hero-poster" src="${esc(thumbSrc(hm))}" alt="" onerror="this.style.display='none'"/>
         <div class="tr-hero-body">
           <span class="tr-hero-tag">🎬 Трейлер дня</span>
-          <h3>${esc(u.title)}</h3>
-          <div class="tr-hero-meta">${[u.year,u.rating?"⭐ "+u.rating:"",S].filter(Boolean).map(g=>esc(String(g))).join(" · ")}</div>
+          <h3>${esc(hm.title)}</h3>
+          <div class="tr-hero-meta">${[hm.year, hm.rating ? '⭐ ' + hm.rating : '', gs].filter(Boolean).map(x => esc(String(x))).join(' · ')}</div>
           <span class="tr-hero-btn"><i></i> Смотреть</span>
         </div>
-      </div>`}}t.innerHTML=`${$}<div class="trailers-grid">${r.map(p=>{const f=a(p),v=m(p),u=b.includes(String(p.code)),S=[p.year,(p.genres||[])[0]].filter(Boolean).map(g=>esc(String(g))).join(" · ");return`
-    <div class="trailer-card" data-code="${esc(p.code)}">
+      </div>`;
+    }
+  }
+  c.innerHTML = `${hero}<div class="trailers-grid">${pageItems.map(m => {
+    const src = thumbSrc(m), fb = thumbFb(m);
+    const pinned = pinSet.includes(String(m.code));
+    const sub = [m.year, (m.genres || [])[0]].filter(Boolean).map(x => esc(String(x))).join(' · ');
+    return `
+    <div class="trailer-card" data-code="${esc(m.code)}">
       <div class="trailer-thumb">
-        ${f?`<div class="thumb-blur" style="background-image:url('${esc(f)}')"></div><img src="${esc(f)}" alt="" loading="lazy" ${FADE}${dimStyle(p)} onerror="const b=this.previousElementSibling;if(!this.dataset.f){this.dataset.f=1;this.src='${esc(v||"")}';if(b)b.style.backgroundImage='url(${esc(v||"")})'}else{this.style.display='none';if(b)b.style.display='none'}"/>`:'<div class="trailer-thumb-ph">🎬</div>'}
+        ${src
+          ? `<div class="thumb-blur" style="background-image:url('${esc(src)}')"></div><img src="${esc(src)}" alt="" loading="lazy" ${FADE}${dimStyle(m)} onerror="const b=this.previousElementSibling;if(!this.dataset.f){this.dataset.f=1;this.src='${esc(fb || '')}';if(b)b.style.backgroundImage='url(${esc(fb || '')})'}else{this.style.display='none';if(b)b.style.display='none'}"/>`
+          : `<div class="trailer-thumb-ph">🎬</div>`}
         <span class="trailer-shade"></span>
         <span class="trailer-play"><i></i></span>
-        ${w.has(String(p.code))?'<span class="trailer-seen">✓</span>':""}
-        ${p.rating?`<span class="trailer-rate">⭐ ${esc(String(p.rating))}</span>`:""}
-        ${!p.trailer_yt&&p.trailer_file_id?'<span class="trailer-local">📥</span>':""}
-        <button class="trailer-pin${u?" pinned":""}" data-pin="${esc(p.code)}" title="Закрепить наверху">📌</button>
-        <div class="trailer-cap"><h3>${esc(p.title)}</h3>${S?`<span>${S}</span>`:""}</div>
+        ${seenSet.has(String(m.code)) ? '<span class="trailer-seen">✓</span>' : ''}
+        ${m.rating ? `<span class="trailer-rate">⭐ ${esc(String(m.rating))}</span>` : ''}
+        ${(!m.trailer_yt && m.trailer_file_id) ? '<span class="trailer-local">📥</span>' : ''}
+        <button class="trailer-pin${pinned ? ' pinned' : ''}" data-pin="${esc(m.code)}" title="Закрепить наверху">📌</button>
+        <div class="trailer-cap"><h3>${esc(m.title)}</h3>${sub ? `<span>${sub}</span>` : ''}</div>
       </div>
-    </div>`}).join("")}</div>${c}`,t.querySelectorAll(".tr-hero").forEach(p=>p.addEventListener("click",()=>{const f=ALL.find(v=>v.code===p.dataset.code);f&&(haptic("light"),openTrailer(f))})),t.querySelectorAll(".trailer-card").forEach(p=>{p.addEventListener("click",f=>{if(f.target.closest(".trailer-pin"))return;const v=ALL.find(u=>u.code===p.dataset.code);v&&openTrailer(v)})}),t.querySelectorAll(".trailer-pin").forEach(p=>p.addEventListener("click",f=>{f.stopPropagation();const v=toggleTrailerPin(p.dataset.pin);p.classList.toggle("pinned",v);try{tg.showPopup({type:"ok",title:v?"📌 Закреплён":"📌 Откреплён",message:v?"Этот трейлер всегда будет первым в списке.":"Трейлер вернулся в обычный порядок."})}catch(u){}setTimeout(()=>renderTrailers(),250)})),t.querySelectorAll(".pg-btn").forEach(p=>p.addEventListener("click",()=>{const f=p.dataset.pg;f==="prev"?_trailerPage=Math.max(1,_trailerPage-1):f==="next"?_trailerPage=Math.min(o,_trailerPage+1):_trailerPage=parseInt(f,10)||1,haptic("light"),renderTrailers(),window.scrollTo({top:Math.max(0,t.offsetTop-70),behavior:"smooth"})}))}(function(){const e=document.getElementById("btn-tr-random");e&&e.addEventListener("click",()=>{const n=ALL.filter(s=>s.trailer_yt||s.trailer_file_id);n.length&&(haptic("light"),openTrailer(n[Math.floor(Math.random()*n.length)]))})})();const ACHIEVEMENTS_LIST=[{id:"first_code",emoji:"🔓",name:"Первый код",desc:"Разгадай первый код"},{id:"streak3",emoji:"🔥",name:"Стрик 3",desc:"Разгадай 3 кода подряд без ошибок"},{id:"streak7",emoji:"⚡",name:"Стрик 7",desc:"Разгадай 7 кодов подряд без ошибок"},{id:"codes10",emoji:"🎯",name:"10 кодов",desc:"Разгадай 10 кодов"},{id:"codes25",emoji:"🏅",name:"25 кодов",desc:"Разгадай 25 кодов"},{id:"codes50",emoji:"🏆",name:"50 кодов",desc:"Разгадай 50 кодов"},{id:"genres3",emoji:"🎭",name:"3 жанра",desc:"Разгадай коды из 3 разных жанров"},{id:"genres5",emoji:"🌈",name:"5 жанров",desc:"Разгадай коды из 5 разных жанров"},{id:"reaction",emoji:"👍",name:"Оценка",desc:"Поставь оценку фильму"},{id:"reaction3",emoji:"💬",name:"3 оценки",desc:"Поставь 3 оценки"},{id:"favorite",emoji:"❤️",name:"Избранное",desc:"Добавь фильм в избранное"},{id:"points20",emoji:"💰",name:"20 баллов",desc:"Заработай 20 кинобаллов"},{id:"points50",emoji:"💎",name:"50 баллов",desc:"Заработай 50 кинобаллов"},{id:"secret",emoji:"🕵️",name:"Секрет",desc:"Найди секретный код"},{id:"bingo_line",emoji:"🎰",name:"Линия",desc:"Закрой линию в кино-бинго"},{id:"bingo_full",emoji:"👑",name:"Бинго!",desc:"Закрой всю карточку кино-бинго"},{id:"referral3",emoji:"🤝",name:"3 друга",desc:"Пригласи 3 друзей"}];function computeAchCards(){const t=getFavs(),e=getUnlocked(),n=PROFILE||{},s=parseInt(n.pts,10)||0,i=parseInt(n.str,10)||0,o=e.length;return ACHIEVEMENTS_LIST.map(r=>{let c=!1,a="";switch(r.id){case"first_code":c=o>=1;break;case"streak3":c=i>=3,a=`${Math.min(i,3)}/3`;break;case"streak7":c=i>=7,a=`${Math.min(i,7)}/7`;break;case"codes10":c=o>=10,a=`${Math.min(o,10)}/10`;break;case"codes25":c=o>=25,a=`${Math.min(o,25)}/25`;break;case"codes50":c=o>=50,a=`${Math.min(o,50)}/50`;break;case"favorite":c=t.length>=1,a=`${t.length}/1`;break;case"genres3":{const m=new Set;ALL.forEach(b=>{e.includes(String(b.code))&&(b.genres||[]).forEach(w=>m.add(w))}),c=m.size>=3,a=`${m.size}/3`;break}case"genres5":{const m=new Set;ALL.forEach(b=>{e.includes(String(b.code))&&(b.genres||[]).forEach(w=>m.add(w))}),c=m.size>=5,a=`${m.size}/5`;break}case"reaction":c=(n.reactions||0)>=1,a=`${n.reactions||0}/1`;break;case"reaction3":c=(n.reactions||0)>=3,a=`${n.reactions||0}/3`;break;case"points20":c=s>=20,a=`${Math.min(s,20)}/20`;break;case"points50":c=s>=50,a=`${Math.min(s,50)}/50`;break;case"secret":c=!!n.has_secret;break;case"bingo_line":c=!!n.bingo_line,a=n.bingo_line?"1/1":"0/1";break;case"bingo_full":c=!!n.bingo_full,a=n.bingo_full?"1/1":"0/1";break;case"referral3":c=(n.referrals||0)>=3,a=`${n.referrals||0}/3`;break;default:break}return{...r,done:c,progress:a}})}const ACH_SEEN_KEY="kinoafisha_ach_seen",NEWS_SEEN_KEY="kinoafisha_news_seen_ts";function newsMaxTs(){return NEWS.reduce((t,e)=>e.ts&&e.ts>t?e.ts:t,0)}function updateMoreBadge(){const t=document.getElementById("tab-more");if(!t)return;let e=!1;try{const r=computeAchCards().filter(m=>m.done).length,c=parseInt(localStorage.getItem(ACH_SEEN_KEY),10)||0,a=parseFloat(localStorage.getItem(NEWS_SEEN_KEY))||0;e=r>c||newsMaxTs()>a}catch(r){return}t.classList.toggle("has-badge",e);const n=document.getElementById("bn-dot");let s=!1,i=!1;try{s=computeAchCards().filter(r=>r.done).length>(parseInt(localStorage.getItem(ACH_SEEN_KEY),10)||0),i=newsMaxTs()>(parseFloat(localStorage.getItem(NEWS_SEEN_KEY))||0)}catch(r){}n&&n.classList.toggle("hidden",!s);const o=document.getElementById("bn-news-dot");o&&o.classList.toggle("hidden",!i)}function renderAchievements(){const t=document.getElementById("achievements-container");if(!t)return;const e=favouriteGenre(),n=ACHIEVEMENTS_LIST.length,s=computeAchCards(),i=s.filter(c=>c.done).length,o=n?Math.round(100*i/n):0;t.innerHTML=`
+    </div>`; }).join('')}</div>${pager}`;
+  c.querySelectorAll('.tr-hero').forEach(el => el.addEventListener('click', () => {
+    const m = ALL.find(x => x.code === el.dataset.code);
+    if (m) { haptic('light'); openTrailer(m); }
+  }));
+  c.querySelectorAll('.trailer-card').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.trailer-pin')) return;   // не открываем по клику на 📌
+      const m = ALL.find(x => x.code === el.dataset.code);
+      if (m) openTrailer(m);
+    });
+  });
+  c.querySelectorAll('.trailer-pin').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const pinned = toggleTrailerPin(b.dataset.pin);
+    b.classList.toggle('pinned', pinned);
+    try {
+      tg.showPopup({ type: 'ok',
+        title: pinned ? '📌 Закреплён' : '📌 Откреплён',
+        message: pinned ? 'Этот трейлер всегда будет первым в списке.' : 'Трейлер вернулся в обычный порядок.' });
+    } catch (_) {}
+    setTimeout(() => renderTrailers(), 250);   // перерисуем сетку с учётом пина
+  }));
+  c.querySelectorAll('.pg-btn').forEach(b => b.addEventListener('click', () => {
+    const v = b.dataset.pg;
+    if (v === 'prev') _trailerPage = Math.max(1, _trailerPage - 1);
+    else if (v === 'next') _trailerPage = Math.min(pages, _trailerPage + 1);
+    else _trailerPage = parseInt(v, 10) || 1;
+    haptic('light');
+    renderTrailers();
+    window.scrollTo({ top: Math.max(0, c.offsetTop - 70), behavior: 'smooth' });
+  }));
+}
+
+// v92: «🎲 Случайный трейлер» — открывает случайный трейлер в плеере
+(function wireTrailerRandom() {
+  const b = document.getElementById('btn-tr-random');
+  if (!b) return;
+  b.addEventListener('click', () => {
+    const pool = ALL.filter(m => m.trailer_yt || m.trailer_file_id);
+    if (!pool.length) return;
+    haptic('light');
+    openTrailer(pool[Math.floor(Math.random() * pool.length)]);
+  });
+})();
+
+// ---------- достижения «🎖» ----------
+const ACHIEVEMENTS_LIST = [
+  { id: 'first_code', emoji: '🔓', name: 'Первый код', desc: 'Разгадай первый код' },
+  { id: 'streak3', emoji: '🔥', name: 'Стрик 3', desc: 'Разгадай 3 кода подряд без ошибок' },
+  { id: 'streak7', emoji: '⚡', name: 'Стрик 7', desc: 'Разгадай 7 кодов подряд без ошибок' },
+  { id: 'codes10', emoji: '🎯', name: '10 кодов', desc: 'Разгадай 10 кодов' },
+  { id: 'codes25', emoji: '🏅', name: '25 кодов', desc: 'Разгадай 25 кодов' },
+  { id: 'codes50', emoji: '🏆', name: '50 кодов', desc: 'Разгадай 50 кодов' },
+  { id: 'genres3', emoji: '🎭', name: '3 жанра', desc: 'Разгадай коды из 3 разных жанров' },
+  { id: 'genres5', emoji: '🌈', name: '5 жанров', desc: 'Разгадай коды из 5 разных жанров' },
+  { id: 'reaction', emoji: '👍', name: 'Оценка', desc: 'Поставь оценку фильму' },
+  { id: 'reaction3', emoji: '💬', name: '3 оценки', desc: 'Поставь 3 оценки' },
+  { id: 'favorite', emoji: '❤️', name: 'Избранное', desc: 'Добавь фильм в избранное' },
+  { id: 'points20', emoji: '💰', name: '20 баллов', desc: 'Заработай 20 кинобаллов' },
+  { id: 'points50', emoji: '💎', name: '50 баллов', desc: 'Заработай 50 кинобаллов' },
+  { id: 'secret', emoji: '🕵️', name: 'Секрет', desc: 'Найди секретный код' },
+  { id: 'bingo_line', emoji: '🎰', name: 'Линия', desc: 'Закрой линию в кино-бинго' },
+  { id: 'bingo_full', emoji: '👑', name: 'Бинго!', desc: 'Закрой всю карточку кино-бинго' },
+  { id: 'referral3', emoji: '🤝', name: '3 друга', desc: 'Пригласи 3 друзей' },
+];
+
+function computeAchCards() {
+  const favs = getFavs();
+  const unlocked = getUnlocked();
+  // Данные из профиля бота (если синхронизирован)
+  const p = PROFILE || {};
+  const pts = parseInt(p.pts, 10) || 0;
+  const strk = parseInt(p.str, 10) || 0;
+  const unlCount = unlocked.length;
+
+  return ACHIEVEMENTS_LIST.map(a => {
+    let done = false;
+    let progress = '';
+    switch (a.id) {
+      case 'first_code': done = unlCount >= 1; break;
+      case 'streak3': done = strk >= 3; progress = `${Math.min(strk, 3)}/3`; break;
+      case 'streak7': done = strk >= 7; progress = `${Math.min(strk, 7)}/7`; break;
+      case 'codes10': done = unlCount >= 10; progress = `${Math.min(unlCount, 10)}/10`; break;
+      case 'codes25': done = unlCount >= 25; progress = `${Math.min(unlCount, 25)}/25`; break;
+      case 'codes50': done = unlCount >= 50; progress = `${Math.min(unlCount, 50)}/50`; break;
+      case 'favorite': done = favs.length >= 1; progress = `${favs.length}/1`; break;
+      case 'genres3': {
+        const genres = new Set();
+        ALL.forEach(m => { if (unlocked.includes(String(m.code))) (m.genres || []).forEach(g => genres.add(g)); });
+        done = genres.size >= 3; progress = `${genres.size}/3`;
+        break;
+      }
+      case 'genres5': {
+        const genres = new Set();
+        ALL.forEach(m => { if (unlocked.includes(String(m.code))) (m.genres || []).forEach(g => genres.add(g)); });
+        done = genres.size >= 5; progress = `${genres.size}/5`;
+        break;
+      }
+      case 'reaction':
+        done = (p.reactions || 0) >= 1; progress = `${p.reactions || 0}/1`;
+        break;
+      case 'reaction3':
+        done = (p.reactions || 0) >= 3; progress = `${p.reactions || 0}/3`;
+        break;
+      case 'points20':
+        done = pts >= 20; progress = `${Math.min(pts, 20)}/20`;
+        break;
+      case 'points50':
+        done = pts >= 50; progress = `${Math.min(pts, 50)}/50`;
+        break;
+      case 'secret':
+        done = !!p.has_secret;
+        break;
+      case 'bingo_line':
+        done = !!p.bingo_line; progress = p.bingo_line ? '1/1' : '0/1';
+        break;
+      case 'bingo_full':
+        done = !!p.bingo_full; progress = p.bingo_full ? '1/1' : '0/1';
+        break;
+      case 'referral3':
+        done = (p.referrals || 0) >= 3; progress = `${p.referrals || 0}/3`;
+        break;
+      default: break;
+    }
+    return { ...a, done, progress };
+  });
+}
+
+// Бейдж на «Ещё»: точка, когда появились достижения, которых пользователь
+// ещё не видел (открыто больше, чем зафиксировано при последнем просмотре).
+const ACH_SEEN_KEY = 'kinoafisha_ach_seen';
+const NEWS_SEEN_KEY = 'kinoafisha_news_seen_ts';
+function newsMaxTs() {
+  return NEWS.reduce((mx, n) => (n.ts && n.ts > mx ? n.ts : mx), 0);
+}
+function updateMoreBadge() {
+  const moreTab = document.getElementById('tab-more');
+  if (!moreTab) return;
+  let fresh = false;
+  try {
+    const done = computeAchCards().filter(a => a.done).length;
+    const seenAch = parseInt(localStorage.getItem(ACH_SEEN_KEY), 10) || 0;
+    const seenNews = parseFloat(localStorage.getItem(NEWS_SEEN_KEY)) || 0;
+    // Точка на «Ещё»: новые достижения ИЛИ свежие новости
+    fresh = done > seenAch || newsMaxTs() > seenNews;
+  } catch (e) { return; }
+  moreTab.classList.toggle('has-badge', fresh);
+  const bd = document.getElementById('bn-dot');
+  // v233: точка на «Моё» — только новые достижения; у «Новостей» своя точка
+  let freshAch = false, freshNews = false;
+  try {
+    freshAch = computeAchCards().filter(a => a.done).length > (parseInt(localStorage.getItem(ACH_SEEN_KEY), 10) || 0);
+    freshNews = newsMaxTs() > (parseFloat(localStorage.getItem(NEWS_SEEN_KEY)) || 0);
+  } catch (e) {}
+  if (bd) bd.classList.toggle('hidden', !freshAch);
+  const nd = document.getElementById('bn-news-dot');
+  if (nd) nd.classList.toggle('hidden', !freshNews);
+}
+
+function renderAchievements() {
+  const c = document.getElementById('achievements-container');
+  if (!c) return;
+  const favGenre = favouriteGenre();
+  const total = ACHIEVEMENTS_LIST.length;
+  const achCards = computeAchCards();
+  const opened = achCards.filter(a => a.done).length;
+  const pct = total ? Math.round(100 * opened / total) : 0;
+  c.innerHTML = `
     <div class="ach-summary">
       <div class="ach-summary-head">
         <h2>🎖 Достижения</h2>
-        <b>${i}/${n}</b>
+        <b>${opened}/${total}</b>
       </div>
-      <div class="pf-progress"><i style="width:${o}%"></i></div>
-      <p class="ach-hint">${i===n?"Все достижения открыты! 🎉":`Осталось ${n-i} — угадывай фильмы, ставь оценки, приглашай друзей!`}</p>
-      ${e?`<p class="ach-favgenre">🌟 Любимый жанр: <b>${esc(e)}</b></p>`:""}
+      <div class="pf-progress"><i style="width:${pct}%"></i></div>
+      <p class="ach-hint">${opened === total ? 'Все достижения открыты! 🎉' : `Осталось ${total - opened} — угадывай фильмы, ставь оценки, приглашай друзей!`}</p>
+      ${favGenre ? `<p class="ach-favgenre">🌟 Любимый жанр: <b>${esc(favGenre)}</b></p>` : ''}
     </div>
-    <div class="ach-grid">${s.map(c=>`
-      <div class="ach-card ${c.done?"ach-done":""}">
-        <div class="ach-emoji">${c.done?c.emoji:"🔒"}</div>
-        <div class="ach-name">${esc(c.name)}</div>
-        <div class="ach-desc">${esc(c.desc)}</div>
-        ${c.progress?`<div class="ach-progress">${esc(c.progress)}</div>`:""}
-      </div>`).join("")}</div>`;try{localStorage.setItem(ACH_SEEN_KEY,String(i))}catch(c){}const r=document.getElementById("tab-more");r&&r.classList.remove("has-badge"),renderCodeCollection()}const BAK_PREFIX="kinokod:v1:";function buildBackupString(){const t=JSON.stringify({favs:getFavs(),ratings:getRatings(),watched:getWatched(),notes:getNotes(),mycols:getMyCols(),at:Date.now()});return BAK_PREFIX+encodeURIComponent(t)}function csOk(){try{return!!(tg.CloudStorage&&typeof tg.CloudStorage.getItem=="function")}catch(t){return!1}}function csGet(t){return new Promise(e=>{try{tg.CloudStorage.getItem(t,(n,s)=>e(n||s==null?null:String(s)))}catch(n){e(null)}})}function csSet(t,e){return new Promise(n=>{try{tg.CloudStorage.setItem(t,String(e),()=>n(!0))}catch(s){n(!1)}})}const CS_META="kk_prof_meta",CS_CHUNK="kk_prof",CS_TS_KEY="kinoafisha_cloud_ts";let _csTimer=null;function scheduleCloudSync(t){csOk()&&(clearTimeout(_csTimer),_csTimer=setTimeout(saveProfileToCloud,t||2e4))}function capProgress(){let t=null;try{t=JSON.parse(localStorage.getItem("kino_cap_goal")||"null")}catch(n){t=null}let e=0;try{e=parseInt(localStorage.getItem("kino_cap_best")||"0",10)||0}catch(n){}return{best:e,goal:t}}function arenaProgress(){let t=0,e=null;try{t=parseInt(localStorage.getItem("kino_arena_best")||"0",10)||0}catch(s){}try{e=JSON.parse(localStorage.getItem("kino_arena_daily")||"null")}catch(s){e=null}let n=[];try{n=[...getTrailerSeen()].slice(-100)}catch(s){}return{best:t,daily:e,trs:n}}function profileSnapshot(){let t=null,e=null;try{t=JSON.parse(localStorage.getItem(CHALL_KEY)||"null")}catch(n){t=null}try{e={seen:JSON.parse(localStorage.getItem(MAR_SEEN_KEY)||"[]"),resume:localStorage.getItem(MAR_RESUME_KEY)||"",ach:JSON.parse(localStorage.getItem(MAR_ACH_KEY)||"[]")}}catch(n){e=null}return JSON.stringify({favs:getFavs(),ratings:getRatings(),watched:getWatched(),notes:getNotes(),mycols:getMyCols(),streak:dailyState(),week:getWeekStats(),year:getYearStats(),chall:t,mar:e,tw:getTrailerWatches(),recent:getRecent(),open:getOpenCounts(),unlocked:getUnlocked(),pins:getTrailerPins(),cap:capProgress(),arena:arenaProgress(),at:Date.now()})}async function saveProfileToCloud(){if(csOk())try{const t=profileSnapshot(),e=[];for(let n=0;n<t.length&&e.length<14;n+=900)e.push(t.slice(n,n+900));for(let n=0;n<e.length;n++)if(!await csSet(CS_CHUNK+n,e[n]))return;await csSet(CS_META,JSON.stringify({n:e.length,at:Date.now()}))}catch(t){}}function profileLocallyEmpty(){return!getFavs().length&&!getWatched().length&&!getMyCols().length&&!Object.keys(getRatings()).length&&!Object.keys(getNotes()).length}async function restoreProfileFromCloud(){if(!csOk())return null;try{const t=await csGet(CS_META);if(!t)return null;const e=JSON.parse(t);if(!e||!e.n)return null;const n=profileLocallyEmpty(),s=Number(localStorage.getItem(CS_TS_KEY)||0);if(!n&&(e.at||0)<=s)return null;let i="";for(let r=0;r<e.n;r++)i+=await csGet(CS_CHUNK+r)||"";return!i||importBackupString(BAK_PREFIX+encodeURIComponent(i))!=="ok"?null:(localStorage.setItem(CS_TS_KEY,String(e.at||Date.now())),{wasEmpty:n})}catch(t){return null}}function importBackupString(t){try{const e=String(t||"").trim();if(!e.startsWith(BAK_PREFIX))return"not_backup";const n=JSON.parse(decodeURIComponent(e.slice(BAK_PREFIX.length)));if(!n||typeof n!="object")return"bad";const s=c=>Array.isArray(c)?c.filter(a=>a!==null&&a!=="").map(String):[],i=c=>c&&typeof c=="object"&&!Array.isArray(c)?c:{};let o=0;const r=c=>{const a=c.length,m=[...new Set(c)];return o+=a-m.length,m};if(localStorage.setItem(FAV_KEY,JSON.stringify(r(s(n.favs)))),localStorage.setItem(WATCHED_KEY,JSON.stringify(r(s(n.watched)))),localStorage.setItem(RATINGS_KEY,JSON.stringify(i(n.ratings))),localStorage.setItem(NOTES_KEY,JSON.stringify(i(n.notes))),Array.isArray(n.mycols)){const c=n.mycols.filter(a=>a&&typeof a=="object"&&a.id&&a.title&&Array.isArray(a.codes)).map(a=>({id:String(a.id),title:String(a.title),codes:r(s(a.codes))}));localStorage.setItem(MYCOLS_KEY,JSON.stringify(c))}if(n.streak&&typeof n.streak=="object"&&localStorage.setItem(DAILY_KEY,JSON.stringify({last:String(n.streak.last||""),series:Number(n.streak.series)||0,best:Number(n.streak.best)||0,done:Array.isArray(n.streak.done)?n.streak.done.map(Number).filter(Boolean):[]})),i(n.week)&&Object.keys(n.week||{}).length&&localStorage.setItem(WEEK_STATS_KEY,JSON.stringify(n.week)),i(n.year)&&Object.keys(n.year||{}).length&&localStorage.setItem(YEAR_LOG_KEY,JSON.stringify(n.year)),n.chall&&typeof n.chall=="object"&&n.chall.date&&localStorage.setItem(CHALL_KEY,JSON.stringify(n.chall)),n.mar&&typeof n.mar=="object"&&(Array.isArray(n.mar.seen)&&localStorage.setItem(MAR_SEEN_KEY,JSON.stringify(n.mar.seen.map(String))),n.mar.resume&&localStorage.setItem(MAR_RESUME_KEY,String(n.mar.resume)),Array.isArray(n.mar.ach)&&localStorage.setItem(MAR_ACH_KEY,JSON.stringify(n.mar.ach))),Array.isArray(n.tw)&&localStorage.setItem(TW_KEY,JSON.stringify(n.tw.slice(0,MAX_TW))),Array.isArray(n.recent)&&localStorage.setItem(RECENT_KEY,JSON.stringify(n.recent.slice(0,MAX_RECENT))),n.open&&typeof n.open=="object"&&localStorage.setItem(OPEN_COUNT_KEY,JSON.stringify(n.open)),Array.isArray(n.unlocked)&&n.unlocked.length&&localStorage.setItem(UNLOCKED_KEY,JSON.stringify([...new Set(n.unlocked.map(String))])),Array.isArray(n.pins)&&localStorage.setItem(TPIN_KEY,JSON.stringify(n.pins)),n.cap&&typeof n.cap=="object")try{const c=parseInt(localStorage.getItem("kino_cap_best")||"0",10)||0;(Number(n.cap.best)||0)>c&&localStorage.setItem("kino_cap_best",String(Number(n.cap.best)));const a=n.cap.goal;if(a&&typeof a=="object"&&a.day){let m=null;try{m=JSON.parse(localStorage.getItem("kino_cap_goal")||"null")}catch(b){m=null}(!m||String(a.day)>String(m.day)||a.day===m.day&&(a.n||0)>(m.n||0))&&localStorage.setItem("kino_cap_goal",JSON.stringify({day:String(a.day),n:Number(a.n)||0}))}}catch(c){}if(n.arena&&typeof n.arena=="object")try{const c=parseInt(localStorage.getItem("kino_arena_best")||"0",10)||0;(Number(n.arena.best)||0)>c&&localStorage.setItem("kino_arena_best",String(Number(n.arena.best)));const a=n.arena.daily;if(a&&typeof a=="object"&&a.day){let m=null;try{m=JSON.parse(localStorage.getItem("kino_arena_daily")||"null")}catch(b){m=null}(!m||String(a.day)>String(m.day)||a.day===m.day&&(a.score||0)>(m.score||0))&&localStorage.setItem("kino_arena_daily",JSON.stringify({day:String(a.day),score:Number(a.score)||0,right:Number(a.right)||0,total:Number(a.total)||0}))}if(Array.isArray(n.arena.trs)&&n.arena.trs.length){const m=getTrailerSeen();n.arena.trs.forEach(b=>m.add(String(b))),localStorage.setItem(TSEEN_KEY,JSON.stringify([...m].slice(-600)))}}catch(c){}return window._lastRestoreDupes=o,"ok"}catch(e){return"bad"}}function copyBackup(){haptic("light");const t=buildBackupString(),e=()=>{try{tg.showPopup({type:"ok",title:"💾 Бэкап скопирован",message:"Вставь этот текст себе в «Избранное» в Telegram. Он включает «Моё», оценки, заметки и «🗂 Мои подборки» — потом перенеси на другой телефон через «📥 Восстановить»."})}catch(n){}};navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t).then(e).catch(e):e()}function shareFavsPoster(){haptic("light");const t=getFavs().filter(g=>ALL.some(L=>String(L.code)===String(g)));if(!t.length)return;const e=document.getElementById("sharecard-modal");if(!e)return;e.classList.remove("hidden");const n=document.getElementById("sharecard-preview");n.innerHTML='<p class="modal-muted">🎨 Собираем постеры…</p>';const s=t.slice(0,24).map(g=>ALL.find(L=>String(L.code)===String(g))).filter(Boolean),i=4,o=120,r=200,c=10,a=64,m=40,b=Math.ceil(s.length/i),w=c*2+i*o,$=c*2+a+b*r+m;let p,f;try{p=document.createElement("canvas"),p.width=w,p.height=$,f=p.getContext("2d")}catch(g){n.innerHTML='<p class="modal-muted">Картинку не удалось собрать</p>';return}const v=f.createLinearGradient(0,0,0,$);v.addColorStop(0,"#1b2340"),v.addColorStop(1,"#0a0d1a"),f.fillStyle=v,f.fillRect(0,0,w,$),f.fillStyle="rgba(255,193,7,.85)",f.font="bold 22px Manrope, Arial",f.textAlign="center",f.fillText(`МОЙ СПИСОК «ХОЧУ ПОСМОТРЕТЬ» — ${s.length}`,w/2,40);const u=[];s.forEach((g,L)=>{const H=Math.floor(L/i),M=L%i,nt=c+M*o,lt=c+a+H*r;f.fillStyle="rgba(0,0,0,.3)",f.fillRect(nt,lt,o,r);const Q=document.createElement("img");Q.crossOrigin="anonymous";const it=U=>{try{const Y=U.naturalWidth&&U.naturalHeight?U.naturalHeight/U.naturalWidth:1.5,W=Math.min(r,o*Y),dt=W/Y,mt=nt+(o-dt)/2,rt=lt+(r-W)/2;f.drawImage(U,mt,rt,dt,W)}catch(Y){}u.push(1),u.length===s.length&&S()};Q.onload=()=>it(Q),Q.onerror=()=>{u.push(1),u.length===s.length&&S()},Q.src=g.poster});const S=()=>{f.fillStyle="rgba(255,255,255,.6)",f.font="bold 13px Manrope, Arial",f.textAlign="center",f.fillText("🎬 КАПИТАН КИНО — разгадывай коды и смотри кино",w/2,$-14);try{const g=p.toDataURL?p.toDataURL("image/png"):"";if(!g){n.innerHTML='<p class="modal-muted">Картинку не удалось собрать</p>';return}n.innerHTML=`<img src="${g}" alt="Мой список «Хочу посмотреть»"/>`;const L=document.getElementById("btn-sharecard-download");L&&(L.onclick=()=>{try{const H=document.createElement("a");H.href=g,H.download="kinokod_favs.png",H.click()}catch(H){window.open(g,"_blank")}})}catch(g){n.innerHTML='<p class="modal-muted">Картинку не удалось собрать</p>'}};setTimeout(()=>{u.length<s.length&&(u.length=s.length,S())},6e3)}function importBackup(){haptic("light");try{tg.showPopup({type:"prompt",title:"📥 Восстановление из бэкапа",message:"Вставь скопированную строку кинокода и нажми OK. Текущие «Моё», оценки, просмотренные и заметки будут заменены.",placeholder:"kinokod:v1:…",text:"",callback:(t,e)=>{if(t!=="ok")return;const n=importBackupString(e||"");if(n==="ok"){haptic("ok");const s=window._lastRestoreDupes||0;try{tg.showPopup({type:"ok",title:"✅ Восстановлено!",message:"Данные перенесены с другого устройства."+(s>0?`
-🧹 Дубликаты убраны: ${s}.`:"")})}catch(i){}renderGrid(),renderRecoShelf()}else if(n==="not_backup")try{tg.showPopup({type:"alert",title:"Не та строка",message:"Это не бэкап «Киноафиши». Убедись, что вставил строку kinokod:v1:… целиком."})}catch(s){}else try{tg.showPopup({type:"alert",title:"Ошибка",message:"Бэкап повреждён или устарел — восстановить не удалось."})}catch(s){}}})}catch(t){}}function backupFavsNotice(){const t=getFavs(),e=t.map(i=>{const o=ALL.find(r=>String(r.code)===String(i));return o?`${o.code} — ${o.title}`:`${i}`});window._favTitlesCache=e;const n=Object.keys(getRatings()).length,s=getWatched().length;return`
+    <div class="ach-grid">${achCards.map(a => `
+      <div class="ach-card ${a.done ? 'ach-done' : ''}">
+        <div class="ach-emoji">${a.done ? a.emoji : '🔒'}</div>
+        <div class="ach-name">${esc(a.name)}</div>
+        <div class="ach-desc">${esc(a.desc)}</div>
+        ${a.progress ? `<div class="ach-progress">${esc(a.progress)}</div>` : ''}
+      </div>`).join('')}</div>`;
+  // Пользователь открыл раздел — фиксируем, сколько достижений он видел,
+  // и прячем бейдж на «Ещё».
+  try { localStorage.setItem(ACH_SEEN_KEY, String(opened)); } catch (e) {}
+  const moreTab = document.getElementById('tab-more');
+  if (moreTab) moreTab.classList.remove('has-badge');
+  renderCodeCollection();
+}
+
+// ---------- бэкап «Моё»: через бота + переносимый бэкап на другое устройство ----------
+// v74: компактная строка-копия содержит «Моё», оценки, просмотренные и заметки.
+// Её можно вставить в Telegram («Избранное») и восстановить на другом устройстве.
+const BAK_PREFIX = 'kinokod:v1:';
+function buildBackupString() {
+  const payload = JSON.stringify({
+    favs: getFavs(),
+    ratings: getRatings(),
+    watched: getWatched(),
+    notes: getNotes(),
+    mycols: getMyCols(),   // v108: свои подборки переезжают вместе с «Моё»
+    at: Date.now(),
+  });
+  return BAK_PREFIX + encodeURIComponent(payload);
+}
+
+// ---------- v121: облачный профиль — Telegram CloudStorage ----------
+// «Моё» (избранное, оценки, просмотры, заметки, подборки) автоматически живёт
+// в личном облаке Telegram: CloudStorage привязан к пользователю и боту,
+// работает при любом способе запуска и переживает смену устройства.
+// Новое устройство само подтягивает профиль при старте; изменения на устройстве
+// дописываются в облако с debounce (последняя запись = самая свежая).
+// Лимит CloudStorage — до 1024 символов на значение, поэтому пишем чанками по 900.
+function csOk() {
+  try { return !!(tg.CloudStorage && typeof tg.CloudStorage.getItem === 'function'); }
+  catch (e) { return false; }
+}
+function csGet(key) {
+  return new Promise((res) => {
+    try { tg.CloudStorage.getItem(key, (err, val) => res(err ? null : (val == null ? null : String(val)))); }
+    catch (e) { res(null); }
+  });
+}
+function csSet(key, val) {
+  return new Promise((res) => {
+    try { tg.CloudStorage.setItem(key, String(val), () => res(true)); }
+    catch (e) { res(false); }
+  });
+}
+const CS_META = 'kk_prof_meta';  // {n, at} — коммит-маркер, пишется последним
+const CS_CHUNK = 'kk_prof';      // kk_prof0, kk_prof1, …
+const CS_TS_KEY = 'kinoafisha_cloud_ts';
+let _csTimer = null;
+function scheduleCloudSync(delayMs) {
+  if (!csOk()) return;
+  clearTimeout(_csTimer);
+  _csTimer = setTimeout(saveProfileToCloud, delayMs || 20000);
+}
+function capProgress() {
+  let goal = null;
+  try { goal = JSON.parse(localStorage.getItem('kino_cap_goal') || 'null'); } catch (e) { goal = null; }
+  let best = 0;
+  try { best = parseInt(localStorage.getItem('kino_cap_best') || '0', 10) || 0; } catch (e) {}
+  return { best, goal };
+}
+// v181: Кино-арена (рекорд + результат дуэли дня) и «уже смотрел трейлер» — тоже переезжают между устройствами
+function arenaProgress() {
+  let best = 0, daily = null;
+  try { best = parseInt(localStorage.getItem('kino_arena_best') || '0', 10) || 0; } catch (e) {}
+  try { daily = JSON.parse(localStorage.getItem('kino_arena_daily') || 'null'); } catch (e) { daily = null; }
+  let trs = []; try { trs = [...getTrailerSeen()].slice(-100); } catch (e) {}
+  return { best, daily, trs };
+}
+function profileSnapshot() {
+  // A2/v124: помимо «Моё» переносим и активность — стрик, «Моя неделя», «Мой год»,
+  // челленджи дня, прогресс марафона, трейлер-историю, недавние, счётчики открытий,
+  // закреплённые трейлеры и разгаданные коды (тот же транспорт, что и бэкап).
+  let chall = null, mar = null;
+  try { chall = JSON.parse(localStorage.getItem(CHALL_KEY) || 'null'); } catch (e) { chall = null; }
+  try {
+    mar = {
+      seen: JSON.parse(localStorage.getItem(MAR_SEEN_KEY) || '[]'),
+      resume: localStorage.getItem(MAR_RESUME_KEY) || '',
+      ach: JSON.parse(localStorage.getItem(MAR_ACH_KEY) || '[]'),
+    };
+  } catch (e) { mar = null; }
+  return JSON.stringify({
+    favs: getFavs(), ratings: getRatings(), watched: getWatched(),
+    notes: getNotes(), mycols: getMyCols(),
+    streak: dailyState(), week: getWeekStats(), year: getYearStats(),
+    chall, mar, tw: getTrailerWatches(), recent: getRecent(),
+    open: getOpenCounts(), unlocked: getUnlocked(), pins: getTrailerPins(),
+    cap: capProgress(),   // v160: рекорд и цель дня игры «Капитан в пути»
+    arena: arenaProgress(),   // v181: Кино-арена
+    at: Date.now(),
+  });
+}
+async function saveProfileToCloud() {
+  if (!csOk()) return;
+  try {
+    const payload = profileSnapshot();
+    const chunks = [];
+    for (let i = 0; i < payload.length && chunks.length < 14; i += 900) {
+      chunks.push(payload.slice(i, i + 900));
+    }
+    for (let i = 0; i < chunks.length; i++) {
+      if (!(await csSet(CS_CHUNK + i, chunks[i]))) return;  // облако не приняло
+    }
+    await csSet(CS_META, JSON.stringify({ n: chunks.length, at: Date.now() }));
+  } catch (e) { /* пусто */ }
+}
+function profileLocallyEmpty() {
+  return !getFavs().length && !getWatched().length && !getMyCols().length
+    && !Object.keys(getRatings()).length && !Object.keys(getNotes()).length;
+}
+async function restoreProfileFromCloud() {
+  if (!csOk()) return null;
+  try {
+    const metaRaw = await csGet(CS_META);
+    if (!metaRaw) return null;
+    const meta = JSON.parse(metaRaw);
+    if (!meta || !meta.n) return null;
+    const wasEmpty = profileLocallyEmpty();
+    const localAt = Number(localStorage.getItem(CS_TS_KEY) || 0);
+    // Локально пусто → всегда восстанавливаем (новое устройство). Иначе — только
+    // когда облако свежее последнего переноса (смена телефона «в обе стороны»).
+    if (!wasEmpty && (meta.at || 0) <= localAt) return null;
+    let payload = '';
+    for (let i = 0; i < meta.n; i++) payload += (await csGet(CS_CHUNK + i)) || '';
+    if (!payload) return null;
+    const res = importBackupString(BAK_PREFIX + encodeURIComponent(payload));
+    if (res !== 'ok') return null;
+    localStorage.setItem(CS_TS_KEY, String(meta.at || Date.now()));
+    return { wasEmpty };
+  } catch (e) { return null; }
+}
+function importBackupString(raw) {
+  try {
+    const s = String(raw || '').trim();
+    if (!s.startsWith(BAK_PREFIX)) return 'not_backup';
+    const data = JSON.parse(decodeURIComponent(s.slice(BAK_PREFIX.length)));
+    if (!data || typeof data !== 'object') return 'bad';
+    const add1 = (v) => Array.isArray(v) ? v.filter(x => x !== null && x !== '').map(String) : [];
+    const add2 = (v) => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+    // v113: дедупликация — при переносе на новое устройство в списках и
+    // подборках могут быть дубликаты (несколько раз сохраняли/восстанавливали).
+    let dupes = 0;
+    const uniq = (arr) => {
+      const before = arr.length;
+      const out = [...new Set(arr)];
+      dupes += before - out.length;
+      return out;
+    };
+    localStorage.setItem(FAV_KEY, JSON.stringify(uniq(add1(data.favs))));
+    localStorage.setItem(WATCHED_KEY, JSON.stringify(uniq(add1(data.watched))));
+    localStorage.setItem(RATINGS_KEY, JSON.stringify(add2(data.ratings)));
+    localStorage.setItem(NOTES_KEY, JSON.stringify(add2(data.notes)));
+    // v108: подборки — только валидный массив {id,title,codes}; старые бэкапы
+    // без этого поля не трогаем (не очищаем то, что уже есть на устройстве).
+    if (Array.isArray(data.mycols)) {
+      const cols = data.mycols.filter(c => c && typeof c === 'object'
+        && c.id && c.title && Array.isArray(c.codes))
+        .map(c => ({ id: String(c.id), title: String(c.title), codes: uniq(add1(c.codes)) }));
+      localStorage.setItem(MYCOLS_KEY, JSON.stringify(cols));
+    }
+    // A2/v124: активность и настройки — только если поле есть в бэкапе/облаке
+    // (старые версии не содержат их — тогда ничего не трогаем).
+    if (data.streak && typeof data.streak === 'object') {
+      localStorage.setItem(DAILY_KEY, JSON.stringify({
+        last: String(data.streak.last || ''),
+        series: Number(data.streak.series) || 0,
+        best: Number(data.streak.best) || 0,
+        done: Array.isArray(data.streak.done) ? data.streak.done.map(Number).filter(Boolean) : [],
+      }));
+    }
+    if (add2(data.week) && Object.keys(data.week || {}).length) localStorage.setItem(WEEK_STATS_KEY, JSON.stringify(data.week));
+    if (add2(data.year) && Object.keys(data.year || {}).length) localStorage.setItem(YEAR_LOG_KEY, JSON.stringify(data.year));
+    if (data.chall && typeof data.chall === 'object' && data.chall.date) localStorage.setItem(CHALL_KEY, JSON.stringify(data.chall));
+    if (data.mar && typeof data.mar === 'object') {
+      if (Array.isArray(data.mar.seen)) localStorage.setItem(MAR_SEEN_KEY, JSON.stringify(data.mar.seen.map(String)));
+      if (data.mar.resume) localStorage.setItem(MAR_RESUME_KEY, String(data.mar.resume));
+      if (Array.isArray(data.mar.ach)) localStorage.setItem(MAR_ACH_KEY, JSON.stringify(data.mar.ach));
+    }
+    if (Array.isArray(data.tw)) localStorage.setItem(TW_KEY, JSON.stringify(data.tw.slice(0, MAX_TW)));
+    if (Array.isArray(data.recent)) localStorage.setItem(RECENT_KEY, JSON.stringify(data.recent.slice(0, MAX_RECENT)));
+    if (data.open && typeof data.open === 'object') localStorage.setItem(OPEN_COUNT_KEY, JSON.stringify(data.open));
+    if (Array.isArray(data.unlocked) && data.unlocked.length) {
+      localStorage.setItem(UNLOCKED_KEY, JSON.stringify([...new Set(data.unlocked.map(String))]));
+    }
+    if (Array.isArray(data.pins)) localStorage.setItem(TPIN_KEY, JSON.stringify(data.pins));
+    if (data.cap && typeof data.cap === 'object') {      // v160: игра — берём лучшее из облака и устройства
+      try {
+        const lb = parseInt(localStorage.getItem('kino_cap_best') || '0', 10) || 0;
+        if ((Number(data.cap.best) || 0) > lb) localStorage.setItem('kino_cap_best', String(Number(data.cap.best)));
+        const cg = data.cap.goal;
+        if (cg && typeof cg === 'object' && cg.day) {
+          let lg = null;
+          try { lg = JSON.parse(localStorage.getItem('kino_cap_goal') || 'null'); } catch (e) { lg = null; }
+          if (!lg || String(cg.day) > String(lg.day) || (cg.day === lg.day && (cg.n || 0) > (lg.n || 0))) {
+            localStorage.setItem('kino_cap_goal', JSON.stringify({ day: String(cg.day), n: Number(cg.n) || 0 }));
+          }
+        }
+      } catch (e) { /* пусто */ }
+    }
+    if (data.arena && typeof data.arena === 'object') {   // v181: Кино-арена — лучшее из облака и устройства
+      try {
+        const lb = parseInt(localStorage.getItem('kino_arena_best') || '0', 10) || 0;
+        if ((Number(data.arena.best) || 0) > lb) localStorage.setItem('kino_arena_best', String(Number(data.arena.best)));
+        const d = data.arena.daily;
+        if (d && typeof d === 'object' && d.day) {
+          let ld = null; try { ld = JSON.parse(localStorage.getItem('kino_arena_daily') || 'null'); } catch (e) { ld = null; }
+          if (!ld || String(d.day) > String(ld.day) || (d.day === ld.day && (d.score || 0) > (ld.score || 0))) {
+            localStorage.setItem('kino_arena_daily', JSON.stringify({ day: String(d.day), score: Number(d.score) || 0, right: Number(d.right) || 0, total: Number(d.total) || 0 }));
+          }
+        }
+        if (Array.isArray(data.arena.trs) && data.arena.trs.length) {
+          const st = getTrailerSeen(); data.arena.trs.forEach(x => st.add(String(x)));
+          localStorage.setItem(TSEEN_KEY, JSON.stringify([...st].slice(-600)));
+        }
+      } catch (e) { /* пусто */ }
+    }
+    window._lastRestoreDupes = dupes;
+    return 'ok';
+  } catch (e) { return 'bad'; }
+}
+function copyBackup() {
+  haptic('light');
+  const text = buildBackupString();
+  const done = () => {
+    try {
+      tg.showPopup({
+        type: 'ok',
+        title: '💾 Бэкап скопирован',
+        message: 'Вставь этот текст себе в «Избранное» в Telegram. Он включает «Моё», оценки, заметки и «🗂 Мои подборки» — потом перенеси на другой телефон через «📥 Восстановить».',
+      });
+    } catch (e) { /* пусто */ }
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(done);
+  } else done();
+}
+
+// v109: «🖼 Поделиться картинкой» — красивая картинка всех «хочу посмотреть».
+// Клепаем canvas с постерами (до 24), названиями и брендом, выводим в модалку
+// sharecard-modal (переиспользуем её) — можно скачать и кинуть в чат.
+function shareFavsPoster() {
+  haptic('light');
+  const favs = getFavs().filter(c => ALL.some(m => String(m.code) === String(c)));
+  if (!favs.length) return;
+  const modal = document.getElementById('sharecard-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const prev = document.getElementById('sharecard-preview');
+  prev.innerHTML = '<p class="modal-muted">🎨 Собираем постеры…</p>';
+  const items = favs.slice(0, 24).map(c => ALL.find(m => String(m.code) === String(c))).filter(Boolean);
+  const COLS = 4, CELL_W = 120, CELL_H = 200, PAD = 10, HEAD_H = 64, FOOT_H = 40;
+  const rows = Math.ceil(items.length / COLS);
+  const W = PAD * 2 + COLS * CELL_W;
+  const H = PAD * 2 + HEAD_H + rows * CELL_H + FOOT_H;
+  let cv, ctx;
+  try {
+    cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    ctx = cv.getContext('2d');
+  } catch (e) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; return; }
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#1b2340'); g.addColorStop(1, '#0a0d1a');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(255,193,7,.85)';
+  ctx.font = 'bold 22px Manrope, Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(`МОЙ СПИСОК «ХОЧУ ПОСМОТРЕТЬ» — ${items.length}`, W / 2, 40);
+  const loaded = [];   // подсчёт загруженных, рисуем по мере поступления
+  items.forEach((m, i) => {
+    const r = Math.floor(i / COLS), c = i % COLS;
+    const x = PAD + c * CELL_W, y = PAD + HEAD_H + r * CELL_H;
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    ctx.fillRect(x, y, CELL_W, CELL_H);
+    const tag = document.createElement('img');
+    tag.crossOrigin = 'anonymous';
+    const paint = (img) => {
+      try {
+        const ar = img.naturalWidth && img.naturalHeight ? img.naturalHeight / img.naturalWidth : 1.5;
+        const h = Math.min(CELL_H, CELL_W * ar);
+        const w = h / ar;
+        const dx = x + (CELL_W - w) / 2, dy = y + (CELL_H - h) / 2;
+        ctx.drawImage(img, dx, dy, w, h);
+      } catch (e) {}
+      loaded.push(1);
+      if (loaded.length === items.length) finish();
+    };
+    tag.onload = () => paint(tag);
+    tag.onerror = () => { loaded.push(1); if (loaded.length === items.length) finish(); };
+    tag.src = m.poster;
+  });
+  const finish = () => {
+    ctx.fillStyle = 'rgba(255,255,255,.6)';
+    ctx.font = 'bold 13px Manrope, Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('🎬 КАПИТАН КИНО — разгадывай коды и смотри кино', W / 2, H - 14);
+    try {
+      const url = cv.toDataURL ? cv.toDataURL('image/png') : '';
+      if (!url) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; return; }
+      prev.innerHTML = `<img src="${url}" alt="Мой список «Хочу посмотреть»"/>`;
+      const dl = document.getElementById('btn-sharecard-download');
+      if (dl) dl.onclick = () => {
+        try {
+          const a = document.createElement('a');
+          a.href = url; a.download = 'kinokod_favs.png'; a.click();
+        } catch (e) { window.open(url, '_blank'); }
+      };
+    } catch (e) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; }
+  };
+  // страховка: если какой-то постер завис, всё равно рисуем
+  setTimeout(() => { if (loaded.length < items.length) { loaded.length = items.length; finish(); } }, 6000);
+}
+function importBackup() {
+  haptic('light');
+  try {
+    tg.showPopup({
+      type: 'prompt',
+      title: '📥 Восстановление из бэкапа',
+      message: 'Вставь скопированную строку кинокода и нажми OK. Текущие «Моё», оценки, просмотренные и заметки будут заменены.',
+      placeholder: 'kinokod:v1:…',
+      text: '',
+      callback: (btnId, value) => {
+        if (btnId !== 'ok') return;
+        const r = importBackupString(value || '');
+        if (r === 'ok') {
+          haptic('ok');
+          const dupes = window._lastRestoreDupes || 0;
+          try { tg.showPopup({ type: 'ok', title: '✅ Восстановлено!', message: 'Данные перенесены с другого устройства.' + (dupes > 0 ? `\n🧹 Дубликаты убраны: ${dupes}.` : '') }); } catch (e) {}
+          renderGrid();
+          renderRecoShelf();
+        } else if (r === 'not_backup') {
+          try { tg.showPopup({ type: 'alert', title: 'Не та строка', message: 'Это не бэкап «Киноафиши». Убедись, что вставил строку kinokod:v1:… целиком.' }); } catch (e) {}
+        } else {
+          try { tg.showPopup({ type: 'alert', title: 'Ошибка', message: 'Бэкап повреждён или устарел — восстановить не удалось.' }); } catch (e) {}
+        }
+      },
+    });
+  } catch (e) { /* пусто */ }
+}
+function backupFavsNotice() {
+  const favs = getFavs();
+  const favTitles = favs.map(code => {
+    const m = ALL.find(x => String(x.code) === String(code));
+    return m ? `${m.code} — ${m.title}` : `${code}`;
+  });
+  // Переменная используется кнопкой «📋 Скопировать список» (см. copyFavsList)
+  window._favTitlesCache = favTitles;
+  const ratN = Object.keys(getRatings()).length;
+  const watN = getWatched().length;
+  return `
     <div class="cols-list">
       <div class="col-card backup-card">
         <div class="col-body">
-          <h3>💾 «Моё» хранится локально${t.length?` (${t.length})`:""}</h3>
-          <p>${t.length||n||s?`❤️ ${t.length} · ⭐ ${n} · 👁 ${s} — переноси на другое устройство`:"Список пуст — нажми ❤️ на любом фильме."}</p>
+          <h3>💾 «Моё» хранится локально${favs.length ? ` (${favs.length})` : ''}</h3>
+          <p>${favs.length || ratN || watN
+            ? `❤️ ${favs.length} · ⭐ ${ratN} · 👁 ${watN} — переноси на другое устройство`
+            : 'Список пуст — нажми ❤️ на любом фильме.'}</p>
         </div>
-        ${t.length?'<button class="btn-secondary" id="btn-copy-list">📋 Скопировать список</button>':""}
-        ${t.length?'<button class="btn-secondary" id="btn-share-posters">🖼 Поделиться картинкой</button>':""}
-        ${t.length?'<button class="btn-secondary" id="btn-backup">💾 Сохранить в боте</button>':""}
-        ${t.length?'<button class="btn-secondary" id="btn-copy-backup">📱💾 Копия для другого устройства</button>':""}
-        ${t.length?'<button class="btn-secondary" id="btn-import-backup">📥 Восстановить здесь</button>':""}
+        ${favs.length ? '<button class="btn-secondary" id="btn-copy-list">📋 Скопировать список</button>' : ''}
+        ${favs.length ? '<button class="btn-secondary" id="btn-share-posters">🖼 Поделиться картинкой</button>' : ''}
+        ${favs.length ? '<button class="btn-secondary" id="btn-backup">💾 Сохранить в боте</button>' : ''}
+        ${favs.length ? '<button class="btn-secondary" id="btn-copy-backup">📱💾 Копия для другого устройства</button>' : ''}
+        ${favs.length ? '<button class="btn-secondary" id="btn-import-backup">📥 Восстановить здесь</button>' : ''}
         <button class="btn-secondary" id="btn-restore-bot">☁️ Восстановить из бота</button>
-        ${t.length?'<button class="btn-watch" id="btn-clear-fav" style="margin-top:8px">🧹 Очистить «Хочу посмотреть»</button>':""}
+        ${favs.length ? '<button class="btn-watch" id="btn-clear-fav" style="margin-top:8px">🧹 Очистить «Хочу посмотреть»</button>' : ''}
       </div>
-    </div>`}function hlTitle(t,e){const n=String(t||"");if(!e)return esc(n);try{const s=new RegExp("("+e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","ig");return n.split(s).map(i=>i.toLowerCase()===e.toLowerCase()?`<mark class="hl">${esc(i)}</mark>`:esc(i)).join("")}catch(s){return esc(n)}}function parseSmartQuery(t){const e=(t||"").toLowerCase().replace(/ё/g,"е");if(!e||e.length>60)return null;const n=[],s={},i=new Map;ALL.forEach(a=>(a.genres||[]).forEach(m=>{const b=String(m).toLowerCase(),w=b.replace(/(ый|ой|ая|ое|ые|а|я|ы|и|е|у|ь)$/,"");w.length>=4&&!i.has(w)&&i.set(w,b)}));for(const[a,m]of i)if(e.includes(a)){s.genre=m,n.push("жанр: "+m);break}const o=e.match(/(\d)(?:[.,](\d))?\s*\+/);o&&(s.minRating=parseFloat(o[1]+"."+(o[2]||"0")),n.push("рейтинг "+s.minRating+"+"));const r=e.match(/(19|20)(\d)0\s*[-–—]?\s*(х|е|ых|ов)/);if(r)s.decade=parseInt(r[1]+r[2]+"0",10),n.push(s.decade+"-е");else{const a=e.match(/\b(19\d{2}|20\d{2})\b/);a&&(s.year=parseInt(a[1],10),n.push(s.year+" год"))}const c=e.match(/до\s*(\d(?:[.,]\d)?)\s*(ч|час)/);return c&&(s.maxMin=Math.round(parseFloat(c[1].replace(",","."))*60),n.push("до "+c[1]+" ч")),/коротк/.test(e)&&(s.maxMin=Math.min(s.maxMin||999,100),n.push("короткие")),/длинн/.test(e)&&(s.minDurMin=120,n.push("длинные")),n.length?(s.parts=n,s):null}function cleanKpTitle(t){let e=String(t||"");const n=e.match(/«([^»]+)»/);return n&&(e=n[1]),e.replace(/\s*\([^)]*\)\s*$/,"").replace(/[«»"]/g,"").trim()}function openUrlLink(t){if(t){haptic("ok");try{tg.openLink(t,{try_instant_view:!1})}catch(e){window.open(t,"_blank")}}}function openWatchLink(t){if(t.link)return openUrlLink(t.link);if(t.link2)return openUrlLink(t.link2);openImdbLink(t)}function openImdbLink(t){const e=cleanKpTitle(t.title);openUrlLink("https://www.imdb.com/find/?q="+encodeURIComponent(e||""))}const COUNTRY_FLAGS={сша:"🇺🇸",россия:"🇷🇺",великобритания:"🇬🇧",франция:"🇫🇷",германия:"🇩🇪",канада:"🇨🇦",япония:"🇯🇵","южная корея":"🇰🇷",китай:"🇨🇳",италия:"🇮🇹",испания:"🇪🇸",индия:"🇮🇳",австралия:"🇦🇺",бразилия:"🇧🇷",мексика:"🇲🇽",швеция:"🇸🇪",дания:"🇩🇰",норвегия:"🇳🇴",ирландия:"🇮🇪","новая зеландия":"🇳🇿",польша:"🇵🇱",украина:"🇺🇦",чехия:"🇨🇿",гонконг:"🇭🇰",нидерланды:"🇳🇱",бельгия:"🇧🇪",швейцария:"🇨🇭",австрия:"🇦🇹",финляндия:"🇫🇮",израиль:"🇮🇱",турция:"🇹🇷",аргентина:"🇦🇷"},flagOf=t=>COUNTRY_FLAGS[String(t||"").toLowerCase().trim()]||"🌍";function shareMovie(t){haptic("light");const n=location.href.split("#")[0].replace(/index\.html$/,"")+"movie/"+encodeURIComponent(t.code)+".html",s=(t.genres||[]).slice(0,2).join(" · "),i=`🎬 «${t.title}»${t.year?" ("+t.year+")":""}
-⭐ ${t.rating||"—"}${s?" · "+s:""}
+    </div>`;
+}
 
-Угадывай фильмы по кодам и смотри кино в «Киноафише» 👇`,o="https://t.me/share/url?url="+encodeURIComponent(n)+"&text="+encodeURIComponent(i);try{tg.openTelegramLink(o)}catch(r){window.open(o,"_blank")}}function shareCatalogPoster(){if(haptic("light"),!ALL.length)return;const t=document.getElementById("sharecard-modal");if(!t)return;t.classList.remove("hidden");const e=document.getElementById("sharecard-preview");e.innerHTML='<p class="modal-muted">🎨 Собираем витрину…</p>';const n=ALL.filter(S=>S.poster).slice(0,48);if(!n.length){e.innerHTML='<p class="modal-muted">Постеры ещё не загрузились — попробуй чуть позже</p>';return}const s=6,i=80,o=120,r=10,c=64,a=40,m=Math.ceil(n.length/s),b=r*2+s*i,w=r*2+c+m*o+a;let $,p;try{$=document.createElement("canvas"),$.width=b,$.height=w,p=$.getContext("2d")}catch(S){e.innerHTML='<p class="modal-muted">Картинку не удалось собрать</p>';return}const f=p.createLinearGradient(0,0,0,w);f.addColorStop(0,"#1b2340"),f.addColorStop(1,"#0a0d1a"),p.fillStyle=f,p.fillRect(0,0,b,w),p.strokeStyle="rgba(255,193,7,.5)",p.lineWidth=3,p.strokeRect(5,5,b-10,w-10),p.fillStyle="rgba(255,193,7,.95)",p.font="bold 22px Manrope, Arial",p.textAlign="center",p.fillText("🎬 КАПИТАН КИНО",b/2,40),p.fillStyle="rgba(255,255,255,.75)",p.font="14px Manrope, Arial",p.fillText(`${ALL.length} фильмов · угадывай коды — открывай кино`,b/2,64);const v=[],u=()=>{p.fillStyle="rgba(255,255,255,.55)",p.font="bold 12px Manrope, Arial",p.fillText("Открой афишу в Telegram → @kapitan_kino_bot",b/2,w-16);try{const S=$.toDataURL?$.toDataURL("image/png"):"";if(!S){e.innerHTML='<p class="modal-muted">Картинку не удалось собрать</p>';return}e.innerHTML=`<img src="${S}" alt="Каталог фильмов"/>`;const g=document.getElementById("btn-sharecard-download");g&&(g.onclick=()=>{try{const L=document.createElement("a");L.href=S,L.download="kinokod_catalog.png",L.click()}catch(L){window.open(S,"_blank")}})}catch(S){e.innerHTML='<p class="modal-muted">Картинку не удалось собрать</p>'}};n.forEach((S,g)=>{const L=Math.floor(g/s),H=g%s,M=r+H*i,nt=r+c+L*o;p.fillStyle="rgba(0,0,0,.32)",p.fillRect(M,nt,i,o-20);const lt=document.createElement("img");lt.crossOrigin="anonymous";const Q=()=>{try{const it=lt.naturalWidth||1,Y=(lt.naturalHeight||1)/it,W=o-20,dt=i;let mt,rt;Y>=W/dt?(rt=W,mt=rt/Y):(mt=dt,rt=mt*Y),p.drawImage(lt,M+(dt-mt)/2,nt+(W-rt)/2,mt,rt)}catch(it){}p.fillStyle="rgba(255,193,7,.9)",p.font="bold 10px Manrope, Arial",p.textAlign="center",p.fillText("🔑 "+S.code,M+i/2,nt+o-7),v.push(1),v.length===n.length&&u()};lt.onload=Q,lt.onerror=()=>{p.fillStyle="rgba(255,255,255,.75)",p.font="22px Manrope, Arial",p.textAlign="center",p.fillText("🎬",M+i/2,nt+(o-20)/2+7),p.fillStyle="rgba(255,193,7,.9)",p.font="bold 10px Manrope, Arial",p.fillText("🔑 "+S.code,M+i/2,nt+o-7),v.push(1),v.length===n.length&&u()},lt.src=S.poster}),setTimeout(()=>{v.length<n.length&&(v.length=n.length,u())},8e3)}const SC_W=500,SC_H=750;function drawShareCard(t,e){let n=null,s=null;try{n=document.createElement("canvas"),n.width=SC_W,n.height=SC_H,s=n.getContext("2d")}catch(a){e(null);return}const i=s.createLinearGradient(0,0,0,SC_H);i.addColorStop(0,"#1b2340"),i.addColorStop(.55,"#12162b"),i.addColorStop(1,"#0a0d1a"),s.fillStyle=i,s.fillRect(0,0,SC_W,SC_H),s.strokeStyle="rgba(255,193,7,.55)",s.lineWidth=3,s.strokeRect(6,6,SC_W-12,SC_H-12);const o=()=>{s.textAlign="center";const a=String(t.title||"").replace(/^«|»$/g,"").trim(),m=_scLines(a,28);s.fillStyle="#ffffff",s.font="bold 30px Manrope, Arial";let b=612;m.forEach(w=>{s.fillText(w,SC_W/2,b),b+=36}),s.fillStyle="rgba(255,193,7,.9)",s.font="bold 15px Manrope, Arial",s.fillText("🔑 Код "+t.code,SC_W/2,t.rating?672:700),t.rating&&(s.fillStyle="rgba(255,255,255,.85)",s.font="14px Manrope, Arial",s.fillText("⭐ "+t.rating+(t.year?"  ·  "+t.year:""),SC_W/2,700)),s.fillStyle="rgba(255,255,255,.55)",s.font="bold 12px Manrope, Arial",s.fillText("🎬 КАПИТАН КИНО",SC_W/2,730),e(n)},r=a=>{s.fillStyle="rgba(0,0,0,.35)",s.fillRect((SC_W-300)/2-8,74,316,466),s.drawImage(a,(SC_W-300)/2,82,300,450),o()},c=()=>{s.fillStyle="#10131f",s.fillRect((SC_W-300)/2,82,300,450),s.fillStyle="rgba(255,255,255,.85)",s.font="38px Manrope, Arial",s.textAlign="center",s.fillText("🎬",SC_W/2,307),o()};if(t.poster){const a=document.createElement("img");a.crossOrigin="anonymous";let m=!1;a.onload=()=>{m||(m=!0,r(a))},a.onerror=()=>{m||(m=!0,c())},a.src=t.poster,setTimeout(()=>{m||(m=!0,c())},4e3)}else c()}function _scLines(t,e){const n=String(t),s=[];for(let i=0;i<n.length;i+=e){let o=Math.min(i+e,n.length);if(o<n.length){const r=n.lastIndexOf(" ",o);r>i+e/2&&(o=r)}if(s.push(n.slice(i,o).trim()),s.length>=3)break}return s}function openShareCard(t){haptic("light");const e=document.getElementById("sharecard-modal");if(!e)return;e.classList.remove("hidden");const n=document.getElementById("sharecard-preview");n.innerHTML='<p class="modal-muted">🎨 Рисуем карточку…</p>',drawShareCard(t,s=>{if(!s){n.innerHTML='<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>';return}try{(o=>{s.toDataURL?o(s.toDataURL("image/png")):s.toBlob?new FileReader().readAsDataURL(s.toBlob()).then(o).catch(()=>o(null)):o(null)})(o=>{if(!o){n.innerHTML='<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>';return}n.innerHTML=`<img src="${o}" alt="Карточка фильма"/>`;const r=document.getElementById("btn-sharecard-download");r&&(r.onclick=()=>{try{const c=document.createElement("a");c.href=o,c.download="kinokod_"+t.code+".png",c.click()}catch(c){window.open(o,"_blank")}})})}catch(i){n.innerHTML='<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>'}})}function parseMovieHash(){const t=(location.hash||"").replace(/^#/,"");if(!/^m=[^&]+/.test(t))return;const e=decodeURIComponent(t.slice(2));e&&ALL.some(n=>String(n.code)===e)&&(history.replaceState(null,"",location.pathname+location.search),setTimeout(()=>openDetail(e),250))}let _recentRandom=[];function pickRandomMovie(){if(!ALL.length)return null;let t=ALL.filter(n=>n.poster&&!_recentRandom.includes(String(n.code)));t.length||(t=ALL.filter(n=>!_recentRandom.includes(String(n.code)))),t.length||(_recentRandom=[],t=ALL.slice());const e=t[Math.floor(Math.random()*t.length)];return _recentRandom.push(String(e.code)),_recentRandom.length>5&&(_recentRandom=_recentRandom.slice(-5)),e}function _renderRandomCard(t){const e=document.getElementById("random-body");if(!t||!e)return;const n=(t.countries||[]).slice(0,2).map(flagOf).join(" ");e.innerHTML=`
-    <div class="rm-card" data-code="${esc(t.code)}">
-      ${t.poster?`<img src="${esc(t.poster)}" alt="" loading="lazy" decoding="async" ${FADE}${dimStyle(t)}/>`:'<div class="rm-ph">🎬</div>'}
+// ---------- сетка (афиша + моё) ----------
+// Подсветка совпадения поиска в названии (esc обеих частей!)
+function hlTitle(title, q) {
+  const t = String(title || '');
+  if (!q) return esc(t);
+  try {
+    const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+    return t.split(re).map(part =>
+      part.toLowerCase() === q.toLowerCase() ? `<mark class="hl">${esc(part)}</mark>` : esc(part)
+    ).join('');
+  } catch (e) { return esc(t); }
+}
+
+// ---------- v60: умный поиск-фраза ----------
+// Разбираем «драмы 8+», «триллеры 2010-х», «боевик до 2 часов» на фильтры.
+function parseSmartQuery(raw) {
+  const q = (raw || '').toLowerCase().replace(/ё/g, 'е');
+  if (!q || q.length > 60) return null;
+  const parts = [];
+  const out = {};
+
+  // жанр: слово во фразе совпадает с началом известного жанра из базы
+  const genreMap = new Map();
+  ALL.forEach(m => (m.genres || []).forEach(g => {
+    const gl = String(g).toLowerCase();
+    const stem = gl.replace(/(ый|ой|ая|ое|ые|а|я|ы|и|е|у|ь)$/, '');
+    if (stem.length >= 4 && !genreMap.has(stem)) genreMap.set(stem, gl);
+  }));
+  for (const [stem, gl] of genreMap) {
+    if (q.includes(stem)) { out.genre = gl; parts.push('жанр: ' + gl); break; }
+  }
+
+  const rm = q.match(/(\d)(?:[.,](\d))?\s*\+/);          // «8+», «7.5+»
+  if (rm) {
+    out.minRating = parseFloat(rm[1] + '.' + (rm[2] || '0'));
+    parts.push('рейтинг ' + out.minRating + '+');
+  }
+
+  const dm = q.match(/(19|20)(\d)0\s*[-–—]?\s*(х|е|ых|ов)/);  // «2010-х», «2000-е»
+  if (dm) {
+    out.decade = parseInt(dm[1] + dm[2] + '0', 10);
+    parts.push(out.decade + '-е');
+  } else {
+    const ym = q.match(/\b(19\d{2}|20\d{2})\b/);              // точный год
+    if (ym) { out.year = parseInt(ym[1], 10); parts.push(out.year + ' год'); }
+  }
+
+  const dmax = q.match(/до\s*(\d(?:[.,]\d)?)\s*(ч|час)/);     // «до 2 часов»
+  if (dmax) {
+    out.maxMin = Math.round(parseFloat(dmax[1].replace(',', '.')) * 60);
+    parts.push('до ' + dmax[1] + ' ч');
+  }
+  if (/коротк/.test(q)) { out.maxMin = Math.min(out.maxMin || 999, 100); parts.push('короткие'); }
+  if (/длинн/.test(q)) { out.minDurMin = 120; parts.push('длинные'); }
+
+  if (!parts.length) return null;
+  out.parts = parts;   // v65: parts нужен рендеру подсказки «🧠 …» — раньше был undefined и рендер падал
+  return out;
+}
+
+// ---------- v62: «Смотреть фильм» ----------
+// Просмотр — по прямой ссылке на kinogo.ec (доступен и в РФ, и в Украине).
+// Справочная страница о фильме — IMDB (работает без ограничений по стране),
+// Кинопоиск запрещён в UI: он недоступен части аудитории канала.
+// Название чистим для поиска: «На грани» (Man on a Ledge, 2012) -> «На грани»
+function cleanKpTitle(raw) {
+  let s = String(raw || '');
+  const qm = s.match(/«([^»]+)»/);
+  if (qm) s = qm[1];
+  return s.replace(/\s*\([^)]*\)\s*$/, '').replace(/[«»"]/g, '').trim();
+}
+function openUrlLink(url) {
+  if (!url) return;
+  haptic('ok');
+  try { tg.openLink(url, { try_instant_view: false }); } catch (_) { window.open(url, '_blank'); }
+}
+function openWatchLink(m) {
+  if (m.link) return openUrlLink(m.link);   // прямая ссылка на просмотр (kinogo.ec)
+  if (m.link2) return openUrlLink(m.link2); // v72: запасное зеркало
+  openImdbLink(m);                          // иначе — страница о фильме на IMDB
+}
+function openImdbLink(m) {
+  const q = cleanKpTitle(m.title);
+  openUrlLink('https://www.imdb.com/find/?q=' + encodeURIComponent(q || ''));
+}
+
+// ---------- v72: флаги стран, красивый шаринг, «Случайный фильм», #m=КОД ----------
+const COUNTRY_FLAGS = {
+  'сша': '🇺🇸', 'россия': '🇷🇺', 'великобритания': '🇬🇧', 'франция': '🇫🇷',
+  'германия': '🇩🇪', 'канада': '🇨🇦', 'япония': '🇯🇵', 'южная корея': '🇰🇷',
+  'китай': '🇨🇳', 'италия': '🇮🇹', 'испания': '🇪🇸', 'индия': '🇮🇳',
+  'австралия': '🇦🇺', 'бразилия': '🇧🇷', 'мексика': '🇲🇽', 'швеция': '🇸🇪',
+  'дания': '🇩🇰', 'норвегия': '🇳🇴', 'ирландия': '🇮🇪', 'новая зеландия': '🇳🇿',
+  'польша': '🇵🇱', 'украина': '🇺🇦', 'чехия': '🇨🇿', 'гонконг': '🇭🇰',
+  'нидерланды': '🇳🇱', 'бельгия': '🇧🇪', 'швейцария': '🇨🇭', 'австрия': '🇦🇹',
+  'финляндия': '🇫🇮', 'израиль': '🇮🇱', 'турция': '🇹🇷', 'аргентина': '🇦🇷',
+};
+const flagOf = (ct) => COUNTRY_FLAGS[String(ct || '').toLowerCase().trim()] || '🌍';
+
+// Красивый шаринг фильма: эмодзи-текст + ссылка на ПУБЛИЧНУЮ страницу фильма
+// (v122, B1): страница movie/<code>.html содержит OG-теги — в превью чата
+// Telegram и других мессенджеров показывается постер, оценка и название.
+// Со страницы одна кнопка возвращает в «Киноафишу» (#movie=КОД).
+function shareMovie(m) {
+  haptic('light');
+  const base = location.href.split('#')[0].replace(/index\.html$/, '');
+  const link = base + 'movie/' + encodeURIComponent(m.code) + '.html';
+  const g = (m.genres || []).slice(0, 2).join(' · ');
+  const text = `🎬 «${m.title}»${m.year ? ' (' + m.year + ')' : ''}\n` +
+    `⭐ ${m.rating || '—'}${g ? ' · ' + g : ''}\n\n` +
+    `Угадывай фильмы по кодам и смотри кино в «Киноафише» 👇`;
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text);
+  try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+}
+
+// v113: «🖼 Постер каталога» — вся афиша одной картинкой (сетка постеров с кодами).
+// Удобно кинуть в чат: витрина канала в одном посте. Рисуем на canvas, показываем
+// в модалке карточки (sharecard-modal) с кнопкой скачивания.
+function shareCatalogPoster() {
+  haptic('light');
+  if (!ALL.length) return;
+  const modal = document.getElementById('sharecard-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const prev = document.getElementById('sharecard-preview');
+  prev.innerHTML = '<p class="modal-muted">🎨 Собираем витрину…</p>';
+  const items = ALL.filter(m => m.poster).slice(0, 48);
+  if (!items.length) { prev.innerHTML = '<p class="modal-muted">Постеры ещё не загрузились — попробуй чуть позже</p>'; return; }
+  // v114: компактная витрина 6×8 (пропорции ячейки = постера 2:3), чтобы
+  // картинка не была вытянутым прямоугольником и целиком помещалась в превью.
+  const COLS = 6, CELL_W = 80, CELL_H = 120, PAD = 10, HEAD_H = 64, FOOT_H = 40;
+  const rows = Math.ceil(items.length / COLS);
+  const W = PAD * 2 + COLS * CELL_W;
+  const H = PAD * 2 + HEAD_H + rows * CELL_H + FOOT_H;
+  let cv, ctx;
+  try {
+    cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    ctx = cv.getContext('2d');
+  } catch (e) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; return; }
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#1b2340'); g.addColorStop(1, '#0a0d1a');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(255,193,7,.5)'; ctx.lineWidth = 3;
+  ctx.strokeRect(5, 5, W - 10, H - 10);
+  ctx.fillStyle = 'rgba(255,193,7,.95)';
+  ctx.font = 'bold 22px Manrope, Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('🎬 КАПИТАН КИНО', W / 2, 40);
+  ctx.fillStyle = 'rgba(255,255,255,.75)';
+  ctx.font = '14px Manrope, Arial';
+  ctx.fillText(`${ALL.length} фильмов · угадывай коды — открывай кино`, W / 2, 64);
+  const loaded = [];
+  const finish = () => {
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.font = 'bold 12px Manrope, Arial';
+    ctx.fillText('Открой афишу в Telegram → @kapitan_kino_bot', W / 2, H - 16);
+    try {
+      const url = cv.toDataURL ? cv.toDataURL('image/png') : '';
+      if (!url) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; return; }
+      prev.innerHTML = `<img src="${url}" alt="Каталог фильмов"/>`;
+      const dl = document.getElementById('btn-sharecard-download');
+      if (dl) dl.onclick = () => {
+        try {
+          const a = document.createElement('a');
+          a.href = url; a.download = 'kinokod_catalog.png'; a.click();
+        } catch (e) { window.open(url, '_blank'); }
+      };
+    } catch (e) { prev.innerHTML = '<p class="modal-muted">Картинку не удалось собрать</p>'; }
+  };
+  items.forEach((m, i) => {
+    const r = Math.floor(i / COLS), c = i % COLS;
+    const x = PAD + c * CELL_W, y = PAD + HEAD_H + r * CELL_H;
+    // подложка-ячейка
+    ctx.fillStyle = 'rgba(0,0,0,.32)';
+    ctx.fillRect(x, y, CELL_W, CELL_H - 20);
+    const img = document.createElement('img');
+    img.crossOrigin = 'anonymous';
+    const paint = () => {
+      try {
+        const iw = img.naturalWidth || 1, ih = img.naturalHeight || 1;
+        const ar = ih / iw;
+        const ph = CELL_H - 20, pw = CELL_W;
+        // cover-филл: постер заполняет ячейку полностью (кроп сверху/снизу)
+        let w, h;
+        if (ar >= ph / pw) { h = ph; w = h / ar; }
+        else { w = pw; h = w * ar; }
+        ctx.drawImage(img, x + (pw - w) / 2, y + (ph - h) / 2, w, h);
+      } catch (e) {}
+      // плашка с кодом
+      ctx.fillStyle = 'rgba(255,193,7,.9)';
+      ctx.font = 'bold 10px Manrope, Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🔑 ' + m.code, x + CELL_W / 2, y + CELL_H - 7);
+      loaded.push(1);
+      if (loaded.length === items.length) finish();
+    };
+    img.onload = paint;
+    img.onerror = () => {
+      ctx.fillStyle = 'rgba(255,255,255,.75)';
+      ctx.font = '22px Manrope, Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('🎬', x + CELL_W / 2, y + (CELL_H - 20) / 2 + 7);
+      ctx.fillStyle = 'rgba(255,193,7,.9)';
+      ctx.font = 'bold 10px Manrope, Arial';
+      ctx.fillText('🔑 ' + m.code, x + CELL_W / 2, y + CELL_H - 7);
+      loaded.push(1);
+      if (loaded.length === items.length) finish();
+    };
+    img.src = m.poster;
+  });
+  // страховка: если часть постеров зависла — всё равно отдаём витрину
+  setTimeout(() => { if (loaded.length < items.length) { loaded.length = items.length; finish(); } }, 8000);
+}
+
+// v106: 🖼 готовая карточка-картинка (canvas) для шеринга в чаты и сторис
+// Рисуем плакат 500×750: градиентный фон, постер, название, рейтинг, бренд.
+const SC_W = 500, SC_H = 750;
+function drawShareCard(m, cb) {
+  let cv = null, cx = null;
+  try {
+    cv = document.createElement('canvas');
+    cv.width = SC_W; cv.height = SC_H;
+    cx = cv.getContext('2d');
+  } catch (e) { cb(null); return; }
+  const g = cx.createLinearGradient(0, 0, 0, SC_H);
+  g.addColorStop(0, '#1b2340');
+  g.addColorStop(0.55, '#12162b');
+  g.addColorStop(1, '#0a0d1a');
+  cx.fillStyle = g;
+  cx.fillRect(0, 0, SC_W, SC_H);
+  cx.strokeStyle = 'rgba(255,193,7,.55)';
+  cx.lineWidth = 3;
+  cx.strokeRect(6, 6, SC_W - 12, SC_H - 12);
+  // финальная отрисовка текста поверх постера
+  const ready = () => {
+    cx.textAlign = 'center';
+    const title = String(m.title || '').replace(/^«|»$/g, '').trim();
+    const lines = _scLines(title, 28);
+    cx.fillStyle = '#ffffff';
+    cx.font = 'bold 30px Manrope, Arial';
+    let ty = 612;
+    lines.forEach(l => { cx.fillText(l, SC_W / 2, ty); ty += 36; });
+    cx.fillStyle = 'rgba(255,193,7,.9)';
+    cx.font = 'bold 15px Manrope, Arial';
+    cx.fillText('🔑 Код ' + m.code, SC_W / 2, m.rating ? 672 : 700);
+    if (m.rating) {
+      cx.fillStyle = 'rgba(255,255,255,.85)';
+      cx.font = '14px Manrope, Arial';
+      cx.fillText('⭐ ' + m.rating + (m.year ? '  ·  ' + m.year : ''), SC_W / 2, 700);
+    }
+    cx.fillStyle = 'rgba(255,255,255,.55)';
+    cx.font = 'bold 12px Manrope, Arial';
+    cx.fillText('🎬 КАПИТАН КИНО', SC_W / 2, 730);
+    cb(cv);
+  };
+  const paintPoster = (img) => {
+    cx.fillStyle = 'rgba(0,0,0,.35)';
+    cx.fillRect((SC_W - 300) / 2 - 8, 82 - 8, 300 + 16, 450 + 16);
+    cx.drawImage(img, (SC_W - 300) / 2, 82, 300, 450);
+    ready();
+  };
+  const paintFallback = () => {
+    cx.fillStyle = '#10131f';
+    cx.fillRect((SC_W - 300) / 2, 82, 300, 450);
+    cx.fillStyle = 'rgba(255,255,255,.85)';
+    cx.font = '38px Manrope, Arial';
+    cx.textAlign = 'center';
+    cx.fillText('🎬', SC_W / 2, 82 + 225);
+    ready();
+  };
+  if (m.poster) {
+    const img = document.createElement('img');
+    img.crossOrigin = 'anonymous';
+    let done = false;
+    img.onload = () => { if (!done) { done = true; paintPoster(img); } };
+    img.onerror = () => { if (!done) { done = true; paintFallback(); } };
+    img.src = m.poster;
+    setTimeout(() => { if (!done) { done = true; paintFallback(); } }, 4000);
+  } else paintFallback();
+}
+
+// перенос названия фиксированными лимитами (без measureText)
+function _scLines(title, maxLen) {
+  const s = String(title);
+  const lines = [];
+  for (let i = 0; i < s.length; i += maxLen) {
+    let end = Math.min(i + maxLen, s.length);
+    if (end < s.length) {
+      const sp = s.lastIndexOf(' ', end);
+      if (sp > i + maxLen / 2) end = sp;
+    }
+    lines.push(s.slice(i, end).trim());
+    if (lines.length >= 3) break;
+  }
+  return lines;
+}
+
+function openShareCard(m) {
+  haptic('light');
+  const modal = document.getElementById('sharecard-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const prev = document.getElementById('sharecard-preview');
+  prev.innerHTML = '<p class="modal-muted">🎨 Рисуем карточку…</p>';
+  drawShareCard(m, (cv) => {
+    if (!cv) { prev.innerHTML = '<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>'; return; }
+    try {
+      // Новый canvas API: toDataURL / toBlob. Фолбэк — dataURL вручную.
+      const makeUrl = (cb2) => {
+        if (cv.toDataURL) cb2(cv.toDataURL('image/png'));
+        else if (cv.toBlob) {
+          const fr = new FileReader();
+          fr.readAsDataURL(cv.toBlob()).then(cb2).catch(() => cb2(null));
+        } else cb2(null);
+      };
+      makeUrl((url) => {
+        if (!url) { prev.innerHTML = '<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>'; return; }
+        prev.innerHTML = `<img src="${url}" alt="Карточка фильма"/>`;
+        const dl = document.getElementById('btn-sharecard-download');
+        if (dl) dl.onclick = () => {
+          try {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'kinokod_' + m.code + '.png';
+            a.click();
+          } catch (e) { window.open(url, '_blank'); }
+        };
+      });
+    } catch (e) {
+      prev.innerHTML = '<p class="modal-muted">Карточку не удалось собрать — используй «📤 Поделиться»</p>';
+    }
+  });
+}
+
+// Открываем карточку фильма по прямой ссылке #m=КОД (из шеринга)
+function parseMovieHash() {
+  const h = (location.hash || '').replace(/^#/, '');
+  if (!/^m=[^&]+/.test(h)) return;
+  const code = decodeURIComponent(h.slice(2));
+  if (code && ALL.some(x => String(x.code) === code)) {
+    history.replaceState(null, '', location.pathname + location.search);
+    setTimeout(() => openDetail(code), 250);
+  }
+}
+
+// Случайный фильм: без недавних показов, приоритет — с постером и рейтингом
+let _recentRandom = [];
+function pickRandomMovie() {
+  if (!ALL.length) return null;
+  let pool = ALL.filter(m => m.poster && !_recentRandom.includes(String(m.code)));
+  if (!pool.length) pool = ALL.filter(m => !_recentRandom.includes(String(m.code)));
+  if (!pool.length) { _recentRandom = []; pool = ALL.slice(); }
+  const m = pool[Math.floor(Math.random() * pool.length)];
+  _recentRandom.push(String(m.code));
+  if (_recentRandom.length > 5) _recentRandom = _recentRandom.slice(-5);
+  return m;
+}
+function _renderRandomCard(m) {
+  const body = document.getElementById('random-body');
+  if (!m || !body) return;
+  const flags = (m.countries || []).slice(0, 2).map(flagOf).join(' ');
+  body.innerHTML = `
+    <div class="rm-card" data-code="${esc(m.code)}">
+      ${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" decoding="async" ${FADE}${dimStyle(m)}/>` : '<div class="rm-ph">🎬</div>'}
       <div class="rm-info">
-        <b>${esc(t.title)}</b>
-        <span>${ratingBadge(t)}${t.year?" · "+esc(String(t.year)):""}${n?" · "+n:""}</span>
-        ${(t.genres||[]).length?"<em>"+t.genres.slice(0,3).map(o=>`<i class="chip chip-genre" data-g="${esc(o)}">${esc(o)}</i>`).join(" ")+"</em>":""}
+        <b>${esc(m.title)}</b>
+        <span>${ratingBadge(m)}${m.year ? ' · ' + esc(String(m.year)) : ''}${flags ? ' · ' + flags : ''}</span>
+        ${(m.genres || []).length ? '<em>' + m.genres.slice(0, 3).map(g => `<i class="chip chip-genre" data-g="${esc(g)}">${esc(g)}</i>`).join(' ') + '</em>' : ''}
       </div>
     </div>
-    ${t.link||t.link2?'<button class="btn-watch" id="btn-rm-watch">▶️ Смотреть фильм</button>':""}`;const s=e.querySelector(".rm-card");s&&(s.onclick=()=>{closeRandom(),openDetail(t.code)}),e.querySelectorAll(".chip-genre").forEach(o=>o.addEventListener("click",r=>{r.stopPropagation(),closeRandom(),activeGenre=o.dataset.g,renderGenreChips(),openView("grid")}));const i=document.getElementById("btn-rm-watch");i&&(i.onclick=()=>openWatchLink(t))}function closeRandom(){document.getElementById("random-modal").classList.add("hidden")}function renderRandomMovie(){const t=pickRandomMovie(),e=document.getElementById("random-body"),n=document.getElementById("random-modal");if(!t||!e||!n)return;haptic("light"),(()=>{let i=0,o=60;e.innerHTML='<div class="rm-roll"><span class="rm-roll-dice">🎲</span><b id="rm-roll-name">…</b></div>';const r=()=>{if(n.classList.contains("hidden"))return;if(i++>=12){_renderRandomCard(t);return}const c=ALL[Math.floor(Math.random()*ALL.length)],a=document.getElementById("rm-roll-name");a&&(a.textContent=c.title||"…"),i%4===0&&haptic("light"),o*=1.22,setTimeout(r,o)};r()})()}const GENRE_EMOJI={боевик:"💥",триллер:"🔪",ужасы:"👻",комедия:"😂",драма:"🎭",фантастика:"🚀","фантастика / фэнтези":"🚀",криминал:"🔫",детектив:"🔍",романтика:"💕",любовь:"💕",мелодрама:"💕",мультфильм:"🧸",анимация:"🧸",мультипликационный:"🧸",приключения:"🗺",фэнтези:"🐉",история:"🏛",исторический:"🏛",военный:"🎖",спорт:"🏆",музыка:"🎵",биография:"📖",семейный:"👨‍👩‍👧",мистика:"🔮",вестерн:"🤠",документальный:"🎥",короткометражка:"⏱"};function riddleHints(t){const e=[];(t.genres||[]).slice(0,2).forEach(i=>{const o=GENRE_EMOJI[String(i).toLowerCase().trim()];o&&!e.includes(o)&&e.push(o)});const n=parseInt(t.year,10)||0;n&&e.push(n<1990?"📼":n<2005?"📀":n<2020?"💿":"🆕");const s=parseFloat(t.rating)||0;return e.push(s>=8?"🏆":s>=7?"👍":"🤔"),e.slice(0,4).join("  ")}function shareRiddle(t){haptic("light");const e=location.href.split("#")[0]+"#riddle="+encodeURIComponent(t.code),n=parseInt(t.year,10)||0,s=`🎬 Я загадал фильм в «Киноафише»!
+    ${m.link || m.link2 ? '<button class="btn-watch" id="btn-rm-watch">▶️ Смотреть фильм</button>' : ''}`;
+  const card = body.querySelector('.rm-card');
+  if (card) card.onclick = () => { closeRandom(); openDetail(m.code); };
+  body.querySelectorAll('.chip-genre').forEach(ch =>
+    ch.addEventListener('click', (e) => { e.stopPropagation(); closeRandom(); activeGenre = ch.dataset.g; renderGenreChips(); openView('grid'); }));
+  const w = document.getElementById('btn-rm-watch');
+  if (w) w.onclick = () => openWatchLink(m);
+}
+function closeRandom() { document.getElementById('random-modal').classList.add('hidden'); }
 
-Подсказки: ${riddleHints(t)}
-`+(n?`Эпоха: ~${Math.floor(n/10)*10}-е
-`:"")+"Угадаешь? Открой ссылку и проверь себя 👇",i="https://t.me/share/url?url="+encodeURIComponent(e)+"&text="+encodeURIComponent(s);try{tg.openTelegramLink(i)}catch(o){window.open(i,"_blank")}}function shareRiddleReveal(t){haptic("light");const e=location.href.split("#")[0]+"#riddle="+encodeURIComponent(t.code)+"&reveal=1",n=`🎬 Проверь себя: отгадаешь по подсказкам?
+// v98: рулетка — «Случайный фильм» перебирает названия с замедлением,
+// затем фиксирует выпавшую карточку. Закрытие модалки останавливает крутку.
+function renderRandomMovie() {
+  const m = pickRandomMovie();
+  const body = document.getElementById('random-body');
+  const modal = document.getElementById('random-modal');
+  if (!m || !body || !modal) return;
+  haptic('light');
+  const spin = () => {
+    let n = 0, delay = 60;
+    body.innerHTML = '<div class="rm-roll"><span class="rm-roll-dice">🎲</span><b id="rm-roll-name">…</b></div>';
+    const step = () => {
+      if (modal.classList.contains('hidden')) return;   // закрыли во время вращения
+      if (n++ >= 12) { _renderRandomCard(m); return; }
+      const r = ALL[Math.floor(Math.random() * ALL.length)];
+      const el = document.getElementById('rm-roll-name');
+      if (el) el.textContent = r.title || '…';
+      if (n % 4 === 0) haptic('light');
+      delay *= 1.22;
+      setTimeout(step, delay);
+    };
+    step();
+  };
+  spin();
+}
 
-${riddleHints(t)}
+// ---------- v64: «🎭 Загадай другу» ----------
+// Выбираешь фильм — делишься ссылкой с эмодзи-подсказками. Друг открывает
+// мини-апп по ссылке #riddle=КОД и угадывает: сначала подсказки, потом ответ.
+const GENRE_EMOJI = {
+  'боевик': '💥', 'триллер': '🔪', 'ужасы': '👻', 'комедия': '😂', 'драма': '🎭',
+  'фантастика': '🚀', 'фантастика / фэнтези': '🚀', 'криминал': '🔫', 'детектив': '🔍',
+  'романтика': '💕', 'любовь': '💕', 'мелодрама': '💕', 'мультфильм': '🧸',
+  'анимация': '🧸', 'мультипликационный': '🧸', 'приключения': '🗺',
+  'фэнтези': '🐉', 'история': '🏛', 'исторический': '🏛', 'военный': '🎖',
+  'спорт': '🏆', 'музыка': '🎵', 'биография': '📖', 'семейный': '👨‍👩‍👧',
+  'мистика': '🔮', 'вестерн': '🤠', 'документальный': '🎥', 'короткометражка': '⏱',
+};
+function riddleHints(m) {
+  const out = [];
+  (m.genres || []).slice(0, 2).forEach(g => {
+    const e = GENRE_EMOJI[String(g).toLowerCase().trim()];
+    if (e && !out.includes(e)) out.push(e);
+  });
+  const y = parseInt(m.year, 10) || 0;
+  if (y) out.push(y < 1990 ? '📼' : y < 2005 ? '📀' : y < 2020 ? '💿' : '🆕');
+  const r = parseFloat(m.rating) || 0;
+  out.push(r >= 8 ? '🏆' : r >= 7 ? '👍' : '🤔');
+  return out.slice(0, 4).join('  ');
+}
+function shareRiddle(m) {
+  haptic('light');
+  const link = location.href.split('#')[0] + '#riddle=' + encodeURIComponent(m.code);
+  const y = parseInt(m.year, 10) || 0;
+  const text = `🎬 Я загадал фильм в «Киноафише»!\n\n` +
+    `Подсказки: ${riddleHints(m)}\n` +
+    (y ? `Эпоха: ~${Math.floor(y / 10) * 10}-е\n` : '') +
+    `Угадаешь? Открой ссылку и проверь себя 👇`;
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text);
+  try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+}
 
-Открой ссылку — там фильм и ответ. Ты был близок? 😉`,s="https://t.me/share/url?url="+encodeURIComponent(e)+"&text="+encodeURIComponent(n);try{tg.openTelegramLink(s)}catch(i){window.open(s,"_blank")}}function showRiddleModal(t,e){const n=ALL.find(a=>String(a.code)===String(t));if(!n)return;const s=document.getElementById("riddle-modal");if(!s)return;const i=document.getElementById("riddle-hints");i&&(i.textContent=riddleHints(n));const o=document.getElementById("riddle-body");o&&(o.classList.add("hidden"),o.innerHTML=`
+// v110: «Загадать с ответом» — ссылка с параметром reveal=1, чтобы друг мог сразу
+// проверить, угадал ли (ответ разворачивается автоматически после паузы).
+function shareRiddleReveal(m) {
+  haptic('light');
+  const link = location.href.split('#')[0] + '#riddle=' + encodeURIComponent(m.code) + '&reveal=1';
+  const text = `🎬 Проверь себя: отгадаешь по подсказкам?\n\n${riddleHints(m)}\n\nОткрой ссылку — там фильм и ответ. Ты был близок? 😉`;
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text);
+  try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+}
+function showRiddleModal(code, autoReveal) {
+  const m = ALL.find(x => String(x.code) === String(code));
+  if (!m) return;
+  const modal = document.getElementById('riddle-modal');
+  if (!modal) return;
+  const hints = document.getElementById('riddle-hints');
+  if (hints) hints.textContent = riddleHints(m);
+  const body = document.getElementById('riddle-body');
+  if (body) { body.classList.add('hidden'); body.innerHTML = `
     <div class="riddle-reveal">
-      ${n.poster?`<img src="${esc(n.poster)}" alt="" loading="lazy" decoding="async" ${FADE}/>`:""}
+      ${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" decoding="async" ${FADE}/>` : ''}
       <div class="riddle-answer">
-        <b>${esc(n.title)}</b>
-        <span>${ratingBadge(n)}${n.year?" · "+esc(String(n.year)):""}</span>
+        <b>${esc(m.title)}</b>
+        <span>${ratingBadge(m)}${m.year ? ' · ' + esc(String(m.year)) : ''}</span>
       </div>
-    </div>`);const r=document.getElementById("btn-riddle-reveal");r&&(r.classList.remove("hidden"),r.onclick=()=>{haptic("ok"),o&&o.classList.remove("hidden"),r.classList.add("hidden");const a=document.getElementById("btn-riddle-open");a&&a.classList.remove("hidden")});const c=document.getElementById("btn-riddle-open");c&&(c.classList.add("hidden"),c.onclick=()=>{s.classList.add("hidden"),openDetail(n.code)}),s.classList.remove("hidden"),e&&setTimeout(()=>{haptic("ok"),o&&o.classList.remove("hidden"),r&&r.classList.add("hidden"),c&&c.classList.remove("hidden")},1200)}function parseRiddleHash(){try{const t=new URLSearchParams((location.hash||"").replace(/^#/,"")),e=t.get("riddle");e&&(history.replaceState(null,"",location.pathname+location.search),setTimeout(()=>showRiddleModal(e,t.get("reveal")==="1"),500))}catch(t){}}function parseRestoreHash(){try{const e=new URLSearchParams((location.hash||"").replace(/^#/,"")).get("restore");if(!e)return;history.replaceState(null,"",location.pathname+location.search);const n=importBackupString(String(e));setTimeout(()=>{try{if(n==="ok"){const s=window._lastRestoreDupes||0;tg.showPopup({type:"ok",title:"✅ Восстановлено из бота!",message:"«Моё», оценки, просмотренные, заметки и «🗂 Мои подборки» перенесены на это устройство."+(s>0?`
-🧹 Дубликаты убраны: ${s}.`:"")})}else tg.showPopup({type:"alert",title:"Не удалось",message:"Бэкап повреждён или устарел. Скопируй строку заново в «❤️ Моё»."})}catch(s){}},400)}catch(t){}}(function(){const e=document.getElementById("riddle-modal");e&&(e.addEventListener("click",n=>{n.target===e&&e.classList.add("hidden")}),["btn-riddle-close","btn-riddle-close2"].forEach(n=>{const s=document.getElementById(n);s&&(s.onclick=()=>e.classList.add("hidden"))}))})();let timeLimit=0;const durOf=t=>{const e=parseInt(t&&t.duration,10);return e>0?e:0};function renderTimeChips(){const t=document.getElementById("time-chips");if(!t)return;const e=[{v:0,label:"⏱ Любое время"},{v:100,label:"🎬 ~1,5 ч"},{v:125,label:"🎬 ~2 ч"},{v:190,label:"🎬 до 3 ч"}];t.innerHTML=e.map(n=>`<button class="t-chip${timeLimit===n.v?" active":""}" data-t="${n.v}">${n.label}</button>`).join(""),t.querySelectorAll(".t-chip").forEach(n=>{n.addEventListener("click",()=>{timeLimit=parseInt(n.dataset.t,10)||0,haptic("light"),renderTimeChips(),renderGrid()})})}function initShelfArrows(){document.querySelectorAll(".hero-shelf").forEach(t=>{const e=t.querySelector(".hero-row");if(!e||t.querySelector(".shelf-arrow"))return;const n=i=>e.scrollBy({left:i*Math.max(260,e.clientWidth*.8),behavior:"smooth"}),s=(i,o,r)=>{const c=document.createElement("button");c.className="shelf-arrow "+i,c.textContent=r>0?"›":"‹",c.title=o,c.addEventListener("click",()=>{haptic("light"),n(r)}),t.appendChild(c)};s("sa-prev","Назад",-1),s("sa-next","Вперёд",1)})}function initHeaderScroll(){const t=document.querySelector(".header");if(!t)return;const e=()=>t.classList.toggle("scrolled",(window.scrollY||0)>8);window.addEventListener("scroll",e,{passive:!0}),e();const n=document.querySelector(".tabs");if(n){const s=()=>document.documentElement.style.setProperty("--tabs-h",n.offsetHeight+"px");s(),window.addEventListener("resize",s),setTimeout(s,300)}}function resetFilters(){const t=document.getElementById("search");t&&(t.value=""),activeGenre="",renderGenreChips(),activeCountry="",renderCountryChips(),timeLimit=0,renderTimeChips(),onlyTrailer=!1;const e=document.getElementById("btn-only-tr");e&&e.classList.remove("active"),onlyOnline=!1;const n=document.getElementById("btn-only-online");n&&n.classList.remove("active"),haptic("light"),renderGrid()}function renderFilterBar(t,e){const n=document.getElementById("filter-bar");if(!n)return;const s=document.getElementById("search"),i=(s&&s.value||"").trim(),o=[];if(i&&o.push(["🔍 "+i,"search"]),activeGenre&&o.push(["🎭 "+marGenreLabel(activeGenre),"genre"]),activeCountry&&o.push(["🌍 "+activeCountry,"country"]),timeLimit&&o.push(["⏱ до "+timeLimit+" мин","time"]),onlyTrailer&&o.push(["▶️ С трейлером","trailer"]),onlyOnline&&o.push(["🟢 Онлайн","online"]),localStorage.getItem(HIDE_KEY)==="1"&&o.push(["🙈 Без разгаданных","hide"]),!o.length){n.classList.add("hidden"),n.innerHTML="";return}n.classList.remove("hidden"),n.innerHTML=o.map(([c,a])=>`<button class="fb-chip" data-fb="${a}">${esc(c)} ✕</button>`).join("")+`<span class="fb-count">найдено <b>${t}</b>${e<t?" · на экране "+e:""}</span><button class="fb-reset" id="fb-reset">Сбросить</button>`,n.querySelectorAll(".fb-chip").forEach(c=>c.onclick=()=>{const a=c.dataset.fb;if(a==="search"&&s)s.value="";else if(a==="genre")activeGenre="",renderGenreChips();else if(a==="country")activeCountry="",renderCountryChips();else if(a==="time")timeLimit=0,renderTimeChips();else if(a==="trailer"){onlyTrailer=!1;const m=document.getElementById("btn-only-tr");m&&m.classList.remove("active")}else if(a==="online"){onlyOnline=!1;const m=document.getElementById("btn-only-online");m&&m.classList.remove("active")}else if(a==="hide"){localStorage.setItem(HIDE_KEY,"");const m=document.getElementById("hide-unlocked");m&&(m.checked=!1);const b=document.getElementById("hide-toggle-wrap");b&&b.classList.remove("on")}haptic("light"),renderGrid()});const r=document.getElementById("fb-reset");r&&(r.onclick=()=>{resetFilters(),window.scrollTo({top:0,behavior:"smooth"})})}function renderGrid(){try{renderTodayStrip()}catch(C){}const t=(document.getElementById("search").value||"").trim(),e=t.toLowerCase().replace(/ё/g,"е"),n=parseSmartQuery(t),s=document.getElementById("sort").value,i=localStorage.getItem(FAV_MODE_KEY),o=[view,t,n?JSON.stringify(n):"",s,i,activeGenre,activeCountry,timeLimit,onlyTrailer,onlyOnline,localStorage.getItem(HIDE_KEY)].join("§");o!==_gridFilterKey&&(_gridFilterKey=o,gridPage=1);const r=getUnlocked(),c=getWatched();let a=view==="fav"?i==="done"?ALL.filter(C=>r.includes(String(C.code))):i==="watched"?ALL.filter(C=>c.includes(String(C.code))):i==="rated"?ALL.filter(C=>getRatings()[String(C.code)]):ALL.filter(C=>getFavs().includes(C.code)):[...ALL];if(activeGenre&&(a=a.filter(C=>(C.genres||[]).includes(activeGenre))),activeCountry&&(a=a.filter(C=>(C.countries||[]).includes(activeCountry))),timeLimit&&view==="grid"&&(a=a.filter(C=>{const tt=durOf(C);return tt&&tt<=timeLimit})),onlyTrailer&&view==="grid"&&(a=a.filter(C=>C.trailer_yt||C.trailer_mp4||C.trailer_file_id)),onlyOnline&&view==="grid"&&(a=a.filter(C=>!!C.link)),localStorage.getItem(HIDE_KEY)==="1"&&view!=="fav"){const C=new Set(getUnlocked());C.size&&(a=a.filter(tt=>!C.has(String(tt.code))))}if(e&&!n){const C=e.replace(/\D/g,""),tt=/^\d+$/.test(e.replace(/\s+/g,"")),T=F=>(F||"").toLowerCase().replace(/ё/g,"е"),j=e.split(/\s+/).filter(Boolean);let J=[];const A=F=>{const z=F.split(/\s+/).filter(Boolean);a.forEach(x=>{const V=T(x._raw||x.title),K=T([V,x.description,(x.genres||[]).join(" "),(x.countries||[]).join(" "),x.year||"",x.director||"",(x.actors||[]).join(" ")].filter(Boolean).join(" · "));(tt&&C&&String(x.code||"").includes(C)||z.length&&z.every(ct=>K.includes(ct)))&&(J.some(ct=>ct.m===x)||J.push({m:x,score:0}))})};if(A(e),!J.length&&/[a-z]/.test(e)){const F={q:"й",w:"ц",e:"у",r:"к",t:"е",y:"н",u:"г",i:"ш",o:"щ",p:"з",a:"ф",s:"ы",d:"в",f:"а",g:"п",h:"р",j:"о",k:"л",l:"д",z:"я",x:"ч",c:"с",v:"м",b:"и",n:"т",m:"ь","[":"х","]":"ъ",";":"ж","'":"э",",":"б",".":"ю"},z=e.replace(/[a-z\[\];',.]/g,x=>F[x]||x);z&&z!==e&&A(z)}if(!J.length){const F=e.length<=6?2:e.length<=12?3:4;a.forEach(z=>{const x=T(z.title),V=_levDist(e,x);V<=F&&V<=Math.max(2,Math.floor(x.length*.3))&&J.push({m:z,score:V})}),J.sort((z,x)=>z.score-x.score)}a=J.map(F=>F.m)}n&&(a=[...ALL],n.genre&&(a=a.filter(C=>(C.genres||[]).some(tt=>String(tt).toLowerCase()===n.genre))),n.minRating!=null&&(a=a.filter(C=>(parseFloat(C.rating)||0)>=n.minRating)),n.decade&&(a=a.filter(C=>C.year>=n.decade&&C.year<n.decade+10)),n.year&&(a=a.filter(C=>String(C.year)===String(n.year))),n.maxMin&&(a=a.filter(C=>!C.duration||C.duration<=n.maxMin)),n.minDurMin&&(a=a.filter(C=>!C.duration||C.duration>=n.minDurMin))),a.sort((C,tt)=>{if(s==="rating")return(parseFloat(tt.rating)||0)-(parseFloat(C.rating)||0);if(s==="code")return(+C.code||0)-(+tt.code||0);if(s==="new"){const T=new Date(C.added_at||0).getTime();return new Date(tt.added_at||0).getTime()-T}if(s==="myrating"){const T=getRatings()[String(C.code)]||0,j=getRatings()[String(tt.code)]||0;return T!==j?j-T:(C.title||"").localeCompare(tt.title||"","ru")}return(C.title||"").localeCompare(tt.title||"","ru")});const b=!!(t||activeGenre||activeCountry||timeLimit||onlyTrailer||onlyOnline)?'<button class="btn-clear-filters" id="btn-clear-filters" title="Сбросить все фильтры">🧹 Сбросить фильтры</button>':"",w=document.getElementById("movies-container"),$=view==="grid"&&!!(t||activeGenre);["hero-shelf","today-shelf","new-codes-shelf","recent-shelf","reco-shelf","premieres-shelf"].forEach(C=>{const tt=document.getElementById(C);if(!tt)return;const T=tt.querySelector(".hero-row");tt.classList.toggle("hidden",$||!T||!T.children.length)});const p=document.getElementById("filmday-banner");p&&p.classList.toggle("hidden",$||!p.innerHTML.trim());const f=view==="fav"?`<div class="fav-mode">
-      <button class="fav-mode-btn ${i==="fav"?"active":""}" data-mode="fav">❤️ Хочу</button>
-      <button class="fav-mode-btn ${i==="done"?"active":""}" data-mode="done">✅ Разгадал</button>
-      <button class="fav-mode-btn ${i==="watched"?"active":""}" data-mode="watched">👁 Смотрел</button>
-      <button class="fav-mode-btn ${i==="rated"?"active":""}" data-mode="rated">⭐ Оценки</button>
-    </div>`:"",v=view==="fav"&&i==="done"?`<div class="fav-progress">Разгадано ${r.length} из ${ALL.length} (${ALL.length?Math.round(100*r.length/ALL.length):0}%)</div>`:view==="fav"&&i==="watched"?`<div class="fav-progress">Просмотрено ${c.length} из ${ALL.length} (${ALL.length?Math.round(100*c.length/ALL.length):0}%)</div>`:view==="fav"&&i==="rated"?`<div class="fav-progress">Оценено ${plFilms(Object.keys(getRatings()).length)} — рекомендации стали точнее 💫</div>`:"",u=n?`<div class="smart-hint">🧠 ${esc((n.parts||[]).join(" · "))} · найдено: ${a.length}<button class="smart-clear" title="Сбросить" onclick="document.getElementById('search').value='';renderGrid()">✕</button></div>`:"",S=(view==="grid"?`<div class="layout-switch"><span class="ls-label">Вид:</span>
-        <button class="ls-btn${gridLayout==="grid"?" active":""}" data-l="grid">▦ Сетка</button>
-        <button class="ls-btn${gridLayout==="list"?" active":""}" data-l="list">☰ Список</button>
-      </div>`:"")+f+v+u+b+(view==="grid"&&!$&&ALL.length&&c.length>0?`<div class="seen-bar"><span>👁 Отмечено просмотренными: ${c.length} из ${ALL.length}</span><span class="seen-track"><i style="width:${Math.round(100*c.length/ALL.length)}%"></i></span></div>`:"")+(view==="grid"&&!$&&ALL.length?(()=>{const C=ALL.filter(J=>r.includes(String(J.code))).length,tt=ALL.length-C,T=Math.round(100*C/ALL.length),j=tt>0?` · осталось ${tt}`:" · всё собрано! 🏆";return`<div class="seen-bar"><span>🎬 Разгадано кодов: ${C} из ${ALL.length}${j}</span><span class="seen-track"><i style="width:${T}%"></i></span></div>`})():""),g=()=>{w.querySelectorAll(".fav-mode-btn").forEach(C=>C.addEventListener("click",()=>{try{localStorage.setItem(FAV_MODE_KEY,C.dataset.mode)}catch(tt){}haptic("light"),renderGrid()}))};if(!a.length){renderFilterBar(0,0);const C=view==="fav"?i==="done"?"🔒":i==="watched"?"👁":i==="rated"?"⭐":"🤍":"🔍",tt=view==="fav"?i==="done"?"Тут пока тихо. Лови коды в канале — Капитан будет ждать 🔑":i==="watched"?"Ни одного просмотренного. Посмотрел фильм — жми «👁» на карточке 🍿":i==="rated"?"Оценок ещё нет. Открой любой фильм и поставь ему звёзды ⭐":"Список пуст, Капитан скучает. Жми ❤️ на любом фильме — и он оживёт":"Капитан обшарил всю афишу — такого нет 🤷 Попробуй другое слово или жанр",T=view==="fav"&&(i||"fav")==="fav"?backupFavsNotice():"";w.innerHTML=S+T+`<div class="empty-state">
-      <div class="empty-emoji">${C}</div>
-      <p>${tt}</p>
+    </div>`; }
+  const reveal = document.getElementById('btn-riddle-reveal');
+  if (reveal) {
+    reveal.classList.remove('hidden');
+    reveal.onclick = () => {
+      haptic('ok');
+      if (body) body.classList.remove('hidden');
+      reveal.classList.add('hidden');
+      const open = document.getElementById('btn-riddle-open');
+      if (open) open.classList.remove('hidden');
+    };
+  }
+  const open = document.getElementById('btn-riddle-open');
+  if (open) {
+    open.classList.add('hidden');
+    open.onclick = () => { modal.classList.add('hidden'); openDetail(m.code); };
+  }
+  modal.classList.remove('hidden');
+  // v110: ссылка с reveal=1 — друг сразу видит ответ (после паузы)
+  if (autoReveal) {
+    setTimeout(() => {
+      haptic('ok');
+      if (body) body.classList.remove('hidden');
+      if (reveal) reveal.classList.add('hidden');
+      if (open) open.classList.remove('hidden');
+    }, 1200);
+  }
+}
+function parseRiddleHash() {
+  // Друг пришёл по ссылке «загадай другу»: #riddle=КОД. Показываем загадку
+  // один раз и чистим хэш, чтобы при следующем открытии она не всплывала.
+  try {
+    const params = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const code = params.get('riddle');
+    if (code) {
+      history.replaceState(null, '', location.pathname + location.search);
+      setTimeout(() => showRiddleModal(code, params.get('reveal') === '1'), 500);
+    }
+  } catch (e) { /* пусто */ }
+}
+// v76: восстановление «Моё» из бота — кнопка «📥 Восстановить» в чате открывает
+// мини-апп с #restore=<строка бэкапа>. Импортируем и чистим хэш.
+function parseRestoreHash() {
+  try {
+    const params = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+    const data = params.get('restore');
+    if (!data) return;
+    history.replaceState(null, '', location.pathname + location.search);
+    const r = importBackupString(String(data));
+    setTimeout(() => {
+      try {
+        if (r === 'ok') {
+          const dupes = window._lastRestoreDupes || 0;
+          tg.showPopup({ type: 'ok', title: '✅ Восстановлено из бота!', message: '«Моё», оценки, просмотренные, заметки и «🗂 Мои подборки» перенесены на это устройство.' + (dupes > 0 ? `\n🧹 Дубликаты убраны: ${dupes}.` : '') });
+        } else {
+          tg.showPopup({ type: 'alert', title: 'Не удалось', message: 'Бэкап повреждён или устарел. Скопируй строку заново в «❤️ Моё».' });
+        }
+      } catch (e) { /* пусто */ }
+    }, 400);
+  } catch (e) { /* пусто */ }
+}
+(function initRiddleModal() {
+  const bg = document.getElementById('riddle-modal');
+  if (!bg) return;
+  bg.addEventListener('click', (e) => { if (e.target === bg) bg.classList.add('hidden'); });
+  ['btn-riddle-close', 'btn-riddle-close2'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.onclick = () => bg.classList.add('hidden');
+  });
+})();
+
+// ---------- v77: «Сколько времени есть?» — фильтр афиши по длительности ----------
+let timeLimit = 0;  // 0 = любая длительность
+const durOf = (m) => { const d = parseInt(m && m.duration, 10); return d > 0 ? d : 0; };
+function renderTimeChips() {
+  const box = document.getElementById('time-chips');
+  if (!box) return;
+  const chips = [
+    { v: 0, label: '⏱ Любое время' },
+    { v: 100, label: '🎬 ~1,5 ч' },
+    { v: 125, label: '🎬 ~2 ч' },
+    { v: 190, label: '🎬 до 3 ч' },
+  ];
+  box.innerHTML = chips.map(c =>
+    `<button class="t-chip${timeLimit === c.v ? ' active' : ''}" data-t="${c.v}">${c.label}</button>`).join('');
+  box.querySelectorAll('.t-chip').forEach(ch => {
+    ch.addEventListener('click', () => {
+      timeLimit = parseInt(ch.dataset.t, 10) || 0;
+      haptic('light');
+      renderTimeChips();
+      renderGrid();
+    });
+  });
+}
+// v77: стрелки прокрутки полок на ПК (на тач-устройствах остаётся свайп)
+function initShelfArrows() {
+  document.querySelectorAll('.hero-shelf').forEach(shelf => {
+    const row = shelf.querySelector('.hero-row');
+    if (!row || shelf.querySelector('.shelf-arrow')) return;
+    const go = (dir) => row.scrollBy({ left: dir * Math.max(260, row.clientWidth * 0.8), behavior: 'smooth' });
+    const mk = (cls, title, dir) => {
+      const b = document.createElement('button');
+      b.className = 'shelf-arrow ' + cls;
+      b.textContent = dir > 0 ? '›' : '‹';
+      b.title = title;
+      b.addEventListener('click', () => { haptic('light'); go(dir); });
+      shelf.appendChild(b);
+    };
+    mk('sa-prev', 'Назад', -1);
+    mk('sa-next', 'Вперёд', 1);
+  });
+}
+// v77: тень стеклянной шапки при прокрутке
+function initHeaderScroll() {
+  const h = document.querySelector('.header');
+  if (!h) return;
+  const upd = () => h.classList.toggle('scrolled', (window.scrollY || 0) > 8);
+  window.addEventListener('scroll', upd, { passive: true });
+  upd();
+  // v123: высота табов в CSS-переменной — липкая строка фильтров встаёт ровно под
+  // ними (на узких экранах табы переносятся на второй ряд, «магическое» число не годится)
+  const tabs = document.querySelector('.tabs');
+  if (tabs) {
+    const sync = () => document.documentElement.style.setProperty('--tabs-h', tabs.offsetHeight + 'px');
+    sync();
+    window.addEventListener('resize', sync);
+    setTimeout(sync, 300);   // после подстановки шрифта строка может стать выше
+  }
+}
+
+// ---------- v123: липкая строка «что включено» + сколько нашлось ----------
+// Зачем: строка поиска и чипы уезжают вверх при прокрутке, и через экран уже не
+// видно, почему в афише мало фильмов. Теперь активные фильтры висят под табами
+// и снимаются одним тапом (плюс видно счётчик найденного).
+function resetFilters() {
+  const s = document.getElementById('search');
+  if (s) s.value = '';
+  activeGenre = ''; renderGenreChips();
+  activeCountry = ''; renderCountryChips();
+  timeLimit = 0; renderTimeChips();
+  onlyTrailer = false; const tb = document.getElementById('btn-only-tr'); if (tb) tb.classList.remove('active');
+  onlyOnline = false; const ob = document.getElementById('btn-only-online'); if (ob) ob.classList.remove('active');
+  haptic('light');
+  renderGrid();
+}
+function renderFilterBar(total, shown) {
+  const el = document.getElementById('filter-bar');
+  if (!el) return;
+  const s = document.getElementById('search');
+  const q = (s && s.value || '').trim();
+  const chips = [];
+  if (q) chips.push(['🔍 ' + q, 'search']);
+  if (activeGenre) chips.push(['🎭 ' + marGenreLabel(activeGenre), 'genre']);
+  if (activeCountry) chips.push(['🌍 ' + activeCountry, 'country']);
+  if (timeLimit) chips.push(['⏱ до ' + timeLimit + ' мин', 'time']);
+  if (onlyTrailer) chips.push(['▶️ С трейлером', 'trailer']);
+  if (onlyOnline) chips.push(['🟢 Онлайн', 'online']);
+  if (localStorage.getItem(HIDE_KEY) === '1') chips.push(['🙈 Без разгаданных', 'hide']);
+  if (!chips.length) {
+    el.classList.add('hidden');
+    el.innerHTML = '';
+    return;
+  }
+  el.classList.remove('hidden');
+  el.innerHTML = chips.map(([label, k]) =>
+    `<button class="fb-chip" data-fb="${k}">${esc(label)} ✕</button>`).join('') +
+    `<span class="fb-count">найдено <b>${total}</b>${shown < total ? ' · на экране ' + shown : ''}</span>` +
+    `<button class="fb-reset" id="fb-reset">Сбросить</button>`;
+  el.querySelectorAll('.fb-chip').forEach(b => b.onclick = () => {
+    const k = b.dataset.fb;
+    if (k === 'search' && s) s.value = '';
+    else if (k === 'genre') { activeGenre = ''; renderGenreChips(); }
+    else if (k === 'country') { activeCountry = ''; renderCountryChips(); }
+    else if (k === 'time') { timeLimit = 0; renderTimeChips(); }
+    else if (k === 'trailer') { onlyTrailer = false; const t = document.getElementById('btn-only-tr'); if (t) t.classList.remove('active'); }
+    else if (k === 'online') { onlyOnline = false; const o = document.getElementById('btn-only-online'); if (o) o.classList.remove('active'); }
+    else if (k === 'hide') {
+      localStorage.setItem(HIDE_KEY, '');
+      const box = document.getElementById('hide-unlocked');
+      if (box) box.checked = false;
+      const wrap = document.getElementById('hide-toggle-wrap');
+      if (wrap) wrap.classList.remove('on');
+    }
+    haptic('light');
+    renderGrid();
+  });
+  const r = document.getElementById('fb-reset');
+  if (r) r.onclick = () => {
+    resetFilters();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+}
+
+function renderGrid() {
+  try { renderTodayStrip(); } catch (e) {}
+  const qRaw = (document.getElementById('search').value || '').trim();
+  // v64: нормализуем запрос (ё→е) — раньше «зелёная» с ё не находила «Зеленая миля»
+  const q = qRaw.toLowerCase().replace(/ё/g, 'е');
+  const smart = parseSmartQuery(qRaw);
+  const sort = document.getElementById('sort').value;
+  const favMode = localStorage.getItem(FAV_MODE_KEY);  // fav | done | watched
+  // v93: «Показать ещё» — афиша порциями по GRID_PAGE_SIZE (30). При смене
+  // любого фильтра/поиска/сортировки страница сбрасывается на первую.
+  const gKey = [view, qRaw, smart ? JSON.stringify(smart) : '', sort, favMode,
+    activeGenre, activeCountry, timeLimit, onlyTrailer, onlyOnline,
+    localStorage.getItem(HIDE_KEY)].join('§');
+  if (gKey !== _gridFilterKey) { _gridFilterKey = gKey; gridPage = 1; }
+  const unlockedAll = getUnlocked();
+  const watchedAll = getWatched();
+  let list = view === 'fav'
+    ? (favMode === 'done'
+        ? ALL.filter(m => unlockedAll.includes(String(m.code)))
+        : (favMode === 'watched'
+            ? ALL.filter(m => watchedAll.includes(String(m.code)))
+            : (favMode === 'rated'
+                ? ALL.filter(m => getRatings()[String(m.code)])
+                : ALL.filter(m => getFavs().includes(m.code)))))
+    : [...ALL];
+  if (activeGenre) list = list.filter(m => (m.genres || []).includes(activeGenre));
+  if (activeCountry) list = list.filter(m => (m.countries || []).includes(activeCountry));
+  // v77: фильтр «Сколько времени есть?» — только фильмы с известной длительностью
+  if (timeLimit && view === 'grid') list = list.filter(m => { const d = durOf(m); return d && d <= timeLimit; });
+  // v90: «▶️ С трейлером» — только фильмы, которые можно посмотреть с видео
+  if (onlyTrailer && view === 'grid') list = list.filter(m => m.trailer_yt || m.trailer_mp4 || m.trailer_file_id);
+  // v91: «🟢 Онлайн» — только фильмы с прямой ссылкой на просмотр
+  if (onlyOnline && view === 'grid') list = list.filter(m => !!m.link);
+  // 🙈 «Скрыть разгаданные»: прячем карточки, код которых есть в localStorage
+  if (localStorage.getItem(HIDE_KEY) === '1' && view !== 'fav') {
+    const unlockedSet = new Set(getUnlocked());
+    if (unlockedSet.size) list = list.filter(m => !unlockedSet.has(String(m.code)));
+  }
+    if (q && !smart) {
+    const digits = q.replace(/\D/g, '');
+    const isCode = /^\d+$/.test(q.replace(/\s+/g, ''));  // весь запрос — число → это код
+    // Сначала точные совпадения (все слова запроса в названии/описании или код),
+    // затем раскладка, затем нечёткий поиск по Левенштейну («интерстелар» найдёт «Интерстеллар»).
+    const norm = (t) => (t || '').toLowerCase().replace(/ё/g, 'е');
+    const toks = q.split(/\s+/).filter(Boolean);
+    let matches = [];
+    const tryQuery = (query) => {
+      const tks = query.split(/\s+/).filter(Boolean);
+      list.forEach(m => {
+        const t = norm(m._raw || m.title);
+        // «стог сена»: название + описание + жанры + страны + год + люди
+        const hay = norm([t, m.description, (m.genres || []).join(' '),
+          (m.countries || []).join(' '), m.year || '', m.director || '',
+          (m.actors || []).join(' ')].filter(Boolean).join(' · '));
+        const codeHit = isCode && digits && String(m.code || '').includes(digits);
+        // все слова запроса должны найтись (в любом поле) — так «зеленая миля 1999»
+        // и «торино гран» работают независимо от порядка слов
+        if (codeHit || (tks.length && tks.every(w => hay.includes(w)))) {
+          if (!matches.some(x => x.m === m)) matches.push({ m, score: 0 });
+        }
+      });
+    };
+    tryQuery(q);
+    if (!matches.length && /[a-z]/.test(q)) {
+      // 2-й эшелон: неправильная раскладка клавиатуры — «ptktyfz» → «зеленая»
+      const RU_LAYOUT = { q:'й', w:'ц', e:'у', r:'к', t:'е', y:'н', u:'г', i:'ш', o:'щ', p:'з',
+        a:'ф', s:'ы', d:'в', f:'а', g:'п', h:'р', j:'о', k:'л', l:'д', z:'я', x:'ч', c:'с',
+        v:'м', b:'и', n:'т', m:'ь', '[':'х', ']':'ъ', ';':'ж', "'":'э', ',':'б', '.':'ю' };
+      const qRu = q.replace(/[a-z\[\];',.]/g, ch => RU_LAYOUT[ch] || ch);
+      if (qRu && qRu !== q) tryQuery(qRu);
+    }
+    if (!matches.length) {
+      const limit = q.length <= 6 ? 2 : (q.length <= 12 ? 3 : 4);
+      list.forEach(m => {
+        const t = norm(m.title);
+        const d = _levDist(q, t);
+        if (d <= limit && d <= Math.max(2, Math.floor(t.length * 0.3))) {
+          matches.push({ m, score: d });
+        }
+      });
+      matches.sort((a, b) => a.score - b.score);
+    }
+    list = matches.map(x => x.m);
+  }
+  // Умный фильтр: применяем разобранные из фразы директивы напрямую
+  if (smart) {
+    list = [...ALL];
+    if (smart.genre) list = list.filter(m => (m.genres || []).some(g => String(g).toLowerCase() === smart.genre));
+    if (smart.minRating != null) list = list.filter(m => (parseFloat(m.rating) || 0) >= smart.minRating);
+    if (smart.decade) list = list.filter(m => m.year >= smart.decade && m.year < smart.decade + 10);
+    if (smart.year) list = list.filter(m => String(m.year) === String(smart.year));
+    if (smart.maxMin) list = list.filter(m => !m.duration || m.duration <= smart.maxMin);
+    if (smart.minDurMin) list = list.filter(m => !m.duration || m.duration >= smart.minDurMin);
+  }
+  list.sort((a, b) => {
+    if (sort === 'rating') return (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0);
+    if (sort === 'code') return (+a.code || 0) - (+b.code || 0);
+    if (sort === 'new') {
+      const da = new Date(a.added_at || 0).getTime();
+      const db = new Date(b.added_at || 0).getTime();
+      return db - da;
+    }
+    // v92: «⭐ По моей оценке» — сначала твои 5★→1★, потом неоценённые
+    if (sort === 'myrating') {
+      const ra = getRatings()[String(a.code)] || 0;
+      const rb = getRatings()[String(b.code)] || 0;
+      if (ra !== rb) return (rb - ra);
+      return (a.title || '').localeCompare(b.title || '', 'ru');
+    }
+    return (a.title || '').localeCompare(b.title || '', 'ru');
+  });
+  // v92: кнопка «🧹 Сбросить фильтры» — видна, когда активен хоть один фильтр
+  const anyFilter = !!(qRaw || activeGenre || activeCountry || timeLimit || onlyTrailer || onlyOnline);
+  const clearBtn = anyFilter
+    ? `<button class="btn-clear-filters" id="btn-clear-filters" title="Сбросить все фильтры">🧹 Сбросить фильтры</button>`
+    : '';
+  const c = document.getElementById('movies-container');
+  // v71: во время поиска прячем полки главной (тренды, премьеры, «Советуем», фильм дня),
+  // чтобы результаты или «Ничего не нашлось» были сразу под строкой поиска, а не
+  // глубоко внизу страницы. При очистке запроса полки возвращаются сами.
+  const searching = view === 'grid' && !!(qRaw || activeGenre);
+  ['hero-shelf', 'today-shelf', 'new-codes-shelf', 'recent-shelf', 'reco-shelf', 'premieres-shelf'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const row = el.querySelector('.hero-row');
+    el.classList.toggle('hidden', searching || !row || !row.children.length);
+  });
+  const fdBan = document.getElementById('filmday-banner');
+  if (fdBan) fdBan.classList.toggle('hidden', searching || !fdBan.innerHTML.trim());
+  // Переключатель «Моё»: ❤️ хочу посмотреть / ✅ разгаданные / 👁 я смотрел + прогресс
+  const modeSwitch = view === 'fav' ? `<div class="fav-mode">
+      <button class="fav-mode-btn ${favMode === 'fav' ? 'active' : ''}" data-mode="fav">❤️ Хочу</button>
+      <button class="fav-mode-btn ${favMode === 'done' ? 'active' : ''}" data-mode="done">✅ Разгадал</button>
+      <button class="fav-mode-btn ${favMode === 'watched' ? 'active' : ''}" data-mode="watched">👁 Смотрел</button>
+      <button class="fav-mode-btn ${favMode === 'rated' ? 'active' : ''}" data-mode="rated">⭐ Оценки</button>
+    </div>` : '';
+  const progressLine = (view === 'fav' && favMode === 'done')
+    ? `<div class="fav-progress">Разгадано ${unlockedAll.length} из ${ALL.length} (${ALL.length ? Math.round(100 * unlockedAll.length / ALL.length) : 0}%)</div>`
+    : (view === 'fav' && favMode === 'watched')
+    ? `<div class="fav-progress">Просмотрено ${watchedAll.length} из ${ALL.length} (${ALL.length ? Math.round(100 * watchedAll.length / ALL.length) : 0}%)</div>`
+    : (view === 'fav' && favMode === 'rated')
+    ? `<div class="fav-progress">Оценено ${plFilms(Object.keys(getRatings()).length)} — рекомендации стали точнее 💫</div>`
+    : '';
+  const smartHint = smart
+    ? `<div class="smart-hint">🧠 ${esc((smart.parts || []).join(' · '))} · найдено: ${list.length}<button class="smart-clear" title="Сбросить" onclick="document.getElementById('search').value='';renderGrid()">✕</button></div>`
+    : '';
+  const head = (view === 'grid'
+    ? `<div class="layout-switch"><span class="ls-label">Вид:</span>
+        <button class="ls-btn${gridLayout === 'grid' ? ' active' : ''}" data-l="grid">▦ Сетка</button>
+        <button class="ls-btn${gridLayout === 'list' ? ' active' : ''}" data-l="list">☰ Список</button>
+      </div>`
+    : '')
+    + modeSwitch + progressLine + smartHint + clearBtn
+    // v75: полоску «просмотрено» показываем только когда есть хоть одна отметка —
+    // «0 из 71» выглядело как баг и занимало место
+    + (view === 'grid' && !searching && ALL.length && watchedAll.length > 0
+      ? `<div class="seen-bar"><span>👁 Отмечено просмотренными: ${watchedAll.length} из ${ALL.length}</span><span class="seen-track"><i style="width:${Math.round(100 * watchedAll.length / ALL.length)}%"></i></span></div>`
+      : '')
+    // v126: прогресс «разгадано кодов» — главная цель афиши (механика канала).
+    // В отличие от «просмотрено», показываем ВСЕГДА (даже с 0): «0 из 85 — собери
+    // всё» мотивирует новичка и даёт причину возвращаться. Тот же CSS, что у
+    // «просмотрено», — единый вид без новых стилей.
+    + (view === 'grid' && !searching && ALL.length
+      ? (() => {
+          const done = ALL.filter(m => unlockedAll.includes(String(m.code))).length;
+          const left = ALL.length - done;
+          const pct = Math.round(100 * done / ALL.length);
+          const hint = left > 0 ? ` · осталось ${left}` : ' · всё собрано! 🏆';
+          return `<div class="seen-bar"><span>🎬 Разгадано кодов: ${done} из ${ALL.length}${hint}</span><span class="seen-track"><i style="width:${pct}%"></i></span></div>`;
+        })()
+      : '');
+  const wireFavMode = () => {
+    c.querySelectorAll('.fav-mode-btn').forEach(b => b.addEventListener('click', () => {
+      try { localStorage.setItem(FAV_MODE_KEY, b.dataset.mode); } catch (e) {}
+      haptic('light');
+      renderGrid();
+    }));
+  };
+  if (!list.length) {
+    // v124: чипы и «Сбросить» нужны как раз при нулевом результате — раньше
+    // строка пряталась вместе с ними, и выйти из тупика фильтра можно было
+    // только наугад (или кнопкой «Мне повезёт»).
+    renderFilterBar(0, 0);
+    const emptyEmoji = view === 'fav' ? (favMode === 'done' ? '🔒' : favMode === 'watched' ? '👁' : favMode === 'rated' ? '⭐' : '🤍') : '🔍';
+    const emptyText = view === 'fav'
+      ? (favMode === 'done'
+          ? 'Тут пока тихо. Лови коды в канале — Капитан будет ждать 🔑'
+          : (favMode === 'watched'
+              ? 'Ни одного просмотренного. Посмотрел фильм — жми «👁» на карточке 🍿'
+              : (favMode === 'rated'
+                  ? 'Оценок ещё нет. Открой любой фильм и поставь ему звёзды ⭐'
+                  : 'Список пуст, Капитан скучает. Жми ❤️ на любом фильме — и он оживёт')))
+      : 'Капитан обшарил всю афишу — такого нет 🤷 Попробуй другое слово или жанр';
+    // v74: даже при пустом «Моём» показываем карточку с бэкапом/восстановлением
+    const backupEmpty = (view === 'fav' && (favMode || 'fav') === 'fav') ? backupFavsNotice() : '';
+    c.innerHTML = head + backupEmpty + `<div class="empty-state">
+      <div class="empty-emoji">${emptyEmoji}</div>
+      <p>${emptyText}</p>
       <button class="btn-secondary" id="btn-empty-lucky">🎲 Мне повезёт</button>
-    </div>`+(view==="grid"?freshLineHtml():""),g();const j=document.getElementById("btn-copy-backup");j&&(j.onclick=copyBackup);const J=document.getElementById("btn-share-posters");J&&(J.onclick=shareFavsPoster);const A=document.getElementById("btn-import-backup");A&&(A.onclick=importBackup);const F=document.getElementById("btn-restore-bot");F&&(F.onclick=()=>sendOrDeepLink({action:"restore_backup"}));const z=document.getElementById("btn-empty-lucky");z&&(z.onclick=()=>{if(!ALL.length)return;haptic("light");const x=ALL[Math.floor(Math.random()*ALL.length)];openDetail(x.code)});return}const L=view==="fav"&&(i||"fav")==="fav"?backupFavsNotice():"",H=view==="grid"&&a.length>GRID_PAGE_SIZE,M=H?a.slice(0,gridPage*GRID_PAGE_SIZE):a,nt=H&&M.length<a.length?`<button class="btn-show-more" id="btn-show-more">🎞 Показать ещё (${a.length-M.length})</button>`:"";renderFilterBar(a.length,M.length),w.innerHTML=S+L+(gridLayout==="list"?M.map(C=>listRowHtml(C,e)).join(""):M.map(C=>{const tt=view==="fav"&&i==="rated"&&getRatings()[String(C.code)]||0;return`
-    <div class="movie-card${view==="fav"&&(i||"fav")==="fav"&&getFavs().includes(String(C.code))?" card-fav":""}" data-code="${esc(C.code)}">
-      ${posterHtmlQuick(C)}
+    </div>` + (view === 'grid' ? freshLineHtml() : '');
+    wireFavMode();
+    const cbE = document.getElementById('btn-copy-backup');
+    if (cbE) cbE.onclick = copyBackup;
+    const spE = document.getElementById('btn-share-posters');
+    if (spE) spE.onclick = shareFavsPoster;
+    const ibE = document.getElementById('btn-import-backup');
+    if (ibE) ibE.onclick = importBackup;
+    const rbE = document.getElementById('btn-restore-bot');
+    if (rbE) rbE.onclick = () => sendOrDeepLink({ action: 'restore_backup' });
+    const el = document.getElementById('btn-empty-lucky');
+    if (el) el.onclick = () => {
+      if (!ALL.length) return;
+      haptic('light');
+      const m = ALL[Math.floor(Math.random() * ALL.length)];
+      openDetail(m.code);
+    };
+    return;
+  }
+  const backup = (view === 'fav' && (favMode || 'fav') === 'fav') ? backupFavsNotice() : '';
+  // v93: виртуализация афиши — рисуем только текущую страницу (по 30),
+  // кнопка «Показать ещё» появляется, когда за границей остались фильмы.
+  const gridClipped = (view === 'grid') && list.length > GRID_PAGE_SIZE;
+  const visible = gridClipped ? list.slice(0, gridPage * GRID_PAGE_SIZE) : list;
+  const showMoreBtn = gridClipped && visible.length < list.length
+    ? `<button class="btn-show-more" id="btn-show-more">🎞 Показать ещё (${list.length - visible.length})</button>`
+    : '';
+  // v123: липкая строка «что включено» — над гридом, но под табами
+  renderFilterBar(list.length, visible.length);
+  c.innerHTML = head + backup + (gridLayout === 'list'
+    ? visible.map(m => listRowHtml(m, q)).join('')
+    : visible.map(m => {
+    const myR = (view === 'fav' && favMode === 'rated') ? (getRatings()[String(m.code)] || 0) : 0;
+    return `
+    <div class="movie-card${(view === 'fav' && (favMode || 'fav') === 'fav' && getFavs().includes(String(m.code))) ? ' card-fav' : ''}" data-code="${esc(m.code)}">
+      ${posterHtmlQuick(m)}
       <div class="movie-info">
-        <h3>${hlTitle(C.title,e)}</h3>
-        <span class="rating">${ratingBadge(C)}${tt?`<span class="my-stars">${"★".repeat(tt)}</span>`:""}${durOf(C)?`<span class="dur-chip">⏱ ${durOf(C)} мин</span>`:""}</span>
+        <h3>${hlTitle(m.title, q)}</h3>
+        <span class="rating">${ratingBadge(m)}${myR ? `<span class="my-stars">${'★'.repeat(myR)}</span>` : ''}${durOf(m) ? `<span class="dur-chip">⏱ ${durOf(m)} мин</span>` : ''}</span>
       </div>
-    </div>`}).join(""))+nt+(view==="grid"?freshLineHtml():"");const lt=document.getElementById("btn-backup");lt&&(lt.onclick=()=>sendOrDeepLink({action:"save_favs",codes:getFavs()}));const Q=document.getElementById("btn-copy-list");Q&&(Q.onclick=copyFavsList);const it=document.getElementById("btn-share-posters");it&&(it.onclick=shareFavsPoster);const U=document.getElementById("btn-copy-backup");U&&(U.onclick=copyBackup);const Y=document.getElementById("btn-import-backup");Y&&(Y.onclick=importBackup);const W=document.getElementById("btn-restore-bot");W&&(W.onclick=()=>sendOrDeepLink({action:"restore_backup"}));const dt=document.getElementById("btn-clear-fav");dt&&(dt.onclick=()=>{if(getFavs().length)try{(tg.showConfirm||tg.showPopup)("Очистить список «Хочу посмотреть»?",T=>{T&&(setFavs([]),haptic("ok"),renderGrid(),renderRecoShelf())})}catch(tt){setFavs([]),renderGrid()}}),g(),Array.from(w.children).forEach((C,tt)=>{C.style.animationDelay=Math.min(tt,24)*.03+"s"}),w.querySelectorAll(".movie-card").forEach(C=>C.addEventListener("click",()=>openDetail(C.dataset.code))),w.querySelectorAll(".ls-btn").forEach(C=>C.addEventListener("click",()=>{gridLayout=C.dataset.l==="list"?"list":"grid";try{localStorage.setItem(LAYOUT_KEY,gridLayout)}catch(tt){}haptic("light"),renderGrid()})),w.querySelectorAll(".movie-row").forEach(C=>C.addEventListener("click",tt=>{tt.target.closest("button")||openDetail(C.dataset.code)}));const mt=document.getElementById("btn-clear-filters");mt&&(mt.onclick=()=>{resetFilters(),window.scrollTo({top:0,behavior:"smooth"})});const rt=document.getElementById("btn-show-more");rt&&(rt.onclick=()=>{haptic("light"),gridPage++,renderGrid()}),wireFavQuick(w)}let detailOrigin="grid";function openDetail(t){const e=ALL.find(g=>g.code===t);if(!e)return;track("movie",t),bumpWeekStat("open"),addRecent(e.code);const n=bumpOpenCount(t);challDone("open_movie"),view&&view!=="detail"&&(detailOrigin=view),rememberScroll(),view="detail",showView("detail");const s=getFavs().includes(t),i=findSimilar(e),o=[e.year?`<span class="chip chip-dim">📅 ${esc(e.year)}</span>`:"",e.duration?`<span class="chip chip-dim">⏱ ${esc(fmtDuration(e.duration))}</span>`:"",...(e.countries||[]).slice(0,2).map(g=>`<span class="chip chip-dim">${flagOf(g)} ${esc(g)}</span>`),...(e.genres||[]).map(g=>`<button class="chip chip-genre${activeGenre===g?" active":""}" data-g="${esc(g)}" title="Фильмы этого жанра">${esc(g)}</button>`)].filter(Boolean).join(""),r=premiereForTitle(e.title);document.getElementById("view-detail").innerHTML=`
+    </div>`;
+  }).join('')) + showMoreBtn + (view === 'grid' ? freshLineHtml() : '');
+  const b = document.getElementById('btn-backup');
+  if (b) b.onclick = () => sendOrDeepLink({ action: 'save_favs', codes: getFavs() });
+  const bc = document.getElementById('btn-copy-list');
+  if (bc) bc.onclick = copyFavsList;
+  const sp2 = document.getElementById('btn-share-posters');
+  if (sp2) sp2.onclick = shareFavsPoster;
+  const cb2 = document.getElementById('btn-copy-backup');
+  if (cb2) cb2.onclick = copyBackup;
+  const ib2 = document.getElementById('btn-import-backup');
+  if (ib2) ib2.onclick = importBackup;
+  const rb2 = document.getElementById('btn-restore-bot');
+  if (rb2) rb2.onclick = () => sendOrDeepLink({ action: 'restore_backup' });
+  // v101: «🧹 Очистить „Хочу посмотреть“» — с подтверждением, очищает только список ❤️
+  const clr = document.getElementById('btn-clear-fav');
+  if (clr) clr.onclick = () => {
+    const n = getFavs().length;
+    if (!n) return;
+    try {
+      const confirm = tg.showConfirm || tg.showPopup;
+      confirm('Очистить список «Хочу посмотреть»?',
+        (ok) => {
+          if (ok) { setFavs([]); haptic('ok'); renderGrid(); renderRecoShelf(); }
+        });
+    } catch (e) { setFavs([]); renderGrid(); }
+  };
+  wireFavMode();
+  // каскадное появление карточек
+  Array.from(c.children).forEach((el, i) => {
+    el.style.animationDelay = (Math.min(i, 24) * 0.03) + 's';
+  });
+  c.querySelectorAll('.movie-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.code)));
+  // v94: переключатель «Сетка/Список» — режим сохраняется на устройство
+  c.querySelectorAll('.ls-btn').forEach(b => b.addEventListener('click', () => {
+    gridLayout = b.dataset.l === 'list' ? 'list' : 'grid';
+    try { localStorage.setItem(LAYOUT_KEY, gridLayout); } catch (e) {}
+    haptic('light');
+    renderGrid();
+  }));
+  // v94: строки списка кликабельны (кнопки внутри не перехватываем)
+  c.querySelectorAll('.movie-row').forEach(el => el.addEventListener('click', (e) => {
+    if (e.target.closest('button')) return;
+    openDetail(el.dataset.code);
+  }));
+  // v92: сброс всех фильтров одной кнопкой
+  const cf = document.getElementById('btn-clear-filters');
+  if (cf) cf.onclick = () => {
+    resetFilters();                     // v123: общая точка сброса (та же, что у липкой строки)
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  // v93: «Показать ещё» — добавляем следующую порцию карточек
+  const sm = document.getElementById('btn-show-more');
+  if (sm) sm.onclick = () => {
+    haptic('light');
+    gridPage++;
+    renderGrid();
+  };
+  wireFavQuick(c);
+}
+// ---------- карточка фильма ----------
+let detailOrigin = 'grid';  // откуда открыт фильм — для кнопки «◀️ Назад»
+function openDetail(code) {
+  const m = ALL.find(x => x.code === code);
+  if (!m) return;
+  track('movie', code);
+  bumpWeekStat('open');
+  addRecent(m.code);
+  const openN = bumpOpenCount(code);   // v93: счётчик открытий карточки
+  challDone('open_movie');
+  if (view && view !== 'detail') detailOrigin = view;
+  rememberScroll();   // v124: запомнить, где афиша стояла — вернёмся туда же
+  view = 'detail';
+  showView('detail');
+  const fav = getFavs().includes(code);
+  const similar = findSimilar(m);
+  // Чипы метаданных (год/длительность/страны) + кликабельные жанры:
+  // тап по жанру-чипу фильтрует афишу этим жанром.
+  const chips = [
+    m.year ? `<span class="chip chip-dim">📅 ${esc(m.year)}</span>` : '',
+    m.duration ? `<span class="chip chip-dim">⏱ ${esc(fmtDuration(m.duration))}</span>` : '',
+    ...(m.countries || []).slice(0, 2).map(ct => `<span class="chip chip-dim">${flagOf(ct)} ${esc(ct)}</span>`),
+    ...(m.genres || []).map(g =>
+      `<button class="chip chip-genre${activeGenre === g ? ' active' : ''}" data-g="${esc(g)}" title="Фильмы этого жанра">${esc(g)}</button>`),
+  ].filter(Boolean).join('');
+  const prem = premiereForTitle(m.title);  // v119: фильм скоро в кино?
+  document.getElementById('view-detail').innerHTML = `
     <button class="btn-back" id="btn-back">◀️ Назад</button>
     <div class="detail">
-      ${posterHtml(e)}
+      ${posterHtml(m)}
       <div class="detail-info">
-        <h2>${esc(e.title)}</h2>
-        <span class="rating">${ratingBadge(e)}</span>
-        ${r?`<p class="premiere-note">🍿 В кино с ${r.date} — ${r.human}!</p>`:""}
-        ${(()=>{const g=myRating(t),L=[1,2,3,4,5].map(H=>`<button class="star-btn${H<=g?" on":""}" data-v="${H}" data-code="${esc(t)}" title="${H} из 5">★</button>`).join("");return`<div class="rate-strip">
-            <span class="rate-label">${g?"Твоя оценка:":"Оцени фильм:"}</span>
-            <span class="rate-stars">${L}</span>
-            ${g?`<button class="rate-clear" data-code="${esc(t)}" title="Убрать оценку">✕</button>`:""}
-            ${g&&e.rating?`<span class="rate-cmp" title="Сравнение с рейтингом Кинопоиска">⚖️ КП ${esc(String(e.rating))} · твоя ${g}/5${g/5*10>=parseFloat(e.rating)?" · 🔥 не хуже КП":""}</span>`:""}
-          </div>`})()}
-        ${o?`<div class="detail-chips">${o}</div>`:""}
-        ${e.director?`<p class="people-line">🎬 Режиссёр: <b class="person-chip" data-q="${esc(e.director)}" title="Найти фильмы">${esc(e.director)}</b></p>`:""}
-        ${(e.actors||[]).length?`<p class="people-line">⭐ В ролях: ${e.actors.slice(0,4).map(g=>`<b class="person-chip" data-q="${esc(g)}" title="Найти фильмы">${esc(g)}</b>`).join(", ")}</p>`:""}
-        <p class="desc">${esc(e.description||"Описание скоро появится.")}</p>
-        ${n>1?`<p class="open-count">👀 Открывал(а) ${n} раз(а)</p>`:n===1?'<p class="open-count">👀 Впервые открыл(а) — как тебе?</p>':""}
-        ${getNotes()[t]?`<div class="note-box">📝 ${esc(getNotes()[t])}</div>`:""}
+        <h2>${esc(m.title)}</h2>
+        <span class="rating">${ratingBadge(m)}</span>
+        ${prem ? `<p class="premiere-note">🍿 В кино с ${prem.date} — ${prem.human}!</p>` : ''}
+        ${(() => {
+          const myR = myRating(code);
+          const stars = [1, 2, 3, 4, 5].map(i =>
+            `<button class="star-btn${i <= myR ? ' on' : ''}" data-v="${i}" data-code="${esc(code)}" title="${i} из 5">★</button>`).join('');
+          return `<div class="rate-strip">
+            <span class="rate-label">${myR ? 'Твоя оценка:' : 'Оцени фильм:'}</span>
+            <span class="rate-stars">${stars}</span>
+            ${myR ? `<button class="rate-clear" data-code="${esc(code)}" title="Убрать оценку">✕</button>` : ''}
+            ${myR && m.rating ? `<span class="rate-cmp" title="Сравнение с рейтингом Кинопоиска">⚖️ КП ${esc(String(m.rating))} · твоя ${myR}/5${(myR / 5) * 10 >= parseFloat(m.rating) ? ' · 🔥 не хуже КП' : ''}</span>` : ''}
+          </div>`;
+        })()}
+        ${chips ? `<div class="detail-chips">${chips}</div>` : ''}
+        ${m.director ? `<p class="people-line">🎬 Режиссёр: <b class="person-chip" data-q="${esc(m.director)}" title="Найти фильмы">${esc(m.director)}</b></p>` : ''}
+        ${(m.actors || []).length ? `<p class="people-line">⭐ В ролях: ${m.actors.slice(0, 4).map(a => `<b class="person-chip" data-q="${esc(a)}" title="Найти фильмы">${esc(a)}</b>`).join(', ')}</p>` : ''}
+        <p class="desc">${esc(m.description || 'Описание скоро появится.')}</p>
+        ${openN > 1 ? `<p class="open-count">👀 Открывал(а) ${openN} раз(а)</p>` : (openN === 1 ? '<p class="open-count">👀 Впервые открыл(а) — как тебе?</p>' : '')}
+        ${getNotes()[code] ? `<div class="note-box">📝 ${esc(getNotes()[code])}</div>` : ''}
         <div class="detail-actions">
-          ${e.link||cleanKpTitle(e.title)?'<button class="btn-watch" id="btn-watch">'+(e.link?"▶️ Смотреть фильм":"🍿 Где посмотреть")+"</button>":""}
-          ${e.link2?'<button class="btn-secondary" id="btn-mirror">🔗 Зеркало</button>':""}
+          ${(m.link || cleanKpTitle(m.title)) ? '<button class="btn-watch" id="btn-watch">' + (m.link ? '▶️ Смотреть фильм' : '🍿 Где посмотреть') + '</button>' : ''}
+          ${m.link2 ? '<button class="btn-secondary" id="btn-mirror">🔗 Зеркало</button>' : ''}
           <button class="btn-primary" id="btn-open">🔓 Открыть код</button>
-          ${e.trailer_mp4||e.trailer_yt||e.trailer_file_id?'<button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>':""}
-          <button class="btn-fav ${s?"active":""}" id="btn-fav">${s?"❤️ В «Моём»":"🤍 Хочу"}</button>
-          <button class="btn-secondary ${getWatched().includes(String(t))?"active watched-btn":"watched-btn"}" id="btn-watched">${getWatched().includes(String(t))?"👁 Смотрел":"👁 Смотрел?"}</button>
+          ${m.trailer_mp4 || m.trailer_yt || m.trailer_file_id ? '<button class="btn-secondary" id="btn-trailer">▶️ Трейлер</button>' : ''}
+          <button class="btn-fav ${fav ? 'active' : ''}" id="btn-fav">${fav ? '❤️ В «Моём»' : '🤍 Хочу'}</button>
+          <button class="btn-secondary ${getWatched().includes(String(code)) ? 'active watched-btn' : 'watched-btn'}" id="btn-watched">${getWatched().includes(String(code)) ? '👁 Смотрел' : '👁 Смотрел?'}</button>
           <button class="btn-secondary" id="btn-share">📤 Другу</button>
           <button class="btn-secondary" id="btn-more">⋯</button>
           <div class="more-actions" id="more-actions" hidden>
-          <button class="btn-secondary" id="btn-note">📝 ${getNotes()[t]?"Заметка есть":"Заметка"}</button>
+          <button class="btn-secondary" id="btn-note">📝 ${getNotes()[code] ? 'Заметка есть' : 'Заметка'}</button>
           <button class="btn-secondary" id="btn-copy">📎 Скопировать код</button>
           <button class="btn-secondary" id="btn-riddle">🎭 Загадать другу</button>
           <button class="btn-secondary" id="btn-riddle-reveal-share">🎭 Загадать с ответом</button>
           <button class="btn-secondary" id="btn-review">✍️ Отзыв</button>
           <button class="btn-secondary" id="btn-remind">🔔 Напомнить через час</button>
-          ${r&&r.fid?'<button class="btn-secondary" id="btn-prem-remind">💌 Напомнить о премьере</button>':""}
-          ${cleanKpTitle(e.title)?'<button class="btn-secondary" id="btn-kp">⭐ IMDB</button>':""}
+          ${prem && prem.fid ? '<button class="btn-secondary" id="btn-prem-remind">💌 Напомнить о премьере</button>' : ''}
+          ${cleanKpTitle(m.title) ? '<button class="btn-secondary" id="btn-kp">⭐ IMDB</button>' : ''}
           <button class="btn-secondary" id="btn-sharecard">🖼 Карточка</button>
           </div>
         </div>
       </div>
     </div>
-    ${i.length?`
+    ${similar.length ? `
     <div class="similar-section">
       <h3 class="similar-title">🎬 Похожие фильмы</h3>
       <div class="similar-row">
-        ${i.map(g=>`
-          <div class="similar-card" data-code="${esc(g.code)}">
+        ${similar.map(s => `
+          <div class="similar-card" data-code="${esc(s.code)}">
             <div class="similar-poster">
-              ${g.poster?`<img src="${esc(g.poster)}" alt="${esc(g.title)}" loading="lazy" ${FADE}${dimStyle(g)} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`:'<div class="poster-placeholder similar-ph"><span>🎬</span></div>'}
+              ${s.poster
+                ? `<img src="${esc(s.poster)}" alt="${esc(s.title)}" loading="lazy" ${FADE}${dimStyle(s)} onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+                : `<div class="poster-placeholder similar-ph"><span>🎬</span></div>`}
             </div>
-            <div class="similar-name">${esc(g.title)}</div>
-          </div>`).join("")}
+            <div class="similar-name">${esc(s.title)}</div>
+          </div>`).join('')}
       </div>
-    </div>`:""}`,document.getElementById("btn-back").onclick=()=>openView(detailOrigin||"grid");const c=document.querySelector("#view-detail .poster-wrap");c&&(c.classList.add("zoomable"),c.addEventListener("click",g=>{const L=c.querySelector("img"),H=document.getElementById("lightbox");!L||!H||(g.stopPropagation(),haptic("light"),H.querySelector("img").src=L.src,H.classList.remove("hidden"))})),document.getElementById("btn-open").onclick=()=>sendOrDeepLink({action:"open_movie",code:t});const a=document.getElementById("btn-watch");a&&(a.onclick=()=>openWatchLink(e));const m=document.getElementById("btn-mirror");m&&(m.onclick=()=>openUrlLink(e.link2));const b=document.getElementById("btn-kp");b&&(b.onclick=()=>openImdbLink(e)),document.querySelectorAll("#view-detail .star-btn").forEach(g=>g.addEventListener("click",()=>{setRating(g.dataset.code,parseInt(g.dataset.v,10)),openDetail(t)}));const w=document.querySelector("#view-detail .rate-clear");w&&w.addEventListener("click",()=>{removeRating(w.dataset.code),openDetail(t)});const $=document.getElementById("btn-riddle");$&&($.onclick=()=>shareRiddle(e));const p=document.getElementById("btn-riddle-reveal-share");p&&(p.onclick=()=>shareRiddleReveal(e)),document.getElementById("btn-fav").onclick=()=>{toggleFav(t),openDetail(t)},document.getElementById("btn-watched").onclick=()=>{toggleWatched(String(t)),openDetail(t)},document.getElementById("btn-note").onclick=()=>{const g=getNotes()[t]||"";tg.showPopup({type:"prompt",title:"📝 Заметка о фильме",message:"Короткая заметка сохранится на этом устройстве.",placeholder:g,text:g,callback:(L,H)=>{L==="ok"&&(setNote(t,H||""),haptic("ok"),openDetail(t))}})},document.getElementById("btn-copy").onclick=()=>{const g=()=>{try{tg.HapticFeedback.impactOccurred("light")}catch(L){}tg.showPopup({type:"ok",title:"Код скопирован",message:`Код ${t} отправь боту @kapitan_kino_bot — и фильм откроется!`})};navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t).then(g).catch(g):g()},document.getElementById("btn-remind").onclick=()=>sendOrDeepLink({action:"remind_movie",code:t});const f=document.getElementById("btn-prem-remind");f&&(f.onclick=()=>sendOrDeepLink({action:"remind_premiere",iso:r.iso,fid:r.fid}));const v=document.getElementById("btn-more");v&&(v.onclick=()=>{const g=document.getElementById("more-actions");g&&(g.hidden=!g.hidden,v.textContent=g.hidden?"⋯":"✕")});const u=document.getElementById("btn-trailer");u&&(u.onclick=()=>openTrailer(e)),document.getElementById("btn-review").onclick=()=>{haptic("light");const g=cleanKpTitle(e.title)||e.title||"фильму";try{tg.showPopup({title:"✍️ Отзыв о фильме",message:`Бот попросит написать отзыв о «${g}» одним сообщением.
+    </div>` : ''}`;
+  document.getElementById('btn-back').onclick = () => openView(detailOrigin || 'grid');
+  // v90: тап по постеру в карточке — лайтбокс на весь экран
+  const dPw = document.querySelector('#view-detail .poster-wrap');
+  if (dPw) {
+    dPw.classList.add('zoomable');
+    dPw.addEventListener('click', (e) => {
+      const img = dPw.querySelector('img');
+      const lb = document.getElementById('lightbox');
+      if (!img || !lb) return;
+      e.stopPropagation();
+      haptic('light');
+      lb.querySelector('img').src = img.src;
+      lb.classList.remove('hidden');
+    });
+  }
+  document.getElementById('btn-open').onclick =
+    () => sendOrDeepLink({ action: 'open_movie', code });
+  const watchBtn = document.getElementById('btn-watch');
+  if (watchBtn) watchBtn.onclick = () => openWatchLink(m);
+  const mirrorBtn = document.getElementById('btn-mirror');
+  if (mirrorBtn) mirrorBtn.onclick = () => openUrlLink(m.link2);
+  const kpBtn = document.getElementById('btn-kp');
+  if (kpBtn) kpBtn.onclick = () => openImdbLink(m);
+  // v64: оценка звёздами прямо в карточке (локально) + «Загадать другу»
+  document.querySelectorAll('#view-detail .star-btn').forEach(b =>
+    b.addEventListener('click', () => { setRating(b.dataset.code, parseInt(b.dataset.v, 10)); openDetail(code); }));
+  const rateClear = document.querySelector('#view-detail .rate-clear');
+  if (rateClear) rateClear.addEventListener('click', () => { removeRating(rateClear.dataset.code); openDetail(code); });
+  const riddleBtn = document.getElementById('btn-riddle');
+  if (riddleBtn) riddleBtn.onclick = () => shareRiddle(m);
+  const riddleRevBtn = document.getElementById('btn-riddle-reveal-share');
+  if (riddleRevBtn) riddleRevBtn.onclick = () => shareRiddleReveal(m);
+  document.getElementById('btn-fav').onclick = () => { toggleFav(code); openDetail(code); };
+  document.getElementById('btn-watched').onclick = () => { toggleWatched(String(code)); openDetail(code); };
+  document.getElementById('btn-note').onclick = () => {
+    const current = getNotes()[code] || '';
+    tg.showPopup({
+      type: 'prompt',
+      title: '📝 Заметка о фильме',
+      message: 'Короткая заметка сохранится на этом устройстве.',
+      placeholder: current,
+      text: current,
+      callback: (btnId, value) => {
+        if (btnId === 'ok') {
+          setNote(code, value || '');
+          haptic('ok');
+          openDetail(code);
+        }
+      }
+    });
+  };
+  document.getElementById('btn-copy').onclick = () => {
+    const done = () => {
+      try { tg.HapticFeedback.impactOccurred('light'); } catch (e) {}
+      tg.showPopup({
+        type: 'ok',
+        title: 'Код скопирован',
+        message: `Код ${code} отправь боту @kapitan_kino_bot — и фильм откроется!`
+      });
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(done).catch(done);
+    } else done();
+  };
+  document.getElementById('btn-remind').onclick = () =>
+    sendOrDeepLink({ action: 'remind_movie', code });
+  // v120: «💌 Напомнить о премьере» — бот пришлёт ЛС за день до релиза
+  const premRemindBtn = document.getElementById('btn-prem-remind');
+  if (premRemindBtn) premRemindBtn.onclick = () =>
+    sendOrDeepLink({ action: 'remind_premiere', iso: prem.iso, fid: prem.fid });
+  const moreBtn = document.getElementById('btn-more');
+  if (moreBtn) moreBtn.onclick = () => {
+    const box = document.getElementById('more-actions');
+    if (!box) return;
+    box.hidden = !box.hidden;
+    moreBtn.textContent = box.hidden ? '⋯' : '✕';
+  };
+  const trailerBtn = document.getElementById('btn-trailer');
+  if (trailerBtn) trailerBtn.onclick = () => openTrailer(m);
+  document.getElementById('btn-review').onclick = () => {
+    // Не «выкидываем» человека в бота вслепую: предупреждаем, что бот попросит
+    // текст отзыва, и как из этого режима выйти (кнопка «❌ Отмена» / слово «отмена»).
+    haptic('light');
+    const reviewTitle = cleanKpTitle(m.title) || m.title || 'фильму';
+    try {
+      tg.showPopup({
+        title: '✍️ Отзыв о фильме',
+        message: `Бот попросит написать отзыв о «${reviewTitle}» одним сообщением.\n\nВыйти из режима можно кнопкой «❌ Отмена» у сообщения бота или словом «отмена» — отзыв не сохранится.`,
+        buttons: [
+          { id: 'go', type: 'default', text: '✍️ Открыть бота' },
+          { id: 'no', type: 'cancel', text: 'Не сейчас' },
+        ],
+        callback: (btnId) => {
+          if (btnId === 'go') sendOrDeepLink({ action: 'review_movie', code });
+        },
+      });
+    } catch (e) {
+      sendOrDeepLink({ action: 'review_movie', code });
+    }
+  };
+  document.getElementById('btn-share').onclick = () => shareMovie(m);
+  const scBtn = document.getElementById('btn-sharecard');
+  if (scBtn) scBtn.onclick = () => openShareCard(m);
+  // Тап по похожему фильму → открываем его карточку
+  document.querySelectorAll('#view-detail .similar-card').forEach(el => {
+    el.addEventListener('click', () => {
+      haptic('light');
+      openDetail(el.dataset.code);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+  // Тап по жанровому чипу → афиша, отфильтрованная этим жанром
+  document.querySelectorAll('#view-detail .chip-genre').forEach(ch => {
+    ch.addEventListener('click', () => {
+      haptic('light');
+      activeGenre = ch.dataset.g || '';
+      view = 'grid';
+      showView('catalog');
+      renderGenreChips();
+      renderGrid();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+  // Тап по актёру/режиссёру → афиша с поиском по нему (поиск ищет и по составу)
+  document.querySelectorAll('#view-detail .person-chip').forEach(ch => {
+    ch.addEventListener('click', () => {
+      const q = ch.dataset.q || '';
+      if (!q) return;
+      haptic('light');
+      const si = document.getElementById('search');
+      if (si) si.value = q;
+      addSearchHist(q);
+      activeGenre = '';
+      view = 'grid';
+      showView('catalog');
+      renderGenreChips();
+      renderGrid();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+}
 
-Выйти из режима можно кнопкой «❌ Отмена» у сообщения бота или словом «отмена» — отзыв не сохранится.`,buttons:[{id:"go",type:"default",text:"✍️ Открыть бота"},{id:"no",type:"cancel",text:"Не сейчас"}],callback:L=>{L==="go"&&sendOrDeepLink({action:"review_movie",code:t})}})}catch(L){sendOrDeepLink({action:"review_movie",code:t})}},document.getElementById("btn-share").onclick=()=>shareMovie(e);const S=document.getElementById("btn-sharecard");S&&(S.onclick=()=>openShareCard(e)),document.querySelectorAll("#view-detail .similar-card").forEach(g=>{g.addEventListener("click",()=>{haptic("light"),openDetail(g.dataset.code),window.scrollTo({top:0,behavior:"smooth"})})}),document.querySelectorAll("#view-detail .chip-genre").forEach(g=>{g.addEventListener("click",()=>{haptic("light"),activeGenre=g.dataset.g||"",view="grid",showView("catalog"),renderGenreChips(),renderGrid(),window.scrollTo({top:0,behavior:"smooth"})})}),document.querySelectorAll("#view-detail .person-chip").forEach(g=>{g.addEventListener("click",()=>{const L=g.dataset.q||"";if(!L)return;haptic("light");const H=document.getElementById("search");H&&(H.value=L),addSearchHist(L),activeGenre="",view="grid",showView("catalog"),renderGenreChips(),renderGrid(),window.scrollTo({top:0,behavior:"smooth"})})})}function findSimilar(t){const e=new Set(t.genres||[]),n=ALL.filter(s=>s.code!==t.code).map(s=>{const i=new Set(s.genres||[]);let o=0;return e.forEach(r=>{i.has(r)&&(o+=3)}),s.year&&t.year&&Math.abs(s.year-t.year)<=3&&(o+=2),s.year&&t.year&&s.year===t.year&&(o+=1),o+=Math.min(parseFloat(s.rating)||0,10)/5,{movie:s,score:o}});return n.sort((s,i)=>i.score-s.score),n.slice(0,6).map(s=>s.movie)}const GAME_ROUNDS=5;let game=null;const shuffle=t=>t.sort(()=>Math.random()-.5);function startGame(){const t=ALL.filter(n=>n.poster);if(t.length<6){document.getElementById("view-game").innerHTML='<p class="error">Нужно минимум 6 фильмов с постерами 🎬</p>';return}game={rounds:shuffle([...t]).slice(0,GAME_ROUNDS).map(n=>{const s=shuffle(ALL.filter(i=>i.code!==n.code)).slice(0,3).map(i=>i.title);return{movie:n,options:shuffle([n.title,...s])}}),i:0,correct:0},renderRound()}function renderRound(){const t=game.rounds[game.i];if(!t)return renderGameEnd();document.getElementById("view-game").innerHTML=`
+function findSimilar(m) {
+  // Похожие фильмы: совпадение жанров > года > рейтинга. Максимум 6 карточек.
+  const mGenres = new Set(m.genres || []);
+  const scored = ALL.filter(x => x.code !== m.code).map(x => {
+    const xGenres = new Set(x.genres || []);
+    let score = 0;
+    mGenres.forEach(g => { if (xGenres.has(g)) score += 3; });
+    if (x.year && m.year && Math.abs(x.year - m.year) <= 3) score += 2;
+    if (x.year && m.year && x.year === m.year) score += 1;
+    score += Math.min(parseFloat(x.rating) || 0, 10) / 5;
+    return { movie: x, score };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 6).map(x => x.movie);
+}
+
+// ---------- тренажёр ----------
+const GAME_ROUNDS = 5;
+let game = null;
+
+const shuffle = a => a.sort(() => Math.random() - 0.5);
+
+function startGame() {
+  const withPosters = ALL.filter(m => m.poster);
+  if (withPosters.length < 6) {
+    document.getElementById('view-game').innerHTML =
+      '<p class="error">Нужно минимум 6 фильмов с постерами 🎬</p>';
+    return;
+  }
+  const rounds = shuffle([...withPosters]).slice(0, GAME_ROUNDS).map(m => {
+    const wrong = shuffle(ALL.filter(x => x.code !== m.code)).slice(0, 3).map(x => x.title);
+    return { movie: m, options: shuffle([m.title, ...wrong]) };
+  });
+  game = { rounds, i: 0, correct: 0 };
+  renderRound();
+}
+
+function renderRound() {
+  const r = game.rounds[game.i];
+  if (!r) return renderGameEnd();
+  document.getElementById('view-game').innerHTML = `
     <div class="game">
-      <div class="game-progress">Раунд ${game.i+1} / ${game.rounds.length} · Угадано: ${game.correct}</div>
+      <div class="game-progress">Раунд ${game.i + 1} / ${game.rounds.length} · Угадано: ${game.correct}</div>
       <div class="game-poster" id="game-poster">
-        <img src="${esc(t.movie.poster)}" alt="Угадай фильм" style="filter: blur(14px)"/>
+        <img src="${esc(r.movie.poster)}" alt="Угадай фильм" style="filter: blur(14px)"/>
       </div>
       <div class="game-options">
-        ${t.options.map(e=>`<button class="btn-option" data-t="${esc(e)}">${esc(e)}</button>`).join("")}
+        ${r.options.map(t => `<button class="btn-option" data-t="${esc(t)}">${esc(t)}</button>`).join('')}
       </div>
       <button class="btn-back" id="btn-game-back">◀️ Выйти</button>
-    </div>`,document.getElementById("btn-game-back").onclick=()=>{view="grid",showView("catalog"),renderGrid()},document.querySelectorAll(".btn-option").forEach(e=>e.addEventListener("click",()=>answerRound(e,t.movie)))}function answerRound(t,e){const n=t.dataset.t===e.title;n&&game.correct++,haptic(n?"ok":"error"),t.classList.add(n?"correct":"wrong"),document.querySelectorAll(".btn-option").forEach(i=>i.disabled=!0);const s=document.querySelector("#game-poster img");s&&(s.style.filter="none"),document.querySelector(".game-poster").insertAdjacentHTML("beforeend",`<div class="game-reveal">${n?"✅ Верно!":`❌ Это «${esc(e.title)}»`}</div>`),setTimeout(()=>{game.i++,renderRound()},1600)}function renderGameEnd(){const{correct:t,rounds:e}=game;document.getElementById("view-game").innerHTML=`
+    </div>`;
+  document.getElementById('btn-game-back').onclick = () => { view = 'grid'; showView('catalog'); renderGrid(); };
+  document.querySelectorAll('.btn-option').forEach(b =>
+    b.addEventListener('click', () => answerRound(b, r.movie)));
+}
+
+function answerRound(btn, movie) {
+  const right = btn.dataset.t === movie.title;
+  if (right) game.correct++;
+  haptic(right ? 'ok' : 'error');
+  btn.classList.add(right ? 'correct' : 'wrong');
+  document.querySelectorAll('.btn-option').forEach(b => b.disabled = true);
+  const img = document.querySelector('#game-poster img');
+  if (img) img.style.filter = 'none';
+  document.querySelector('.game-poster').insertAdjacentHTML('beforeend',
+    `<div class="game-reveal">${right ? '✅ Верно!' : `❌ Это «${esc(movie.title)}»`}</div>`);
+  setTimeout(() => { game.i++; renderRound(); }, 1600);
+}
+
+function renderGameEnd() {
+  const { correct, rounds } = game;
+  document.getElementById('view-game').innerHTML = `
     <div class="game">
       <div class="game-end">
-        <h2>${t===e.length?"🏆 Отличная память!":t>=3?"👍 Неплохо!":"🎬 Потренируемся ещё?"}</h2>
-        <p class="game-score">Угадано ${t} из ${e.length}</p>
+        <h2>${correct === rounds.length ? '🏆 Отличная память!' : correct >= 3 ? '👍 Неплохо!' : '🎬 Потренируемся ещё?'}</h2>
+        <p class="game-score">Угадано ${correct} из ${rounds.length}</p>
         <button class="btn-primary" id="btn-send-score">💰 Получить баллы в боте</button>
         <button class="btn-secondary" id="btn-again">🔁 Ещё раз</button>
         <button class="btn-back" id="btn-game-back2">◀️ К афише</button>
       </div>
-    </div>`,document.getElementById("btn-send-score").onclick=()=>sendOrDeepLink({action:"quiz_result",correct:t,total:e.length}),document.getElementById("btn-again").onclick=startGame,document.getElementById("btn-game-back2").onclick=()=>{view="grid",showView("catalog"),renderGrid()}}function renderGameMenu(){const t=!!document.getElementById("view-emoji"),e=[["btn-gm-arena","⚔️","Кино-арена","дуэли знаний на 3 жизни · дуэль дня",!0],["btn-gm-poster","🖼","Угадай по постеру","постер проясняется — угадай фильм"],["btn-gm-frame","🎞","Угадай по кадру","настоящий кадр из трейлера"]];t&&e.push(["btn-gm-emoji","😀","Угадай по эмодзи","расшифруй фильм по смайлам"]),document.getElementById("view-game").innerHTML=`
+    </div>`;
+  document.getElementById('btn-send-score').onclick = () =>
+    sendOrDeepLink({ action: 'quiz_result', correct, total: rounds.length });
+  document.getElementById('btn-again').onclick = startGame;
+  document.getElementById('btn-game-back2').onclick = () => { view = 'grid'; showView('catalog'); renderGrid(); };
+}
+
+// ---------- v106: меню игр + «Угадай по кадру» ----------
+// Раздел «🏋 Тренажёр» теперь открывается меню с тремя режимами:
+// постер (классика), кадр из трейлера (новое), эмодзи-загадки.
+function renderGameMenu() {
+  const emojiReady = !!document.getElementById('view-emoji');
+  const modes = [
+    ['btn-gm-arena', '⚔️', 'Кино-арена', 'дуэли знаний на 3 жизни · дуэль дня', true],
+    ['btn-gm-poster', '🖼', 'Угадай по постеру', 'постер проясняется — угадай фильм'],
+    ['btn-gm-frame', '🎞', 'Угадай по кадру', 'настоящий кадр из трейлера'],
+  ];
+  if (emojiReady) modes.push(['btn-gm-emoji', '😀', 'Угадай по эмодзи', 'расшифруй фильм по смайлам']);
+  document.getElementById('view-game').innerHTML = `
     <div class="game">
       <div class="gm-menu">
         <h2>🏋 Тренажёр</h2>
         <p class="gm-sub">Выбирай, как тренировать киноглаз</p>
-        ${e.map(([i,o,r,c,a])=>`<button class="gm-mode${a?" hot":""}" id="${i}"><span class="gm-ico">${o}</span><span class="gm-txt"><b>${r}</b><i>${c}</i></span><span class="gm-go">›</span></button>`).join("")}
+        ${modes.map(([id, ico, t, sub, hot]) => `<button class="gm-mode${hot ? ' hot' : ''}" id="${id}"><span class="gm-ico">${ico}</span><span class="gm-txt"><b>${t}</b><i>${sub}</i></span><span class="gm-go">›</span></button>`).join('')}
         <button class="btn-back" id="btn-gm-back">◀️ К афише</button>
       </div>
-    </div>`;const n=document.getElementById("btn-gm-arena");n&&(n.onclick=()=>{haptic("light"),openArena()}),document.getElementById("btn-gm-poster").onclick=startGame,document.getElementById("btn-gm-frame").onclick=startFrameGame;const s=document.getElementById("btn-gm-emoji");s&&(s.onclick=()=>{document.getElementById("view-game").innerHTML="",renderEmojiGame()}),document.getElementById("btn-gm-back").onclick=()=>{view="grid",showView("catalog"),renderGrid()}}let frameGame=null;const frameThumb=t=>{if(t.frame_pic)return t.frame_pic;if(t.trailer_yt){const e=["hq1","hq2","hq3"][Math.floor(Math.random()*3)];return"https://i.ytimg.com/vi/"+t.trailer_yt+"/"+e+".jpg"}return""};function startFrameGame(){const t=ALL.filter(n=>frameThumb(n)&&n.poster);if(t.length<6){document.getElementById("view-game").innerHTML='<p class="error">Нужно минимум 6 фильмов с кадрами 🎬</p>';return}frameGame={rounds:shuffle(t).slice(0,5).map(n=>{const s=shuffle(ALL.filter(i=>i.code!==n.code)).slice(0,3).map(i=>i.title);return{movie:n,options:shuffle([n.title,...s])}}),i:0,correct:0},renderFrameRound()}function renderFrameRound(){const t=document.getElementById("view-game"),e=frameGame.rounds[frameGame.i];if(!e)return renderFrameEnd();t.innerHTML=`
+    </div>`;
+  const ga = document.getElementById('btn-gm-arena');
+  if (ga) ga.onclick = () => { haptic('light'); openArena(); };
+  document.getElementById('btn-gm-poster').onclick = startGame;
+  document.getElementById('btn-gm-frame').onclick = startFrameGame;
+  const ge = document.getElementById('btn-gm-emoji');
+  if (ge) ge.onclick = () => {
+    // эмодзи-загадки показываются в своём контейнере (оба видны на view-game)
+    document.getElementById('view-game').innerHTML = '';
+    renderEmojiGame();
+  };
+  document.getElementById('btn-gm-back').onclick = () => { view = 'grid'; showView('catalog'); renderGrid(); };
+}
+
+// «Угадай по кадру»: показываем РЕАЛЬНЫЙ кадр из трейлера.
+// Приоритет: frame_pic (локальный кадр из frames/, собран из hq1/hq2/hq3 —
+// сцены без титульных заставок) → онлайн hq1/hq2/hq3 → никогда постер
+// (постер содержит название фильма — игра теряет смысл).
+let frameGame = null;
+const frameThumb = (m) => {
+  if (m.frame_pic) return m.frame_pic;
+  if (m.trailer_yt) {
+    const v = ['hq1', 'hq2', 'hq3'][Math.floor(Math.random() * 3)];
+    return 'https://i.ytimg.com/vi/' + m.trailer_yt + '/' + v + '.jpg';
+  }
+  return '';
+};
+
+function startFrameGame() {
+  const pool = ALL.filter(m => frameThumb(m) && m.poster);
+  if (pool.length < 6) {
+    document.getElementById('view-game').innerHTML =
+      '<p class="error">Нужно минимум 6 фильмов с кадрами 🎬</p>';
+    return;
+  }
+  const rounds = shuffle(pool).slice(0, 5).map(m => {
+    const wrong = shuffle(ALL.filter(x => x.code !== m.code)).slice(0, 3).map(x => x.title);
+    return { movie: m, options: shuffle([m.title, ...wrong]) };
+  });
+  frameGame = { rounds, i: 0, correct: 0 };
+  renderFrameRound();
+}
+
+function renderFrameRound() {
+  const box = document.getElementById('view-game');
+  const r = frameGame.rounds[frameGame.i];
+  if (!r) return renderFrameEnd();
+  box.innerHTML = `
     <div class="game">
-      <div class="game-progress">🎞 Раунд ${frameGame.i+1} / ${frameGame.rounds.length} · Угадано: ${frameGame.correct}</div>
+      <div class="game-progress">🎞 Раунд ${frameGame.i + 1} / ${frameGame.rounds.length} · Угадано: ${frameGame.correct}</div>
       <div class="frame-question">
-        <img src="${esc(frameThumb(e.movie))}" alt="Кадр из фильма" onerror="this.parentElement.classList.add('no-thumb')"/>
+        <img src="${esc(frameThumb(r.movie))}" alt="Кадр из фильма" onerror="this.parentElement.classList.add('no-thumb')"/>
       </div>
       <div class="game-options">
-        ${e.options.map(n=>`<button class="btn-option" data-t="${esc(n)}">${esc(n)}</button>`).join("")}
+        ${r.options.map(t => `<button class="btn-option" data-t="${esc(t)}">${esc(t)}</button>`).join('')}
       </div>
       <button class="btn-back" id="btn-frame-back">◀️ Выйти</button>
-    </div>`,document.getElementById("btn-frame-back").onclick=()=>renderGameMenu(),t.querySelectorAll(".btn-option").forEach(n=>n.addEventListener("click",()=>answerFrameRound(n,e.movie)))}function answerFrameRound(t,e){const n=document.getElementById("view-game"),s=t.dataset.t===e.title;s&&frameGame.correct++,haptic(s?"ok":"error"),t.classList.add(s?"correct":"wrong"),n.querySelectorAll(".btn-option").forEach(i=>i.disabled=!0),n.querySelector(".frame-question").insertAdjacentHTML("beforeend",`<div class="game-reveal">${s?"✅ Верно!":`❌ Это «${esc(e.title)}»`}</div>`),setTimeout(()=>{frameGame.i++,renderFrameRound()},1600)}function renderFrameEnd(){const{correct:t,rounds:e}=frameGame;document.getElementById("view-game").innerHTML=`
+    </div>`;
+  document.getElementById('btn-frame-back').onclick = () => renderGameMenu();
+  box.querySelectorAll('.btn-option').forEach(b =>
+    b.addEventListener('click', () => answerFrameRound(b, r.movie)));
+}
+
+function answerFrameRound(btn, movie) {
+  const box = document.getElementById('view-game');
+  const right = btn.dataset.t === movie.title;
+  if (right) frameGame.correct++;
+  haptic(right ? 'ok' : 'error');
+  btn.classList.add(right ? 'correct' : 'wrong');
+  box.querySelectorAll('.btn-option').forEach(b => b.disabled = true);
+  box.querySelector('.frame-question').insertAdjacentHTML('beforeend',
+    `<div class="game-reveal">${right ? '✅ Верно!' : `❌ Это «${esc(movie.title)}»`}</div>`);
+  setTimeout(() => { frameGame.i++; renderFrameRound(); }, 1600);
+}
+
+function renderFrameEnd() {
+  const { correct, rounds } = frameGame;
+  document.getElementById('view-game').innerHTML = `
     <div class="game">
       <div class="game-end">
-        <h2>${t===e.length?"🏆 Киносыщик!":t>=3?"👍 Хороший глаз!":"🎬 Тренируемся ещё?"}</h2>
-        <p class="game-score">Угадано ${t} из ${e.length} кадров</p>
+        <h2>${correct === rounds.length ? '🏆 Киносыщик!' : correct >= 3 ? '👍 Хороший глаз!' : '🎬 Тренируемся ещё?'}</h2>
+        <p class="game-score">Угадано ${correct} из ${rounds.length} кадров</p>
         <button class="btn-primary" id="btn-fr-send">💰 Получить баллы в боте</button>
         <button class="btn-secondary" id="btn-fr-again">🔁 Ещё раз</button>
         <button class="btn-back" id="btn-fr-back">◀️ Меню игр</button>
       </div>
-    </div>`,document.getElementById("btn-fr-send").onclick=()=>sendOrDeepLink({action:"quiz_result",correct:t,total:e.length}),document.getElementById("btn-fr-again").onclick=startFrameGame,document.getElementById("btn-fr-back").onclick=()=>{view="game",showView("game"),renderGameMenu()}}function buildPersonGraph(){const t=new Map;return ALL.forEach(e=>{[...e.actors||[],...e.director?[e.director]:[]].forEach(n=>{if(!n)return;const s=n.toLowerCase();t.has(s)||t.set(s,{display:n,films:new Set}),t.get(s).films.add(String(e.code))})}),t}function renderChain(){const t=document.getElementById("chain-container");if(!t)return;const e=r=>r?`<div class="chain-film" data-code="${esc(r.code)}">${r.poster?`<img src="${esc(r.poster)}" loading="lazy" alt=""/>`:'<div class="chain-ph">🎬</div>'}<span>${esc(r.title)}${r.year?" · "+esc(String(r.year)):""}</span></div>`:"",n=(r,c)=>`
+    </div>`;
+  document.getElementById('btn-fr-send').onclick = () =>
+    sendOrDeepLink({ action: 'quiz_result', correct, total: rounds.length });
+  document.getElementById('btn-fr-again').onclick = startFrameGame;
+  document.getElementById('btn-fr-back').onclick = () => { view = 'game'; showView('game'); renderGameMenu(); };
+}
+
+// ---------- v60: «🔗 Кино-путь» — цепочка человек → фильм → человек ----------
+function buildPersonGraph() {
+  const g = new Map();  // ключ (lowercase) -> { display, films:Set(коды) }
+  ALL.forEach(m => {
+    [...(m.actors || []), ...(m.director ? [m.director] : [])].forEach(p => {
+      if (!p) return;
+      const k = p.toLowerCase();
+      if (!g.has(k)) g.set(k, { display: p, films: new Set() });
+      g.get(k).films.add(String(m.code));
+    });
+  });
+  return g;
+}
+function renderChain() {
+  const c = document.getElementById('chain-container');
+  if (!c) return;
+  const filmRow = (film) => film
+    ? `<div class="chain-film" data-code="${esc(film.code)}">${film.poster ? `<img src="${esc(film.poster)}" loading="lazy" alt=""/>` : '<div class="chain-ph">🎬</div>'}<span>${esc(film.title)}${film.year ? ' · ' + esc(String(film.year)) : ''}</span></div>`
+    : '';
+  const shell = (rows, hint) => `
     <button class="btn-back" id="btn-chain-back">◀️ Назад</button>
     <div class="chain-card">
       <h2>🔗 Кино-путь</h2>
-      <p class="chain-hint">${esc(c)}</p>
-      <div class="chain-row">${r}</div>
+      <p class="chain-hint">${esc(hint)}</p>
+      <div class="chain-row">${rows}</div>
       <button class="btn-primary" id="btn-chain-new">🎲 Новый путь</button>
-    </div>`,s=()=>{t.innerHTML='<div class="empty-state"><div class="empty-emoji">🔗</div><p>Пока маловато данных для цепочек — добавь фильмы в канал, и здесь появится «Кино-путь».</p></div>'},i=buildPersonGraph(),o=[...i.values()].filter(r=>r.films.size>=2);if(o.length>=3){const r=new Set,c=[];let a=o[Math.floor(Math.random()*o.length)];for(let m=0;m<7;m++){const b=[...a.films].filter(f=>!r.has(f));if(!b.length)break;const w=b[Math.floor(Math.random()*b.length)],$=ALL.find(f=>String(f.code)===w);if(!$)break;r.add(String($.code)),c.push(`<div class="chain-step"><div class="chain-person">🎭 ${esc(a.display)}</div>${e($)}</div>`);const p=[...$.actors||[],...$.director?[$.director]:[]].map(f=>String(f).toLowerCase()).filter(f=>i.has(f)&&i.get(f).films.size>=2&&i.get(f)!==a);if(!p.length)break;a=i.get(p[Math.floor(Math.random()*p.length)])}if(c.length<2){s();return}t.innerHTML=n(c.join('<div class="chain-link">↔️</div>'),"Случайная цепочка «человек — фильм — человек» по базе канала. Тапни по фильму, чтобы открыть карточку.")}else{const r=new Map;ALL.forEach(b=>(b.genres||[]).forEach(w=>r.set(w,(r.get(w)||0)+1)));const c=[],a=new Set;let m=ALL[Math.floor(Math.random()*ALL.length)];a.add(String(m.code)),c.push(`<div class="chain-step">${e(m)}</div>`);for(let b=0;b<4;b++){const w=(m.genres||[]).filter(v=>r.get(v)>=2);if(!w.length)break;const $=w[Math.floor(Math.random()*w.length)],p=ALL.filter(v=>!a.has(String(v.code))&&(v.genres||[]).includes($));if(!p.length)break;const f=p[Math.floor(Math.random()*p.length)];a.add(String(f.code)),c.push(`<button class="chain-genre" data-g="${esc($)}">🔗 ${esc($)} <em>${r.get($)}</em></button>`),c.push(`<div class="chain-step">${e(f)}</div>`),m=f}if(c.length<3){s();return}t.innerHTML=n(c.join(""),"Цепочка «фильм — жанр — фильм» из твоей базы. Тапни по жанру — откроется подборка, по фильму — карточка.")}document.getElementById("btn-chain-back").onclick=()=>openView("grid"),document.getElementById("btn-chain-new").onclick=()=>{haptic("light"),renderChain()},t.querySelectorAll(".chain-film").forEach(r=>r.addEventListener("click",()=>{haptic("light"),openDetail(r.dataset.code)})),t.querySelectorAll(".chain-genre").forEach(r=>r.addEventListener("click",()=>{haptic("light"),activeGenre=r.dataset.g||"",view="grid",showView("catalog"),renderGenreChips(),renderGrid(),window.scrollTo({top:0,behavior:"smooth"})}))}const VIEW_BOXES={catalog:"view-catalog",cols:"view-cols",news:"view-news",top:"view-top",profile:"view-profile",trailers:"view-trailers",achievements:"view-achievements",detail:"view-detail",game:"view-game",chain:"view-chain",year:"view-year",marathon:"view-marathon",tinder:"view-tinder",mycols:"view-mycols","mycol-detail":"view-mycol-detail",tonight:"view-tonight",quiz:"view-quiz",play:"view-play",mine:"view-mine"};function _reduceMotion(){try{return window.matchMedia("(prefers-reduced-motion: reduce)").matches}catch(t){return!1}}function animateViewIn(t){!t||_reduceMotion()||(t.classList.remove("view-enter"),t.offsetWidth,t.classList.add("view-enter"))}const DEEP_VIEWS=["tinder","marathon","chain","game","tonight","quiz","year"];let _tgBackBound=!1;function syncTgBack(t){const e=tg&&tg.BackButton;!e||!e.show||(_tgBackBound||(_tgBackBound=!0,e.onClick(()=>{try{haptic("light")}catch(n){}view="play",openView("play")})),DEEP_VIEWS.indexOf(t)>=0?e.show():e.hide())}function showView(t){const e=(i,o)=>{const r=document.getElementById(i);r&&r.classList.toggle("hidden",!o)};e("view-catalog",t==="catalog"),e("view-cols",t==="cols"),e("view-news",t==="news"),e("view-top",t==="top"),e("view-profile",t==="profile"),e("view-trailers",t==="trailers"),e("view-achievements",t==="achievements"),e("view-detail",t==="detail"),e("view-game",t==="game"),e("view-emoji",t==="game"),e("view-chain",t==="chain"),e("view-year",t==="year"),e("view-marathon",t==="marathon"),e("view-tinder",t==="tinder");try{syncTgBack(t)}catch(i){}e("view-tonight",t==="tonight"),e("view-quiz",t==="quiz"),e("view-mycols",t==="mycols"),e("view-map",t==="map"),e("view-play",t==="play"),e("view-mine",t==="mine"),e("view-library",t==="library"),e("view-mycol-detail",t==="mycol-detail"),e("toolbar",t==="catalog"||t==="trailers"),e("filter-bar",t==="catalog"),t==="catalog"&&renderFilmDay();const n=t==="catalog"?view:t;document.querySelectorAll(".tab[data-view]").forEach(i=>i.classList.toggle("active",i.dataset.view===n));const s=document.getElementById("tab-more");s&&s.classList.toggle("active",["cols","top","achievements","profile","fav","game","chain","year","tinder","mycols","tonight","quiz","map","library"].includes(n)),document.querySelectorAll(".more-item").forEach(i=>i.classList.toggle("active",i.dataset.view===n)),animateViewIn(document.getElementById(VIEW_BOXES[t]||""));try{syncBottomNav(t)}catch(i){}}let _tinderQueue=[],_tinderIdx=0,_tinderPicks=[];function shuffleArr(t){const e=t.slice();for(let n=e.length-1;n>0;n--){const s=Math.floor(Math.random()*(n+1));[e[n],e[s]]=[e[s],e[n]]}return e}function renderTinder(){const t=document.getElementById("tinder-container");if(!t)return;if(!ALL.length){t.innerHTML='<p class="empty-note">Загрузка базы…</p>';return}const e=new Set(getWatched().map(String)),n=new Set(getFavs());_tinderQueue=shuffleArr(ALL).sort((s,i)=>{const o=e.has(String(s.code))||n.has(String(s.code))?1:0,r=e.has(String(i.code))||n.has(String(i.code))?1:0;return o-r}),_tinderIdx=0,_tinderPicks=[],drawTinderHead(t),drawTinderCard()}function drawTinderHead(t){t.innerHTML=`
+    </div>`;
+  const empty = () => {
+    c.innerHTML = `<div class="empty-state"><div class="empty-emoji">🔗</div><p>Пока маловато данных для цепочек — добавь фильмы в канал, и здесь появится «Кино-путь».</p></div>`;
+  };
+
+  const g = buildPersonGraph();
+  const people = [...g.values()].filter(v => v.films.size >= 2);
+  if (people.length >= 3) {
+    // режим «человек — фильм — человек» (когда синк подтянул актёров)
+    const used = new Set();
+    const rows = [];
+    let info = people[Math.floor(Math.random() * people.length)];
+    for (let s = 0; s < 7; s++) {
+      const films = [...info.films].filter(f => !used.has(f));
+      if (!films.length) break;
+      const pickCode = films[Math.floor(Math.random() * films.length)];   // v194: выбор один раз (раньше random считался для каждого фильма → film мог быть undefined)
+      const film = ALL.find(x => String(x.code) === pickCode);
+      if (!film) break;
+      used.add(String(film.code));
+      rows.push(`<div class="chain-step"><div class="chain-person">🎭 ${esc(info.display)}</div>${filmRow(film)}</div>`);
+      const co = [...(film.actors || []), ...(film.director ? [film.director] : [])]
+        .map(p => String(p).toLowerCase())
+        .filter(k => g.has(k) && g.get(k).films.size >= 2 && g.get(k) !== info);
+      if (!co.length) break;
+      info = g.get(co[Math.floor(Math.random() * co.length)]);
+    }
+    if (rows.length < 2) { empty(); return; }
+    c.innerHTML = shell(rows.join('<div class="chain-link">↔️</div>'),
+      'Случайная цепочка «человек — фильм — человек» по базе канала. Тапни по фильму, чтобы открыть карточку.');
+  } else {
+    // режим «фильм — жанр — фильм»: работает сразу, на текущих данных без актёров
+    const genreCount = new Map();
+    ALL.forEach(m => (m.genres || []).forEach(gg => genreCount.set(gg, (genreCount.get(gg) || 0) + 1)));
+    const rows = [];
+    const used = new Set();
+    let cur = ALL[Math.floor(Math.random() * ALL.length)];
+    used.add(String(cur.code));
+    rows.push(`<div class="chain-step">${filmRow(cur)}</div>`);
+    for (let s = 0; s < 4; s++) {
+      const gs = (cur.genres || []).filter(gg => genreCount.get(gg) >= 2);
+      if (!gs.length) break;
+      const gSel = gs[Math.floor(Math.random() * gs.length)];
+      const nexts = ALL.filter(m => !used.has(String(m.code)) && (m.genres || []).includes(gSel));
+      if (!nexts.length) break;
+      const next = nexts[Math.floor(Math.random() * nexts.length)];
+      used.add(String(next.code));
+      rows.push(`<button class="chain-genre" data-g="${esc(gSel)}">🔗 ${esc(gSel)} <em>${genreCount.get(gSel)}</em></button>`);
+      rows.push(`<div class="chain-step">${filmRow(next)}</div>`);
+      cur = next;
+    }
+    if (rows.length < 3) { empty(); return; }
+    c.innerHTML = shell(rows.join(''),
+      'Цепочка «фильм — жанр — фильм» из твоей базы. Тапни по жанру — откроется подборка, по фильму — карточка.');
+  }
+
+  document.getElementById('btn-chain-back').onclick = () => openView('grid');
+  document.getElementById('btn-chain-new').onclick = () => { haptic('light'); renderChain(); };
+  c.querySelectorAll('.chain-film').forEach(el =>
+    el.addEventListener('click', () => { haptic('light'); openDetail(el.dataset.code); }));
+  c.querySelectorAll('.chain-genre').forEach(el =>
+    el.addEventListener('click', () => {
+      haptic('light');
+      activeGenre = el.dataset.g || '';
+      view = 'grid';
+      showView('catalog');
+      renderGenreChips();
+      renderGrid();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }));
+}
+
+// ---------- вкладки и показ ----------
+// v123: мягкий вход раздела. View Transitions API не берём осознанно: он снимает
+// снапшот всей страницы, и sticky-табы на мобильных заметно «прыгают».
+const VIEW_BOXES = {
+  catalog: 'view-catalog', cols: 'view-cols', news: 'view-news', top: 'view-top',
+  profile: 'view-profile', trailers: 'view-trailers', achievements: 'view-achievements',
+  detail: 'view-detail', game: 'view-game', chain: 'view-chain', year: 'view-year',
+  marathon: 'view-marathon', tinder: 'view-tinder', mycols: 'view-mycols',
+  'mycol-detail': 'view-mycol-detail', tonight: 'view-tonight', quiz: 'view-quiz',
+  play: 'view-play', mine: 'view-mine',
+};
+function _reduceMotion() {
+  try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  catch (e) { return false; }
+}
+function animateViewIn(el) {
+  if (!el || _reduceMotion()) return;
+  el.classList.remove('view-enter');
+  void el.offsetWidth;          // перезапуск анимации: иначе второй вход «молчит»
+  el.classList.add('view-enter');
+}
+// v198: родная кнопка «назад» Telegram (в шапке) для вложенных экранов — выйти можно всегда, даже если кнопка внутри экрана не видна
+const DEEP_VIEWS = ['tinder', 'marathon', 'chain', 'game', 'tonight', 'quiz', 'year'];
+let _tgBackBound = false;
+function syncTgBack(name) {
+  const bb = tg && tg.BackButton; if (!bb || !bb.show) return;
+  if (!_tgBackBound) { _tgBackBound = true; bb.onClick(() => { try { haptic('light'); } catch (e) {} view = 'play'; openView('play'); }); }
+  if (DEEP_VIEWS.indexOf(name) >= 0) bb.show(); else bb.hide();
+}
+function showView(name) {
+  // Null-safe: если webview отдал старый закэшированный index.html без новой
+  // вьюхи (кэш-микс), отсутствие элемента не должно ронять весь интерфейс.
+  const toggle = (id, on) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', !on);
+  };
+  toggle('view-catalog', name === 'catalog');
+  toggle('view-cols', name === 'cols');
+  toggle('view-news', name === 'news');
+  toggle('view-top', name === 'top');
+  toggle('view-profile', name === 'profile');
+  toggle('view-trailers', name === 'trailers');
+  toggle('view-achievements', name === 'achievements');
+  toggle('view-detail', name === 'detail');
+  toggle('view-game', name === 'game');
+  toggle('view-emoji', name === 'game');
+  toggle('view-chain', name === 'chain');
+  toggle('view-year', name === 'year');
+  toggle('view-marathon', name === 'marathon');
+  toggle('view-tinder', name === 'tinder');
+  try { syncTgBack(name); } catch (e) {}
+  toggle('view-tonight', name === 'tonight');
+  toggle('view-quiz', name === 'quiz');
+  toggle('view-mycols', name === 'mycols');          // v106
+  toggle('view-map', name === 'map');                 // v176
+  toggle('view-play', name === 'play');               // v183
+  toggle('view-mine', name === 'mine');               // v183
+  toggle('view-library', name === 'library');         // v177
+  toggle('view-mycol-detail', name === 'mycol-detail');  // v106
+  toggle('toolbar', name === 'catalog' || name === 'trailers');
+  toggle('filter-bar', name === 'catalog');   // v123: строка фильтров — только у афиши
+  if (name === 'catalog') renderFilmDay();  // баннер скрываем/возвращаем при смене вьюхи
+  const cur = name === 'catalog' ? view : name;
+  document.querySelectorAll('.tab[data-view]').forEach(t =>
+    t.classList.toggle('active', t.dataset.view === cur));
+  const moreTab = document.getElementById('tab-more');
+  if (moreTab) moreTab.classList.toggle('active',
+    ['cols', 'top', 'achievements', 'profile', 'fav', 'game', 'chain', 'year', 'tinder', 'mycols', 'tonight', 'quiz', 'map', 'library'].includes(cur));
+  document.querySelectorAll('.more-item').forEach(b =>
+    b.classList.toggle('active', b.dataset.view === cur));
+  animateViewIn(document.getElementById(VIEW_BOXES[name] || ''));
+  try { syncBottomNav(name); } catch (e) {}
+}
+
+// ---------- «🎴 Тиндер кино» — свайп-подбор ----------
+// Вправо = «хочу посмотреть» (в Моё), вверх = «уже смотрю», влево = «мимо».
+let _tinderQueue = [];   // фильмы в текущей сессии
+let _tinderIdx = 0;      // текущая позиция
+let _tinderPicks = [];   // коды отобранных (вправо)
+function shuffleArr(a) {
+  const r = a.slice();
+  for (let i = r.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [r[i], r[j]] = [r[j], r[i]];
+  }
+  return r;
+}
+function renderTinder() {
+  const box = document.getElementById('tinder-container');
+  if (!box) return;
+  if (!ALL.length) { box.innerHTML = '<p class="empty-note">Загрузка базы…</p>'; return; }
+  const seen = new Set(getWatched().map(String));
+  const favs = new Set(getFavs());
+  // Колода — все фильмы вперемешку; уже в Моё/просмотренные уходят в хвост.
+  _tinderQueue = shuffleArr(ALL).sort((a, b) => {
+    const pa = seen.has(String(a.code)) || favs.has(String(a.code)) ? 1 : 0;
+    const pb = seen.has(String(b.code)) || favs.has(String(b.code)) ? 1 : 0;
+    return pa - pb;
+  });
+  _tinderIdx = 0;
+  _tinderPicks = [];
+  drawTinderHead(box);
+  drawTinderCard();
+}
+function drawTinderHead(box) {
+  box.innerHTML = `
     <div class="tinder-head">
       <button class="btn-back" id="tinder-back">◀️ Назад</button>
       <h2>🎴 Тиндер кино</h2>
@@ -719,145 +6393,1576 @@ ${riddleHints(t)}
         <button class="tinder-btn tinder-watch" id="tinder-watch" title="Уже смотрел(а)">👁</button>
       </div>
       <div class="tinder-tip">Тап по карточке — открыть фильм</div>
-    </div>`,document.getElementById("tinder-back").onclick=()=>{haptic("light"),view="play",openView("play")},document.getElementById("tinder-no").onclick=()=>swypeTinder("left"),document.getElementById("tinder-yes").onclick=()=>swypeTinder("right"),document.getElementById("tinder-watch").onclick=()=>swypeTinder("up"),bindTinderSwipe()}function drawTinderCard(){const t=document.getElementById("tinder-card"),e=document.getElementById("tinder-count");if(!t)return;if(_tinderIdx>=_tinderQueue.length){tinderFinish();return}const n=_tinderQueue[_tinderIdx],s=getFavs().includes(n.code),i=getWatched().includes(String(n.code)),o=[n.year,fmtDuration(n.duration),(n.genres||[]).slice(0,3).join(" · ")].filter(Boolean).join(" · ");e&&(e.textContent=`${_tinderIdx+1} / ${_tinderQueue.length}`),t.innerHTML=`
+    </div>`;
+  document.getElementById('tinder-back').onclick = () => { haptic('light'); view = 'play'; openView('play'); };
+  document.getElementById('tinder-no').onclick = () => swypeTinder('left');
+  document.getElementById('tinder-yes').onclick = () => swypeTinder('right');
+  document.getElementById('tinder-watch').onclick = () => swypeTinder('up');
+  bindTinderSwipe();
+}
+function drawTinderCard() {
+  const card = document.getElementById('tinder-card');
+  const cnt = document.getElementById('tinder-count');
+  if (!card) return;
+  if (_tinderIdx >= _tinderQueue.length) { tinderFinish(); return; }
+  const m = _tinderQueue[_tinderIdx];
+  const fav = getFavs().includes(m.code);
+  const watched = getWatched().includes(String(m.code));
+  const meta = [m.year, fmtDuration(m.duration), (m.genres || []).slice(0, 3).join(' · ')].filter(Boolean).join(' · ');
+  if (cnt) cnt.textContent = `${_tinderIdx + 1} / ${_tinderQueue.length}`;
+  card.innerHTML = `
     <div class="tinder-poster">
-      ${n.poster?`<img src="${esc(n.poster)}" alt="${esc(n.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(n)}
-             onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`:'<div class="poster-placeholder"><span>🎬</span></div>'}
-      <span class="code-badge">🔑 ${esc(String(n.code))}</span>
-      ${s?'<span class="tinder-flag t-fav">❤️ в «Моём»</span>':""}
-      ${i?'<span class="tinder-flag">👁 смотрю</span>':""}
+      ${m.poster
+        ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy" decoding="async" ${FADE}${dimStyle(m)}
+             onerror="this.style.display='none';this.parentElement.classList.add('no-poster')"/>`
+        : `<div class="poster-placeholder"><span>🎬</span></div>`}
+      <span class="code-badge">🔑 ${esc(String(m.code))}</span>
+      ${fav ? '<span class="tinder-flag t-fav">❤️ в «Моём»</span>' : ''}
+      ${watched ? '<span class="tinder-flag">👁 смотрю</span>' : ''}
     </div>
     <div class="tinder-info">
-      <h3>${esc(n.title)}</h3>
-      ${o?`<div class="tinder-meta">${esc(o)}</div>`:""}
-      <span class="rating">${ratingBadge(n)}</span>
-      ${n.director?`<div class="tinder-dir">🎬 ${esc(n.director)}</div>`:""}
-    </div>`,t.style.transform="",t.style.opacity="1",t.style.transition="none",t.onclick=r=>{r.target.closest(".tinder-actions")||r.target.closest(".tinder-btn")||openDetail(n.code)}}function tinderFinish(){const t=document.getElementById("tinder-card"),e=document.getElementById("tinder-count");if(e&&(e.textContent=""),!t)return;const n=_tinderPicks.map(i=>ALL.find(o=>o.code===i)).filter(Boolean);t.innerHTML=`
+      <h3>${esc(m.title)}</h3>
+      ${meta ? `<div class="tinder-meta">${esc(meta)}</div>` : ''}
+      <span class="rating">${ratingBadge(m)}</span>
+      ${m.director ? `<div class="tinder-dir">🎬 ${esc(m.director)}</div>` : ''}
+    </div>`;
+  card.style.transform = '';
+  card.style.opacity = '1';
+  card.style.transition = 'none';
+  card.onclick = (e) => {
+    if (e.target.closest('.tinder-actions') || e.target.closest('.tinder-btn')) return;
+    openDetail(m.code);
+  };
+}
+
+function tinderFinish() {
+  const card = document.getElementById('tinder-card');
+  const cnt = document.getElementById('tinder-count');
+  if (cnt) cnt.textContent = '';
+  if (!card) return;
+  const favs = _tinderPicks.map(code => ALL.find(x => x.code === code)).filter(Boolean);
+  card.innerHTML = `
     <div class="tinder-finish">
-      <h3>${n.length?"🎉 Твоя подборка на вечер":"🌙 Всё пересмотрели"}</h3>
-      <p class="tinder-finish-sub">${n.length?`Выбрал(а) ${n.length}${n.length===1?" фильм":" фильмов"} — нажми, чтобы открыть`:"В этой колоде ничего не приглянулось. Начнёшь новую?"}</p>
-      ${n.length?'<div class="tinder-minis">'+n.map(i=>`
-        <div class="tinder-mini" data-c="${esc(i.code)}">
-          <div class="tm-poster">${i.poster?`<img src="${esc(i.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none'"/>`:"<span>🎬</span>"}</div>
-          <div class="tm-name">${esc(i.title)}</div>
-        </div>`).join("")+"</div>":""}
+      <h3>${favs.length ? '🎉 Твоя подборка на вечер' : '🌙 Всё пересмотрели'}</h3>
+      <p class="tinder-finish-sub">${favs.length
+        ? `Выбрал(а) ${favs.length}${favs.length === 1 ? ' фильм' : ' фильмов'} — нажми, чтобы открыть`
+        : 'В этой колоде ничего не приглянулось. Начнёшь новую?'}</p>
+      ${favs.length ? '<div class="tinder-minis">' + favs.map(m => `
+        <div class="tinder-mini" data-c="${esc(m.code)}">
+          <div class="tm-poster">${m.poster
+            ? `<img src="${esc(m.poster)}" alt="" loading="lazy" ${FADE} onerror="this.style.display='none'"/>`
+            : '<span>🎬</span>'}</div>
+          <div class="tm-name">${esc(m.title)}</div>
+        </div>`).join('') + '</div>' : ''}
       <div class="tinder-finish-actions">
         <button class="btn-primary" id="tinder-restart">🎴 Листать ещё</button>
       </div>
-    </div>`;const s=document.getElementById("tinder-restart");s&&(s.onclick=()=>{haptic("light"),renderTinder()}),t.querySelectorAll(".tinder-mini").forEach(i=>i.addEventListener("click",()=>{const o=ALL.find(r=>String(r.code)===String(i.dataset.c));o&&openDetail(o.code)}))}function swypeTinder(t){const e=document.getElementById("tinder-card");if(!e||_tinderIdx>=_tinderQueue.length)return;const n=_tinderQueue[_tinderIdx],s=window.innerWidth||400;e.style.transition="transform .28s ease, opacity .28s ease",t==="right"?(haptic("ok"),getFavs().includes(n.code)||toggleFav(n.code),_tinderPicks.push(n.code),e.style.transform=`translateX(${s}px) rotate(12deg)`,e.style.opacity="0"):t==="up"?(haptic("ok"),getWatched().includes(String(n.code))||toggleWatched(n.code),e.style.transform=`translateY(-${s*1.4}px) rotate(-10deg)`,e.style.opacity="0"):(haptic("light"),e.style.transform=`translateX(-${s}px) rotate(-12deg)`,e.style.opacity="0"),setTimeout(()=>{_tinderIdx++,drawTinderCard()},280)}function bindTinderSwipe(){const t=document.getElementById("tinder-stage"),e=document.getElementById("tinder-card");if(!t||!e)return;let n=0,s=0,i=!1,o=!1;t.addEventListener("touchstart",r=>{const c=r.touches[0];n=c.clientX,s=c.clientY,i=!0,o=!1},{passive:!0}),t.addEventListener("touchmove",r=>{if(!i)return;const c=r.touches[0],a=c.clientX-n,m=c.clientY-s;if((Math.abs(a)>5||Math.abs(m)>5)&&(o=!0),o&&e&&_tinderIdx<_tinderQueue.length){const b=Math.max(-14,Math.min(14,a/16));e.style.transition="none",e.style.transform=`translate(${a}px, ${m>0?m*.4:m}px) rotate(${b}deg)`,e.style.opacity=String(Math.max(.35,1-Math.abs(a)/420))}},{passive:!0}),t.addEventListener("touchend",r=>{if(!i)return;i=!1;const c=r.changedTouches[0],a=c.clientX-n,m=c.clientY-s;o&&_tinderIdx<_tinderQueue.length&&(Math.abs(a)>80&&Math.abs(a)>Math.abs(m)?swypeTinder(a>0?"right":"left"):Math.abs(m)>80&&m<0&&Math.abs(m)>Math.abs(a)?swypeTinder("up"):(e.style.transition="transform .2s ease, opacity .2s ease",e.style.transform="",e.style.opacity="1")),o=!1},{passive:!0})}let EMOJI_RIDDLES=[];function renderEmojiGame(){const t=document.getElementById("view-emoji");if(!t)return;if(!EMOJI_RIDDLES.length){t.innerHTML="";return}const e=EMOJI_RIDDLES[Math.floor(Math.random()*EMOJI_RIDDLES.length)];t.innerHTML=`
+    </div>`;
+  const ok = document.getElementById('tinder-restart');
+  if (ok) ok.onclick = () => { haptic('light'); renderTinder(); };
+  card.querySelectorAll('.tinder-mini').forEach(el => el.addEventListener('click', () => {
+    const m = ALL.find(x => String(x.code) === String(el.dataset.c));
+    if (m) openDetail(m.code);
+  }));
+}
+function swypeTinder(dir) {
+  const card = document.getElementById('tinder-card');
+  if (!card || _tinderIdx >= _tinderQueue.length) return;
+  const m = _tinderQueue[_tinderIdx];
+  const W = window.innerWidth || 400;
+  card.style.transition = 'transform .28s ease, opacity .28s ease';
+  if (dir === 'right') {
+    haptic('ok');
+    if (!getFavs().includes(m.code)) toggleFav(m.code);
+    _tinderPicks.push(m.code);
+    card.style.transform = `translateX(${W}px) rotate(12deg)`;
+    card.style.opacity = '0';
+  } else if (dir === 'up') {
+    haptic('ok');
+    if (!getWatched().includes(String(m.code))) toggleWatched(m.code);
+    card.style.transform = `translateY(-${W * 1.4}px) rotate(-10deg)`;
+    card.style.opacity = '0';
+  } else {
+    haptic('light');
+    card.style.transform = `translateX(-${W}px) rotate(-12deg)`;
+    card.style.opacity = '0';
+  }
+  setTimeout(() => { _tinderIdx++; drawTinderCard(); }, 280);
+}
+function bindTinderSwipe() {
+  const stage = document.getElementById('tinder-stage');
+  const card = document.getElementById('tinder-card');
+  if (!stage || !card) return;
+  let startX = 0, startY = 0, down = false, moved = false;
+  stage.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    startX = t.clientX; startY = t.clientY; down = true; moved = false;
+  }, { passive: true });
+  stage.addEventListener('touchmove', (e) => {
+    if (!down) return;
+    const t = e.touches[0];
+    const dx = t.clientX - startX, dy = t.clientY - startY;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true;
+    if (moved && card && _tinderIdx < _tinderQueue.length) {
+      const rot = Math.max(-14, Math.min(14, dx / 16));
+      card.style.transition = 'none';
+      card.style.transform = `translate(${dx}px, ${dy > 0 ? dy * 0.4 : dy}px) rotate(${rot}deg)`;
+      card.style.opacity = String(Math.max(.35, 1 - Math.abs(dx) / 420));
+    }
+  }, { passive: true });
+  stage.addEventListener('touchend', (e) => {
+    if (!down) return;
+    down = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX, dy = t.clientY - startY;
+    if (moved && _tinderIdx < _tinderQueue.length) {
+      if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy)) swypeTinder(dx > 0 ? 'right' : 'left');
+      else if (Math.abs(dy) > 80 && dy < 0 && Math.abs(dy) > Math.abs(dx)) swypeTinder('up');
+      else { card.style.transition = 'transform .2s ease, opacity .2s ease'; card.style.transform = ''; card.style.opacity = '1'; }
+    }
+    moved = false;
+  }, { passive: true });
+}
+
+// ---------- мини-игра «😀 Угадай по эмодзи» ----------
+let EMOJI_RIDDLES = [];
+function renderEmojiGame() {
+  const box = document.getElementById('view-emoji');
+  if (!box) return;
+  if (!EMOJI_RIDDLES.length) { box.innerHTML = ''; return; }
+  const r = EMOJI_RIDDLES[Math.floor(Math.random() * EMOJI_RIDDLES.length)];
+  box.innerHTML = `
     <div class="emoji-game">
       <h2 class="emoji-title">😀 Угадай по эмодзи</h2>
-      <div class="emoji-q">${esc(e.emoji)}</div>
+      <div class="emoji-q">${esc(r.emoji)}</div>
       <div class="game-options">
-                ${e.options.map(n=>`<button class="btn-option" data-t="${esc(n)}" data-code="${e.code}">${esc(n)}</button>`).join("")}
+                ${r.options.map(t => `<button class="btn-option" data-t="${esc(t)}" data-code="${r.code}">${esc(t)}</button>`).join('')}
       </div>
       <button class="btn-back" id="emoji-next">🎲 Другая загадка</button>
-    </div>`,t.querySelectorAll(".btn-option").forEach(n=>n.addEventListener("click",()=>{if(t.dataset.locked==="1")return;t.dataset.locked="1";const s=ALL.find(r=>String(r.code)===String(n.dataset.code))||{},i=s?n.dataset.t===s.title:!1;haptic(i?"ok":"error"),n.classList.add(i?"correct":"wrong"),t.querySelectorAll(".btn-option").forEach(r=>{s&&r.dataset.t===s.title&&r.classList.add("correct"),r.disabled=!0});const o=s.code;if(o){const r=document.createElement("button");r.className="btn-primary",r.style.marginTop="10px",r.textContent=`🔓 Открыть код «${s.title||""}»`,r.onclick=()=>sendOrDeepLink({action:"open_movie",code:o}),t.querySelector(".emoji-game").appendChild(r)}})),document.getElementById("emoji-next").onclick=()=>{haptic("light"),t.dataset.locked="0",renderEmojiGame()}}const LAST_VIEW_KEY="kinoafisha_last_view",_viewScroll={};function rememberScroll(){const t=String(curTab||view||"");if(t)try{_viewScroll[t]=window.scrollY||0}catch(e){}}function restoreScroll(t){try{window.scrollTo({top:_viewScroll[String(t)]||0,behavior:"auto"})}catch(e){}}function openView(t,e){track("view",t),rememberScroll(),curTab=t,view=t==="today"?"grid":t;try{localStorage.setItem(LAST_VIEW_KEY,t)}catch(n){}e&&e.restore||bumpViewStat(t);try{t==="play"||t==="mine"?(showView(t),renderHub(t)):t==="game"?(showView("game"),renderGameMenu()):t==="cols"?(showView("cols"),renderCols()):t==="news"?(showView("news"),renderNews()):t==="top"?(showView("top"),renderLeaderboard()):t==="profile"?(showView("profile"),renderProfile()):t==="trailers"?(showView("trailers"),renderTrailerGenreChips(),renderTrailers()):t==="achievements"?(showView("achievements"),renderAchievements()):t==="chain"?(showView("chain"),renderChain()):t==="marathon"?(showView("marathon"),renderMarathonView()):t==="year"?(showView("year"),renderYear()):t==="tinder"?(showView("tinder"),renderTinder()):t==="tonight"?(showView("tonight"),renderTonight()):t==="quiz"?(showView("quiz"),renderQuiz()):t==="mycols"?(showView("mycols"),renderMyCols()):t==="map"?(showView("map"),renderMap()):t==="library"?(showView("library"),renderLibrary()):t==="mycol-detail"?(showView("mycol-detail"),renderMyColDetail()):(showView("catalog"),renderGrid(),t==="today"&&(renderTonightHero(),renderTMood(),renderTLinks(),renderTNudge()))}catch(n){bumpErrorStat("view",t),showErrorBanner("Раздел «"+t+"» не открылся: "+(n&&n.message||"неизвестная ошибка"))}restoreScroll(t)}document.querySelectorAll(".tab[data-view]").forEach(t=>t.addEventListener("click",()=>{haptic("light"),openView(t.dataset.view)})),(()=>{const t=["today","grid","play","mine"];let e=0,n=0,s=!1;const i=()=>!!document.querySelector(".modal:not(.hidden)");document.addEventListener("touchstart",o=>{if(s=!1,i()||moreMenu&&!moreMenu.classList.contains("hidden"))return;const r=document.getElementById("view-detail");r&&!r.classList.contains("hidden")||o.target.closest("input, textarea, select, .hero-row, .similar-row, .genre-chips, .trailer-genre-chips")||(e=o.touches[0].clientX,n=o.touches[0].clientY,s=!0)},{passive:!0}),document.addEventListener("touchend",o=>{if(!s)return;s=!1;const r=o.changedTouches[0].clientX-e,c=o.changedTouches[0].clientY-n;if(Math.abs(r)<70||Math.abs(c)>45)return;const a=curTab==="fav"?"mine":curTab,m=t.indexOf(a);if(m===-1)return;const b=r<0?t[m+1]:t[m-1];b&&(haptic("light"),openView(b))},{passive:!0})})();const moreTab=document.getElementById("tab-more"),moreMenu=document.getElementById("more-menu"),sheetBackdrop=document.getElementById("sheet-backdrop"),SHEET_GROUPS=[["🌙 Сегодня",["tonight","duo","quiz"]],["🎮 Играть",["capgame","arena","game","chain","marathon"]],["▶️ Смотреть",["trailers","news","map","cols","top","mycols","tinder"]],["🏅 Прогресс",["achievements","year"]],["👤 Твоё",["library","profile","fav"]],["⚙️ Настройки",["mute","info","catalog","changelog"]]],SHEET_LABELS={trailers:["🎥 Трейлеры","новинки и классика"],news:["📰 Новости","что происходит в кино"],tonight:["🌙 Сегодня вечером","подберём по настроению"],duo:["👥 Выбор на двоих","фильм для обоих"],quiz:["🧠 Викторина дня","5 вопросов · серия дней"],capgame:["🎮 Капитан в пути","игра на 45 секунд"],arena:["⚔️ Кино-арена","3 жизни · дуэли знаний"],map:["🌍 Кино-карта","фильмы по странам мира"],library:["📚 Моя библиотека","хочу · смотрел · любимое"],mute:["🔔 Вибрации","вкл"],info:["ℹ️ О боте","что здесь и зачем"],cols:["📚 Подборки","готовые тематические"],top:["🏆 Топ","лучшее за неделю"],mycols:["🗂 Мои подборки","что собрал сам"],tinder:["🎴 Тиндер кино","свайпай и выбирай"],game:["🏋 Тренажёр","кадр и загадка"],chain:["🔗 Кино-путь","фильм → похожее"],marathon:["🎬 Марафон","трейлеры подряд"],achievements:["🎖 Достижения","коллекция наград"],year:["🏆 Мой год","итоги просмотров"],profile:["👤 Профиль","уровень и баллы"],fav:["❤️ Моё","хочу посмотреть"],catalog:["🖼 Постер каталога","картинкой в канал"],changelog:["🎁 Что нового","что добавили в афишу"]};function sheetKey(t){return t.dataset.view?t.dataset.view:t.id==="more-catalog"?"catalog":t.id==="more-changelog"?"changelog":t.id==="more-capgame"?"capgame":t.id==="more-duo"?"duo":t.id==="more-arena"?"arena":t.id==="more-mute"?"mute":t.id==="more-info"?"info":""}function buildMoreSheet(){if(!moreMenu||!moreMenu.querySelector(".more-item")||moreMenu.querySelector(".sheet-body"))return;const t=Array.from(moreMenu.querySelectorAll(".more-item")),e=document.createElement("div");e.className="sheet-body",SHEET_GROUPS.forEach(([s,i])=>{const o=document.createElement("div");o.className="sheet-group";const r=document.createElement("div");r.className="sheet-group-title",r.textContent=s;const c=document.createElement("div");c.className="sheet-grid",i.forEach(a=>{const m=t.find($=>sheetKey($)===a);if(!m)return;const[b,w]=SHEET_LABELS[a]||["",""];m.innerHTML=`<b>${b}</b><i>${w}</i>`,c.appendChild(m)}),o.appendChild(r),o.appendChild(c),e.appendChild(o)});const n=moreMenu.querySelector("#more-accent");if(n){const s=e.querySelectorAll(".sheet-group"),i=s[s.length-1];i?e.insertBefore(n,i):e.appendChild(n)}moreMenu.appendChild(e),syncMoreMute()}let _sheetTimer=null;function openMoreMenu(){moreMenu&&(clearTimeout(_sheetTimer),moreMenu.style.transform="",moreMenu.style.transition="",moreMenu.classList.remove("hidden"),sheetBackdrop&&sheetBackdrop.classList.remove("hidden"),moreMenu.offsetHeight,moreMenu.classList.add("show"),sheetBackdrop&&sheetBackdrop.classList.add("show"),moreTab&&moreTab.setAttribute("aria-expanded","true"))}function closeMoreMenu(){moreMenu&&(moreTab&&moreTab.setAttribute("aria-expanded","false"),!moreMenu.classList.contains("hidden")&&(moreMenu.classList.remove("show"),sheetBackdrop&&sheetBackdrop.classList.remove("show"),clearTimeout(_sheetTimer),_sheetTimer=setTimeout(()=>{moreMenu.classList.add("hidden"),moreMenu.style.transform="",sheetBackdrop&&sheetBackdrop.classList.add("hidden")},320)))}if(moreTab&&moreMenu){buildMoreSheet(),moreTab.addEventListener("click",o=>{o.stopPropagation(),haptic("light"),moreMenu.classList.contains("hidden")?openMoreMenu():closeMoreMenu()}),sheetBackdrop&&sheetBackdrop.addEventListener("click",closeMoreMenu);const t=document.getElementById("sheet-close");t&&t.addEventListener("click",closeMoreMenu),document.addEventListener("keydown",o=>{o.key==="Escape"&&closeMoreMenu()});let e=0,n=0,s=!1;moreMenu.addEventListener("touchstart",o=>{o.target.closest(".sheet-grab, .sheet-head")&&(s=!0,n=0,e=o.touches[0].clientY,moreMenu.style.transition="none")},{passive:!0}),moreMenu.addEventListener("touchmove",o=>{s&&(n=Math.max(0,o.touches[0].clientY-e),moreMenu.style.transform="translateY("+n+"px)",sheetBackdrop&&(sheetBackdrop.style.opacity=String(Math.max(.3,1-n/300))))},{passive:!0});const i=o=>{s&&(s=!1,moreMenu.style.transition="",sheetBackdrop&&(sheetBackdrop.style.opacity=""),o?(haptic("medium"),moreMenu.style.transform="translateY(100%)",closeMoreMenu()):moreMenu.style.transform="",n=0)};moreMenu.addEventListener("touchend",()=>i(n>90),{passive:!0}),moreMenu.addEventListener("touchcancel",()=>i(!1),{passive:!0}),document.querySelectorAll(".more-item").forEach(o=>o.addEventListener("click",()=>{if(closeMoreMenu(),o.id==="more-changelog"){showChangelog(!0);return}if(o.id==="more-catalog"){shareCatalogPoster();return}if(o.id==="more-mute"){const r=document.getElementById("btn-mute");r&&r.click(),syncMoreMute();return}if(o.id==="more-capgame"){haptic("light"),openCaptainGame();return}if(o.id==="more-duo"){haptic("light"),openDuo();return}if(o.id==="more-arena"){haptic("light"),openArena();return}if(o.id==="more-info"){const r=document.getElementById("btn-info");r&&r.click();return}haptic("light"),openView(o.dataset.view)}))}function greetNow(){const t=new Date().getHours();return t<5?"Доброй ночи":t<12?"Доброе утро":t<18?"Добрый день":"Добрый вечер"}function renderTonightHero(){const t=document.getElementById("tonight-hero");if(!t)return;const e=filmDayPick();if(!e){t.classList.add("hidden");return}const n=getFavs().includes(e.code),s=getWatched().map(String).includes(String(e.code)),i=(e.genres||[]).slice(0,2).join(" · ");let o=0;try{o=typeof durOf=="function"?durOf(e):0}catch(b){}const r=[e.year,e.rating?"⭐ "+e.rating:"",o?o+" мин":""].filter(Boolean).join(" · ");t.classList.remove("hidden"),t.innerHTML=`
-    <div class="th-bg" style="background-image:url('${esc(e.poster)}')"></div>
+    </div>`;
+  box.querySelectorAll('.btn-option').forEach(b => b.addEventListener('click', () => {
+    if (box.dataset.locked === '1') return;
+    box.dataset.locked = '1';
+        // v130: ответ ищем через code, а не через data-a (который больше не раскрывает title)
+    const movie = ALL.find(m => String(m.code) === String(b.dataset.code)) || {};
+    const right = movie ? b.dataset.t === movie.title : false;
+    haptic(right ? 'ok' : 'error');
+    b.classList.add(right ? 'correct' : 'wrong');
+    box.querySelectorAll('.btn-option').forEach(x => {
+            if (movie && x.dataset.t === movie.title) x.classList.add('correct');
+      x.disabled = true;
+    });
+        // v130: код уже найден выше по data-code (он равен r.code, с которым
+    // рендерятся кнопки). Раньше здесь стоял повторный `const movie` в этом же
+    // блоке — это SyntaxError, из-за которого весь бандл не парсился, а
+    // приложение открывалось чёрным экраном.
+    const code = movie.code;
+    if (code) {
+      const open = document.createElement('button');
+      open.className = 'btn-primary';
+      open.style.marginTop = '10px';
+            open.textContent = `🔓 Открыть код «${movie.title || ''}»`;
+      open.onclick = () => sendOrDeepLink({ action: 'open_movie', code });
+      box.querySelector('.emoji-game').appendChild(open);
+    }
+  }));
+  document.getElementById('emoji-next').onclick = () => { haptic('light'); box.dataset.locked = '0'; renderEmojiGame(); };
+}
+
+const LAST_VIEW_KEY = 'kinoafisha_last_view';
+// v124: у каждого раздела своя позиция прокрутки. Раньше при переключении
+// вкладок страница оставалась на той же высоте — пользователь попадал в
+// середину нового раздела; теперь возврат в раздел ставит его на прежнее
+// место (а первый вход — наверх).
+const _viewScroll = {};
+function rememberScroll() {
+  const k = String(curTab || view || '');
+  if (!k) return;
+  try { _viewScroll[k] = window.scrollY || 0; } catch (e) { /* пусто */ }
+}
+function restoreScroll(name) {
+  try { window.scrollTo({ top: _viewScroll[String(name)] || 0, behavior: 'auto' }); }
+  catch (e) { /* пусто */ }
+}
+// Единая точка открытия разделов: вкладки, подменю «Ещё» и восстановление
+// последнего раздела при запуске — всё через openView.
+function openView(v, opts) {
+  track('view', v);
+  rememberScroll();   // позицию запоминаем ДО смены раздела
+  curTab = v;
+  view = (v === 'today') ? 'grid' : v;   // «Сегодня» — режим афиши (те же блоки, другой набор)
+  try { localStorage.setItem(LAST_VIEW_KEY, v); } catch (e) {}
+  // v124: считаем осознанные переходы по разделам. Восстановление последнего
+  // раздела при запуске приложения — не переход (opts.restore), иначе «Афиша»
+  // вырастет от каждого открытия приложения.
+  if (!(opts && opts.restore)) bumpViewStat(v);
+  // v126: падение рендера раздела — самая тихая поломка: пользователь видит
+  // пустой экран и уходит, а мы узнаём об этом только из жалобы. Сбой считаем и
+  // показываем в той же плашке, что и прочие ошибки приложения.
+  try {
+    if (v === 'play' || v === 'mine') { showView(v); renderHub(v); }
+    else if (v === 'game') { showView('game'); renderGameMenu(); }
+    else if (v === 'cols') { showView('cols'); renderCols(); }
+    else if (v === 'news') { showView('news'); renderNews(); }
+    else if (v === 'top') { showView('top'); renderLeaderboard(); }
+    else if (v === 'profile') { showView('profile'); renderProfile(); }
+    else if (v === 'trailers') { showView('trailers'); renderTrailerGenreChips(); renderTrailers(); }
+    else if (v === 'achievements') { showView('achievements'); renderAchievements(); }
+    else if (v === 'chain') { showView('chain'); renderChain(); }
+    else if (v === 'marathon') { showView('marathon'); renderMarathonView(); }
+    else if (v === 'year') { showView('year'); renderYear(); }
+    else if (v === 'tinder') { showView('tinder'); renderTinder(); }
+    else if (v === 'tonight') { showView('tonight'); renderTonight(); }
+    else if (v === 'quiz') { showView('quiz'); renderQuiz(); }
+    else if (v === 'mycols') { showView('mycols'); renderMyCols(); }   // v106: свои подборки
+    else if (v === 'map') { showView('map'); renderMap(); }             // v176: кино-карта
+    else if (v === 'library') { showView('library'); renderLibrary(); } // v177: кинобиблиотека
+    else if (v === 'mycol-detail') { showView('mycol-detail'); renderMyColDetail(); }
+    else { showView('catalog'); renderGrid(); if (v === 'today') { renderTonightHero(); renderTMood(); renderTLinks(); renderTNudge(); } }  // today | grid | fav
+  } catch (e) {
+    bumpErrorStat('view', v);
+    showErrorBanner('Раздел «' + v + '» не открылся: ' + ((e && e.message) || 'неизвестная ошибка'));
+  }
+  // v124: раздел открывается на своём прежнем месте (первый вход — наверх)
+  restoreScroll(v);
+}
+// v125: смена вкладки подтверждается тактильно — палец «слышит» переход сразу,
+// ещё до того, как раздел дорисуется (на медленном телефоне это заметная пауза).
+document.querySelectorAll('.tab[data-view]').forEach(t => t.addEventListener('click', () => {
+  haptic('light');
+  openView(t.dataset.view);
+}));
+
+// ---------- v60: свайп влево/вправо листает главные вкладки ----------
+// Афиша → Трейлеры → Новости и обратно. В доп. разделах («Ещё») и в карточке
+// фильма свайп не работает, чтобы не уводить со специфичного экрана.
+(() => {
+  const ORDER = ['today', 'grid', 'play', 'mine'];
+  let sx = 0, sy = 0, armed = false;
+  const modalOpen = () => !!document.querySelector('.modal:not(.hidden)');
+  document.addEventListener('touchstart', (e) => {
+    armed = false;
+    if (modalOpen()) return;
+    if (moreMenu && !moreMenu.classList.contains('hidden')) return;
+    const det = document.getElementById('view-detail');
+    if (det && !det.classList.contains('hidden')) return;
+    // не мешаем горизонтальным прокруткам и формам
+    if (e.target.closest('input, textarea, select, .hero-row, .similar-row, .genre-chips, .trailer-genre-chips')) return;
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    armed = true;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (!armed) return;
+    armed = false;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > 45) return;
+    const cur = curTab === 'fav' ? 'mine' : curTab;
+    const i = ORDER.indexOf(cur);
+    if (i === -1) return;
+    const next = dx < 0 ? ORDER[i + 1] : ORDER[i - 1];
+    if (!next) return;
+    haptic('light');
+    openView(next);
+  }, { passive: true });
+})();
+
+// ---------- «Ещё»: нижний лист (bottom-sheet) с группами ----------
+// Было выпадающее меню на 13 плоских пунктов («админка»): на телефоне это и
+// мелко, и без структуры. Стало: лист снизу, крупные плитки с подписью, группы.
+// Кнопки остаются в index.html плоским списком (совместимость + кэш-микс), а
+// раскладка по группам идёт здесь — порядок разделов правится в одном месте.
+const moreTab = document.getElementById('tab-more');
+const moreMenu = document.getElementById('more-menu');
+const sheetBackdrop = document.getElementById('sheet-backdrop');
+const SHEET_GROUPS = [
+  ['🌙 Сегодня', ['tonight', 'duo', 'quiz']],
+  ['🎮 Играть', ['capgame', 'arena', 'game', 'chain', 'marathon']],
+  ['▶️ Смотреть', ['trailers', 'news', 'map', 'cols', 'top', 'mycols', 'tinder']],
+  ['🏅 Прогресс', ['achievements', 'year']],
+  ['👤 Твоё', ['library', 'profile', 'fav']],
+  ['⚙️ Настройки', ['mute', 'info', 'catalog', 'changelog']],
+];
+const SHEET_LABELS = {
+  trailers: ['🎥 Трейлеры', 'новинки и классика'],
+  news: ['📰 Новости', 'что происходит в кино'],
+  tonight: ['🌙 Сегодня вечером', 'подберём по настроению'],
+  duo: ['👥 Выбор на двоих', 'фильм для обоих'],
+  quiz: ['🧠 Викторина дня', '5 вопросов · серия дней'],
+  capgame: ['🎮 Капитан в пути', 'игра на 45 секунд'],
+  arena: ['⚔️ Кино-арена', '3 жизни · дуэли знаний'],
+  map: ['🌍 Кино-карта', 'фильмы по странам мира'],
+  library: ['📚 Моя библиотека', 'хочу · смотрел · любимое'],
+  mute: ['🔔 Вибрации', 'вкл'],
+  info: ['ℹ️ О боте', 'что здесь и зачем'],
+  cols: ['📚 Подборки', 'готовые тематические'],
+  top: ['🏆 Топ', 'лучшее за неделю'],
+  mycols: ['🗂 Мои подборки', 'что собрал сам'],
+  tinder: ['🎴 Тиндер кино', 'свайпай и выбирай'],
+  game: ['🏋 Тренажёр', 'кадр и загадка'],
+  chain: ['🔗 Кино-путь', 'фильм → похожее'],
+  marathon: ['🎬 Марафон', 'трейлеры подряд'],
+  achievements: ['🎖 Достижения', 'коллекция наград'],
+  year: ['🏆 Мой год', 'итоги просмотров'],
+  profile: ['👤 Профиль', 'уровень и баллы'],
+  fav: ['❤️ Моё', 'хочу посмотреть'],
+  catalog: ['🖼 Постер каталога', 'картинкой в канал'],
+  changelog: ['🎁 Что нового', 'что добавили в афишу'],
+};
+// Ключ плитки: data-view, а у «Постер каталога» и «Что нового» — id.
+function sheetKey(btn) {
+  if (btn.dataset.view) return btn.dataset.view;
+  if (btn.id === 'more-catalog') return 'catalog';
+  if (btn.id === 'more-changelog') return 'changelog';
+  if (btn.id === 'more-capgame') return 'capgame';
+  if (btn.id === 'more-duo') return 'duo';
+  if (btn.id === 'more-arena') return 'arena';
+  if (btn.id === 'more-mute') return 'mute';
+  if (btn.id === 'more-info') return 'info';
+  return '';
+}
+function buildMoreSheet() {
+  if (!moreMenu || !moreMenu.querySelector('.more-item')) return;
+  if (moreMenu.querySelector('.sheet-body')) return;   // уже разложено
+  const items = Array.from(moreMenu.querySelectorAll('.more-item'));
+  const body = document.createElement('div');
+  body.className = 'sheet-body';
+  SHEET_GROUPS.forEach(([title, keys]) => {
+    const group = document.createElement('div');
+    group.className = 'sheet-group';
+    const h = document.createElement('div');
+    h.className = 'sheet-group-title';
+    h.textContent = title;
+    const grid = document.createElement('div');
+    grid.className = 'sheet-grid';
+    keys.forEach(k => {
+      const btn = items.find(b => sheetKey(b) === k);
+      if (!btn) return;
+      const [main, sub] = SHEET_LABELS[k] || ['', ''];
+      btn.innerHTML = `<b>${main}</b><i>${sub}</i>`;
+      grid.appendChild(btn);        // перенос узла: плоский список исчезает сам
+    });
+    group.appendChild(h);
+    group.appendChild(grid);
+    body.appendChild(group);
+  });
+  // «Цвет оформления» — отдельный блок перед настройками, на всю ширину
+  const accent = moreMenu.querySelector('#more-accent');
+  if (accent) {
+    const groups = body.querySelectorAll('.sheet-group');
+    const last = groups[groups.length - 1];
+    if (last) body.insertBefore(accent, last);
+    else body.appendChild(accent);
+  }
+  moreMenu.appendChild(body);
+  syncMoreMute();
+}
+let _sheetTimer = null;
+function openMoreMenu() {
+  if (!moreMenu) return;
+  clearTimeout(_sheetTimer);
+  moreMenu.style.transform = '';     // v124: после свайпа мог остаться inline-transform
+  moreMenu.style.transition = '';
+  moreMenu.classList.remove('hidden');
+  if (sheetBackdrop) sheetBackdrop.classList.remove('hidden');
+  void moreMenu.offsetHeight;       // reflow: без него transition не запускается
+  moreMenu.classList.add('show');
+  if (sheetBackdrop) sheetBackdrop.classList.add('show');
+  if (moreTab) moreTab.setAttribute('aria-expanded', 'true');
+}
+function closeMoreMenu() {
+  if (!moreMenu) return;
+  if (moreTab) moreTab.setAttribute('aria-expanded', 'false');
+  if (moreMenu.classList.contains('hidden')) return;
+  moreMenu.classList.remove('show');
+  if (sheetBackdrop) sheetBackdrop.classList.remove('show');
+  clearTimeout(_sheetTimer);
+  // .hidden ставим после анимации — иначе лист исчезает рывком
+  _sheetTimer = setTimeout(() => {
+    moreMenu.classList.add('hidden');
+    moreMenu.style.transform = '';   // v124: следующий показ снова поедет снизу
+    if (sheetBackdrop) sheetBackdrop.classList.add('hidden');
+  }, 320);
+}
+if (moreTab && moreMenu) {
+  buildMoreSheet();
+  moreTab.addEventListener('click', (e) => {
+    e.stopPropagation();
+    haptic('light');
+    if (moreMenu.classList.contains('hidden')) openMoreMenu();
+    else closeMoreMenu();
+  });
+  if (sheetBackdrop) sheetBackdrop.addEventListener('click', closeMoreMenu);
+  const sheetX = document.getElementById('sheet-close');
+  if (sheetX) sheetX.addEventListener('click', closeMoreMenu);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMoreMenu(); });
+  // Свайп вниз по «ручке»/шапке — привычный жест закрытия. Лист едет за
+  // пальцем (иначе жест выглядит «мёртвым»), при отпускании либо закрывается,
+  // либо возвращается на место. Тянем только вниз — вверх не «выпрыгивает».
+  let sy = 0, dy = 0, dragging = false;
+  moreMenu.addEventListener('touchstart', (e) => {
+    if (!e.target.closest('.sheet-grab, .sheet-head')) return;
+    dragging = true;
+    dy = 0;
+    sy = e.touches[0].clientY;
+    moreMenu.style.transition = 'none';
+  }, { passive: true });
+  moreMenu.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    dy = Math.max(0, e.touches[0].clientY - sy);
+    moreMenu.style.transform = 'translateY(' + dy + 'px)';
+    if (sheetBackdrop) sheetBackdrop.style.opacity = String(Math.max(.3, 1 - dy / 300));
+  }, { passive: true });
+  const dragEnd = (close) => {
+    if (!dragging) return;
+    dragging = false;
+    moreMenu.style.transition = '';
+    if (sheetBackdrop) sheetBackdrop.style.opacity = '';
+    if (close) {
+      // v125: жест довели до конца — «средний» удар ощутимее лёгкого тапа, и на
+      // ощупь понятно, что лист именно закрылся, а не вернулся назад.
+      haptic('medium');
+      moreMenu.style.transform = 'translateY(100%)';   // доводим жест до конца
+      closeMoreMenu();
+    } else {
+      moreMenu.style.transform = '';                   // не дотянул — назад
+    }
+    dy = 0;
+  };
+  moreMenu.addEventListener('touchend', () => dragEnd(dy > 90), { passive: true });
+  moreMenu.addEventListener('touchcancel', () => dragEnd(false), { passive: true });
+  document.querySelectorAll('.more-item').forEach(b => b.addEventListener('click', () => {
+    closeMoreMenu();
+    if (b.id === 'more-changelog') { showChangelog(true); return; }  // v101: открываемый инфоблок
+    if (b.id === 'more-catalog') { shareCatalogPoster(); return; }   // v113: витрина одной картинкой
+    if (b.id === 'more-mute') { const m = document.getElementById('btn-mute'); if (m) m.click(); syncMoreMute(); return; }
+    if (b.id === 'more-capgame') { haptic('light'); openCaptainGame(); return; }
+    if (b.id === 'more-duo') { haptic('light'); openDuo(); return; }
+    if (b.id === 'more-arena') { haptic('light'); openArena(); return; }   // v158: игра прямо из меню
+    if (b.id === 'more-info') { const i = document.getElementById('btn-info'); if (i) i.click(); return; }
+    haptic('light');   // v125: плитка в листе — тоже переход, отзываемся так же
+    openView(b.dataset.view);
+  }));
+}
+
+
+// ---------- v183: «Сегодня» (главный экран), нижняя панель, хабы «Играть»/«Моё» ----------
+function greetNow() {
+  const h = new Date().getHours();
+  return h < 5 ? 'Доброй ночи' : h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер';
+}
+function renderTonightHero() {
+  const el = document.getElementById('tonight-hero');
+  if (!el) return;
+  const m = filmDayPick();
+  if (!m) { el.classList.add('hidden'); return; }
+  const fav = getFavs().includes(m.code);
+  const seen = getWatched().map(String).includes(String(m.code));
+  const genres = (m.genres || []).slice(0, 2).join(' · ');
+  let dur = 0;
+  try { dur = (typeof durOf === 'function') ? durOf(m) : 0; } catch (e) {}
+  const meta = [m.year, m.rating ? '⭐ ' + m.rating : '', dur ? dur + ' мин' : ''].filter(Boolean).join(' · ');
+  el.classList.remove('hidden');
+  el.innerHTML = `
+    <div class="th-bg" style="background-image:url('${esc(m.poster)}')"></div>
     <div class="th-in">
       <div class="th-hello">${greetNow()}</div>
       <div class="th-sub">Капитан выбрал кино на сегодня</div>
       <div class="th-card" id="th-card">
-        <div class="th-poster"><img src="${esc(e.poster)}" alt="" decoding="async" onerror="this.style.display='none'"/></div>
+        <div class="th-poster"><img src="${esc(m.poster)}" alt="" decoding="async" onerror="this.style.display='none'"/></div>
         <div class="th-info">
-          <div class="th-title">${esc(e.title)}</div>
-          <div class="th-meta">${esc(r)}</div>
-          ${i?`<div class="th-genres">${esc(i)}</div>`:""}
-          <button class="th-seen${s?" on":""}" id="th-seen">${s?"✅ Смотрел"+(myRating(e.code)?" · "+"★".repeat(myRating(e.code)):" · оценить"):"✔️ Уже смотрел"}</button>
+          <div class="th-title">${esc(m.title)}</div>
+          <div class="th-meta">${esc(meta)}</div>
+          ${genres ? `<div class="th-genres">${esc(genres)}</div>` : ''}
+          <button class="th-seen${seen ? ' on' : ''}" id="th-seen">${seen ? '✅ Смотрел' + (myRating(m.code) ? ' · ' + '★'.repeat(myRating(m.code)) : ' · оценить') : '✔️ Уже смотрел'}</button>
           <div class="th-btns">
             <button class="th-open" id="th-open">▶️ Открыть</button>
             <button class="th-roll" id="th-roll" title="Другой фильм" aria-label="Другой фильм">🎲</button>
-            <button class="fav-quick ${n?"active":""}" data-code="${esc(e.code)}" aria-label="Моё" title="В «Моё»">${n?"♥︎":"♡"}</button>
+            <button class="fav-quick ${fav ? 'active' : ''}" data-code="${esc(m.code)}" aria-label="Моё" title="В «Моё»">${fav ? '♥︎' : '♡'}</button>
           </div>
         </div>
       </div>
-    </div>`;const c=()=>{haptic("light"),openDetail(e.code)},a=t.querySelector(".th-poster");a&&(a.onclick=c);const m=t.querySelector(".th-title");m&&(m.onclick=c),document.getElementById("th-open").onclick=c,document.getElementById("th-seen").onclick=b=>{b.stopPropagation(),openSeenSheet(e,s)},document.getElementById("th-roll").onclick=b=>{b.stopPropagation(),haptic("light");const w=ALL.filter($=>(parseFloat($.rating)||0)>=7.3&&$.poster&&String($.code)!==String(e.code));w.length&&(_fdManual=w[Math.floor(Math.random()*w.length)].code,renderTonightHero())},wireFavQuick(t)}function _countriesSeen(){const t=new Set,e=new Set(getWatched().map(String));return ALL.forEach(n=>{e.has(String(n.code))&&(n.countries||[]).forEach(s=>t.add(s))}),t}function openSeenSheet(t,e){const n=_countriesSeen();if(!e){const w=new Set(getWatched().map(String));w.add(String(t.code)),setWatched(w);try{bumpWeekStat("watched")}catch($){}haptic("ok")}let s=document.getElementById("t-rate");s&&s.remove(),s=document.createElement("div"),s.id="t-rate",s.className="modal";const i=myRating(t.code);s.innerHTML=`<div class="modal-card tr-card">
+    </div>`;
+  const open = () => { haptic('light'); openDetail(m.code); };
+  const po = el.querySelector('.th-poster'); if (po) po.onclick = open;
+  const ti = el.querySelector('.th-title'); if (ti) ti.onclick = open;
+  document.getElementById('th-open').onclick = open;
+  document.getElementById('th-seen').onclick = (ev) => { ev.stopPropagation(); openSeenSheet(m, seen); };
+  document.getElementById('th-roll').onclick = (ev) => {
+    ev.stopPropagation();
+    haptic('light');
+    const cands = ALL.filter(x => (parseFloat(x.rating) || 0) >= 7.3 && x.poster && String(x.code) !== String(m.code));
+    if (!cands.length) return;
+    _fdManual = cands[Math.floor(Math.random() * cands.length)].code;
+    renderTonightHero();
+  };
+  wireFavQuick(el);
+}
+
+// ---------- v185: «Я посмотрел» → оценка в одно касание + итог ----------
+function _countriesSeen() {
+  const set = new Set();
+  const w = new Set(getWatched().map(String));
+  ALL.forEach(x => { if (w.has(String(x.code))) (x.countries || []).forEach(c => set.add(c)); });
+  return set;
+}
+function openSeenSheet(m, wasSeen) {
+  const before = _countriesSeen();
+  if (!wasSeen) {
+    const w = new Set(getWatched().map(String)); w.add(String(m.code)); setWatched(w);
+    try { bumpWeekStat('watched'); } catch (e) {}
+    haptic('ok');
+  }
+  let el = document.getElementById('t-rate');
+  if (el) el.remove();
+  el = document.createElement('div');
+  el.id = 't-rate';
+  el.className = 'modal';
+  const cur = myRating(m.code);
+  el.innerHTML = `<div class="modal-card tr-card">
     <button class="modal-close" id="tr-x">✕</button>
     <div class="tr-emoji">🍿</div>
-    <h3>Как тебе «${esc(t.title)}»?</h3>
-    <div class="tr-stars" id="tr-stars">${[1,2,3,4,5].map(w=>`<button data-r="${w}" class="${w<=i?"on":""}">★</button>`).join("")}</div>
+    <h3>Как тебе «${esc(m.title)}»?</h3>
+    <div class="tr-stars" id="tr-stars">${[1, 2, 3, 4, 5].map(i => `<button data-r="${i}" class="${i <= cur ? 'on' : ''}">★</button>`).join('')}</div>
     <div class="tr-sum" id="tr-sum"></div>
     <button class="btn-primary" id="tr-ok">Готово</button>
-  </div>`,document.body.appendChild(s);const o=s.querySelector("#tr-sum"),r=getWatched().length,c=_countriesSeen(),a=[...c].filter(w=>!n.has(w)),m=w=>{const $=[`📚 В «Смотрел» теперь ${r} ${r%10===1&&r%100!==11?"фильм":r%10>=2&&r%10<=4&&(r%100<12||r%100>14)?"фильма":"фильмов"}`];a.length?$.push(`🌍 Новая страна на кино-карте: ${esc(a.join(", "))}!`):c.size&&$.push(`🌍 Стран на кино-карте: ${c.size}`),w>=4?$.push("Капитан запомнил: такое тебе заходит 😉"):w&&w<=2&&$.push("Принято. Подберу что-нибудь получше."),o.innerHTML=$.map(p=>`<div>${p}</div>`).join(""),o.classList.add("show")};m(i);const b=()=>{s.remove(),renderTonightHero();try{renderTodayStrip()}catch(w){}};s.querySelector("#tr-x").onclick=b,s.querySelector("#tr-ok").onclick=b,s.addEventListener("click",w=>{w.target===s&&b()}),s.querySelectorAll("#tr-stars button").forEach(w=>w.onclick=()=>{const $=+w.dataset.r;setRating(t.code,$),s.querySelectorAll("#tr-stars button").forEach(p=>p.classList.toggle("on",+p.dataset.r<=(myRating(t.code)||0))),m(myRating(t.code))})}let _tmMood=null,_tmShift=0;const TM_IDS=["laugh","thrill","scary","date","friends","family"];let _tmTime=0;function renderTMood(){const t=document.getElementById("t-mood");if(!t||!ALL.length)return;const n=TM_IDS.map(r=>TONIGHT_MOODS.find(c=>c.id===r)).filter(Boolean).map(r=>`<button class="tm-chip${_tmMood===r.id?" active":""}" data-id="${r.id}">${r.emoji} ${esc(r.name.replace(/ \(.*\)/,""))}</button>`).join("");let s="";if(_tmMood){const r=TONIGHT_MOODS.find(w=>w.id===_tmMood),c=new Set(getWatched().map(String)),a=w=>{if(!_tmTime)return!0;const $=+w.duration||0;return $>0&&$<=_tmTime};let m=ALL.filter(w=>r.ok(w)&&a(w)&&(+w.rating||0)>=6.8);m.length||(m=ALL.filter(w=>r.ok(w)&&a(w))),m.length||(m=ALL.filter(w=>r.ok(w)));const b=m.filter(w=>!c.has(String(w.code)));if(b.length&&(m=b),!m.length)s='<div class="tm-empty">Под это настроение пока пусто — выбери другое 🙂</div>';else{const w=_seedRng(_todayKey()+"tm"+r.id);m=m.map(f=>[w(),f]).sort((f,v)=>f[0]-v[0]).map(f=>f[1]);const $=m[_tmShift%m.length],p=[$.year,$.rating?"⭐ "+$.rating:"",($.genres||[]).slice(0,2).join(" · ")].filter(Boolean).join(" · ");s=`<div class="tm-res" data-code="${esc(String($.code))}">
-        <div class="tm-poster">${$.poster?`<img src="${esc($.poster)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'"/>`:""}</div>
-        <div class="tm-info"><b>${esc($.title)}</b><span>${esc(p)}</span>
-          <div class="tm-btns"><button class="tm-open">▶️ Открыть</button>${m.length>1?'<button class="tm-next">🔄 Другой</button>':""}</div></div>
-      </div>`}}t.classList.remove("hidden");const i=[[0,"Любое время"],[100,"⏱ до 100 мин"],[130,"до 2 ч 10 мин"]].map(([r,c])=>`<button class="tm-chip tm-time${_tmTime===r?" active":""}" data-t="${r}">${c}</button>`).join("");t.innerHTML=`<div class="tm-head">Что хочется?</div><div class="tm-chips">${n}</div><div class="tm-chips tm-times">${i}</div>${s}`,t.querySelectorAll(".tm-time").forEach(r=>r.onclick=()=>{_tmTime=+r.dataset.t,_tmShift=0,haptic("light"),renderTMood()}),t.querySelectorAll(".tm-chip:not(.tm-time)").forEach(r=>r.onclick=()=>{_tmMood=_tmMood===r.dataset.id?null:r.dataset.id,_tmShift=0,haptic("light"),renderTMood()});const o=t.querySelector(".tm-res");if(o){t.querySelector(".tm-open").onclick=()=>openDetail(o.dataset.code);const r=t.querySelector(".tm-poster");r&&(r.onclick=()=>openDetail(o.dataset.code));const c=t.querySelector(".tm-next");c&&(c.onclick=()=>{_tmShift++,haptic("light"),renderTMood()})}}function popMsg(t,e){const n=document.createElement("div");n.className="pop-msg"+(e?" "+e:""),n.textContent=t,document.body.appendChild(n),setTimeout(()=>n.remove(),2200)}function confetti(t=26){const e=["#ff5a5f","#ffc43d","#3ecf7a","#4aa3ff","#c77dff"],n=document.createElement("div");n.className="confetti";for(let s=0;s<t;s++){const i=document.createElement("i");i.style.left=5+Math.random()*90+"%",i.style.background=e[s%e.length],i.style.animationDelay=Math.random()*.25+"s",i.style.animationDuration=1.2+Math.random()*.9+"s",i.style.transform="rotate("+Math.floor(Math.random()*360)+"deg)",n.appendChild(i)}document.body.appendChild(n),setTimeout(()=>n.remove(),2600)}const RANKS=[[0,"🎟","Зритель","Знакомишься с афишей"],[50,"🍿","Киноман","Смотришь и оцениваешь регулярно"],[150,"✍️","Критик","Есть вкус и своё мнение"],[350,"🎬","Режиссёр","Разгадываешь коды и играешь в арене"],[700,"⚓","Капитан","Высшее звание — ты на мостике"]];function kinoXP(){let t=0;try{t=parseInt(localStorage.getItem("kino_arena_best")||"0",10)||0}catch(n){}const e=dailyState();return getWatched().length*3+Object.keys(getRatings()).length*2+getUnlocked().length*5+getFavs().length+Math.floor(t/10)+Math.max(e.best||0,e.series||0)*2}function rankInfo(){const t=kinoXP();let e=0;RANKS.forEach((o,r)=>{t>=o[0]&&(e=r)});const n=RANKS[e],s=RANKS[e+1]||null,i=s?Math.round(100*(t-n[0])/(s[0]-n[0])):100;return{xp:t,i:e,cur:n,nxt:s,pct:i}}function rankCardHtml(){const t=rankInfo();return`<div class="rk-card">
-    <div class="rk-ico">${t.cur[1]}</div>
+  </div>`;
+  document.body.appendChild(el);
+  const sum = el.querySelector('#tr-sum');
+  const total = getWatched().length;
+  const after = _countriesSeen();
+  const fresh = [...after].filter(c => !before.has(c));
+  const showSum = (r) => {
+    const lines = [`📚 В «Смотрел» теперь ${total} ${total % 10 === 1 && total % 100 !== 11 ? 'фильм' : (total % 10 >= 2 && total % 10 <= 4 && (total % 100 < 12 || total % 100 > 14) ? 'фильма' : 'фильмов')}`];
+    if (fresh.length) lines.push(`🌍 Новая страна на кино-карте: ${esc(fresh.join(', '))}!`);
+    else if (after.size) lines.push(`🌍 Стран на кино-карте: ${after.size}`);
+    if (r >= 4) lines.push('Капитан запомнил: такое тебе заходит 😉');
+    else if (r && r <= 2) lines.push('Принято. Подберу что-нибудь получше.');
+    sum.innerHTML = lines.map(l => `<div>${l}</div>`).join('');
+    sum.classList.add('show');
+  };
+  showSum(cur);
+  const close = () => { el.remove(); renderTonightHero(); try { renderTodayStrip(); } catch (e) {} };
+  el.querySelector('#tr-x').onclick = close;
+  el.querySelector('#tr-ok').onclick = close;
+  el.addEventListener('click', (e) => { if (e.target === el) close(); });
+  el.querySelectorAll('#tr-stars button').forEach(b => b.onclick = () => {
+    const r = +b.dataset.r;
+    setRating(m.code, r);
+    el.querySelectorAll('#tr-stars button').forEach(x => x.classList.toggle('on', +x.dataset.r <= (myRating(m.code) || 0)));
+    showSum(myRating(m.code));
+  });
+}
+
+// ---------- v185: «Что хочется?» — один фильм по настроению прямо на «Сегодня» ----------
+let _tmMood = null, _tmShift = 0;
+const TM_IDS = ['laugh', 'thrill', 'scary', 'date', 'friends', 'family'];
+let _tmTime = 0;   // v188: «сколько времени» — 0 любое / 100 / 130 минут
+function renderTMood() {
+  const el = document.getElementById('t-mood');
+  if (!el || !ALL.length) return;
+  const moods = TM_IDS.map(id => TONIGHT_MOODS.find(x => x.id === id)).filter(Boolean);
+  const chips = moods.map(md => `<button class="tm-chip${_tmMood === md.id ? ' active' : ''}" data-id="${md.id}">${md.emoji} ${esc(md.name.replace(/ \(.*\)/, ''))}</button>`).join('');
+  let result = '';
+  if (_tmMood) {
+    const md = TONIGHT_MOODS.find(x => x.id === _tmMood);
+    const seen = new Set(getWatched().map(String));
+    const fitT = m => { if (!_tmTime) return true; const d = +m.duration || 0; return d > 0 && d <= _tmTime; };
+    let pool = ALL.filter(m => md.ok(m) && fitT(m) && (+m.rating || 0) >= 6.8);
+    if (!pool.length) pool = ALL.filter(m => md.ok(m) && fitT(m));
+    if (!pool.length) pool = ALL.filter(m => md.ok(m));
+    const fresh = pool.filter(m => !seen.has(String(m.code)));
+    if (fresh.length) pool = fresh;
+    if (!pool.length) result = '<div class="tm-empty">Под это настроение пока пусто — выбери другое 🙂</div>';
+    else {
+      const rnd = _seedRng(_todayKey() + 'tm' + md.id);
+      pool = pool.map(m => [rnd(), m]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+      const m = pool[_tmShift % pool.length];
+      const meta = [m.year, m.rating ? '⭐ ' + m.rating : '', (m.genres || []).slice(0, 2).join(' · ')].filter(Boolean).join(' · ');
+      result = `<div class="tm-res" data-code="${esc(String(m.code))}">
+        <div class="tm-poster">${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'"/>` : ''}</div>
+        <div class="tm-info"><b>${esc(m.title)}</b><span>${esc(meta)}</span>
+          <div class="tm-btns"><button class="tm-open">▶️ Открыть</button>${pool.length > 1 ? '<button class="tm-next">🔄 Другой</button>' : ''}</div></div>
+      </div>`;
+    }
+  }
+  el.classList.remove('hidden');
+  const tchips = [[0, 'Любое время'], [100, '⏱ до 100 мин'], [130, 'до 2 ч 10 мин']].map(([v, t]) => `<button class="tm-chip tm-time${_tmTime === v ? ' active' : ''}" data-t="${v}">${t}</button>`).join('');
+  el.innerHTML = `<div class="tm-head">Что хочется?</div><div class="tm-chips">${chips}</div><div class="tm-chips tm-times">${tchips}</div>${result}`;
+  el.querySelectorAll('.tm-time').forEach(b => b.onclick = () => { _tmTime = +b.dataset.t; _tmShift = 0; haptic('light'); renderTMood(); });
+  el.querySelectorAll('.tm-chip:not(.tm-time)').forEach(b => b.onclick = () => {
+    _tmMood = (_tmMood === b.dataset.id) ? null : b.dataset.id; _tmShift = 0; haptic('light'); renderTMood();
+  });
+  const res = el.querySelector('.tm-res');
+  if (res) {
+    el.querySelector('.tm-open').onclick = () => openDetail(res.dataset.code);
+    const poster = el.querySelector('.tm-poster'); if (poster) poster.onclick = () => openDetail(res.dataset.code);
+    const nx = el.querySelector('.tm-next'); if (nx) nx.onclick = () => { _tmShift++; haptic('light'); renderTMood(); };
+  }
+}
+
+// ---------- v186: ранги Капитана, итог недели, микроанимации ----------
+function popMsg(text, kind) {
+  const el = document.createElement('div');
+  el.className = 'pop-msg' + (kind ? ' ' + kind : '');
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+function confetti(n = 26) {
+  const cols = ['#ff5a5f', '#ffc43d', '#3ecf7a', '#4aa3ff', '#c77dff'];
+  const box = document.createElement('div');
+  box.className = 'confetti';
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement('i');
+    p.style.left = (5 + Math.random() * 90) + '%';
+    p.style.background = cols[i % cols.length];
+    p.style.animationDelay = (Math.random() * .25) + 's';
+    p.style.animationDuration = (1.2 + Math.random() * .9) + 's';
+    p.style.transform = 'rotate(' + Math.floor(Math.random() * 360) + 'deg)';
+    box.appendChild(p);
+  }
+  document.body.appendChild(box);
+  setTimeout(() => box.remove(), 2600);
+}
+const RANKS = [
+  [0, '🎟', 'Зритель', 'Знакомишься с афишей'],
+  [50, '🍿', 'Киноман', 'Смотришь и оцениваешь регулярно'],
+  [150, '✍️', 'Критик', 'Есть вкус и своё мнение'],
+  [350, '🎬', 'Режиссёр', 'Разгадываешь коды и играешь в арене'],
+  [700, '⚓', 'Капитан', 'Высшее звание — ты на мостике'],
+];
+function kinoXP() {
+  let arena = 0;
+  try { arena = parseInt(localStorage.getItem('kino_arena_best') || '0', 10) || 0; } catch (e) {}
+  const d = dailyState();
+  return getWatched().length * 3 + Object.keys(getRatings()).length * 2 + getUnlocked().length * 5
+    + getFavs().length + Math.floor(arena / 10) + Math.max(d.best || 0, d.series || 0) * 2;
+}
+function rankInfo() {
+  const xp = kinoXP();
+  let i = 0;
+  RANKS.forEach((r, k) => { if (xp >= r[0]) i = k; });
+  const cur = RANKS[i], nxt = RANKS[i + 1] || null;
+  const pct = nxt ? Math.round(100 * (xp - cur[0]) / (nxt[0] - cur[0])) : 100;
+  return { xp, i, cur, nxt, pct };
+}
+function rankCardHtml() {
+  const r = rankInfo();
+  return `<div class="rk-card">
+    <div class="rk-ico">${r.cur[1]}</div>
     <div class="rk-body">
-      <div class="rk-name">${t.cur[2]}</div>
-      <div class="rk-sub">${t.nxt?`${t.xp} оч. · до «${t.nxt[2]}» ${t.nxt[0]-t.xp}`:`${t.xp} оч. · высший ранг 👑`}</div>
-      <div class="rk-bar"><i style="width:${t.pct}%"></i></div>
+      <div class="rk-name">${r.cur[2]}</div>
+      <div class="rk-sub">${r.nxt ? `${r.xp} оч. · до «${r.nxt[2]}» ${r.nxt[0] - r.xp}` : `${r.xp} оч. · высший ранг 👑`}</div>
+      <div class="rk-bar"><i style="width:${r.pct}%"></i></div>
     </div>
-    <div class="rk-ladder">${RANKS.map((e,n)=>`<span class="${n<=t.i?"on":""}" title="${e[2]} от ${e[0]}">${e[1]}</span>`).join("")}</div>
-  </div>`}function checkRankUp(){try{const t=rankInfo(),e=parseInt(localStorage.getItem("kino_rank_seen")||"-1",10);if(e<0){localStorage.setItem("kino_rank_seen",String(t.i));return}t.i>e&&(localStorage.setItem("kino_rank_seen",String(t.i)),haptic("ok"),confetti(34),popMsg(`${t.cur[1]} Новый ранг: ${t.cur[2]}!`,"big"))}catch(t){}}function weekData(){const t=week7(),e=s=>t.reduce((i,o)=>i+(o[s]||0),0),n=dailyState();return{watched:e("watched"),rated:e("rated"),trailers:e("trailers"),favs:e("favs"),opened:e("open"),series:n.series||0,rank:rankInfo(),days:t.filter(s=>s.open+s.trailers+s.favs+s.rated+s.watched>0).length}}function weekCanvas(t){const e=document.createElement("canvas");e.width=1080,e.height=1350;const n=e.getContext("2d"),s=n.createLinearGradient(0,0,1080,1350);return s.addColorStop(0,"#1d2140"),s.addColorStop(1,"#3a1d3f"),n.fillStyle=s,n.fillRect(0,0,1080,1350),n.fillStyle="rgba(255,255,255,.06)",n.beginPath(),n.arc(900,200,320,0,7),n.fill(),n.fillStyle="#fff",n.textAlign="center",n.font="800 78px system-ui,sans-serif",n.fillText("Моя неделя в кино",540,170),n.font="500 38px system-ui,sans-serif",n.fillStyle="rgba(255,255,255,.7)",n.fillText("Капитан Кино · Киноафиша",540,232),[["🎬",t.watched,"посмотрел"],["⭐",t.rated,"оценок"],["▶️",t.trailers,"трейлеров"],["🔥",t.series,"дней серия"]].forEach((o,r)=>{const c=90+r%2*450,a=330+Math.floor(r/2)*330;n.fillStyle="rgba(255,255,255,.10)",n.beginPath(),n.roundRect(c,a,420,290,36),n.fill(),n.textAlign="center",n.fillStyle="#fff",n.font="90px system-ui,sans-serif",n.fillText(o[0],c+210,a+105),n.font="800 100px system-ui,sans-serif",n.fillText(String(o[1]),c+210,a+205),n.font="500 34px system-ui,sans-serif",n.fillStyle="rgba(255,255,255,.75)",n.fillText(o[2],c+210,a+255)}),n.fillStyle="rgba(255,255,255,.12)",n.beginPath(),n.roundRect(90,1030,900,190,36),n.fill(),n.fillStyle="#fff",n.font="90px system-ui,sans-serif",n.fillText(t.rank.cur[1],210,1155),n.textAlign="left",n.font="800 54px system-ui,sans-serif",n.fillText("Ранг: "+t.rank.cur[2],300,1120),n.font="500 36px system-ui,sans-serif",n.fillStyle="rgba(255,255,255,.75)",n.fillText(t.rank.xp+" очков · активных дней: "+t.days+" из 7",300,1172),n.textAlign="center",n.font="500 32px system-ui,sans-serif",n.fillStyle="rgba(255,255,255,.55)",n.fillText("t.me/kapitan_kino_bot",540,1292),e}function openWeekCard(){const t=weekData();let e=document.getElementById("t-week");e&&e.remove(),e=document.createElement("div"),e.id="t-week",e.className="modal";const n=weekCanvas(t);e.innerHTML=`<div class="modal-card tw-card"><button class="modal-close" id="tw-x">✕</button>
-    <img class="tw-img" alt="Моя неделя в кино" src="${n.toDataURL("image/png")}"/>
-    <button class="btn-primary" id="tw-share">📤 Поделиться</button></div>`,document.body.appendChild(e);const s=()=>e.remove();e.querySelector("#tw-x").onclick=s,e.addEventListener("click",i=>{i.target===e&&s()}),e.querySelector("#tw-share").onclick=async()=>{const i=`🎬 Моя неделя в кино: посмотрел ${t.watched}, оценок ${t.rated}, серия ${t.series} ${_daysWord(t.series||1)}. Ранг — ${t.rank.cur[2]}!`;try{const r=await new Promise(a=>n.toBlob(a,"image/png")),c=new File([r],"week.png",{type:"image/png"});if(navigator.canShare&&navigator.canShare({files:[c]})){await navigator.share({files:[c],text:i});return}}catch(r){}const o="https://t.me/share/url?url="+encodeURIComponent("https://t.me/kapitan_kino_bot")+"&text="+encodeURIComponent(i);try{tg.openTelegramLink(o)}catch(r){window.open(o,"_blank")}}}function renderTNudge(){const t=document.getElementById("t-nudge");if(!t)return;const e=dailyState(),n=_wdayKey();let s="",i=null;const o=new Date().getHours(),r=new Date().getDay();if(checkRankUp(),(r===0||r===1)&&weekData().days>0?(s="📅 Итог недели готов — посмотри и поделись",i=openWeekCard):e.series>=2&&e.last!==n?s=`🔥 Серия заходов: ${e.series} ${_daysWord(e.series)} — зайди в игру сегодня, чтобы не потерять`:e.series>=2&&e.last===n?s=`🔥 Серия заходов: ${e.series} ${_daysWord(e.series)}. Капитан гордится`:o>=18&&(s="🎬 Вечер — самое время выбрать кино. Капитан уже подобрал"),!s){t.classList.add("hidden");return}t.textContent=s,t.onclick=i,t.classList.toggle("click",!!i),t.classList.remove("hidden")}function goKey(t){const e=Array.from(document.querySelectorAll(".more-item")).find(n=>sheetKey(n)===t);e&&e.click()}const GROUP_URL="https://www.facebook.com/groups/1951192206248508";function renderTLinks(){const t=document.getElementById("t-links");if(!t)return;const e=[["poker","🃏 Покер"],["blackjack","♠️ Блэкджек"],["trailers","🎥 Трейлеры"],["news","📰 Новости"],["tonight","🌙 По настроению"],["duo","👥 На двоих"],["tinder","🎴 Тиндер"]];t.classList.remove("hidden"),t.innerHTML=e.map(([n,s])=>`<button class="tl-chip" data-k="${n}">${s}</button>`).join("")+(GROUP_URL?'<button class="tl-chip tl-group" data-k="__group">💬 Обсуждаем в группе</button>':""),t.querySelectorAll(".tl-chip").forEach(n=>n.onclick=()=>{if(haptic("light"),n.dataset.k==="__group"){try{tg.openLink(GROUP_URL)}catch(s){window.open(GROUP_URL,"_blank")}return}if(n.dataset.k==="poker"){openPokerSafe();return}if(n.dataset.k==="blackjack"){openBlackjackSafe();return}goKey(n.dataset.k)})}const HUBS={play:["Играть","Игры и дуэли знаний — копи баллы и открывай награды",[["🎮 Прямо сейчас",["capgame","arena","game","poker","blackjack","friends"]],["🧠 Каждый день",["quiz","duo","tonight"]],["🔎 Ещё",["chain","marathon","tinder","top"]]]],mine:["Моё","Твоё кино: списки, прогресс и итоги",[["📚 Моё кино",["library","fav","mycols"]],["🏅 Прогресс",["week","profile","achievements","year","map"]]]]},APP_VER=231;function renderHub(t){const e=document.getElementById(t+"-container"),n=HUBS[t];if(!e||!n)return;const[s,i,o]=n;e.innerHTML=`<div class="hub-head"><h2>${s}</h2><p>${i}</p></div>`+(t==="mine"?rankCardHtml():"")+o.map(([r,c])=>`<div class="hub-group"><div class="hub-gt">${r}</div><div class="hub-grid">`+c.map((a,m)=>{const[b,w]=(a==="fav"?["❤️ Хочу посмотреть","твой список"]:a==="week"?["📅 Моя неделя","итог и картинка"]:a==="friends"?["👥 Играть с друзьями","покер в твоём чате"]:a==="blackjack"?["♠️ Блэкджек","до 21 на фишках"]:a==="poker"?["🃏 Кино-покер","на фишках, без риска"]:SHEET_LABELS[a])||[a,""],$=b.indexOf(" "),p=$>0?b.slice(0,$):"🎬",f=$>0?b.slice($+1):b;return`<button class="hub-tile${m===0&&c.length%2===1?" hub-wide":""}" data-k="${a}"><span class="ht-ico">${p}</span><b>${esc(f)}</b><i>${esc(w)}</i></button>`}).join("")+"</div></div>").join("")+`<div class="hub-ver">версия ${APP_VER}</div>`,e.querySelectorAll(".hub-tile").forEach(r=>r.onclick=()=>{haptic("light"),r.dataset.k==="week"?openWeekCard():r.dataset.k==="friends"?openFriendsPoker():r.dataset.k==="poker"?openPokerSafe():r.dataset.k==="blackjack"?openBlackjackSafe():goKey(r.dataset.k)})}function openPokerSafe(){if(typeof window.openPoker=="function"){try{window.openPoker()}catch(t){try{popMsg("Покер не открылся: "+t.message)}catch(e){}}return}try{popMsg("Покер загружается… обнови приложение")}catch(t){}}function openBlackjackSafe(){if(typeof window.openBlackjack=="function"){try{window.openBlackjack()}catch(t){try{popMsg("Блэкджек не открылся: "+t.message)}catch(e){}}return}try{popMsg("Блэкджек загружается… обнови приложение")}catch(t){}}function openFriendsPoker(){const t="https://t.me/kapitan_kino_bot?startgroup=poker";try{popMsg("В чате с друзьями напиши /poker")}catch(e){}try{tg.openTelegramLink(t)}catch(e){window.open(t,"_blank")}}const BN_MAP={catalog:null,play:"play",mine:"mine",game:"play",chain:"play",tinder:"play",marathon:"play",quiz:"play",tonight:"play",library:"mine",profile:"mine",achievements:"mine",year:"mine",map:"mine",mycols:"mine","mycol-detail":"mine",cols:"grid",top:"grid",trailers:"grid",news:"news"},BN_HIDE=["detail","game","mycol-detail"];function syncBottomNav(t){const e=document.getElementById("bnav");if(!e)return;let n;t==="catalog"?n=view==="fav"?"mine":curTab==="today"?"today":"grid":t==="detail"?n=e.dataset.key||"today":n=BN_MAP[t]||"grid",e.dataset.key=n,document.body.dataset.tab=t==="catalog"?curTab==="today"?"today":"afisha":String(t),e.classList.toggle("bn-off",BN_HIDE.includes(t)),e.querySelectorAll(".bn[data-bn]").forEach(s=>s.classList.toggle("active",s.dataset.bn===n))}(()=>{document.body.dataset.tab="today";const t=document.getElementById("bnav");t&&t.querySelectorAll(".bn[data-bn]").forEach(e=>e.addEventListener("click",()=>{haptic("light");const n=e.dataset.bn;if(n==="more"){const s=document.getElementById("tab-more");s&&s.click();return}if(typeof closeMoreMenu=="function"&&closeMoreMenu(),curTab===n){try{window.scrollTo({top:0,behavior:"smooth"})}catch(s){}return}openView(n)}))})();let _searchTimer=null;document.getElementById("search").addEventListener("input",()=>{clearTimeout(_searchTimer),activeGenre&&(activeGenre="",renderGenreChips()),activeCountry&&(activeCountry="",renderCountryChips()),initSearchHist(document.getElementById("search").value);const t=document.getElementById("code-hint"),e=document.getElementById("search").value.trim();if(t)if(/^\d+$/.test(e)&&e.length>=2){const n=ALL.find(s=>String(s.code)===e);t.textContent=n?"🔑 "+e+" · "+(n.title||"")+" — Enter откроет":"🤷 Кода "+e+" нет в афише",t.classList.remove("hidden")}else t.classList.add("hidden");try{renderSearchSug()}catch(n){}_searchTimer=setTimeout(renderGrid,180)}),document.getElementById("sort").addEventListener("change",renderGrid),document.getElementById("search").addEventListener("keydown",t=>{if(t.key==="Enter"){const e=document.getElementById("search").value.trim();if(/^\d+$/.test(e)){const n=ALL.find(s=>String(s.code)===e);if(n){addSearchHist(e),initSearchHist(),haptic("ok"),openDetail(n.code);return}}e&&(addSearchHist(e),initSearchHist())}});function renderSearchSug(){const t=document.getElementById("search-sug"),e=document.getElementById("search");if(!t||!e)return;const s=e.value.trim().toLowerCase().replace(/ё/g,"е");if(s.length<2||/^\d+$/.test(s)||!ALL.length){t.classList.add("hidden"),t.innerHTML="";return}const i=$=>String($||"").toLowerCase().replace(/ё/g,"е"),o=$=>{const p=i($);return p.includes(s)&&p!==s},r=[],c=new Set,a=($,p,f)=>{const v=f+p;!c.has(v)&&r.length<7&&(c.add(v),r.push({ico:$,text:p}))},m=new Map;ALL.forEach($=>{$.director&&o($.director)&&m.set($.director,"🎬"),($.actors||[]).forEach(p=>{o(p)&&!m.has(p)&&m.set(p,"⭐")})}),[...m.entries()].slice(0,3).forEach(([$,p])=>a(p,$,"p"));const b=new Set,w=new Set;if(ALL.forEach($=>{($.countries||[]).forEach(p=>o(p)&&b.add(p)),($.genres||[]).forEach(p=>o(p)&&w.add(p))}),[...b].slice(0,2).forEach($=>a("🌍",$,"c")),[...w].slice(0,2).forEach($=>a("🎭",$,"g")),ALL.filter($=>o($.title)).slice(0,3).forEach($=>a("🎞",$.title,"t")),!r.length){t.classList.add("hidden"),t.innerHTML="";return}t.classList.remove("hidden"),t.innerHTML=r.map(($,p)=>`<button class="sug-chip" data-i="${p}">${$.ico} ${esc($.text)}</button>`).join(""),t.querySelectorAll(".sug-chip").forEach($=>$.onclick=()=>{e.value=r[+$.dataset.i].text,haptic("light"),t.classList.add("hidden"),renderGrid();try{addSearchHist(e.value)}catch(p){}})}document.getElementById("trailer-search").addEventListener("input",()=>{clearTimeout(_trailerSearchTimer),_trailerPage=1,trailerGenre&&(trailerGenre="",renderTrailerGenreChips()),_trailerSearchTimer=setTimeout(renderTrailers,180)}),document.getElementById("trailer-sort").addEventListener("change",()=>{_trailerPage=1,renderTrailers()});const btnTop=document.getElementById("btn-top");window.addEventListener("scroll",()=>{btnTop.classList.toggle("hidden",window.scrollY<700)},{passive:!0}),btnTop.addEventListener("click",()=>{haptic("light"),window.scrollTo({top:0,behavior:"smooth"})}),document.getElementById("btn-theme").addEventListener("click",toggleTheme),(()=>{const t=document.getElementById("btn-mute");if(!t)return;const e=()=>{t.textContent=hapticsEnabled()?"🔔":"🔇"};t.addEventListener("click",()=>{const n=toggleHaptics();e(),n||haptic("light");try{tg.showPopup({type:"ok",title:n?"🔇 Вибрации выключены":"🔔 Вибрации включены",message:n?"Приложение больше не вибрирует на действиях.":"Тактильный отклик вернулся."})}catch(s){}}),e()})();function buildLabel(){const t=document.querySelector('script[src*="script.js?v="]'),e=t&&/[?&]v=(\d+)/.exec(t.getAttribute("src")||""),n=["Сборка "+(e?"v"+e[1]:"неизвестна")];try{tg&&tg.version&&n.push("Telegram "+tg.version),tg&&tg.platform&&n.push(tg.platform)}catch(s){}return n.join(" · ")}document.getElementById("btn-info").addEventListener("click",()=>{haptic("light");const t=document.getElementById("about-build");if(t)try{t.textContent=buildLabel()}catch(e){t.textContent=""}document.getElementById("about").classList.remove("hidden")}),document.getElementById("btn-about-close").addEventListener("click",()=>document.getElementById("about").classList.add("hidden")),document.getElementById("about").addEventListener("click",t=>{t.target.id==="about"&&document.getElementById("about").classList.add("hidden")}),document.getElementById("btn-about-channel").addEventListener("click",()=>tg.openTelegramLink(CHANNEL_URL)),document.getElementById("btn-lucky").addEventListener("click",()=>{if(!ALL.length)return;haptic("light");const t=ALL[Math.floor(Math.random()*ALL.length)];openDetail(t.code)});const rndModal=document.getElementById("random-modal");document.getElementById("btn-random").addEventListener("click",()=>{ALL.length&&(rndModal.classList.remove("hidden"),renderRandomMovie())}),document.getElementById("btn-random-close").addEventListener("click",closeRandom),document.getElementById("btn-random-again").addEventListener("click",renderRandomMovie),rndModal.addEventListener("click",t=>{t.target===rndModal&&closeRandom()}),document.getElementById("btn-only-tr").addEventListener("click",()=>{onlyTrailer=!onlyTrailer,haptic("light"),document.getElementById("btn-only-tr").classList.toggle("active",onlyTrailer),renderGrid()}),document.getElementById("btn-only-online").addEventListener("click",()=>{onlyOnline=!onlyOnline,haptic("light"),document.getElementById("btn-only-online").classList.toggle("active",onlyOnline),renderGrid()}),(function(){const e=document.getElementById("lightbox");e&&e.addEventListener("click",()=>{e.classList.add("hidden"),e.querySelector("img").src=""})})();const refreshBtn=document.getElementById("btn-refresh");refreshBtn.addEventListener("click",async()=>{if(!refreshBtn.dataset.busy){refreshBtn.dataset.busy="1",refreshBtn.classList.add("spin"),haptic("light");try{await loadMovies()}catch(t){}refreshBtn.classList.remove("spin"),delete refreshBtn.dataset.busy,refreshBtn.textContent="✓",setTimeout(()=>{refreshBtn.textContent="⟳"},1600)}}),(function(){const t=document.getElementById("ptr");if(!t)return;let e=0,n=!1,s=0;const i=()=>!!document.querySelector(".modal:not(.hidden)");document.addEventListener("touchstart",o=>{if(window.scrollY>0||i()){n=!1;return}e=o.touches[0].clientY,s=0,n=!0},{passive:!0}),document.addEventListener("touchmove",o=>{if(!n)return;if(s=o.touches[0].clientY-e,s<=0){t.style.opacity="0";return}const r=Math.min(s,120);t.textContent=s>90?"🔄 Отпусти — обновлю":"↓ Тяни вниз",t.style.transform="translate(-50%, "+Math.round(40+r*.4)+"px)",t.style.opacity=String(Math.min(r/80,1))},{passive:!0}),document.addEventListener("touchend",()=>{n&&(n=!1,s>90?(t.textContent="⏳ Обновляю…",loadMovies().then(()=>{view==="trailers"&&(renderTrailerGenreChips(),renderTrailers()),view==="news"&&renderNews(),setTimeout(()=>{t.style.opacity="0",t.style.transform=""},700)})):(t.style.opacity="0",t.style.transform=""))})})();function openKinogod(){var $,p;const t=document.getElementById("kinogod-modal"),e=document.getElementById("kinogod-body"),n=PROFILE||{},s=getUnlocked(),i=getFavs(),o=n.pts||0,r=n.str||0,c=n.tit||"Зритель",a=n.rank,m=typeof a=="number"?`<div class="kg-row"><span>📍 Место в топе</span><b>${a}</b></div>`:"",b=new Map;[...i,...s].forEach(f=>{const v=ALL.find(u=>u.code===f);(v&&Array.isArray(v.genres)?v.genres:[]).forEach(u=>b.set(u,(b.get(u)||0)+1))});const w=(($=[...b.entries()].sort((f,v)=>v[1]-f[1])[0])==null?void 0:$[0])||"";e.innerHTML=`
+    <div class="rk-ladder">${RANKS.map((x, k) => `<span class="${k <= r.i ? 'on' : ''}" title="${x[2]} от ${x[0]}">${x[1]}</span>`).join('')}</div>
+  </div>`;
+}
+function checkRankUp() {
+  try {
+    const r = rankInfo();
+    const seen = parseInt(localStorage.getItem('kino_rank_seen') || '-1', 10);
+    if (seen < 0) { localStorage.setItem('kino_rank_seen', String(r.i)); return; }
+    if (r.i > seen) {
+      localStorage.setItem('kino_rank_seen', String(r.i));
+      haptic('ok'); confetti(34);
+      popMsg(`${r.cur[1]} Новый ранг: ${r.cur[2]}!`, 'big');
+    }
+  } catch (e) {}
+}
+function weekData() {
+  const w = week7();
+  const sum = (k) => w.reduce((a, d) => a + (d[k] || 0), 0);
+  const d = dailyState();
+  return { watched: sum('watched'), rated: sum('rated'), trailers: sum('trailers'), favs: sum('favs'), opened: sum('open'),
+    series: d.series || 0, rank: rankInfo(), days: w.filter(x => (x.open + x.trailers + x.favs + x.rated + x.watched) > 0).length };
+}
+function weekCanvas(wd) {
+  const c = document.createElement('canvas'); c.width = 1080; c.height = 1350;
+  const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 1080, 1350); gr.addColorStop(0, '#1d2140'); gr.addColorStop(1, '#3a1d3f');
+  g.fillStyle = gr; g.fillRect(0, 0, 1080, 1350);
+  g.fillStyle = 'rgba(255,255,255,.06)'; g.beginPath(); g.arc(900, 200, 320, 0, 7); g.fill();
+  g.fillStyle = '#fff'; g.textAlign = 'center';
+  g.font = '800 78px system-ui,sans-serif'; g.fillText('Моя неделя в кино', 540, 170);
+  g.font = '500 38px system-ui,sans-serif'; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText('Капитан Кино · Киноафиша', 540, 232);
+  const items = [['🎬', wd.watched, 'посмотрел'], ['⭐', wd.rated, 'оценок'], ['▶️', wd.trailers, 'трейлеров'], ['🔥', wd.series, 'дней серия']];
+  items.forEach((it, i) => {
+    const x = 90 + (i % 2) * 450, y = 330 + Math.floor(i / 2) * 330;
+    g.fillStyle = 'rgba(255,255,255,.10)'; g.beginPath(); g.roundRect(x, y, 420, 290, 36); g.fill();
+    g.textAlign = 'center'; g.fillStyle = '#fff';
+    g.font = '90px system-ui,sans-serif'; g.fillText(it[0], x + 210, y + 105);
+    g.font = '800 100px system-ui,sans-serif'; g.fillText(String(it[1]), x + 210, y + 205);
+    g.font = '500 34px system-ui,sans-serif'; g.fillStyle = 'rgba(255,255,255,.75)'; g.fillText(it[2], x + 210, y + 255);
+  });
+  g.fillStyle = 'rgba(255,255,255,.12)'; g.beginPath(); g.roundRect(90, 1030, 900, 190, 36); g.fill();
+  g.fillStyle = '#fff'; g.font = '90px system-ui,sans-serif'; g.fillText(wd.rank.cur[1], 210, 1155);
+  g.textAlign = 'left'; g.font = '800 54px system-ui,sans-serif'; g.fillText('Ранг: ' + wd.rank.cur[2], 300, 1120);
+  g.font = '500 36px system-ui,sans-serif'; g.fillStyle = 'rgba(255,255,255,.75)'; g.fillText(wd.rank.xp + ' очков · активных дней: ' + wd.days + ' из 7', 300, 1172);
+  g.textAlign = 'center'; g.font = '500 32px system-ui,sans-serif'; g.fillStyle = 'rgba(255,255,255,.55)'; g.fillText('t.me/kapitan_kino_bot', 540, 1292);
+  return c;
+}
+function openWeekCard() {
+  const wd = weekData();
+  let el = document.getElementById('t-week'); if (el) el.remove();
+  el = document.createElement('div'); el.id = 't-week'; el.className = 'modal';
+  const cv = weekCanvas(wd);
+  el.innerHTML = `<div class="modal-card tw-card"><button class="modal-close" id="tw-x">✕</button>
+    <img class="tw-img" alt="Моя неделя в кино" src="${cv.toDataURL('image/png')}"/>
+    <button class="btn-primary" id="tw-share">📤 Поделиться</button></div>`;
+  document.body.appendChild(el);
+  const close = () => el.remove();
+  el.querySelector('#tw-x').onclick = close;
+  el.addEventListener('click', (e) => { if (e.target === el) close(); });
+  el.querySelector('#tw-share').onclick = async () => {
+    const txt = `🎬 Моя неделя в кино: посмотрел ${wd.watched}, оценок ${wd.rated}, серия ${wd.series} ${_daysWord(wd.series || 1)}. Ранг — ${wd.rank.cur[2]}!`;
+    try {
+      const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+      const f = new File([blob], 'week.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: txt }); return; }
+    } catch (e) {}
+    const u = 'https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') + '&text=' + encodeURIComponent(txt);
+    try { tg.openTelegramLink(u); } catch (e) { window.open(u, '_blank'); }
+  };
+}
+
+function renderTNudge() {
+  const el = document.getElementById('t-nudge');
+  if (!el) return;
+  const s = dailyState();
+  const today = _wdayKey();
+  let txt = '';
+  let onClick = null;
+  const h = new Date().getHours();
+  const wdn = new Date().getDay();
+  checkRankUp();
+  if ((wdn === 0 || wdn === 1) && weekData().days > 0) { txt = '📅 Итог недели готов — посмотри и поделись'; onClick = openWeekCard; }
+  else if (s.series >= 2 && s.last !== today) txt = `🔥 Серия заходов: ${s.series} ${_daysWord(s.series)} — зайди в игру сегодня, чтобы не потерять`;
+  else if (s.series >= 2 && s.last === today) txt = `🔥 Серия заходов: ${s.series} ${_daysWord(s.series)}. Капитан гордится`;
+  else if (h >= 18) txt = '🎬 Вечер — самое время выбрать кино. Капитан уже подобрал';
+  if (!txt) { el.classList.add('hidden'); return; }
+  el.textContent = txt;
+  el.onclick = onClick;
+  el.classList.toggle('click', !!onClick);
+  el.classList.remove('hidden');
+}
+function goKey(k) {
+  const btn = Array.from(document.querySelectorAll('.more-item')).find(b => sheetKey(b) === k);
+  if (btn) btn.click();
+}
+const GROUP_URL = 'https://www.facebook.com/groups/1951192206248508';   // группа «Кино Капитана» (пусто — чип скрыт)
+function renderTLinks() {
+  const el = document.getElementById('t-links');
+  if (!el) return;
+  const L = [['poker', '🃏 Покер'], ['blackjack', '♠️ Блэкджек'], ['trailers', '🎥 Трейлеры'], ['news', '📰 Новости'], ['tonight', '🌙 По настроению'],
+             ['duo', '👥 На двоих'], ['tinder', '🎴 Тиндер']];
+  el.classList.remove('hidden');
+  el.innerHTML = L.map(([k, t]) => `<button class="tl-chip" data-k="${k}">${t}</button>`).join('') +
+    (GROUP_URL ? '<button class="tl-chip tl-group" data-k="__group">💬 Обсуждаем в группе</button>' : '');
+  el.querySelectorAll('.tl-chip').forEach(b => b.onclick = () => {
+    haptic('light');
+    if (b.dataset.k === '__group') { try { tg.openLink(GROUP_URL); } catch (e) { window.open(GROUP_URL, '_blank'); } return; }
+    if (b.dataset.k === 'poker') { openPokerSafe(); return; }
+    if (b.dataset.k === 'blackjack') { openBlackjackSafe(); return; }
+    goKey(b.dataset.k);
+  });
+}
+const HUBS = {
+  play: ['Играть', 'Игры и дуэли знаний — копи баллы и открывай награды', [
+    ['🎮 Прямо сейчас', ['capgame', 'arena', 'game', 'poker', 'blackjack', 'friends']],
+    ['🧠 Каждый день', ['quiz', 'duo', 'tonight']],
+    ['🔎 Ещё', ['chain', 'marathon', 'tinder', 'top']],
+  ]],
+  mine: ['Моё', 'Твоё кино: списки, прогресс и итоги', [
+    ['📚 Моё кино', ['library', 'fav', 'mycols']],
+    ['🏅 Прогресс', ['week', 'profile', 'achievements', 'year', 'map']],
+  ]],
+};
+const APP_VER = 231;   // совпадает с ?v= в index.html — видно в «Играть/Моё/Ещё», чтобы понимать, какая версия открыта
+function renderHub(name) {
+  const box = document.getElementById(name + '-container');
+  const cfg = HUBS[name];
+  if (!box || !cfg) return;
+  const [title, sub, groups] = cfg;
+  box.innerHTML = `<div class="hub-head"><h2>${title}</h2><p>${sub}</p></div>` + (name === 'mine' ? rankCardHtml() : '') + groups.map(([gt, keys]) =>
+    `<div class="hub-group"><div class="hub-gt">${gt}</div><div class="hub-grid">` +
+    keys.map((k, i) => {
+      const [main, subl] = (k === 'fav' ? ['❤️ Хочу посмотреть', 'твой список'] : (k === 'week' ? ['📅 Моя неделя', 'итог и картинка'] : (k === 'friends' ? ['👥 Играть с друзьями', 'покер в твоём чате'] : (k === 'blackjack' ? ['♠️ Блэкджек', 'до 21 на фишках'] : k === 'poker' ? ['🃏 Кино-покер', 'на фишках, без риска'] : SHEET_LABELS[k])))) || [k, ''];
+      const sp = main.indexOf(' ');
+      const ico = sp > 0 ? main.slice(0, sp) : '🎬';
+      const txt = sp > 0 ? main.slice(sp + 1) : main;
+      return `<button class="hub-tile${i === 0 && keys.length % 2 === 1 ? ' hub-wide' : ''}" data-k="${k}"><span class="ht-ico">${ico}</span><b>${esc(txt)}</b><i>${esc(subl)}</i></button>`;
+    }).join('') + '</div></div>').join('') + `<div class="hub-ver">версия ${APP_VER}</div>`;
+  box.querySelectorAll('.hub-tile').forEach(b => b.onclick = () => { haptic('light'); if (b.dataset.k === 'week') openWeekCard(); else if (b.dataset.k === 'friends') { openFriendsPoker(); } else if (b.dataset.k === 'poker') { openPokerSafe(); } else if (b.dataset.k === 'blackjack') { openBlackjackSafe(); } else goKey(b.dataset.k); });
+}
+// v191: покер с друзьями — стол ведёт бот в чате. startgroup даёт выбрать чат, куда добавить бота.
+function openPokerSafe() {
+  if (typeof window.openPoker === 'function') { try { window.openPoker(); } catch (e) { try { popMsg('Покер не открылся: ' + e.message); } catch (e2) {} } return; }
+  try { popMsg('Покер загружается… обнови приложение'); } catch (e) {}
+}
+function openBlackjackSafe() {
+  if (typeof window.openBlackjack === 'function') { try { window.openBlackjack(); } catch (e) { try { popMsg('Блэкджек не открылся: ' + e.message); } catch (e2) {} } return; }
+  try { popMsg('Блэкджек загружается… обнови приложение'); } catch (e) {}
+}
+function openFriendsPoker() {
+  const url = 'https://t.me/kapitan_kino_bot?startgroup=poker';
+  try { popMsg('В чате с друзьями напиши /poker'); } catch (e) {}
+  try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+}
+const BN_MAP = {
+  catalog: null, play: 'play', mine: 'mine',
+  game: 'play', chain: 'play', tinder: 'play', marathon: 'play', quiz: 'play', tonight: 'play',
+  library: 'mine', profile: 'mine', achievements: 'mine', year: 'mine', map: 'mine', mycols: 'mine', 'mycol-detail': 'mine',
+  cols: 'grid', top: 'grid', trailers: 'grid', news: 'news',
+};
+const BN_HIDE = ['detail', 'game', 'mycol-detail'];   // v195: тиндер и марафон больше не прячут нижнее меню — иначе из них не выйти
+function syncBottomNav(name) {
+  const nav = document.getElementById('bnav');
+  if (!nav) return;
+  let key;
+  if (name === 'catalog') key = (view === 'fav') ? 'mine' : (curTab === 'today' ? 'today' : 'grid');
+  else if (name === 'detail') key = nav.dataset.key || 'today';
+  else key = BN_MAP[name] || 'grid';
+  nav.dataset.key = key;
+  document.body.dataset.tab = (name === 'catalog') ? (curTab === 'today' ? 'today' : 'afisha') : String(name);
+  nav.classList.toggle('bn-off', BN_HIDE.includes(name));
+  nav.querySelectorAll('.bn[data-bn]').forEach(b => b.classList.toggle('active', b.dataset.bn === key));
+}
+(() => {
+  document.body.dataset.tab = 'today';
+  const nav = document.getElementById('bnav');
+  if (!nav) return;
+  nav.querySelectorAll('.bn[data-bn]').forEach(b => b.addEventListener('click', () => {
+    haptic('light');
+    const k = b.dataset.bn;
+    if (k === 'more') { const t = document.getElementById('tab-more'); if (t) t.click(); return; }
+    if (typeof closeMoreMenu === 'function') closeMoreMenu();
+    if (curTab === k) { try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {} return; }
+    openView(k);
+  }));
+})();
+
+// ---------- поиск с debounce (не рендерим на каждый символ) ----------
+let _searchTimer = null;
+document.getElementById('search').addEventListener('input', () => {
+  clearTimeout(_searchTimer);
+  // Поиск — всегда по ВСЕЙ афише: если был активен жанровый фильтр (например,
+  // после тапа по чипу жанра в карточке фильма), сбрасываем его — иначе поиск
+  // ищет только внутри одного жанра и выглядит «сломанным».
+  if (activeGenre) {
+    activeGenre = '';
+    renderGenreChips();
+  }
+  // v89: сброс фильтра по стране при вводе поиска — как и жанровый
+  if (activeCountry) {
+    activeCountry = '';
+    renderCountryChips();
+  }
+  initSearchHist(document.getElementById('search').value);
+  // v100: живая подсказка «код найден» под строкой поиска
+  const hint = document.getElementById('code-hint');
+  const cq = document.getElementById('search').value.trim();
+  if (hint) {
+    if (/^\d+$/.test(cq) && cq.length >= 2) {
+      const m = ALL.find(x => String(x.code) === cq);
+      hint.textContent = m
+        ? '🔑 ' + cq + ' · ' + (m.title || '') + ' — Enter откроет'
+        : '🤷 Кода ' + cq + ' нет в афише';
+      hint.classList.remove('hidden');
+    } else {
+      hint.classList.add('hidden');
+    }
+  }
+  try { renderSearchSug(); } catch (e) {}
+  _searchTimer = setTimeout(renderGrid, 180);
+});
+document.getElementById('sort').addEventListener('change', renderGrid);
+document.getElementById('search').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const q = document.getElementById('search').value.trim();
+    if (/^\d+$/.test(q)) {
+      // v100: ввёл чистый код → Enter = мгновенно открыть карточку
+      const m = ALL.find(x => String(x.code) === q);
+      if (m) {
+        addSearchHist(q); initSearchHist();
+        haptic('ok');
+        openDetail(m.code);
+        return;
+      }
+    }
+    if (q) { addSearchHist(q); initSearchHist(); }
+  }
+});
+
+
+// ---------- v186: подсказки поиска (люди, страны, жанры, названия) ----------
+function renderSearchSug() {
+  const box = document.getElementById('search-sug');
+  const inp = document.getElementById('search');
+  if (!box || !inp) return;
+  const raw = inp.value.trim();
+  const q = raw.toLowerCase().replace(/ё/g, 'е');
+  if (q.length < 2 || /^\d+$/.test(q) || !ALL.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+  const n = (t) => String(t || '').toLowerCase().replace(/ё/g, 'е');
+  const hit = (t) => { const x = n(t); return x.includes(q) && x !== q; };
+  const out = [], seen = new Set();
+  const add = (ico, text, kind) => { const k = kind + text; if (!seen.has(k) && out.length < 7) { seen.add(k); out.push({ ico, text }); } };
+  const people = new Map();
+  ALL.forEach(m => {
+    if (m.director && hit(m.director)) people.set(m.director, '🎬');
+    (m.actors || []).forEach(a => { if (hit(a) && !people.has(a)) people.set(a, '⭐'); });
+  });
+  [...people.entries()].slice(0, 3).forEach(([p, ico]) => add(ico, p, 'p'));
+  const countries = new Set(), genres = new Set();
+  ALL.forEach(m => { (m.countries || []).forEach(c => hit(c) && countries.add(c)); (m.genres || []).forEach(g => hit(g) && genres.add(g)); });
+  [...countries].slice(0, 2).forEach(c => add('🌍', c, 'c'));
+  [...genres].slice(0, 2).forEach(g => add('🎭', g, 'g'));
+  ALL.filter(m => hit(m.title)).slice(0, 3).forEach(m => add('🎞', m.title, 't'));
+  if (!out.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+  box.classList.remove('hidden');
+  box.innerHTML = out.map((o, i) => `<button class="sug-chip" data-i="${i}">${o.ico} ${esc(o.text)}</button>`).join('');
+  box.querySelectorAll('.sug-chip').forEach(b => b.onclick = () => {
+    inp.value = out[+b.dataset.i].text;
+    haptic('light');
+    box.classList.add('hidden');
+    renderGrid();
+    try { addSearchHist(inp.value); } catch (e) {}
+  });
+}
+
+// ---------- поиск/сортировка трейлеров ----------
+document.getElementById('trailer-search').addEventListener('input', () => {
+  clearTimeout(_trailerSearchTimer);
+  _trailerPage = 1;
+  if (trailerGenre) { trailerGenre = ''; renderTrailerGenreChips(); }
+  _trailerSearchTimer = setTimeout(renderTrailers, 180);
+});
+document.getElementById('trailer-sort').addEventListener('change', () => { _trailerPage = 1; renderTrailers(); });
+
+// ---------- кнопка «наверх» (glass-дизайн) ----------
+const btnTop = document.getElementById('btn-top');
+window.addEventListener('scroll', () => {
+  btnTop.classList.toggle('hidden', window.scrollY < 700);
+}, { passive: true });
+btnTop.addEventListener('click', () => {
+  haptic('light');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ---------- переключатель темы ----------
+document.getElementById('btn-theme').addEventListener('click', toggleTheme);
+
+// ---------- v109: «🔇 без вибраций» ----------
+(() => {
+  const btn = document.getElementById('btn-mute');
+  if (!btn) return;
+  const sync = () => { btn.textContent = hapticsEnabled() ? '🔔' : '🔇'; };
+  btn.addEventListener('click', () => {
+    const off = toggleHaptics();
+    sync();
+    if (!off) haptic('light');   // при включении вибраций сразу подтверждаем
+    try {
+      tg.showPopup({
+        type: 'ok',
+        title: off ? '🔇 Вибрации выключены' : '🔔 Вибрации включены',
+        message: off ? 'Приложение больше не вибрирует на действиях.' : 'Тактильный отклик вернулся.',
+      });
+    } catch (e) {}
+  });
+  sync();
+})();
+
+// ---------- «О боте» ----------
+// v136: показываем версию сборки и клиент Telegram. Версию берём из СВОЕГО
+// script-тега (?v=N), а не из константы: константу забыли бы поднять при бампе,
+// а тег всегда совпадает с реально загруженным бандлом — по нему и видно,
+// не отдал ли SW прошлую сборку.
+function buildLabel() {
+  const tag = document.querySelector('script[src*="script.js?v="]');
+  const m = tag && /[?&]v=(\d+)/.exec(tag.getAttribute('src') || '');
+  const parts = ['Сборка ' + (m ? 'v' + m[1] : 'неизвестна')];
+  try {
+    if (tg && tg.version) parts.push('Telegram ' + tg.version);
+    if (tg && tg.platform) parts.push(tg.platform);
+  } catch (e) { /* диагностика не должна мешать открыть «О боте» */ }
+  return parts.join(' · ');
+}
+document.getElementById('btn-info').addEventListener('click', () => {
+  haptic('light');
+  const build = document.getElementById('about-build');
+  if (build) {
+    try { build.textContent = buildLabel(); } catch (e) { build.textContent = ''; }
+  }
+  document.getElementById('about').classList.remove('hidden');
+});
+document.getElementById('btn-about-close').addEventListener('click', () =>
+  document.getElementById('about').classList.add('hidden'));
+document.getElementById('about').addEventListener('click', (e) => {
+  if (e.target.id === 'about') document.getElementById('about').classList.add('hidden');
+});
+document.getElementById('btn-about-channel').addEventListener('click', () =>
+  tg.openTelegramLink(CHANNEL_URL));
+
+// 🎲 «Мне повезёт» — случайный фильм
+document.getElementById('btn-lucky').addEventListener('click', () => {
+  if (!ALL.length) return;
+  haptic('light');
+  const m = ALL[Math.floor(Math.random() * ALL.length)];
+  openDetail(m.code);
+});
+
+// ---------- v72: «🎲 Случайный фильм» и «⟳ Обновить афишу» ----------
+const rndModal = document.getElementById('random-modal');
+document.getElementById('btn-random').addEventListener('click', () => {
+  if (!ALL.length) return;
+  rndModal.classList.remove('hidden');
+  renderRandomMovie();
+});
+document.getElementById('btn-random-close').addEventListener('click', closeRandom);
+document.getElementById('btn-random-again').addEventListener('click', renderRandomMovie);
+rndModal.addEventListener('click', (e) => { if (e.target === rndModal) closeRandom(); });
+
+// v90: «▶️ С трейлером» — фильтр афиши по наличию видео
+document.getElementById('btn-only-tr').addEventListener('click', () => {
+  onlyTrailer = !onlyTrailer;
+  haptic('light');
+  document.getElementById('btn-only-tr').classList.toggle('active', onlyTrailer);
+  renderGrid();
+});
+
+// v91: «🟢 Онлайн» — фильтр афиши по прямой ссылке на просмотр
+document.getElementById('btn-only-online').addEventListener('click', () => {
+  onlyOnline = !onlyOnline;
+  haptic('light');
+  document.getElementById('btn-only-online').classList.toggle('active', onlyOnline);
+  renderGrid();
+});
+
+// v90: лайтбокс — закрытие по тапу в любом месте
+(function initLightbox() {
+  const lb = document.getElementById('lightbox');
+  if (!lb) return;
+  lb.addEventListener('click', () => { lb.classList.add('hidden'); lb.querySelector('img').src = ''; });
+})();
+
+const refreshBtn = document.getElementById('btn-refresh');
+refreshBtn.addEventListener('click', async () => {
+  if (refreshBtn.dataset.busy) return;
+  refreshBtn.dataset.busy = '1';
+  refreshBtn.classList.add('spin');
+  haptic('light');
+  try { await loadMovies(); } catch (e) {}
+  refreshBtn.classList.remove('spin');
+  delete refreshBtn.dataset.busy;
+  refreshBtn.textContent = '✓';
+  setTimeout(() => { refreshBtn.textContent = '⟳'; }, 1600);
+});
+
+// 👇 Pull-to-refresh: на верху страницы тянешь список вниз — данные обновляются
+(function () {
+  const ind = document.getElementById('ptr');
+  if (!ind) return;
+  let startY = 0, pulling = false, dist = 0;
+  const modalOpen = () => !!document.querySelector('.modal:not(.hidden)');
+  document.addEventListener('touchstart', (e) => {
+    if (window.scrollY > 0 || modalOpen()) { pulling = false; return; }
+    startY = e.touches[0].clientY;
+    dist = 0;
+    pulling = true;
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (!pulling) return;
+    dist = e.touches[0].clientY - startY;
+    if (dist <= 0) { ind.style.opacity = '0'; return; }
+    const d = Math.min(dist, 120);
+    ind.textContent = dist > 90 ? '🔄 Отпусти — обновлю' : '↓ Тяни вниз';
+    ind.style.transform = 'translate(-50%, ' + Math.round(40 + d * 0.4) + 'px)';
+    ind.style.opacity = String(Math.min(d / 80, 1));
+  }, { passive: true });
+  document.addEventListener('touchend', () => {
+    if (!pulling) return;
+    pulling = false;
+    if (dist > 90) {
+      ind.textContent = '⏳ Обновляю…';
+      loadMovies().then(() => {
+        if (view === 'trailers') { renderTrailerGenreChips(); renderTrailers(); }
+        if (view === 'news') renderNews();
+        setTimeout(() => { ind.style.opacity = '0'; ind.style.transform = ''; }, 700);
+      });
+    } else {
+      ind.style.opacity = '0';
+      ind.style.transform = '';
+    }
+  });
+})();
+
+// 🎬 «Мой Киногод» — карточка-итог прямо в приложении (без сворачивания);
+// данные берём из синхронизированного профиля (PROFILE). Если не синхронизирован —
+// предлагаем нажать 🔁, а самому можно зайти в бота кнопкой ниже.
+function openKinogod() {
+  const modal = document.getElementById('kinogod-modal');
+  const body = document.getElementById('kinogod-body');
+  const p = PROFILE || {};
+  const unlocked = getUnlocked();
+  const favs = getFavs();
+  const pts = p.pts || 0;
+  const streak = p.str || 0;
+  const level = p.tit || 'Зритель';
+  const rank = p.rank;   // может быть undefined
+  const topText = (typeof rank === 'number')
+    ? `<div class="kg-row"><span>📍 Место в топе</span><b>${rank}</b></div>`
+    : '';
+  // любимый жанр — локально по избранному/разгаданным
+  const genreCount = new Map();
+  [...favs, ...unlocked].forEach(code => {
+    const m = ALL.find(x => x.code === code);
+    (m && Array.isArray(m.genres) ? m.genres : []).forEach(g => genreCount.set(g, (genreCount.get(g) || 0) + 1));
+  });
+  const topGenre = [...genreCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+  body.innerHTML = `
     <div class="kg-head">
       <div class="kg-emoji">🎬</div>
       <h2>Мой Киногод</h2>
       <p class="modal-muted">Твой год в кино — как ты угадываешь фильмы</p>
     </div>
     <div class="kg-stats">
-      ${n.uid?"":'<p class="kg-hint">🔁 Синхронизируйся с ботом, чтобы сюда добавились уровень и баллы.</p>'}
-      <div class="kg-row"><span>🏅 Уровень</span><b>${esc(c)}</b></div>
-      <div class="kg-row"><span>💰 Кинобаллы</span><b>${o}</b></div>
-      <div class="kg-row"><span>🔥 Стрик</span><b>${r} ${r%10===1&&r%100!==11?"день":"дней"}</b></div>
-      <div class="kg-row"><span>🔓 Разгадано кодов</span><b>${s.length}</b></div>
-      <div class="kg-row"><span>❤️ В «Моём»</span><b>${i.length}</b></div>
-      ${m}
-      ${w?`<div class="kg-row"><span>🎯 Любимый жанр</span><b>${esc(w)}</b></div>`:""}
+      ${p.uid ? '' : '<p class="kg-hint">🔁 Синхронизируйся с ботом, чтобы сюда добавились уровень и баллы.</p>'}
+      <div class="kg-row"><span>🏅 Уровень</span><b>${esc(level)}</b></div>
+      <div class="kg-row"><span>💰 Кинобаллы</span><b>${pts}</b></div>
+      <div class="kg-row"><span>🔥 Стрик</span><b>${streak} ${streak % 10 === 1 && streak % 100 !== 11 ? 'день' : 'дней'}</b></div>
+      <div class="kg-row"><span>🔓 Разгадано кодов</span><b>${unlocked.length}</b></div>
+      <div class="kg-row"><span>❤️ В «Моём»</span><b>${favs.length}</b></div>
+      ${topText}
+      ${topGenre ? `<div class="kg-row"><span>🎯 Любимый жанр</span><b>${esc(topGenre)}</b></div>` : ''}
     </div>
     <div class="kg-actions">
       <button class="btn-primary" id="kg-bot">🤖 Открыть бота</button>
-    </div>`,t.classList.remove("hidden"),(p=document.getElementById("kg-bot"))==null||p.addEventListener("click",()=>{tg.openTelegramLink("https://t.me/kapitan_kino_bot")})}(be=document.getElementById("btn-cap-game"))==null||be.addEventListener("click",()=>{haptic("light"),openCaptainGame()}),(ke=document.getElementById("btn-ask-captain"))==null||ke.addEventListener("click",()=>{haptic("light"),sendOrDeepLink({action:"ask_captain"})}),document.getElementById("btn-kinogod").addEventListener("click",()=>{haptic("light"),openKinogod()}),document.getElementById("btn-kinogod-close").addEventListener("click",()=>{document.getElementById("kinogod-modal").classList.add("hidden")}),(Se=document.getElementById("kinogod-modal"))==null||Se.addEventListener("click",t=>{t.target===t.currentTarget&&document.getElementById("kinogod-modal").classList.add("hidden")}),document.getElementById("btn-howto").addEventListener("click",()=>{haptic("light"),document.getElementById("howto-modal").classList.remove("hidden")}),document.getElementById("btn-howto-close").addEventListener("click",()=>{document.getElementById("howto-modal").classList.add("hidden")}),(we=document.getElementById("howto-modal"))==null||we.addEventListener("click",t=>{t.target===t.currentTarget&&document.getElementById("howto-modal").classList.add("hidden")});const pickModal=document.getElementById("pick-modal"),pickResults=document.getElementById("pick-results");function fillPickGenres(){const t=document.getElementById("pick-genre");if(!t||t.options.length>1)return;const e=new Set;ALL.forEach(n=>(n.genres||[]).forEach(s=>{s&&e.add(s)})),[...e].sort((n,s)=>n.localeCompare(s,"ru")).forEach(n=>{const s=document.createElement("option");s.value=n,s.textContent=n,t.appendChild(s)})}function runPick(){const t=document.getElementById("pick-genre").value,e=document.getElementById("pick-dur").value,n=parseFloat(document.getElementById("pick-rate").value)||0;if(!pickResults)return;let s=[...ALL];if(t&&(s=s.filter(r=>(r.genres||[]).includes(t))),e==="short"?s=s.filter(r=>(parseInt(r.duration,10)||0)>0&&(parseInt(r.duration,10)||0)<=90):e==="mid"?s=s.filter(r=>{const c=parseInt(r.duration,10)||0;return c>90&&c<=120}):e==="long"&&(s=s.filter(r=>(parseInt(r.duration,10)||0)>120)),n&&(s=s.filter(r=>parseFloat(r.rating)>=n)),!s.length){pickResults.innerHTML='<p class="error">Ничего не нашлось под такие вкусы 😔 Попробуй ослабить фильтры.</p>';return}const i=[],o=[...s].sort(()=>Math.random()-.5);for(const r of o){if(i.length>=3)break;i.push(r)}pickResults.innerHTML=i.map(r=>`
-    <div class="pick-card" data-code="${esc(r.code)}">
+    </div>`;
+  modal.classList.remove('hidden');
+  document.getElementById('kg-bot')?.addEventListener('click', () => {
+    tg.openTelegramLink('https://t.me/kapitan_kino_bot');
+  });
+}
+document.getElementById('btn-cap-game')?.addEventListener('click', () => { haptic('light'); openCaptainGame(); });
+document.getElementById('btn-ask-captain')?.addEventListener('click', () => {
+  haptic('light');
+  sendOrDeepLink({ action: 'ask_captain' });
+});
+document.getElementById('btn-kinogod').addEventListener('click', () => {
+  haptic('light');
+  openKinogod();
+});
+document.getElementById('btn-kinogod-close').addEventListener('click', () => {
+  document.getElementById('kinogod-modal').classList.add('hidden');
+});
+document.getElementById('kinogod-modal')?.addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) document.getElementById('kinogod-modal').classList.add('hidden');
+});
+
+// ❓ «Как играть» — короткая справка по кодам и боту
+document.getElementById('btn-howto').addEventListener('click', () => {
+  haptic('light');
+  document.getElementById('howto-modal').classList.remove('hidden');
+});
+document.getElementById('btn-howto-close').addEventListener('click', () => {
+  document.getElementById('howto-modal').classList.add('hidden');
+});
+document.getElementById('howto-modal')?.addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) document.getElementById('howto-modal').classList.add('hidden');
+});
+
+// 🎲 «Фильм на вечер» — модалка подбора по вкусу
+const pickModal = document.getElementById('pick-modal');
+const pickResults = document.getElementById('pick-results');
+function fillPickGenres() {
+  const sel = document.getElementById('pick-genre');
+  if (!sel || sel.options.length > 1) return;
+  const genres = new Set();
+  ALL.forEach(m => (m.genres || []).forEach(g => { if (g) genres.add(g); }));
+  [...genres].sort((a, b) => a.localeCompare(b, 'ru')).forEach(g => {
+    const o = document.createElement('option');
+    o.value = g; o.textContent = g;
+    sel.appendChild(o);
+  });
+}
+function runPick() {
+  const genre = document.getElementById('pick-genre').value;
+  const dur = document.getElementById('pick-dur').value;
+  const minRate = parseFloat(document.getElementById('pick-rate').value) || 0;
+  if (!pickResults) return;
+  let pool = [...ALL];
+  if (genre) pool = pool.filter(m => (m.genres || []).includes(genre));
+  if (dur === 'short') pool = pool.filter(m => (parseInt(m.duration, 10) || 0) > 0 && (parseInt(m.duration, 10) || 0) <= 90);
+  else if (dur === 'mid') pool = pool.filter(m => { const d = parseInt(m.duration, 10) || 0; return d > 90 && d <= 120; });
+  else if (dur === 'long') pool = pool.filter(m => (parseInt(m.duration, 10) || 0) > 120);
+  if (minRate) pool = pool.filter(m => parseFloat(m.rating) >= minRate);
+  if (!pool.length) {
+    pickResults.innerHTML = '<p class="error">Ничего не нашлось под такие вкусы 😔 Попробуй ослабить фильтры.</p>';
+    return;
+  }
+  const picks = [];
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  for (const m of shuffled) {
+    if (picks.length >= 3) break;
+    picks.push(m);
+  }
+  pickResults.innerHTML = picks.map(m => `
+    <div class="pick-card" data-code="${esc(m.code)}">
       <div class="pick-thumb">
-        ${r.poster?`<img src="${esc(r.poster)}" alt="" loading="lazy" ${FADE}${dimStyle(r)} onerror="this.style.display='none'"/>`:'<div class="trailer-thumb-ph">🎬</div>'}
+        ${m.poster
+          ? `<img src="${esc(m.poster)}" alt="" loading="lazy" ${FADE}${dimStyle(m)} onerror="this.style.display='none'"/>`
+          : `<div class="trailer-thumb-ph">🎬</div>`}
       </div>
       <div class="pick-info">
-        <b>${esc(r.title)}</b>
-        <span class="rating">${ratingBadge(r)}${r.duration?" · ⏱ "+esc(fmtDuration(r.duration)):""}</span>
-        ${r.description?`<p>${esc((r.description||"").slice(0,120))}…</p>`:""}
+        <b>${esc(m.title)}</b>
+        <span class="rating">${ratingBadge(m)}${m.duration ? ' · ⏱ ' + esc(fmtDuration(m.duration)) : ''}</span>
+        ${m.description ? `<p>${esc((m.description || '').slice(0, 120))}…</p>` : ''}
       </div>
-    </div>`).join(""),pickResults.querySelectorAll(".pick-card").forEach(r=>r.addEventListener("click",()=>openDetail(r.dataset.code)))}document.getElementById("btn-pick").addEventListener("click",()=>{pickModal&&(fillPickGenres(),pickModal.classList.remove("hidden"))});const btnPickClose=document.getElementById("btn-pick-close");btnPickClose&&(btnPickClose.onclick=()=>pickModal.classList.add("hidden"));const btnPickRun=document.getElementById("btn-pick-run");btnPickRun&&(btnPickRun.onclick=()=>{haptic("light"),runPick()}),pickModal.addEventListener("click",t=>{t.target===pickModal&&pickModal.classList.add("hidden")});function renderLibrary(){const t=document.getElementById("library-container");if(!t)return;const e=new Map(ALL.map(u=>[String(u.code),u])),n=u=>u.map(S=>e.get(String(S))).filter(Boolean),s=getFavs(),i=getWatched().map(String),o=getUnlocked().map(String),r=getRatings(),c=n(s).filter(u=>!i.includes(String(u.code))),a=n(i),m=Object.keys(r).filter(u=>r[u]>=4).sort((u,S)=>r[S]-r[u]).map(u=>e.get(u)).filter(Boolean),b=n(o),w=[{key:"want",mode:"fav",icon:"❤️",title:"Хочу посмотреть",list:c,empty:"Нажми ❤️ в карточке фильма — он появится здесь."},{key:"watched",mode:"watched",icon:"✅",title:"Уже смотрел",list:a,empty:"Отмечай просмотренные фильмы — соберём твою историю."},{key:"loved",mode:"rated",icon:"⭐",title:"Любимое",list:m,empty:"Поставь фильму 4–5 звёзд — он попадёт на эту полку."},{key:"solved",mode:"done",icon:"🔑",title:"Разгаданные коды",list:b,empty:"Открой первый код — и полка оживёт."}],$=new Set([...s.map(String),...i,...Object.keys(r),...o]).size,p=(u,S)=>`<div class="lb-film" data-code="${esc(u.code)}">
-      <div class="lb-poster">${u.poster?`<img src="${esc(u.poster)}" alt="" loading="lazy" onerror="this.style.display='none'"/>`:"<span>🎬</span>"}${S.key==="loved"&&r[u.code]?`<em class="lb-star">⭐${r[u.code]}</em>`:""}${S.key==="want"&&i.includes(String(u.code))?'<em class="lb-star">✓</em>':""}</div>
-      <b>${esc(u.title)}</b></div>`,f=c.length?c[Math.floor(Math.random()*c.length)]:null;t.innerHTML=`
+    </div>`).join('');
+  pickResults.querySelectorAll('.pick-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.code)));
+}
+document.getElementById('btn-pick').addEventListener('click', () => {
+  if (!pickModal) return;
+  fillPickGenres();
+  pickModal.classList.remove('hidden');
+});
+const btnPickClose = document.getElementById('btn-pick-close');
+if (btnPickClose) btnPickClose.onclick = () => pickModal.classList.add('hidden');
+const btnPickRun = document.getElementById('btn-pick-run');
+if (btnPickRun) btnPickRun.onclick = () => { haptic('light'); runPick(); };
+pickModal.addEventListener('click', (e) => {
+  if (e.target === pickModal) pickModal.classList.add('hidden');
+});
+
+
+
+
+// ---------- v177: «Моя библиотека» — полки Хочу / Смотрел / Любимое / Разгадано ----------
+function renderLibrary() {
+  const c = document.getElementById('library-container');
+  if (!c) return;
+  const byCode = new Map(ALL.map(m => [String(m.code), m]));
+  const pickList = (codes) => codes.map(x => byCode.get(String(x))).filter(Boolean);
+  const wantC = getFavs(), watchedC = getWatched().map(String), unl = getUnlocked().map(String);
+  const rates = getRatings();
+  const want = pickList(wantC).filter(m => !watchedC.includes(String(m.code)));
+  const watched = pickList(watchedC);
+  const loved = Object.keys(rates).filter(k => rates[k] >= 4).sort((a, b) => rates[b] - rates[a]).map(k => byCode.get(k)).filter(Boolean);
+  const solved = pickList(unl);
+  const shelves = [
+    { key: 'want', mode: 'fav', icon: '❤️', title: 'Хочу посмотреть', list: want, empty: 'Нажми ❤️ в карточке фильма — он появится здесь.' },
+    { key: 'watched', mode: 'watched', icon: '✅', title: 'Уже смотрел', list: watched, empty: 'Отмечай просмотренные фильмы — соберём твою историю.' },
+    { key: 'loved', mode: 'rated', icon: '⭐', title: 'Любимое', list: loved, empty: 'Поставь фильму 4–5 звёзд — он попадёт на эту полку.' },
+    { key: 'solved', mode: 'done', icon: '🔑', title: 'Разгаданные коды', list: solved, empty: 'Открой первый код — и полка оживёт.' },
+  ];
+  const total = new Set([...wantC.map(String), ...watchedC, ...Object.keys(rates), ...unl]).size;
+  const card = (m, sh) => `<div class="lb-film" data-code="${esc(m.code)}">
+      <div class="lb-poster">${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" onerror="this.style.display='none'"/>` : '<span>🎬</span>'}${sh.key === 'loved' && rates[m.code] ? `<em class="lb-star">⭐${rates[m.code]}</em>` : ''}${sh.key === 'want' && watchedC.includes(String(m.code)) ? '<em class="lb-star">✓</em>' : ''}</div>
+      <b>${esc(m.title)}</b></div>`;
+  const tonight = want.length ? want[Math.floor(Math.random() * want.length)] : null;
+  c.innerHTML = `
     <h2 class="lb-title">📚 Моя библиотека</h2>
     <div class="lb-stats">
-      ${w.map(u=>`<div class="lb-stat" data-go="${u.key}"><b>${u.list.length}</b><span>${u.icon} ${u.key==="want"?"хочу":u.key==="watched"?"смотрел":u.key==="loved"?"любимое":"кодов"}</span></div>`).join("")}
+      ${shelves.map(sh => `<div class="lb-stat" data-go="${sh.key}"><b>${sh.list.length}</b><span>${sh.icon} ${sh.key === 'want' ? 'хочу' : sh.key === 'watched' ? 'смотрел' : sh.key === 'loved' ? 'любимое' : 'кодов'}</span></div>`).join('')}
     </div>
-    ${f?'<button class="lb-tonight" id="lb-tonight">🎲 Что посмотреть из «Хочу»? <small>выбрать для меня</small></button>':""}
-    ${$===0?'<p class="lb-empty-all">Полки пока пустые 🙂 Добавляй фильмы в «Хочу», отмечай просмотренное и ставь оценки — здесь вырастет твоя личная кинобиблиотека.</p>':""}
-    ${w.map(u=>`<section class="lb-shelf" id="lb-${u.key}">
-        <div class="lb-head"><span>${u.icon} ${u.title} <em>${u.list.length}</em></span>${u.list.length?`<button class="lb-all" data-mode="${u.mode}">Все →</button>`:""}</div>
-        ${u.list.length?`<div class="lb-row">${u.list.slice(0,14).map(S=>p(S,u)).join("")}</div>`:`<p class="lb-empty">${u.empty}</p>`}
-      </section>`).join("")}`,t.querySelectorAll(".lb-film").forEach(u=>u.addEventListener("click",()=>openDetail(u.dataset.code))),t.querySelectorAll(".lb-all").forEach(u=>u.addEventListener("click",()=>{try{localStorage.setItem(FAV_MODE_KEY,u.dataset.mode)}catch(S){}haptic("light"),openView("fav")})),t.querySelectorAll(".lb-stat").forEach(u=>u.addEventListener("click",()=>{const S=document.getElementById("lb-"+u.dataset.go);S&&S.scrollIntoView({behavior:"smooth",block:"start"})}));const v=t.querySelector("#lb-tonight");v&&(v.onclick=()=>{haptic("ok"),openDetail(f.code)})}const MAP_LAND=[[[-168,66],[-141,70],[-110,73],[-80,73],[-62,60],[-55,50],[-67,45],[-76,36],[-81,25],[-97,26],[-97,18],[-87,21],[-83,10],[-78,8],[-86,14],[-105,20],[-117,32],[-124,40],[-125,49],[-135,58],[-150,60],[-165,60]],[[-55,60],[-45,60],[-20,70],[-20,82],[-60,82],[-70,76]],[[-78,8],[-60,10],[-50,0],[-35,-6],[-40,-22],[-48,-27],[-58,-38],[-65,-42],[-68,-55],[-74,-50],[-72,-30],[-70,-18],[-81,-6],[-80,0]],[[-10,36],[-9,43],[-2,48],[5,53],[8,57],[10,59],[5,62],[15,68],[28,71],[40,67],[40,56],[30,46],[28,41],[23,36],[14,38],[8,44],[-5,36]],[[-17,21],[-6,36],[10,37],[32,31],[35,28],[43,12],[51,12],[40,-5],[40,-16],[33,-26],[20,-35],[12,-18],[9,-1],[9,4],[-8,4],[-17,14]],[[30,46],[40,67],[60,70],[100,77],[140,72],[170,66],[160,55],[142,48],[135,35],[122,30],[120,22],[108,12],[104,2],[98,8],[92,22],[80,8],[72,20],[58,24],[50,30],[36,32],[30,40]],[[114,-22],[122,-17],[136,-12],[142,-11],[153,-26],[147,-38],[135,-35],[115,-34]]],MAP_GEO={сша:[-98,39],канада:[-100,58],мексика:[-102,23],бразилия:[-52,-11],аргентина:[-64,-34],чили:[-71,-33],колумбия:[-74,4],великобритания:[-2,54],ирландия:[-8,53],франция:[2,47],германия:[10,51],дания:[10,56],испания:[-4,40],португалия:[-8,39.5],исландия:[-19,65],швейцария:[8,47],италия:[12,42],швеция:[16,62],норвегия:[9,61],финляндия:[26,64],люксембург:[6,49.8],польша:[19,52],греция:[22,39],бельгия:[4.5,50.6],нидерланды:[5.5,52.2],австрия:[14,47.5],чехия:[15.5,49.8],венгрия:[19,47],румыния:[25,46],украина:[31,49],беларусь:[28,53.5],россия:[95,62],ссср:[95,62],турция:[35,39],израиль:[35,31.5],иран:[53,32],индия:[78,22],китай:[104,35],гонконг:[114,22.3],япония:[138,37],"южная корея":[128,36],таиланд:[101,15],"новая зеландия":[172,-41],австралия:[134,-25],юар:[24,-29],египет:[30,27],марокко:[-6,32]};let _mapSel="",_mapZoom="world";function renderMap(){const t=document.getElementById("map-container");if(!t)return;const e=new Map;ALL.forEach(u=>(u.countries||[]).forEach(S=>{const g=String(S).trim();g&&(e.has(g)||e.set(g,[]),e.get(g).push(u))}));let n=[];try{n=getUnlocked().map(String)}catch(u){}const s=new Set;e.forEach((u,S)=>{u.some(g=>n.includes(String(g.code)))&&s.add(S)});const i=[...e.entries()].sort((u,S)=>S[1].length-u[1].length),o=_mapZoom==="eu",r=o?{x:155,y:8,w:85,h:52}:{x:0,y:0,w:360,h:145},c=u=>u+180,a=u=>80-u,m=MAP_LAND.map(u=>`<polygon class="mp-land" points="${u.map(([S,g])=>c(S)+","+a(g)).join(" ")}"/>`).join(""),b=o?3.2:1,w=i.filter(([u])=>MAP_GEO[u.toLowerCase()]).map(([u,S])=>{const[g,L]=MAP_GEO[u.toLowerCase()];if(o&&(g<-25||g>62||L<20||L>74))return"";const H=Math.min(15,3.2+Math.sqrt(S.length)*1.7)/b;return`<g class="${"mp-dot"+(s.has(u)?" seen":"")+(_mapSel===u?" sel":"")}" data-c="${esc(u)}"><circle cx="${c(g)}" cy="${a(L)}" r="${H.toFixed(1)}"/>${H>=(o?2.2:6)?`<text x="${c(g)}" y="${(a(L)+(o?.9:2.2)).toFixed(1)}" font-size="${o?2.6:6.5}">${S.length}</text>`:""}</g>`}).join(""),$=[-60,-30,0,30,60].map(u=>`<line class="mp-grat" x1="0" x2="360" y1="${a(u)}" y2="${a(u)}"/>`).join(""),p=_mapSel&&e.get(_mapSel)?e.get(_mapSel).slice().sort((u,S)=>(parseFloat(S.rating)||0)-(parseFloat(u.rating)||0)):null,f=i.length?Math.round(s.size/i.length*100):0;t.innerHTML=`
+    ${tonight ? `<button class="lb-tonight" id="lb-tonight">🎲 Что посмотреть из «Хочу»? <small>выбрать для меня</small></button>` : ''}
+    ${total === 0 ? '<p class="lb-empty-all">Полки пока пустые 🙂 Добавляй фильмы в «Хочу», отмечай просмотренное и ставь оценки — здесь вырастет твоя личная кинобиблиотека.</p>' : ''}
+    ${shelves.map(sh => `<section class="lb-shelf" id="lb-${sh.key}">
+        <div class="lb-head"><span>${sh.icon} ${sh.title} <em>${sh.list.length}</em></span>${sh.list.length ? `<button class="lb-all" data-mode="${sh.mode}">Все →</button>` : ''}</div>
+        ${sh.list.length ? `<div class="lb-row">${sh.list.slice(0, 14).map(m => card(m, sh)).join('')}</div>` : `<p class="lb-empty">${sh.empty}</p>`}
+      </section>`).join('')}`;
+  c.querySelectorAll('.lb-film').forEach(el => el.addEventListener('click', () => openDetail(el.dataset.code)));
+  c.querySelectorAll('.lb-all').forEach(b => b.addEventListener('click', () => {
+    try { localStorage.setItem(FAV_MODE_KEY, b.dataset.mode); } catch (e) {}
+    haptic('light'); openView('fav');
+  }));
+  c.querySelectorAll('.lb-stat').forEach(el => el.addEventListener('click', () => {
+    const t = document.getElementById('lb-' + el.dataset.go); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
+  const tn = c.querySelector('#lb-tonight');
+  if (tn) tn.onclick = () => { haptic('ok'); openDetail(tonight.code); };
+}
+
+// ---------- v176: «Кино-карта» — фильмы по странам, паспорт путешественника ----------
+const MAP_LAND = [   // грубые контуры материков [lon, lat] — стилизованная карта без внешних картографических данных
+  [[-168,66],[-141,70],[-110,73],[-80,73],[-62,60],[-55,50],[-67,45],[-76,36],[-81,25],[-97,26],[-97,18],[-87,21],[-83,10],[-78,8],[-86,14],[-105,20],[-117,32],[-124,40],[-125,49],[-135,58],[-150,60],[-165,60]],
+  [[-55,60],[-45,60],[-20,70],[-20,82],[-60,82],[-70,76]],
+  [[-78,8],[-60,10],[-50,0],[-35,-6],[-40,-22],[-48,-27],[-58,-38],[-65,-42],[-68,-55],[-74,-50],[-72,-30],[-70,-18],[-81,-6],[-80,0]],
+  [[-10,36],[-9,43],[-2,48],[5,53],[8,57],[10,59],[5,62],[15,68],[28,71],[40,67],[40,56],[30,46],[28,41],[23,36],[14,38],[8,44],[-5,36]],
+  [[-17,21],[-6,36],[10,37],[32,31],[35,28],[43,12],[51,12],[40,-5],[40,-16],[33,-26],[20,-35],[12,-18],[9,-1],[9,4],[-8,4],[-17,14]],
+  [[30,46],[40,67],[60,70],[100,77],[140,72],[170,66],[160,55],[142,48],[135,35],[122,30],[120,22],[108,12],[104,2],[98,8],[92,22],[80,8],[72,20],[58,24],[50,30],[36,32],[30,40]],
+  [[114,-22],[122,-17],[136,-12],[142,-11],[153,-26],[147,-38],[135,-35],[115,-34]],
+];
+const MAP_GEO = {   // страна → [lon, lat]
+  'сша': [-98, 39], 'канада': [-100, 58], 'мексика': [-102, 23], 'бразилия': [-52, -11], 'аргентина': [-64, -34], 'чили': [-71, -33], 'колумбия': [-74, 4],
+  'великобритания': [-2, 54], 'ирландия': [-8, 53], 'франция': [2, 47], 'германия': [10, 51], 'дания': [10, 56], 'испания': [-4, 40], 'португалия': [-8, 39.5],
+  'исландия': [-19, 65], 'швейцария': [8, 47], 'италия': [12, 42], 'швеция': [16, 62], 'норвегия': [9, 61], 'финляндия': [26, 64], 'люксембург': [6, 49.8],
+  'польша': [19, 52], 'греция': [22, 39], 'бельгия': [4.5, 50.6], 'нидерланды': [5.5, 52.2], 'австрия': [14, 47.5], 'чехия': [15.5, 49.8], 'венгрия': [19, 47],
+  'румыния': [25, 46], 'украина': [31, 49], 'беларусь': [28, 53.5], 'россия': [95, 62], 'ссср': [95, 62], 'турция': [35, 39], 'израиль': [35, 31.5], 'иран': [53, 32],
+  'индия': [78, 22], 'китай': [104, 35], 'гонконг': [114, 22.3], 'япония': [138, 37], 'южная корея': [128, 36], 'таиланд': [101, 15], 'новая зеландия': [172, -41],
+  'австралия': [134, -25], 'юар': [24, -29], 'египет': [30, 27], 'марокко': [-6, 32],
+};
+let _mapSel = '', _mapZoom = 'world';
+function renderMap() {
+  const c = document.getElementById('map-container');
+  if (!c) return;
+  const by = new Map();
+  ALL.forEach(m => (m.countries || []).forEach(ct => { const k = String(ct).trim(); if (!k) return; if (!by.has(k)) by.set(k, []); by.get(k).push(m); }));
+  let unlocked = []; try { unlocked = getUnlocked().map(String); } catch (e) {}
+  const visited = new Set();
+  by.forEach((arr, ct) => { if (arr.some(m => unlocked.includes(String(m.code)))) visited.add(ct); });
+  const list = [...by.entries()].sort((a, b) => b[1].length - a[1].length);
+  const eu = _mapZoom === 'eu';
+  const vb = eu ? { x: 155, y: 8, w: 85, h: 52 } : { x: 0, y: 0, w: 360, h: 145 };   // Европа: lon -25..60, lat 72..20
+  const px = (lon) => lon + 180, py = (lat) => 80 - lat;
+  const poly = MAP_LAND.map(pl => `<polygon class="mp-land" points="${pl.map(([lo, la]) => px(lo) + ',' + py(la)).join(' ')}"/>`).join('');
+  const k = eu ? 3.2 : 1;     // в режиме «Европа» пузырьки относительно меньше
+  const dots = list.filter(([ct]) => MAP_GEO[ct.toLowerCase()]).map(([ct, arr]) => {
+    const [lo, la] = MAP_GEO[ct.toLowerCase()];
+    if (eu && (lo < -25 || lo > 62 || la < 20 || la > 74)) return '';
+    const r = (Math.min(15, 3.2 + Math.sqrt(arr.length) * 1.7)) / k;
+    const cls = 'mp-dot' + (visited.has(ct) ? ' seen' : '') + (_mapSel === ct ? ' sel' : '');
+    return `<g class="${cls}" data-c="${esc(ct)}"><circle cx="${px(lo)}" cy="${py(la)}" r="${r.toFixed(1)}"/>${r >= (eu ? 2.2 : 6) ? `<text x="${px(lo)}" y="${(py(la) + (eu ? 0.9 : 2.2)).toFixed(1)}" font-size="${eu ? 2.6 : 6.5}">${arr.length}</text>` : ''}</g>`;
+  }).join('');
+  const grat = [-60, -30, 0, 30, 60].map(la => `<line class="mp-grat" x1="0" x2="360" y1="${py(la)}" y2="${py(la)}"/>`).join('');
+  const sel = _mapSel && by.get(_mapSel) ? by.get(_mapSel).slice().sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0)) : null;
+  const pct = list.length ? Math.round(visited.size / list.length * 100) : 0;
+  c.innerHTML = `
     <h2 class="mp-title">🌍 Кино-карта</h2>
-    <div class="mp-pass"><div class="mp-pass-top"><b>🧳 Паспорт: ${s.size} из ${i.length} стран</b><span>${f}%</span></div>
-      <div class="mp-bar"><i style="width:${f}%"></i></div>
+    <div class="mp-pass"><div class="mp-pass-top"><b>🧳 Паспорт: ${visited.size} из ${list.length} стран</b><span>${pct}%</span></div>
+      <div class="mp-bar"><i style="width:${pct}%"></i></div>
       <p>Открывай коды фильмов из новых стран — они загораются золотом.</p></div>
-    <div class="mp-zoom"><button class="chip${o?"":" active"}" data-z="world">🌍 Мир</button><button class="chip${o?" active":""}" data-z="eu">🇪🇺 Европа</button></div>
-    <svg class="mp-svg" viewBox="${r.x} ${r.y} ${r.w} ${r.h}" preserveAspectRatio="xMidYMid meet">${$}${m}${w}</svg>
-    <div class="mp-chips">${i.map(([u,S])=>`<button class="chip${_mapSel===u?" active":""}${s.has(u)?" mp-seen":""}" data-c="${esc(u)}">${flagOf(u)} ${esc(u)} <em>${S.length}</em></button>`).join("")}</div>
-    ${p?`<h3 class="mp-sel-title">${flagOf(_mapSel)} ${esc(_mapSel)} · ${p.length}</h3>
-      <div class="mp-films">${p.map(u=>`<div class="mp-film" data-code="${esc(u.code)}"><div class="mp-poster">${u.poster?`<img src="${esc(u.poster)}" alt="" loading="lazy" onerror="this.style.display='none'"/>`:"<span>🎬</span>"}${n.includes(String(u.code))?'<em class="mp-got">✓</em>':""}</div><b>${esc(u.title)}</b><i>${esc([u.year,u.rating?"⭐ "+u.rating:""].filter(Boolean).join(" · "))}</i></div>`).join("")}</div>`:'<p class="mp-hint">Тапни страну на карте или в списке — покажу её фильмы 🎬</p>'}`;const v=u=>{_mapSel=_mapSel===u?"":u,haptic("light"),renderMap();const S=document.querySelector(".mp-sel-title");S&&_mapSel&&S.scrollIntoView({behavior:"smooth",block:"start"})};t.querySelectorAll(".mp-dot").forEach(u=>u.addEventListener("click",()=>v(u.dataset.c))),t.querySelectorAll(".mp-chips .chip").forEach(u=>u.addEventListener("click",()=>v(u.dataset.c))),t.querySelectorAll(".mp-zoom .chip").forEach(u=>u.addEventListener("click",()=>{_mapZoom=u.dataset.z,haptic("light"),renderMap()})),t.querySelectorAll(".mp-film").forEach(u=>u.addEventListener("click",()=>{detailOrigin="map",openDetail(u.dataset.code)}))}const ARENA_BEST_KEY="kino_arena_best";function openArena(){let t=document.getElementById("arena");t||(t=document.createElement("div"),t.id="arena",t.className="arena hidden",document.body.appendChild(t)),t.classList.remove("hidden"),document.body.classList.add("no-scroll");const e=()=>{lt(),t.classList.add("hidden"),document.body.classList.remove("no-scroll")},n=T=>{const j=parseFloat(String(T).replace(",","."));return isFinite(j)?j:0},s=12,i="kino_arena_daily",o=capDayStr(new Date);let r=!1,c=Math.random;const a=T=>()=>{T|=0,T=T+1831565813|0;let j=Math.imul(T^T>>>15,1|T);return j=j+Math.imul(j^j>>>7,61|j)^j,((j^j>>>14)>>>0)/4294967296};let m=null;try{const T=JSON.parse(localStorage.getItem(i)||"null");T&&T.day===o&&(m=T)}catch(T){}const b=(T,j)=>{const J=T.slice();for(let A=J.length-1;A>0;A--){const F=Math.floor(c()*(A+1));[J[A],J[F]]=[J[F],J[A]]}return J.slice(0,j)},w=ALL.filter(T=>T.title&&n(T.rating)>0&&parseInt(T.year,10)>1900).sort((T,j)=>String(T.code).localeCompare(String(j.code)));let $=0;try{$=parseInt(localStorage.getItem(ARENA_BEST_KEY)||"0",10)||0}catch(T){}let p=3,f=0,v=0,u=0,S=new Set,g=!1,L=1,H=null,M=0,nt=12;const lt=()=>{H&&(clearTimeout(H),H=null)},Q=(T,j="")=>`<div class="ar-film" data-code="${esc(T.code)}">
-      <div class="ar-poster">${T.poster?`<img src="${esc(T.poster)}" alt="" onerror="this.style.display='none'"/>`:"<span>🎬</span>"}</div>
-      <b>${esc(T.title)}</b><i class="ar-val">${j}</i></div>`,it={rating(){const[T,j]=b(w,2);return Math.abs(n(T.rating)-n(j.rating))<.3?null:{kind:"duel",q:"Какой фильм выше по рейтингу?",films:[T,j],win:n(T.rating)>n(j.rating)?T:j,show:J=>"⭐ "+n(J.rating).toFixed(1)}},older(){const[T,j]=b(w,2);return Math.abs(parseInt(T.year,10)-parseInt(j.year,10))<3?null:{kind:"duel",q:"Какой фильм вышел раньше?",films:[T,j],win:parseInt(T.year,10)<parseInt(j.year,10)?T:j,show:J=>"📅 "+J.year}},longer(){const T=w.filter(A=>parseInt(A.duration,10)>0);if(T.length<2)return null;const[j,J]=b(T,2);return Math.abs(parseInt(j.duration,10)-parseInt(J.duration,10))<15?null:{kind:"duel",q:"Какой фильм идёт дольше?",films:[j,J],win:parseInt(j.duration,10)>parseInt(J.duration,10)?j:J,show:A=>"⏱ "+fmtDuration(A.duration)}},director(){const T=w.filter(F=>F.director);if(T.length<4)return null;const j=b(T,1)[0],J=[...new Set(T.filter(F=>F.director!==j.director).map(F=>F.director))];if(J.length<2)return null;const A=b([j.director,...b(J,2)],3);return{kind:"opts",q:`Кто снял «${j.title}»?`,film:j,opts:A,ans:j.director}},actor(){const T=w.filter(z=>(z.actors||[]).length);if(T.length<4)return null;const j=b(T,1)[0],J=j.actors[0],A=w.filter(z=>!(z.actors||[]).includes(J)&&z.code!==j.code);if(A.length<2)return null;const F=b([j,...b(A,2)],3);return{kind:"opts",q:`В каком фильме снимался(ась) ${J}?`,opts:F.map(z=>z.title),ans:j.title}},cast(){const T=w.filter(x=>(x.actors||[]).length>=2);if(T.length<4)return null;const j=b(T,1)[0],[J,A]=j.actors,F=w.filter(x=>x.code!==j.code&&!(x.actors||[]).includes(J)&&!(x.actors||[]).includes(A));if(F.length<2)return null;const z=b([j,...b(F,2)],3);return{kind:"opts",q:`Какой фильм с ${J} и ${A}?`,opts:z.map(x=>x.title),ans:j.title}},country(){const T=w.filter(z=>(z.countries||[]).length);if(T.length<4)return null;const j=b(T,1)[0],J=j.countries[0],A=[...new Set(w.flatMap(z=>z.countries||[]).filter(z=>z&&!(j.countries||[]).includes(z)))];if(A.length<2)return null;const F=b([J,...b(A,2)],3);return{kind:"opts",q:`Какая страна сняла «${j.title}»?`,film:j,opts:F,ans:J}},decade(){const T=w.filter(x=>!/\d{4}/.test(x.title));if(T.length<4)return null;const j=b(T,1)[0],J=parseInt(j.year,10),A=Math.floor(J/10)*10,F=[A-10,A+10,A-20,A+20].filter(x=>x>=1920&&x<=new Date().getFullYear());if(F.length<2)return null;const z=b([A,...b(F,2)],3).sort((x,V)=>x-V).map(x=>x+"-е");return{kind:"opts",q:`В каком десятилетии вышел «${j.title}»?`,film:j,opts:z,ans:A+"-е"}}},U=()=>{const T=(r?u<4:v<3)?["rating","older","longer"]:["rating","older","longer","director","actor","cast","country","decade","director","actor","cast"];for(let j=0;j<120;j++){const J=it[T[Math.floor(c()*T.length)]]();if(!J)continue;const A=J.q;if(!S.has(A))return S.add(A),J}for(let j=0;j<40;j++){const[J,A]=b(w,2);if(n(J.rating)===n(A.rating))continue;const F="r:"+J.code+A.code;if(!S.has(F))return S.add(F),{kind:"duel",q:"Какой фильм выше по рейтингу?",films:[J,A],win:n(J.rating)>n(A.rating)?J:A,show:z=>"⭐ "+n(z.rating).toFixed(1)}}return null},Y=()=>`<div class="ar-top"><button class="ar-x" id="ar-x">✕</button>
-      <div class="ar-lives">${"❤️".repeat(p)}${"🖤".repeat(3-p)}</div>
-      <div class="ar-score">${f}${v>=3?` <span class="ar-streak">🔥${v}</span>`:""}</div></div>`,W=()=>{const T=t.querySelector("#ar-x");T&&(T.onclick=e)},dt=()=>{lt(),r&&p>0&&u>=s&&(f+=50);const T=!r&&f>$;if(!r&&f>$){$=f;try{localStorage.setItem(ARENA_BEST_KEY,String(f))}catch(A){}}let j=0;if(r){j=Math.max(0,u-(3-p)),m={day:o,score:f,right:j,total:u};try{localStorage.setItem(i,JSON.stringify(m))}catch(A){}}haptic(T?"ok":"light"),T&&confetti(30);try{scheduleCloudSync(3e3)}catch(A){}try{checkRankUp()}catch(A){}const J=f>=300?"Киноман 🏆":f>=150?"Знаток 🎬":f>=60?"Зритель 🍿":"Новичок 🎟";t.innerHTML=`${Y()}<div class="ar-end"><div class="ar-end-emoji">${T?"🏆":"🎬"}</div>
-      <h2>${r?"Дуэль дня пройдена":T?"Новый рекорд!":"Игра окончена"}</h2>
-      <div class="ar-end-score">${f}</div><div class="ar-end-title">${J} · ${r?`верно ${j} из ${u}`:`вопросов: ${u}`}${!r&&$&&!T?` · рекорд ${$}`:""}</div>
-      <div class="ar-end-btns"><button class="btn-primary" id="ar-again">🔄 Ещё раз</button><button class="btn-secondary" id="ar-share">📤 Поделиться</button></div></div>`,W(),t.querySelector("#ar-again").onclick=()=>{p=3,f=0,v=0,u=0,L=1,S=new Set,r=!1,c=Math.random,tt()},t.querySelector("#ar-share").onclick=()=>{const A=r?`⚔️ Дуэль дня ${o.slice(8)}.${o.slice(5,7)}: ${f} очков, верно ${j} из ${u}. Одни и те же вопросы для всех — побьёшь?`:`⚔️ Кино-арена: ${f} очков (${J})! Сможешь больше?`,F="https://t.me/share/url?url="+encodeURIComponent("https://t.me/kapitan_kino_bot")+"&text="+encodeURIComponent(A);try{tg.openTelegramLink(F)}catch(z){window.open(F,"_blank")}}},mt=(T,j,J,A)=>{if(g)return;g=!0,u++,lt();const F=j&&Date.now()-M<nt*400;j?(v++,f+=10+Math.min(v,10)*2+(F?5:0),haptic("ok"),v%5===0&&L<2&&L++):(v=0,p--,haptic("medium"));const z=t.querySelector(".ar-timer i");z&&(z.style.animationPlayState="paused"),j&&popMsg("+"+(10+Math.min(v,10)*2+(F?5:0))),A(j);const x=t.querySelector(".ar-score");x&&(x.textContent=f),setTimeout(()=>{g=!1,p<=0||r&&u>=s?dt():tt()},j?900:1500)},rt=()=>(nt=Math.max(7,13-Math.floor(v/3)),`<div class="ar-timer"><i style="animation-duration:${nt}s"></i></div>`),C=T=>{M=Date.now(),lt(),H=setTimeout(()=>{g||(T.kind==="duel"?mt(T,!1,null,()=>{t.querySelectorAll(".ar-film").forEach(j=>{const J=T.films.find(A=>A.code===j.dataset.code);j.querySelector(".ar-val").textContent=T.show(J),j.classList.add(J===T.win?"ok":"bad")})}):mt(T,!1,null,()=>t.querySelectorAll(".ar-opt").forEach(j=>{j.disabled=!0,j.dataset.o===T.ans&&j.classList.add("ok")})))},nt*1e3)},tt=()=>{const T=U();if(!T){dt();return}if(T.kind==="duel")t.innerHTML=`${Y()}${rt()}<div class="ar-body"><div class="ar-q">${esc(T.q)}</div>
-        <div class="ar-duel">${T.films.map(j=>Q(j)).join("")}</div></div>`,W(),C(T),t.querySelectorAll(".ar-film").forEach(j=>j.onclick=()=>{const J=T.films.find(A=>A.code===j.dataset.code);mt(T,J===T.win,J,A=>{t.querySelectorAll(".ar-film").forEach(F=>{const z=T.films.find(x=>x.code===F.dataset.code);F.querySelector(".ar-val").textContent=T.show(z),F.classList.add(z===T.win?"ok":"bad")})})});else{t.innerHTML=`${Y()}${rt()}<div class="ar-body"><div class="ar-q">${esc(T.q)}</div>
-        ${T.film?`<div class="ar-one">${Q(T.film)}</div>`:""}
-        <div class="ar-opts">${T.opts.map(J=>`<button class="ar-opt" data-o="${esc(J)}">${esc(J)}</button>`).join("")}</div>
-        ${L>0?`<button class="ar-hint" id="ar-hint">💡 Убрать лишнее (${L})</button>`:""}</div>`,W(),C(T);const j=t.querySelector("#ar-hint");j&&(j.onclick=()=>{if(g||L<1)return;const J=[...t.querySelectorAll(".ar-opt")].filter(F=>F.dataset.o!==T.ans&&!F.disabled);if(J.length<2)return;L--,haptic("light");const A=J[Math.floor(Math.random()*J.length)];A.disabled=!0,A.classList.add("gone"),j.remove()}),t.querySelectorAll(".ar-opt").forEach(J=>J.onclick=()=>{mt(T,J.dataset.o===T.ans,J.dataset.o,A=>{t.querySelectorAll(".ar-opt").forEach(F=>{F.disabled=!0,F.dataset.o===T.ans&&F.classList.add("ok")}),A||J.classList.add("bad")})})}};if(w.length<6){t.innerHTML=`${Y()}<div class="ar-end"><h2>Мало фильмов</h2><p>Загляни позже 🙂</p></div>`,W();return}t.innerHTML=`<div class="ar-top"><button class="ar-x" id="ar-x">✕</button><div></div><div></div></div>
+    <div class="mp-zoom"><button class="chip${eu ? '' : ' active'}" data-z="world">🌍 Мир</button><button class="chip${eu ? ' active' : ''}" data-z="eu">🇪🇺 Европа</button></div>
+    <svg class="mp-svg" viewBox="${vb.x} ${vb.y} ${vb.w} ${vb.h}" preserveAspectRatio="xMidYMid meet">${grat}${poly}${dots}</svg>
+    <div class="mp-chips">${list.map(([ct, arr]) => `<button class="chip${_mapSel === ct ? ' active' : ''}${visited.has(ct) ? ' mp-seen' : ''}" data-c="${esc(ct)}">${flagOf(ct)} ${esc(ct)} <em>${arr.length}</em></button>`).join('')}</div>
+    ${sel ? `<h3 class="mp-sel-title">${flagOf(_mapSel)} ${esc(_mapSel)} · ${sel.length}</h3>
+      <div class="mp-films">${sel.map(m => `<div class="mp-film" data-code="${esc(m.code)}"><div class="mp-poster">${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" onerror="this.style.display='none'"/>` : '<span>🎬</span>'}${unlocked.includes(String(m.code)) ? '<em class="mp-got">✓</em>' : ''}</div><b>${esc(m.title)}</b><i>${esc([m.year, m.rating ? '⭐ ' + m.rating : ''].filter(Boolean).join(' · '))}</i></div>`).join('')}</div>`
+      : '<p class="mp-hint">Тапни страну на карте или в списке — покажу её фильмы 🎬</p>'}`;
+  const pick = (ct) => { _mapSel = (_mapSel === ct) ? '' : ct; haptic('light'); renderMap(); const t = document.querySelector('.mp-sel-title'); if (t && _mapSel) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  c.querySelectorAll('.mp-dot').forEach(g => g.addEventListener('click', () => pick(g.dataset.c)));
+  c.querySelectorAll('.mp-chips .chip').forEach(b => b.addEventListener('click', () => pick(b.dataset.c)));
+  c.querySelectorAll('.mp-zoom .chip').forEach(b => b.addEventListener('click', () => { _mapZoom = b.dataset.z; haptic('light'); renderMap(); }));
+  c.querySelectorAll('.mp-film').forEach(el => el.addEventListener('click', () => { detailOrigin = 'map'; openDetail(el.dataset.code); }));
+}
+
+// ---------- v174: «Кино-арена» — дуэли знаний на 3 жизни ----------
+const ARENA_BEST_KEY = 'kino_arena_best';
+function openArena() {
+  let ov = document.getElementById('arena');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'arena'; ov.className = 'arena hidden';
+    document.body.appendChild(ov);
+  }
+  ov.classList.remove('hidden');
+  document.body.classList.add('no-scroll');
+  const close = () => { stopTimer(); ov.classList.add('hidden'); document.body.classList.remove('no-scroll'); };
+  const num = (v) => { const x = parseFloat(String(v).replace(',', '.')); return isFinite(x) ? x : 0; };
+  // «Дуэль дня»: один и тот же набор вопросов для всех в этот день (генератор от даты)
+  const DAILY_Q = 12, DAILY_KEY = 'kino_arena_daily';
+  const dayKey = capDayStr(new Date());
+  let daily = false, rnd = Math.random;
+  const seededRnd = (seed) => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  let dailyDone = null; try { const d = JSON.parse(localStorage.getItem(DAILY_KEY) || 'null'); if (d && d.day === dayKey) dailyDone = d; } catch (e) {}
+  const pickN = (arr, n) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, n); };
+  const pool = ALL.filter(m => m.title && num(m.rating) > 0 && parseInt(m.year, 10) > 1900).sort((a, b) => String(a.code).localeCompare(String(b.code)));
+  let best = 0; try { best = parseInt(localStorage.getItem(ARENA_BEST_KEY) || '0', 10) || 0; } catch (e) {}
+  let lives = 3, score = 0, streak = 0, asked = 0, seen = new Set(), busy = false;
+  let hints = 1, tm = null, t0 = 0, tLimit = 12;      // 💡 подсказки 50/50 и таймер вопроса
+  const stopTimer = () => { if (tm) { clearTimeout(tm); tm = null; } };
+
+  const cardH = (m, extra = '') => `<div class="ar-film" data-code="${esc(m.code)}">
+      <div class="ar-poster">${m.poster ? `<img src="${esc(m.poster)}" alt="" onerror="this.style.display='none'"/>` : '<span>🎬</span>'}</div>
+      <b>${esc(m.title)}</b><i class="ar-val">${extra}</i></div>`;
+
+  // генераторы вопросов: {q, kind:'duel'|'opts', ...}
+  const gens = {
+    rating() { const [a, b] = pickN(pool, 2); if (Math.abs(num(a.rating) - num(b.rating)) < 0.3) return null;
+      return { kind: 'duel', q: 'Какой фильм выше по рейтингу?', films: [a, b], win: num(a.rating) > num(b.rating) ? a : b, show: m => '⭐ ' + num(m.rating).toFixed(1) }; },
+    older() { const [a, b] = pickN(pool, 2); if (Math.abs(parseInt(a.year, 10) - parseInt(b.year, 10)) < 3) return null;
+      return { kind: 'duel', q: 'Какой фильм вышел раньше?', films: [a, b], win: parseInt(a.year, 10) < parseInt(b.year, 10) ? a : b, show: m => '📅 ' + m.year }; },
+    longer() { const p2 = pool.filter(m => parseInt(m.duration, 10) > 0); if (p2.length < 2) return null; const [a, b] = pickN(p2, 2);
+      if (Math.abs(parseInt(a.duration, 10) - parseInt(b.duration, 10)) < 15) return null;
+      return { kind: 'duel', q: 'Какой фильм идёт дольше?', films: [a, b], win: parseInt(a.duration, 10) > parseInt(b.duration, 10) ? a : b, show: m => '⏱ ' + fmtDuration(m.duration) }; },
+    director() { const p2 = pool.filter(m => m.director); if (p2.length < 4) return null; const m = pickN(p2, 1)[0];
+      const others = [...new Set(p2.filter(x => x.director !== m.director).map(x => x.director))]; if (others.length < 2) return null;
+      const opts = pickN([m.director, ...pickN(others, 2)], 3);
+      return { kind: 'opts', q: `Кто снял «${m.title}»?`, film: m, opts, ans: m.director }; },
+    actor() { const p2 = pool.filter(m => (m.actors || []).length); if (p2.length < 4) return null; const m = pickN(p2, 1)[0]; const act = m.actors[0];
+      const wrong = pool.filter(x => !(x.actors || []).includes(act) && x.code !== m.code); if (wrong.length < 2) return null;
+      const opts = pickN([m, ...pickN(wrong, 2)], 3);
+      return { kind: 'opts', q: `В каком фильме снимался(ась) ${act}?`, opts: opts.map(x => x.title), ans: m.title }; },
+    cast() { const p2 = pool.filter(m => (m.actors || []).length >= 2); if (p2.length < 4) return null; const m = pickN(p2, 1)[0];
+      const [a1, a2] = m.actors;
+      const wrong = pool.filter(x => x.code !== m.code && !(x.actors || []).includes(a1) && !(x.actors || []).includes(a2)); if (wrong.length < 2) return null;
+      const opts = pickN([m, ...pickN(wrong, 2)], 3);
+      return { kind: 'opts', q: `Какой фильм с ${a1} и ${a2}?`, opts: opts.map(x => x.title), ans: m.title }; },
+    country() { const p2 = pool.filter(m => (m.countries || []).length); if (p2.length < 4) return null; const m = pickN(p2, 1)[0]; const c0 = m.countries[0];
+      const others = [...new Set(pool.flatMap(x => x.countries || []).filter(c => c && !(m.countries || []).includes(c)))]; if (others.length < 2) return null;
+      const opts = pickN([c0, ...pickN(others, 2)], 3);
+      return { kind: 'opts', q: `Какая страна сняла «${m.title}»?`, film: m, opts, ans: c0 }; },
+    decade() { const p2 = pool.filter(x => !/\d{4}/.test(x.title)); if (p2.length < 4) return null; const m = pickN(p2, 1)[0]; const y = parseInt(m.year, 10); const d0 = Math.floor(y / 10) * 10;
+      const decs = [d0 - 10, d0 + 10, d0 - 20, d0 + 20].filter(d => d >= 1920 && d <= new Date().getFullYear());
+      if (decs.length < 2) return null;
+      const opts = pickN([d0, ...pickN(decs, 2)], 3).sort((a, b) => a - b).map(d => d + '-е');
+      return { kind: 'opts', q: `В каком десятилетии вышел «${m.title}»?`, film: m, opts, ans: d0 + '-е' }; },
+  };
+  const next = () => {
+    // с ростом серии добавляем более трудные типы
+    const kinds = (daily ? asked < 4 : streak < 3) ? ['rating', 'older', 'longer'] : ['rating', 'older', 'longer', 'director', 'actor', 'cast', 'country', 'decade', 'director', 'actor', 'cast'];
+    for (let i = 0; i < 120; i++) {
+      const g = gens[kinds[Math.floor(rnd() * kinds.length)]]();
+      if (!g) continue;
+      const key = g.q; if (seen.has(key)) continue; seen.add(key); return g;
+    }
+    // запасной вариант: сравнение рейтингов без порога, чтобы раунд не обрывался на редких данных
+    for (let i = 0; i < 40; i++) {
+      const [a, b] = pickN(pool, 2);
+      if (num(a.rating) === num(b.rating)) continue;
+      const key = 'r:' + a.code + b.code; if (seen.has(key)) continue; seen.add(key);
+      return { kind: 'duel', q: 'Какой фильм выше по рейтингу?', films: [a, b], win: num(a.rating) > num(b.rating) ? a : b, show: m => '⭐ ' + num(m.rating).toFixed(1) };
+    }
+    return null;
+  };
+
+  const head = () => `<div class="ar-top"><button class="ar-x" id="ar-x">✕</button>
+      <div class="ar-lives">${'❤️'.repeat(lives)}${'🖤'.repeat(3 - lives)}</div>
+      <div class="ar-score">${score}${streak >= 3 ? ` <span class="ar-streak">🔥${streak}</span>` : ''}</div></div>`;
+
+  const bind = () => { const x = ov.querySelector('#ar-x'); if (x) x.onclick = close; };
+
+  const finish = () => {
+    stopTimer();
+    if (daily && lives > 0 && asked >= DAILY_Q) score += 50;       // прошёл все вопросы дуэли — бонус
+    const rec = !daily && score > best;
+    if (!daily && score > best) { best = score; try { localStorage.setItem(ARENA_BEST_KEY, String(score)); } catch (e) {} }
+    let rightN = 0;
+    if (daily) {
+      rightN = Math.max(0, asked - (3 - lives));
+      dailyDone = { day: dayKey, score, right: rightN, total: asked };
+      try { localStorage.setItem(DAILY_KEY, JSON.stringify(dailyDone)); } catch (e) {}
+    }
+    haptic(rec ? 'ok' : 'light');
+    if (rec) confetti(30);
+    try { scheduleCloudSync(3000); } catch (e) {}
+    try { checkRankUp(); } catch (e) {}
+    const title = score >= 300 ? 'Киноман 🏆' : score >= 150 ? 'Знаток 🎬' : score >= 60 ? 'Зритель 🍿' : 'Новичок 🎟';
+    ov.innerHTML = `${head()}<div class="ar-end"><div class="ar-end-emoji">${rec ? '🏆' : '🎬'}</div>
+      <h2>${daily ? 'Дуэль дня пройдена' : rec ? 'Новый рекорд!' : 'Игра окончена'}</h2>
+      <div class="ar-end-score">${score}</div><div class="ar-end-title">${title} · ${daily ? `верно ${rightN} из ${asked}` : `вопросов: ${asked}`}${!daily && best && !rec ? ` · рекорд ${best}` : ''}</div>
+      <div class="ar-end-btns"><button class="btn-primary" id="ar-again">🔄 Ещё раз</button><button class="btn-secondary" id="ar-share">📤 Поделиться</button></div></div>`;
+    bind();
+    ov.querySelector('#ar-again').onclick = () => { lives = 3; score = 0; streak = 0; asked = 0; hints = 1; seen = new Set(); daily = false; rnd = Math.random; render(); };
+    ov.querySelector('#ar-share').onclick = () => {
+      const t = daily
+        ? `⚔️ Дуэль дня ${dayKey.slice(8)}.${dayKey.slice(5, 7)}: ${score} очков, верно ${rightN} из ${asked}. Одни и те же вопросы для всех — побьёшь?`
+        : `⚔️ Кино-арена: ${score} очков (${title})! Сможешь больше?`;
+      const u = 'https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') + '&text=' + encodeURIComponent(t);
+      try { tg.openTelegramLink(u); } catch (e) { window.open(u, '_blank'); }
+    };
+  };
+
+  const answer = (g, ok, picked, reveal) => {
+    if (busy) return; busy = true; asked++; stopTimer();
+    const quick = ok && (Date.now() - t0) < tLimit * 400;       // быстрый ответ — бонус
+    if (ok) { streak++; score += 10 + Math.min(streak, 10) * 2 + (quick ? 5 : 0); haptic('ok');
+      if (streak % 5 === 0 && hints < 2) hints++; }
+    else { streak = 0; lives--; haptic('medium'); }
+    const bar0 = ov.querySelector('.ar-timer i'); if (bar0) bar0.style.animationPlayState = 'paused';
+    if (ok) popMsg('+' + (10 + Math.min(streak, 10) * 2 + (quick ? 5 : 0)));
+    reveal(ok);
+    const sc = ov.querySelector('.ar-score'); if (sc) sc.textContent = score;
+    setTimeout(() => { busy = false; if (lives <= 0 || (daily && asked >= DAILY_Q)) finish(); else render(); }, ok ? 900 : 1500);
+  };
+
+  const timerBar = () => {
+    tLimit = Math.max(7, 13 - Math.floor(streak / 3));     // с серией времени на ответ меньше
+    return `<div class="ar-timer"><i style="animation-duration:${tLimit}s"></i></div>`;
+  };
+  const startTimer = (g) => {
+    t0 = Date.now(); stopTimer();
+    tm = setTimeout(() => {
+      if (busy) return;
+      if (g.kind === 'duel') answer(g, false, null, () => {
+        ov.querySelectorAll('.ar-film').forEach(e2 => {
+          const ff = g.films.find(x => x.code === e2.dataset.code);
+          e2.querySelector('.ar-val').textContent = g.show(ff);
+          e2.classList.add(ff === g.win ? 'ok' : 'bad');
+        });
+      });
+      else answer(g, false, null, () => ov.querySelectorAll('.ar-opt').forEach(x => { x.disabled = true; if (x.dataset.o === g.ans) x.classList.add('ok'); }));
+    }, tLimit * 1000);
+  };
+  const render = () => {
+    const g = next();
+    if (!g) { finish(); return; }
+    if (g.kind === 'duel') {
+      ov.innerHTML = `${head()}${timerBar()}<div class="ar-body"><div class="ar-q">${esc(g.q)}</div>
+        <div class="ar-duel">${g.films.map(f => cardH(f)).join('')}</div></div>`;
+      bind(); startTimer(g);
+      ov.querySelectorAll('.ar-film').forEach(el => el.onclick = () => {
+        const f = g.films.find(x => x.code === el.dataset.code);
+        answer(g, f === g.win, f, (ok) => {
+          ov.querySelectorAll('.ar-film').forEach(e2 => {
+            const ff = g.films.find(x => x.code === e2.dataset.code);
+            e2.querySelector('.ar-val').textContent = g.show(ff);
+            e2.classList.add(ff === g.win ? 'ok' : 'bad');
+          });
+        });
+      });
+    } else {
+      ov.innerHTML = `${head()}${timerBar()}<div class="ar-body"><div class="ar-q">${esc(g.q)}</div>
+        ${g.film ? `<div class="ar-one">${cardH(g.film)}</div>` : ''}
+        <div class="ar-opts">${g.opts.map(o => `<button class="ar-opt" data-o="${esc(o)}">${esc(o)}</button>`).join('')}</div>
+        ${hints > 0 ? `<button class="ar-hint" id="ar-hint">💡 Убрать лишнее (${hints})</button>` : ''}</div>`;
+      bind(); startTimer(g);
+      const hb = ov.querySelector('#ar-hint');
+      if (hb) hb.onclick = () => {
+        if (busy || hints < 1) return;
+        const wrong = [...ov.querySelectorAll('.ar-opt')].filter(x => x.dataset.o !== g.ans && !x.disabled);
+        if (wrong.length < 2) return;
+        hints--; haptic('light');
+        const w = wrong[Math.floor(Math.random() * wrong.length)]; w.disabled = true; w.classList.add('gone');
+        hb.remove();
+      };
+      ov.querySelectorAll('.ar-opt').forEach(b => b.onclick = () => {
+        answer(g, b.dataset.o === g.ans, b.dataset.o, (ok) => {
+          ov.querySelectorAll('.ar-opt').forEach(x => { x.disabled = true; if (x.dataset.o === g.ans) x.classList.add('ok'); });
+          if (!ok) b.classList.add('bad');
+        });
+      });
+    }
+  };
+
+  if (pool.length < 6) { ov.innerHTML = `${head()}<div class="ar-end"><h2>Мало фильмов</h2><p>Загляни позже 🙂</p></div>`; bind(); return; }
+  // заставка
+  ov.innerHTML = `<div class="ar-top"><button class="ar-x" id="ar-x">✕</button><div></div><div></div></div>
     <div class="ar-end"><div class="ar-end-emoji">⚔️</div><h2>Кино-арена</h2>
     <p>Отвечай на вопросы о кино. Три жизни и таймер на каждый вопрос. Серия верных ответов и скорость дают больше очков, за каждые 5 подряд — подсказка 💡, а вопросы усложняются.</p>
-    ${$?`<p class="ar-best">Твой рекорд: <b>${$}</b></p>`:""}
-    <div class="ar-end-btns ar-col"><button class="btn-primary" id="ar-daily">📅 Дуэль дня${m?` · ${m.score}`:""}</button><button class="btn-secondary" id="ar-go">Свободная игра</button></div>
-    <p class="ar-note">${m?"Сегодня уже сыграно — можно ещё раз для тренировки.":"12 вопросов, одинаковых для всех сегодня. Сравни счёт с друзьями!"}</p></div>`,W(),t.querySelector("#ar-go").onclick=()=>{haptic("light"),r=!1,c=Math.random,tt()},t.querySelector("#ar-daily").onclick=()=>{haptic("light"),r=!0,c=a(parseInt(o.replace(/-/g,""),10)+w.length*7),p=3,f=0,v=0,u=0,L=1,S=new Set,tt()}}let _duoA=new Set,_duoB=new Set,_duoSeed=0;function openDuo(){let t=document.getElementById("duo-modal");t||(t=document.createElement("div"),t.id="duo-modal",t.className="modal hidden",t.innerHTML=`<div class="modal-card duo-card">
+    ${best ? `<p class="ar-best">Твой рекорд: <b>${best}</b></p>` : ''}
+    <div class="ar-end-btns ar-col"><button class="btn-primary" id="ar-daily">📅 Дуэль дня${dailyDone ? ` · ${dailyDone.score}` : ''}</button><button class="btn-secondary" id="ar-go">Свободная игра</button></div>
+    <p class="ar-note">${dailyDone ? 'Сегодня уже сыграно — можно ещё раз для тренировки.' : '12 вопросов, одинаковых для всех сегодня. Сравни счёт с друзьями!'}</p></div>`;
+  bind();
+  ov.querySelector('#ar-go').onclick = () => { haptic('light'); daily = false; rnd = Math.random; render(); };
+  ov.querySelector('#ar-daily').onclick = () => {
+    haptic('light'); daily = true;
+    rnd = seededRnd(parseInt(dayKey.replace(/-/g, ''), 10) + pool.length * 7);
+    lives = 3; score = 0; streak = 0; asked = 0; hints = 1; seen = new Set();
+    render();
+  };
+}
+
+// ---------- v166: «Выбор на двоих» — каждый отмечает свои жанры, ищем фильм на пересечении ----------
+let _duoA = new Set(), _duoB = new Set(), _duoSeed = 0;
+function openDuo() {
+  let md = document.getElementById('duo-modal');
+  if (!md) {
+    md = document.createElement('div');
+    md.id = 'duo-modal'; md.className = 'modal hidden';
+    md.innerHTML = `<div class="modal-card duo-card">
       <button class="modal-close" id="duo-close">✕</button>
       <h2>👥 Выбор на двоих</h2>
       <p class="modal-muted">Каждый отмечает, что хочет. Найду фильм, который зайдёт обоим.</p>
@@ -865,39 +7970,2243 @@ ${riddleHints(t)}
       <div class="duo-who">🙋‍♀️ Второй</div><div class="duo-chips" id="duo-b"></div>
       <button class="btn-primary" id="duo-run">🎬 Подобрать на двоих</button>
       <div id="duo-results" class="pick-results"></div>
-    </div>`,document.body.appendChild(t),t.addEventListener("click",i=>{i.target===t&&t.classList.add("hidden")}),t.querySelector("#duo-close").onclick=()=>t.classList.add("hidden"),t.querySelector("#duo-run").onclick=()=>{haptic("light"),_duoSeed++,runDuo()});const e=new Map;ALL.forEach(i=>(i.genres||[]).forEach(o=>{o&&e.set(o,(e.get(o)||0)+1)}));const n=[...e.entries()].sort((i,o)=>o[1]-i[1]).slice(0,10).map(i=>i[0]),s=(i,o)=>{const r=t.querySelector(i);r.innerHTML=n.map(c=>`<button class="duo-chip${o.has(c)?" on":""}" data-g="${esc(c)}">${esc(c)}</button>`).join(""),r.querySelectorAll(".duo-chip").forEach(c=>c.onclick=()=>{haptic("light"),o.has(c.dataset.g)?o.delete(c.dataset.g):o.add(c.dataset.g),c.classList.toggle("on")})};s("#duo-a",_duoA),s("#duo-b",_duoB),t.classList.remove("hidden")}function runDuo(){const t=document.getElementById("duo-results");if(!t)return;if(!_duoA.size||!_duoB.size){t.innerHTML='<p class="error">Пусть каждый отметит хотя бы один жанр 🙂</p>';return}const e=i=>{let o=_duoSeed*2654435761;for(const r of String(i))o=o*31+r.charCodeAt(0)>>>0;return o%1e3/1e3},n=(i,o)=>(i.genres||[]).filter(r=>o.has(r)),s=ALL.map(i=>{const o=n(i,_duoA),r=n(i,_duoB),c=o.length&&r.length,a=[...new Set(o.filter(b=>r.includes(b)))],m=(parseFloat(i.rating)||6)/10;return{m:i,a:o,b:r,both:c,same:a,score:(c?2:o.length||r.length?1:0)+(a.length?.6:0)+m*.7+e(i.code)*.5}}).filter(i=>i.score>=1).sort((i,o)=>o.score-i.score).slice(0,3);if(!s.length){t.innerHTML='<p class="error">Ничего не нашлось 😔 Попробуйте отметить больше жанров.</p>';return}t.innerHTML=s.map(i=>{const o=i.both?i.same.length?`✅ Оба любят: ${i.same.map(esc).join(", ")}`:`✅ ${i.a.map(esc).join(", ")} + ${i.b.map(esc).join(", ")}`:`🤝 Компромисс: подходит ${i.a.length?"первому":"второму"} (${(i.a.length?i.a:i.b).map(esc).join(", ")})`;return`<div class="pick-card" data-code="${esc(i.m.code)}">
-      <div class="pick-thumb">${i.m.poster?`<img src="${esc(i.m.poster)}" alt="" loading="lazy" onerror="this.style.display='none'"/>`:'<div class="trailer-thumb-ph">🎬</div>'}</div>
-      <div class="pick-info"><b>${esc(i.m.title)}</b>
-        <span class="rating">${ratingBadge(i.m)}${i.m.duration?" · ⏱ "+esc(fmtDuration(i.m.duration)):""}</span>
-        <p class="duo-why">${o}</p></div></div>`}).join("")+'<div class="duo-btns"><button class="btn-primary duo-again" id="duo-again">🔄 Ещё варианты</button><button class="btn-primary duo-share" id="duo-share">📤 Отправить</button></div>',t.querySelectorAll(".pick-card").forEach(i=>i.addEventListener("click",()=>{document.getElementById("duo-modal").classList.add("hidden"),openDetail(i.dataset.code)})),t.querySelector("#duo-share").onclick=()=>{haptic("light");const i=s[0],o=`🎬 Нашли фильм на вечер: «${i.m.title}»${i.m.year?" ("+i.m.year+")":""}${i.m.rating?" · ⭐ "+i.m.rating:""}
-${[...s.slice(1)].map(c=>"• ещё вариант: "+c.m.title).join(`
-`)}${s.length>1?`
-`:""}Подбирал Капитан Кино 👥`,r="https://t.me/share/url?url="+encodeURIComponent("https://t.me/kapitan_kino_bot")+"&text="+encodeURIComponent(o);try{tg.openTelegramLink(r)}catch(c){window.open(r,"_blank")}},t.querySelector("#duo-again").onclick=()=>{haptic("light"),_duoSeed++,runDuo()}}const APP_FS_MIN_VERSION="8.0",FS_BUILD="v133";let _appFsByUs=!1,_appFsOff=!1,_appFsFails=0,_swipesWereDisabled=!1;function _appFsAvailable(){try{return!_appFsOff&&!!tg&&typeof tg.requestFullscreen=="function"&&!!tg.isVersionAtLeast&&tg.isVersionAtLeast(APP_FS_MIN_VERSION)}catch(t){return!1}}function _appInFs(){try{return!!tg.isFullscreen}catch(t){return!1}}function enterAppFullscreen(){if(!(!_appFsAvailable()||_appInFs()))try{typeof tg.disableVerticalSwipes=="function"&&(tg.disableVerticalSwipes(),_swipesWereDisabled=!0),tg.requestFullscreen(),_appFsByUs=!0}catch(t){}}function exitAppFullscreen(){if(_appFsByUs){_appFsByUs=!1;try{_appInFs()&&typeof tg.exitFullscreen=="function"&&tg.exitFullscreen()}catch(t){}try{_swipesWereDisabled&&typeof tg.enableVerticalSwipes=="function"&&tg.enableVerticalSwipes()}catch(t){}_swipesWereDisabled=!1}}function _syncTrailerFs(){const t=document.getElementById("btn-trailer-fs");if(!t)return;const e=!!(document.fullscreenElement||document.webkitFullscreenElement||document.msFullscreenElement),n=e||_appInFs();t.textContent=n?"⤢":"⛶",t.title=n?"Свернуть":"На весь экран",t.classList.toggle("hidden",e)}function _requestFs(t){return new Promise(e=>{try{if(!t){e(!1);return}if(t.requestFullscreen){const n=t.requestFullscreen();if(n&&typeof n.then=="function"){n.then(()=>e(!0),()=>e(!1));return}e(!0);return}if(t.webkitRequestFullscreen){t.webkitRequestFullscreen(),e(!0);return}if(t.msRequestFullscreen){t.msRequestFullscreen(),e(!0);return}}catch(n){}e(!1)})}function _showFsDiag(){const t=document.getElementById("trailer-frame"),e=document.getElementById("trailer-video"),n=document.documentElement,s=!!(t&&!t.classList.contains("hidden")),i=!!(e&&!e.classList.contains("hidden"));let o="?";try{o=!!(tg&&tg.isVersionAtLeast&&tg.isVersionAtLeast(APP_FS_MIN_VERSION))}catch(a){o="err"}const c=["сборка: "+FS_BUILD,"tg: "+(tg&&tg.version||"?")+" / "+(tg&&tg.platform||"?"),"tg.requestFullscreen: "+(tg?typeof tg.requestFullscreen:"нет tg"),"мин. "+APP_FS_MIN_VERSION+": "+o,"appFs: off="+_appFsOff+" fails="+_appFsFails,"browserFs: "+(n?typeof n.requestFullscreen+"/"+typeof n.webkitRequestFullscreen:"нет"),"трейлер: "+(s?"youtube":i?"mp4":"нет")].join(`
-`);try{tg.showAlert(c);return}catch(a){}try{alert(c)}catch(a){}}function _exitFs(){try{document.fullscreenElement?document.exitFullscreen().catch(()=>{}):document.webkitFullscreenElement?document.webkitExitFullscreen():document.msExitFullscreen&&document.msExitFullscreen()}catch(t){}}function _offerTrailerInYouTube(){const t=document.getElementById("trailer-frame"),n=(t&&t.getAttribute("src")||"").match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/);if(!n)return;const s="https://youtu.be/"+n[1],i=()=>{try{tg.openLink(s,{try_instant_view:!1})}catch(o){window.open(s,"_blank")}};try{tg.showPopup({title:"⛶ Полный экран",message:"Внутри Telegram на iPhone плеер YouTube развернуть нельзя. Открыть трейлер в YouTube?",buttons:[{id:"yt",type:"default",text:"▶️ Открыть"},{id:"no",type:"cancel"}]},o=>{o==="yt"&&i()});return}catch(o){}i()}async function _trailerFsFlow(){if(!!(document.fullscreenElement||document.webkitFullscreenElement||document.msFullscreenElement)){_exitFs();return}if(_appInFs()){exitAppFullscreen(),_syncTrailerFs();return}if(_appFsAvailable()){enterAppFullscreen(),_syncTrailerFs();return}const e=document.documentElement;if(e&&(typeof e.requestFullscreen=="function"||typeof e.webkitRequestFullscreen=="function")){const s=document.getElementById("trailer-frame"),i=document.getElementById("trailer-modal");if(await _requestFs(s&&!s.classList.contains("hidden")?s:i||void 0))return}const n=document.getElementById("trailer-video");if(n&&!n.classList.contains("hidden")&&n.webkitEnterFullscreen)try{n.webkitEnterFullscreen();return}catch(s){}_offerTrailerInYouTube()}(function(){const e=document.getElementById("btn-trailer-fs");if(!e)return;let n=null,s=!1;e.addEventListener("click",i=>{if(i.stopPropagation(),clearTimeout(n),s){s=!1;return}haptic("light"),_trailerFsFlow()}),e.addEventListener("touchstart",()=>{clearTimeout(n),n=setTimeout(()=>{s=!0,_showFsDiag()},600)},{passive:!0}),["touchend","touchcancel"].forEach(i=>{e.addEventListener(i,()=>clearTimeout(n),{passive:!0})}),e.addEventListener("contextmenu",i=>{i.preventDefault(),_showFsDiag()}),document.addEventListener("fullscreenchange",_syncTrailerFs),document.addEventListener("webkitfullscreenchange",_syncTrailerFs),document.addEventListener("MSFullscreenChange",_syncTrailerFs);try{tg&&typeof tg.onEvent=="function"&&(tg.onEvent("fullscreenChanged",_syncTrailerFs),tg.onEvent("fullscreenFailed",i=>{i&&i.error==="UNSUPPORTED"?_appFsOff=!0:(_appFsFails++,_appFsFails>=2&&(_appFsOff=!0)),_syncTrailerFs()}))}catch(i){}})();function openTrailer(t){if(t){if(window._challTrailerWatched=(window._challTrailerWatched||0)+1,challDone("watch_trailer"),bumpWeekStat("trailers"),pushTrailerWatch(t.code),view==="grid"||view==="fav"){const e=document.getElementById("continue-shelf");e&&!e.classList.contains("hidden")&&renderTrailerShelf()}if(!(!t.trailer_yt&&!t.trailer_file_id)){if(haptic("light"),t.trailer_yt){const e=document.getElementById("trailer-modal"),n=document.getElementById("trailer-frame"),s=document.getElementById("trailer-video");if(!e||!n||!s)return;s.classList.add("hidden"),s.removeAttribute("src"),n.classList.remove("hidden"),n.src="https://www.youtube.com/embed/"+t.trailer_yt+"?autoplay=1&rel=0&playsinline=1&fs=1",e.classList.remove("hidden"),startWatchSession(t.code),enterAppFullscreen(),_syncTrailerFs();return}t.trailer_file_id&&sendOrDeepLink({action:"trailer_movie",code:t.code})}}}(function(){const t=document.getElementById("net-banner");if(!t)return;const e=()=>t.classList.toggle("hidden",navigator.onLine!==!1);window.addEventListener("offline",()=>{e(),haptic("heavy")}),window.addEventListener("online",e),e()})(),(function(){const t=document.querySelector(".tabs");if(window.__tabsDbg={bar:!!t,ran:1,upds:0},!t)return;let e=!1;const n=()=>{e=!1,window.__tabsDbg.upds++;const s=window.scrollY>60&&t.getBoundingClientRect().top<=2;document.body.classList.toggle("tabs-stuck",s)};window.addEventListener("scroll",()=>{n()},{passive:!0})})();function closeTrailer(){_exitFs(),exitAppFullscreen(),endWatchSession();const t=document.getElementById("trailer-modal"),e=document.getElementById("trailer-frame"),n=document.getElementById("trailer-video");e&&(e.src="about:blank"),n&&(n.pause(),n.removeAttribute("src")),t&&t.classList.add("hidden")}(function(){const e=document.getElementById("trailer-modal");e&&e.addEventListener("click",s=>{s.target===e&&closeTrailer()});const n=document.getElementById("btn-trailer-close");n&&n.addEventListener("click",closeTrailer)})();function showErrorBanner(t){try{const e=document.getElementById("err-banner");e&&(e.textContent="⚠️ "+t,e.classList.remove("hidden"))}catch(e){}}window.addEventListener("error",t=>{try{const e=t&&t.target;e&&e!==window?e.tagName==="SCRIPT"&&bumpErrorStat("resource","script_load"):bumpErrorStat("js",t&&t.message)}catch(e){}showErrorBanner("Ошибка приложения: "+(t&&t.message||"неизвестная"))}),window.addEventListener("unhandledrejection",t=>{try{const e=t&&t.reason;bumpErrorStat("promise",e&&e.message||e||"promise")}catch(e){}});const OB_KEY="kinoafisha_onb2";function showOnboarding(){if(localStorage.getItem(OB_KEY))return;const t=document.getElementById("onboarding");if(!t)return;let e=0;const n=4,s=t.querySelectorAll(".ob-slide"),i=t.querySelectorAll(".ob-dot"),o=document.getElementById("ob-next"),r=document.getElementById("ob-skip"),c=()=>{s.forEach((m,b)=>m.classList.toggle("active",b===e)),i.forEach((m,b)=>m.classList.toggle("active",b===e)),o.textContent=e===n-1?"Начать!":"Далее"},a=()=>{localStorage.setItem(OB_KEY,"1"),t.classList.add("hidden"),haptic("light")};o.onclick=()=>{e<n-1?(e++,c(),haptic("light")):a()},r.onclick=a,c(),t.classList.remove("hidden")}const CHANGELOG_V="155",CL_KEY="kinoafisha_seen_changelog";function showChangelog(t=!1){try{if(!t&&localStorage.getItem(CL_KEY)===CHANGELOG_V)return}catch(o){return}const e=document.getElementById("changelog-modal");if(!e)return;e.classList.remove("hidden");const n=()=>{e.classList.add("hidden");try{localStorage.setItem(CL_KEY,CHANGELOG_V)}catch(o){}},s=document.getElementById("btn-cl-ok");s&&(s.onclick=()=>{haptic("light"),n()});const i=document.getElementById("btn-cl-close");i&&(i.onclick=n),e.addEventListener("click",o=>{o.target===e&&n()})}(()=>{const t=document.getElementById("sharecard-modal");if(!t)return;const e=()=>{t.classList.add("hidden")},n=document.getElementById("btn-sharecard-close");n&&(n.onclick=e),t.addEventListener("click",s=>{s.target===t&&e()})})(),window.__kinoBooted=!0;const ANALYTICS_URL="https://kinokod-stats.ata545ga.workers.dev",APP_BUILD="240",_evq=[];let _evT=0;const _sid=Math.random().toString(36).slice(2,10),_t0=Date.now();function track(t,e){if(ANALYTICS_URL)try{_evq.push({n:String(t).slice(0,24),a:e==null?"":String(e).slice(0,40),t:Math.round((Date.now()-_t0)/1e3)}),_evq.length>=20?flushEvents():_evT||(_evT=setTimeout(flushEvents,15e3))}catch(n){}}function flushEvents(){if(clearTimeout(_evT),_evT=0,!ANALYTICS_URL||!_evq.length)return;const t=tg&&tg.initData||"";if(!t){_evq.length=0;return}const e=JSON.stringify({init:t,sid:_sid,v:APP_BUILD,ev:_evq.splice(0,40)});try{if(navigator.sendBeacon&&navigator.sendBeacon(ANALYTICS_URL+"/e",new Blob([e],{type:"text/plain"})))return}catch(n){}try{fetch(ANALYTICS_URL+"/e",{method:"POST",body:e,keepalive:!0,headers:{"Content-Type":"text/plain"}})}catch(n){}}document.addEventListener("visibilitychange",()=>{document.visibilityState==="hidden"&&(track("end",Math.round((Date.now()-_t0)/1e3)),flushEvents())}),window.addEventListener("pagehide",flushEvents);function readDeepLink(){let t="";try{t=tg.initDataUnsafe&&tg.initDataUnsafe.start_param||""}catch(n){}if(!t){const n=(location.hash||"").match(/[#&](movie|tab)=([A-Za-z0-9_-]{1,32})/);n&&(t=n[1]+"_"+n[2])}const e=String(t).match(/^(movie|tab)_([A-Za-z0-9_-]{1,32})$/);return e?{kind:e[1],value:e[2]}:null}function applyDeepLink(t){if(!t)return;let e=0;const n=setInterval(()=>{if(ALL.length||++e>50){if(clearInterval(n),!ALL.length)return;try{if(t.kind==="movie")ALL.find(s=>String(s.code)===t.value)&&openDetail(String(ALL.find(s=>String(s.code)===t.value).code));else{const s=document.querySelector('#bnav [data-bn="'+t.value+'"]')||document.querySelector('.tabs [data-view="'+t.value+'"]');s&&s.click()}}catch(s){}}},300)}const _deepLink=readDeepLink();track("open",_deepLink?_deepLink.kind:(function(){try{return tg.initDataUnsafe&&tg.initDataUnsafe.start_param?"start":"menu"}catch(t){return"menu"}})()),parseAccessHash(),localStorage.getItem(ACCESS_KEY)==="1"?(enterApp(),showOnboarding(),setTimeout(showChangelog,900),applyDeepLink(_deepLink)):_deepLink?(enterApp(!0),applyDeepLink(_deepLink)):(track("gate"),showGate()),document.querySelectorAll(".modal:not(#trailer-modal):not(#onboarding)").forEach((t,e)=>{let n=0;t.addEventListener("touchstart",s=>{if(t.classList.contains("hidden"))return;const i=t.querySelector(".modal-card, .onboarding-card, .kinogod-card");if(!i)return;const o=i.getBoundingClientRect();s.touches[0].clientY-o.top>o.height*.3||(n=s.touches[0].clientY)},{passive:!0}),t.addEventListener("touchmove",s=>{if(!n||t.classList.contains("hidden"))return;const i=t.querySelector(".modal-card, .onboarding-card, .kinogod-card");if(!i)return;const o=s.touches[0].clientY-n;o>12&&(i.style.transition="transform .18s ease",i.style.transform=`translateY(${Math.min(o,90)}px)`,i.style.opacity=String(Math.max(0,1-o/220)))},{passive:!0}),t.addEventListener("touchend",s=>{if(!n||t.classList.contains("hidden"))return;const i=t.querySelector(".modal-card, .onboarding-card, .kinogod-card"),o=i?s.changedTouches[0].clientY-n:0;n=0,i&&(i.style.transition="transform .18s ease, opacity .18s ease",o>70?(i.style.transform="translateY(120%)",i.style.opacity="0",setTimeout(()=>{t.classList.add("hidden"),i.style.transform="",i.style.opacity=""},150)):(i.style.transform="",i.style.opacity=""))},{passive:!0})}),"serviceWorker"in navigator&&location.protocol==="https:"&&window.addEventListener("load",()=>{navigator.serviceWorker.register("./sw.js").catch(()=>{}),navigator.serviceWorker.addEventListener("controllerchange",()=>{try{if(sessionStorage.getItem("sw_reloaded"))return;sessionStorage.setItem("sw_reloaded","1")}catch(t){return}location.reload()})}),window.addEventListener("load",()=>{setTimeout(async()=>{try{if(sessionStorage.getItem("ver_reload"))return;const e=(await(await fetch("./index.html?nc="+Date.now(),{cache:"no-store"})).text()).match(/script\.js\?v=(\d+)/);if(e&&+e[1]>APP_VER){if(sessionStorage.setItem("ver_reload","1"),window.caches){const n=await caches.keys();await Promise.all(n.map(s=>caches.delete(s)))}location.reload()}}catch(t){}},2500)});function _seedRng(t){let e=0;for(const n of String(t))e=e*31+n.charCodeAt(0)>>>0;return()=>(e=e*1664525+1013904223>>>0,e/4294967296)}function _todayKey(){const t=new Date;return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0")}function _lsGetJson(t,e){try{return JSON.parse(localStorage.getItem(t))||e}catch(n){return e}}function _lsSetJson(t,e){try{localStorage.setItem(t,JSON.stringify(e))}catch(n){}}const TONIGHT_MOODS=[{id:"family",emoji:"👨‍👩‍👧",name:"Всей семьёй",ok:t=>_hasG(t,["семейный","мультфильм","приключения","фэнтези"])&&!_hasG(t,["ужасы","триллер","криминал","боевик"])},{id:"laugh",emoji:"😂",name:"Посмеяться",ok:t=>_hasG(t,["комедия"])&&!_hasG(t,["ужасы","криминал"])},{id:"chill",emoji:"🛋",name:"Расслабиться",ok:t=>_hasG(t,["драма","мелодрама","биография","комедия","приключения"])&&!_hasG(t,["ужасы","криминал","боевик"])},{id:"thrill",emoji:"🧠",name:"Чтобы удивило",ok:t=>_hasG(t,["фантастика","детектив","триллер","фэнтези"])&&!_hasG(t,["ужасы"])},{id:"short",emoji:"⏱",name:"Недолго (до 95 мин)",ok:t=>(+t.duration||999)<=95},{id:"scary",emoji:"👻",name:"Страшно",ok:t=>_hasG(t,["ужасы","триллер"])},{id:"friends",emoji:"🍻",name:"С друзьями",ok:t=>_hasG(t,["комедия","боевик","фантастика","триллер","ужасы","фэнтези"])},{id:"date",emoji:"💞",name:"Вдвоём",ok:t=>_hasG(t,["мелодрама","комедия","драма","приключения"])&&!_hasG(t,["ужасы"])},{id:"ny",emoji:"🎄",name:"Новогоднее",ok:t=>/новый год|новогодн|рождеств|санта|дед мороз|ёлк|елк/i.test((t.title||"")+" "+(t.description||""))}];function _hasG(t,e){const n=(t.genres||[]).map(s=>String(s).toLowerCase());return e.some(s=>n.includes(s))}let _tonightMood=null,_tonightShift=0;function renderTonight(){const t=document.getElementById("tonight-container");if(!t)return;if(!ALL.length){t.innerHTML='<p class="empty-note">Загрузка базы…</p>';return}const e=TONIGHT_MOODS.map(i=>`<button class="tn-chip${_tonightMood===i.id?" active":""}" data-mood="${i.id}">${i.emoji} ${esc(i.name)}</button>`).join("");let n='<p class="tn-hint">Выберите настроение — подберём один фильм на вечер.</p>';if(_tonightMood){const i=TONIGHT_MOODS.find(a=>a.id===_tonightMood),o=new Set(getWatched().map(String));let r=ALL.filter(a=>i.ok(a)&&(+a.rating||0)>=6.8);r.length||(r=ALL.filter(a=>i.ok(a)));const c=r.filter(a=>!o.has(String(a.code)));if(c.length&&(r=c),!r.length)n='<p class="tn-hint">Под это настроение пока ничего нет — скоро добавим. Попробуйте другое 🙂</p>';else{const a=_seedRng(_todayKey()+i.id);r=r.map($=>[a(),$]).sort(($,p)=>$[0]-p[0]).map($=>$[1]);const m=r[_tonightShift%r.length],b=[m.year,fmtDuration(m.duration),(m.genres||[]).slice(0,2).join(" · ")].filter(Boolean).join(" · "),w=String(m.description||"").split(/(?<=[.!?])\s/).slice(0,2).join(" ");n=`
+    </div>`;
+    document.body.appendChild(md);
+    md.addEventListener('click', (e) => { if (e.target === md) md.classList.add('hidden'); });
+    md.querySelector('#duo-close').onclick = () => md.classList.add('hidden');
+    md.querySelector('#duo-run').onclick = () => { haptic('light'); _duoSeed++; runDuo(); };
+  }
+  const cnt = new Map();
+  ALL.forEach(m => (m.genres || []).forEach(g => { if (g) cnt.set(g, (cnt.get(g) || 0) + 1); }));
+  const top = [...cnt.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(x => x[0]);
+  const fill = (id, set) => {
+    const box = md.querySelector(id);
+    box.innerHTML = top.map(g => `<button class="duo-chip${set.has(g) ? ' on' : ''}" data-g="${esc(g)}">${esc(g)}</button>`).join('');
+    box.querySelectorAll('.duo-chip').forEach(b => b.onclick = () => {
+      haptic('light');
+      if (set.has(b.dataset.g)) set.delete(b.dataset.g); else set.add(b.dataset.g);
+      b.classList.toggle('on');
+    });
+  };
+  fill('#duo-a', _duoA); fill('#duo-b', _duoB);
+  md.classList.remove('hidden');
+}
+function runDuo() {
+  const out = document.getElementById('duo-results');
+  if (!out) return;
+  if (!_duoA.size || !_duoB.size) { out.innerHTML = '<p class="error">Пусть каждый отметит хотя бы один жанр 🙂</p>'; return; }
+  // детерминированный «рандом» на нажатие: один и тот же набор не прыгает при перерисовке
+  const rnd = (code) => { let h = _duoSeed * 2654435761; for (const ch of String(code)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return (h % 1000) / 1000; };
+  const hits = (m, set) => (m.genres || []).filter(g => set.has(g));
+  const rows = ALL.map(m => {
+    const a = hits(m, _duoA), b = hits(m, _duoB);
+    const both = a.length && b.length;
+    const same = [...new Set(a.filter(g => b.includes(g)))];
+    const base = (parseFloat(m.rating) || 6) / 10;
+    return { m, a, b, both, same, score: (both ? 2 : (a.length || b.length) ? 1 : 0) + (same.length ? 0.6 : 0) + base * 0.7 + rnd(m.code) * 0.5 };
+  }).filter(r => r.score >= 1).sort((x, y) => y.score - x.score).slice(0, 3);
+  if (!rows.length) { out.innerHTML = '<p class="error">Ничего не нашлось 😔 Попробуйте отметить больше жанров.</p>'; return; }
+  out.innerHTML = rows.map(r => {
+    const why = r.both
+      ? (r.same.length ? `✅ Оба любят: ${r.same.map(esc).join(', ')}` : `✅ ${r.a.map(esc).join(', ')} + ${r.b.map(esc).join(', ')}`)
+      : `🤝 Компромисс: подходит ${r.a.length ? 'первому' : 'второму'} (${(r.a.length ? r.a : r.b).map(esc).join(', ')})`;
+    return `<div class="pick-card" data-code="${esc(r.m.code)}">
+      <div class="pick-thumb">${r.m.poster ? `<img src="${esc(r.m.poster)}" alt="" loading="lazy" onerror="this.style.display='none'"/>` : '<div class="trailer-thumb-ph">🎬</div>'}</div>
+      <div class="pick-info"><b>${esc(r.m.title)}</b>
+        <span class="rating">${ratingBadge(r.m)}${r.m.duration ? ' · ⏱ ' + esc(fmtDuration(r.m.duration)) : ''}</span>
+        <p class="duo-why">${why}</p></div></div>`;
+  }).join('') + '<div class="duo-btns"><button class="btn-primary duo-again" id="duo-again">🔄 Ещё варианты</button><button class="btn-primary duo-share" id="duo-share">📤 Отправить</button></div>';
+  out.querySelectorAll('.pick-card').forEach(el => el.addEventListener('click', () => {
+    document.getElementById('duo-modal').classList.add('hidden'); openDetail(el.dataset.code);
+  }));
+  out.querySelector('#duo-share').onclick = () => {
+    haptic('light');
+    const pick = rows[0];
+    const text = `🎬 Нашли фильм на вечер: «${pick.m.title}»${pick.m.year ? ' (' + pick.m.year + ')' : ''}${pick.m.rating ? ' · ⭐ ' + pick.m.rating : ''}\n` +
+      `${[...rows.slice(1)].map(r => '• ещё вариант: ' + r.m.title).join('\n')}${rows.length > 1 ? '\n' : ''}Подбирал Капитан Кино 👥`;
+    const u = 'https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') + '&text=' + encodeURIComponent(text);
+    try { tg.openTelegramLink(u); } catch (e) { window.open(u, '_blank'); }
+  };
+  out.querySelector('#duo-again').onclick = () => { haptic('light'); _duoSeed++; runDuo(); };
+}
+
+// ---------- Трейлер: полноэкранный просмотр ----------
+// v132: на телефоне трейлер не разворачивался, а кнопка «⛶» молча ничего не
+// делала. Причина: браузерный Fullscreen API (Element.requestFullscreen) в
+// WebView Telegram на iOS не поддерживается вообще, а iframe с YouTube сам
+// развернуться не может. Теперь сначала разворачиваем сам мини-апп: у Telegram
+// (Bot API 8.0+) есть свой полноэкранный режим tg.requestFullscreen() — он
+// убирает полуэкран/шапку, и плеер занимает весь экран телефона. Дальше по
+// цепочке — браузерный fullscreen (ПК и веб), webkitEnterFullscreen для нашего
+// mp4 (iOS) и, как последний шов для YouTube-iframe на iOS, открытие трейлера
+// в приложении YouTube: там полноэкранный плеер работает всегда.
+const APP_FS_MIN_VERSION = '8.0';
+const FS_BUILD = 'v133'; // версия логики фуллскрина — видна в диагностике (долгое нажатие на «⛶»)
+let _appFsByUs = false;        // развернули мини-апп сами — сами же и свернём
+let _appFsOff = false;         // клиент точно не умеет (два UNSUPPORTED подряд)
+let _appFsFails = 0;
+let _swipesWereDisabled = false;
+
+function _appFsAvailable() {
+  try {
+    return !_appFsOff && !!tg && typeof tg.requestFullscreen === 'function'
+      && !!tg.isVersionAtLeast && tg.isVersionAtLeast(APP_FS_MIN_VERSION);
+  } catch (e) { return false; }
+}
+
+function _appInFs() {
+  try { return !!tg.isFullscreen; } catch (e) { return false; }
+}
+
+function enterAppFullscreen() {
+  if (!_appFsAvailable() || _appInFs()) return;
+  try {
+    // В полноэкранном режиме вертикальный свайп выходит из него, а он у нас
+    // занят (свайпы в марафоне/шторке) — пока трейлер открыт, свайпы гасим.
+    if (typeof tg.disableVerticalSwipes === 'function') {
+      tg.disableVerticalSwipes(); _swipesWereDisabled = true;
+    }
+    tg.requestFullscreen();
+    _appFsByUs = true;
+  } catch (e) { /* пусто */ }
+}
+
+function exitAppFullscreen() {
+  if (!_appFsByUs) return;
+  _appFsByUs = false;
+  try {
+    if (_appInFs() && typeof tg.exitFullscreen === 'function') tg.exitFullscreen();
+  } catch (e) { /* пусто */ }
+  try {
+    if (_swipesWereDisabled && typeof tg.enableVerticalSwipes === 'function') {
+      tg.enableVerticalSwipes();
+    }
+  } catch (e) { /* пусто */ }
+  _swipesWereDisabled = false;
+}
+
+function _syncTrailerFs() {
+  const fsBtn = document.getElementById('btn-trailer-fs');
+  if (!fsBtn) return;
+  const inDeviceFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  const inAnyFs = inDeviceFs || _appInFs();
+  fsBtn.textContent = inAnyFs ? '⤢' : '⛶';
+  fsBtn.title = inAnyFs ? 'Свернуть' : 'На весь экран';
+  // Прячем кнопку только в «настоящем» fullscreen браузера (там поверх плеера
+  // ничего не нужно); в полноэкранном режиме Telegram она остаётся — ею же
+  // можно вернуться назад.
+  fsBtn.classList.toggle('hidden', inDeviceFs);
+}
+
+// v133: возвращает Promise<boolean> — удалось развернуть или нет. Раньше отказ
+// вебвью проглатывался (.catch(() => {})) и на Android кнопка «молчала», не
+// доходя до фолбэков: requestFullscreen в WebView Telegram может существовать,
+// но отклоняться (нет разрешения на fullscreen в чужом вебвью).
+function _requestFs(el) {
+  return new Promise((resolve) => {
+    try {
+      if (!el) { resolve(false); return; }
+      if (el.requestFullscreen) {
+        const p = el.requestFullscreen();
+        if (p && typeof p.then === 'function') {
+          p.then(() => resolve(true), () => resolve(false));
+          return;
+        }
+        resolve(true); return;
+      }
+      if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); resolve(true); return; }
+      if (el.msRequestFullscreen) { el.msRequestFullscreen(); resolve(true); return; }
+    } catch (e) { /* пусто */ }
+    resolve(false);
+  });
+}
+
+// v133: диагностика — долгое нажатие (или правый клик) на «⛶» показывает,
+// что умеет клиент. Если кнопка «молчит» и это не помогло — телефон ещё
+// гоняет старый скрипт из кэша (сборка в отчёте будет старой).
+function _showFsDiag() {
+  const frame = document.getElementById('trailer-frame');
+  const video = document.getElementById('trailer-video');
+  const root = document.documentElement;
+  const yt = !!(frame && !frame.classList.contains('hidden'));
+  const mp4 = !!(video && !video.classList.contains('hidden'));
+  let min8 = '?';
+  try { min8 = !!(tg && tg.isVersionAtLeast && tg.isVersionAtLeast(APP_FS_MIN_VERSION)); } catch (e) { min8 = 'err'; }
+  const lines = [
+    'сборка: ' + FS_BUILD,
+    'tg: ' + ((tg && tg.version) || '?') + ' / ' + ((tg && tg.platform) || '?'),
+    'tg.requestFullscreen: ' + (tg ? typeof tg.requestFullscreen : 'нет tg'),
+    'мин. ' + APP_FS_MIN_VERSION + ': ' + min8,
+    'appFs: off=' + _appFsOff + ' fails=' + _appFsFails,
+    'browserFs: ' + (root ? (typeof root.requestFullscreen) + '/' + (typeof root.webkitRequestFullscreen) : 'нет'),
+    'трейлер: ' + (yt ? 'youtube' : (mp4 ? 'mp4' : 'нет')),
+  ];
+  const text = lines.join('\n');
+  try { tg.showAlert(text); return; } catch (e) { /* пусто */ }
+  try { alert(text); } catch (e2) { /* пусто */ }
+}
+
+function _exitFs() {
+  try {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else if (document.webkitFullscreenElement) document.webkitExitFullscreen();
+    else if (document.msExitFullscreen) document.msExitFullscreen();
+  } catch (e) { /* пусто */ }
+}
+
+// iOS: YouTube-iframe развернуть из вебвью нельзя — предлагаем открыть трейлер
+// в приложении YouTube (там плеер полноэкранный и с поворотом).
+function _offerTrailerInYouTube() {
+  const frame = document.getElementById('trailer-frame');
+  const src = (frame && frame.getAttribute('src')) || '';
+  const match = src.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/);
+  if (!match) return;
+  const url = 'https://youtu.be/' + match[1];
+  const open = () => {
+    try { tg.openLink(url, { try_instant_view: false }); }
+    catch (e) { window.open(url, '_blank'); }
+  };
+  try {
+    tg.showPopup({
+      title: '⛶ Полный экран',
+      message: 'Внутри Telegram на iPhone плеер YouTube развернуть нельзя. '
+             + 'Открыть трейлер в YouTube?',
+      buttons: [{ id: 'yt', type: 'default', text: '▶️ Открыть' },
+                { id: 'no', type: 'cancel' }],
+    }, (btn) => { if (btn === 'yt') open(); });
+    return;
+  } catch (e) { /* нет showPopup — открываем сразу */ }
+  open();
+}
+
+async function _trailerFsFlow() {
+  const inDeviceFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  if (inDeviceFs) { _exitFs(); return; }
+  // 1) Полноэкранный режим мини-аппа — основной путь на телефоне.
+  if (_appInFs()) { exitAppFullscreen(); _syncTrailerFs(); return; }
+  if (_appFsAvailable()) { enterAppFullscreen(); _syncTrailerFs(); return; }
+  // 2) ПК и веб: обычный браузерный fullscreen на обёртке/iframe.
+  const root = document.documentElement;
+  if (root && (typeof root.requestFullscreen === 'function' || typeof root.webkitRequestFullscreen === 'function')) {
+    const frame = document.getElementById('trailer-frame');
+    const modal = document.getElementById('trailer-modal');
+    const ok = await _requestFs(frame && !frame.classList.contains('hidden') ? frame : (modal || undefined));
+    if (ok) return;
+    // v133: в вебвью Telegram браузерный fullscreen может существовать, но
+    // молча отклоняться (Android) — не «молчим», а идём по фолбэкам дальше.
+  }
+  // 3) iOS и старый Android: наш mp4 умеет своё webkitEnterFullscreen.
+  const video = document.getElementById('trailer-video');
+  if (video && !video.classList.contains('hidden') && video.webkitEnterFullscreen) {
+    try { video.webkitEnterFullscreen(); return; } catch (err) { /* пусто */ }
+  }
+  // 4) YouTube-iframe из вебвью не развернуть — предлагаем приложение YouTube.
+  _offerTrailerInYouTube();
+}
+
+(function initTrailerFsButton() {
+  const fsBtn = document.getElementById('btn-trailer-fs');
+  if (!fsBtn) return;
+  let pressTimer = null, diagShown = false;
+  fsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearTimeout(pressTimer);
+    if (diagShown) { diagShown = false; return; } // только что показали диагностику
+    haptic('light');
+    _trailerFsFlow();
+  });
+  // v133: долгое нажатие (0.6 с) на «⛶» — показать диагностику возможностей.
+  fsBtn.addEventListener('touchstart', () => {
+    clearTimeout(pressTimer);
+    pressTimer = setTimeout(() => { diagShown = true; _showFsDiag(); }, 600);
+  }, { passive: true });
+  ['touchend', 'touchcancel'].forEach((t) => {
+    fsBtn.addEventListener(t, () => clearTimeout(pressTimer), { passive: true });
+  });
+  // На ПК — та же диагностика по правому клику.
+  fsBtn.addEventListener('contextmenu', (e) => { e.preventDefault(); _showFsDiag(); });
+  document.addEventListener('fullscreenchange', _syncTrailerFs);
+  document.addEventListener('webkitfullscreenchange', _syncTrailerFs);
+  document.addEventListener('MSFullscreenChange', _syncTrailerFs);
+  try {
+    if (tg && typeof tg.onEvent === 'function') {
+      tg.onEvent('fullscreenChanged', _syncTrailerFs);
+      tg.onEvent('fullscreenFailed', (e) => {
+        // UNSUPPORTED — клиент точно не умеет полноэкранный режим мини-аппа
+        // (Telegram Web, Desktop или старый клиент) — отключаем сразу. Иные
+        // сбои копим: после двух подряд больше не дёргаем метод и падаем
+        // на фолбэки.
+        if (e && e.error === 'UNSUPPORTED') {
+          _appFsOff = true;
+        } else {
+          _appFsFails++;
+          if (_appFsFails >= 2) _appFsOff = true;
+        }
+        _syncTrailerFs();
+      });
+    }
+  } catch (e) { /* пусто */ }
+})();
+
+function openTrailer(m) {
+  if (!m) return;
+  window._challTrailerWatched = (window._challTrailerWatched || 0) + 1;
+  challDone('watch_trailer');
+  bumpWeekStat('trailers');
+  pushTrailerWatch(m.code);      // v74: в «Продолжить смотреть»
+  // v74: полка «Продолжить смотреть» обновляется сразу, если она видна
+  if (view === 'grid' || view === 'fav') {
+    const cs = document.getElementById('continue-shelf');
+    if (cs && !cs.classList.contains('hidden')) renderTrailerShelf();
+  }
+  if (!m.trailer_yt && !m.trailer_file_id) {
+    return;
+  }
+  haptic('light');
+  // Приоритет — YouTube: играем прямо в приложении на весь экран,
+  // ничего не сворачивая. Локальный файл в Telegram — только фолбэк,
+  // если у фильма нет YouTube-версии (тогда бот пришлёт видео в чат).
+  if (m.trailer_yt) {
+    const modal = document.getElementById('trailer-modal');
+    const frame = document.getElementById('trailer-frame');
+    const video = document.getElementById('trailer-video');
+    if (!modal || !frame || !video) return;
+    video.classList.add('hidden');
+    video.removeAttribute('src');
+    frame.classList.remove('hidden');
+    frame.src = 'https://www.youtube.com/embed/' + m.trailer_yt +
+                '?autoplay=1&rel=0&playsinline=1&fs=1';
+    modal.classList.remove('hidden');
+    startWatchSession(m.code);   // v109: считаем время просмотра
+    // v132: трейлер — единственное место, где нужен весь экран, поэтому просим
+    // полноэкранный режим мини-аппа сразу при открытии: на телефоне он убирает
+    // полуэкран Telegram и работает даже там, где браузерный fullscreen нельзя
+    // (iPhone). Если клиент не умеет — тихо остаёмся как были, а кнопка
+    // разворота предложит фолбэки.
+    enterAppFullscreen();
+    _syncTrailerFs();
+    return;
+  }
+  if (m.trailer_file_id) {
+    // Действие называется 'trailer_movie' — ровно как в маппинге sendOrDeepLink
+    // (раньше тут было 'trailer', маппинг не совпадал, и вместо видео уходил
+    // фолбэк ?start=afisha — трейлер «не открывался»).
+    sendOrDeepLink({ action: 'trailer_movie', code: m.code });
+  }
+}
+
+// v67: индикатор оффлайна — при потере сети показываем баннер,
+// данные остаются доступны из кэша Service Worker.
+(function () {
+  const nb = document.getElementById('net-banner');
+  if (!nb) return;
+  const update = () => nb.classList.toggle('hidden', navigator.onLine !== false);
+  window.addEventListener('offline', () => { update(); haptic('heavy'); });
+  window.addEventListener('online', update);
+  update();
+})();
+
+// v87: таб-бар «отрывается» от контента, когда прилип к верху —
+// скруглённый низ + тень, чтобы не выглядел обрезанным при скролле.
+(function () {
+  const bar = document.querySelector('.tabs');
+  window.__tabsDbg = { bar: !!bar, ran: 1, upds: 0 };
+  if (!bar) return;
+  let ticking = false;
+  const upd = () => {
+    ticking = false;
+    window.__tabsDbg.upds++;
+    const stuck = window.scrollY > 60 && bar.getBoundingClientRect().top <= 2;
+    document.body.classList.toggle('tabs-stuck', stuck);
+  };
+  window.addEventListener('scroll', () => {
+    // прямой вызов — rAF в части WebView не срабатывает, а вычисление дешёвое
+    upd();
+  }, { passive: true });
+})();
+
+function closeTrailer() {
+  _exitFs();
+  exitAppFullscreen();          // v132: вернуть мини-апп в обычный размер
+  endWatchSession();            // v109: фиксируем реальное время просмотра
+  const modal = document.getElementById('trailer-modal');
+  const frame = document.getElementById('trailer-frame');
+  const video = document.getElementById('trailer-video');
+  if (frame) frame.src = 'about:blank'; // останавливаем воспроизведение
+  if (video) { video.pause(); video.removeAttribute('src'); }
+  if (modal) modal.classList.add('hidden');
+}
+
+// Глобальные обработчики модалки (один раз, а не на каждый openDetail)
+(function initTrailerModal() {
+  const bg = document.getElementById('trailer-modal');
+  if (bg) bg.addEventListener('click', (e) => { if (e.target === bg) closeTrailer(); });
+  const closeBtn = document.getElementById('btn-trailer-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeTrailer);
+})();
+
+// ---------- видимый отчёт об ошибках (чтобы вместо «белого экрана» было видно, что сломалось) ----------
+function showErrorBanner(text) {
+  try {
+    const el = document.getElementById('err-banner');
+    if (el) {
+      el.textContent = '⚠️ ' + text;
+      el.classList.remove('hidden');
+    }
+  } catch (_) {}
+}
+window.addEventListener('error', (e) => {
+  // v126: ошибку не только показываем, но и увозим боту (errorStatsPrefix) —
+  // о поломке у подписчиков узнаём из отчёта, а не из первой жалобы.
+  try {
+    const t = e && e.target;
+    if (t && t !== window) {
+      // Картинки/шрифты не считаем: они не мешают приложению и срываются
+      // постоянно (то же правило, что у inline-сторожа в index.html).
+      if (t.tagName === 'SCRIPT') bumpErrorStat('resource', 'script_load');
+    } else {
+      bumpErrorStat('js', e && e.message);
+    }
+  } catch (_) {}
+  showErrorBanner('Ошибка приложения: ' + ((e && e.message) || 'неизвестная'));
+});
+// Сорванный промис (например, не доехал fetch) до window.onerror не доходит —
+// исключение живёт внутри промиса, и в отчёте такие поломки были не видны вовсе.
+window.addEventListener('unhandledrejection', (e) => {
+  try {
+    const r = e && e.reason;
+    bumpErrorStat('promise', (r && r.message) || r || 'promise');
+  } catch (_) {}
+});
+
+// ---------- ЗАПУСК (в самом конце файла: все объявления и обработчики готовы) ----------
+// Раньше enterApp() вызывался в начале файла, до объявления ALL/COLLS — из-за TDZ
+// гонки с fetch приложение открывалось пустым. Теперь запускаем, когда всё готово.
+// ---------- онбординг (показывается один раз) ----------
+const OB_KEY = 'kinoafisha_onb2';   // v183: новая навигация — показываем тур один раз всем
+function showOnboarding() {
+  if (localStorage.getItem(OB_KEY)) return;
+  const modal = document.getElementById('onboarding');
+  if (!modal) return;
+  let slide = 0;
+  const total = 4;
+  const slides = modal.querySelectorAll('.ob-slide');
+  const dots = modal.querySelectorAll('.ob-dot');
+  const nextBtn = document.getElementById('ob-next');
+  const skipBtn = document.getElementById('ob-skip');
+  const render = () => {
+    slides.forEach((s, i) => s.classList.toggle('active', i === slide));
+    dots.forEach((d, i) => d.classList.toggle('active', i === slide));
+    nextBtn.textContent = slide === total - 1 ? 'Начать!' : 'Далее';
+  };
+  const close = () => {
+    localStorage.setItem(OB_KEY, '1');
+    modal.classList.add('hidden');
+    haptic('light');
+  };
+  nextBtn.onclick = () => {
+    if (slide < total - 1) {
+      slide++;
+      render();
+      haptic('light');
+    } else {
+      close();
+    }
+  };
+  skipBtn.onclick = close;
+  render();
+  modal.classList.remove('hidden');
+}
+
+// v98: «Что нового» — показываем один раз на версию, только после входа в апп
+const CHANGELOG_V = '155';
+const CL_KEY = 'kinoafisha_seen_changelog';
+function showChangelog(force = false) {
+  // v101: force=true — открываем даже если уже видели («Ещё → Что нового»)
+  try { if (!force && localStorage.getItem(CL_KEY) === CHANGELOG_V) return; } catch (e) { return; }
+  const m = document.getElementById('changelog-modal');
+  if (!m) return;
+  m.classList.remove('hidden');
+  const done = () => {
+    m.classList.add('hidden');
+    try { localStorage.setItem(CL_KEY, CHANGELOG_V); } catch (e) { /* пусто */ }
+  };
+  const ok = document.getElementById('btn-cl-ok');
+  if (ok) ok.onclick = () => { haptic('light'); done(); };
+  const x = document.getElementById('btn-cl-close');
+  if (x) x.onclick = done;
+  m.addEventListener('click', (e) => { if (e.target === m) done(); });
+}
+
+// v106: закрытие модалки карточки-шеринга (крестик / клик по фону)
+(() => {
+  const m = document.getElementById('sharecard-modal');
+  if (!m) return;
+  const close = () => { m.classList.add('hidden'); };
+  const x = document.getElementById('btn-sharecard-close');
+  if (x) x.onclick = close;
+  m.addEventListener('click', (e) => { if (e.target === m) close(); });
+})();
+
+// v135: сторож запуска (inline-JS в index.html) читает этот флаг. Бандл доехал и
+// выполняется? Если флаг так и не появился — значит скрипт не выполнился вообще
+// (SyntaxError/404/офлайн), и вместо чёрного экрана надо показать сообщение.
+window.__kinoBooted = true;
+
+// v234: аналитика приложения (Cloudflare Worker, см. analytics_worker/README.md).
+// Пустой ANALYTICS_URL — ничего никуда не уходит, приложение работает как раньше.
+const ANALYTICS_URL = 'https://kinokod-stats.ata545ga.workers.dev';
+const APP_BUILD = '240';
+const _evq = []; let _evT = 0;
+const _sid = Math.random().toString(36).slice(2, 10), _t0 = Date.now();
+function track(name, arg) {
+  if (!ANALYTICS_URL) return;
+  try {
+    _evq.push({ n: String(name).slice(0, 24), a: arg == null ? '' : String(arg).slice(0, 40), t: Math.round((Date.now() - _t0) / 1000) });
+    if (_evq.length >= 20) flushEvents(); else if (!_evT) _evT = setTimeout(flushEvents, 15000);
+  } catch (e) { /* аналитика не должна ломать приложение */ }
+}
+function flushEvents() {
+  clearTimeout(_evT); _evT = 0;
+  if (!ANALYTICS_URL || !_evq.length) return;
+  const init = (tg && tg.initData) || '';
+  if (!init) { _evq.length = 0; return; }   // открыто не из Telegram — подписи нет, не шлём
+  const body = JSON.stringify({ init: init, sid: _sid, v: APP_BUILD, ev: _evq.splice(0, 40) });
+  try { if (navigator.sendBeacon && navigator.sendBeacon(ANALYTICS_URL + '/e', new Blob([body], { type: 'text/plain' }))) return; } catch (e) {}
+  try { fetch(ANALYTICS_URL + '/e', { method: 'POST', body: body, keepalive: true, headers: { 'Content-Type': 'text/plain' } }); } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') { track('end', Math.round((Date.now() - _t0) / 1000)); flushEvents(); }
+});
+window.addEventListener('pagehide', flushEvents);
+
+// v232: глубокие ссылки из постов канала. Форматы:
+//   t.me/<бот>?startapp=movie_514   -> карточка фильма 514
+//   t.me/<бот>?startapp=tab_news    -> вкладка (news, trailers, play, mine, today, grid)
+//   <MINIAPP_URL>/#movie=514        -> то же из web_app-кнопок бота
+// Читаем ДО enterApp: parse*Hash очищают location.hash.
+function readDeepLink() {
+  let raw = '';
+  try { raw = (tg.initDataUnsafe && tg.initDataUnsafe.start_param) || ''; } catch (e) {}
+  if (!raw) {
+    const h = (location.hash || '').match(/[#&](movie|tab)=([A-Za-z0-9_-]{1,32})/);
+    if (h) raw = h[1] + '_' + h[2];
+  }
+  const m = String(raw).match(/^(movie|tab)_([A-Za-z0-9_-]{1,32})$/);
+  return m ? { kind: m[1], value: m[2] } : null;
+}
+function applyDeepLink(dl) {
+  if (!dl) return;
+  let tries = 0;
+  const t = setInterval(() => {
+    if (ALL.length || ++tries > 50) {
+      clearInterval(t);
+      if (!ALL.length) return;
+      try {
+        if (dl.kind === 'movie') {
+          if (ALL.find(x => String(x.code) === dl.value)) openDetail(String(ALL.find(x => String(x.code) === dl.value).code));
+        } else {
+          const btn = document.querySelector('#bnav [data-bn="' + dl.value + '"]') ||
+                      document.querySelector('.tabs [data-view="' + dl.value + '"]');
+          if (btn) btn.click();
+        }
+      } catch (e) { /* ссылка устарела — просто покажем афишу */ }
+    }
+  }, 300);
+}
+const _deepLink = readDeepLink();
+track('open', _deepLink ? _deepLink.kind : (function () { try { return (tg.initDataUnsafe && tg.initDataUnsafe.start_param) ? 'start' : 'menu'; } catch (e) { return 'menu'; } })());
+parseAccessHash();  // v96: подтверждение подписки (#access=1) — до решения гейт/вход
+if (localStorage.getItem(ACCESS_KEY) === '1') {
+  enterApp();
+  showOnboarding();
+  setTimeout(showChangelog, 900);  // v98: «Что нового» — раз на версию
+  applyDeepLink(_deepLink);
+} else if (_deepLink) {
+  // v232: пришли по ссылке из поста — сразу показываем фильм, без стены подписки
+  enterApp(true);
+  applyDeepLink(_deepLink);
+} else {
+  track('gate');
+  showGate();
+}
+
+// ---------- свайп вниз для закрытия модалок ----------
+// Универсальный жест: потянул модалку вниз — закрывается (кроме полноэкранного
+// трейлера и онбординга — там свой UX). Жест работает от области «шапки» модалки,
+// чтобы случайные свайпы по контенту не срабатывали.
+document.querySelectorAll('.modal:not(#trailer-modal):not(#onboarding)').forEach((modal, idx) => {
+  let startY = 0;
+  modal.addEventListener('touchstart', (e) => {
+    if (modal.classList.contains('hidden')) return;
+    const card = modal.querySelector('.modal-card, .onboarding-card, .kinogod-card');
+    if (!card) return;
+    const r = card.getBoundingClientRect();
+    // срабатываем только если жест начат в верхних 30% карточки
+    if (e.touches[0].clientY - r.top > r.height * 0.3) return;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  modal.addEventListener('touchmove', (e) => {
+    if (!startY || modal.classList.contains('hidden')) return;
+    const card = modal.querySelector('.modal-card, .onboarding-card, .kinogod-card');
+    if (!card) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 12) {
+      card.style.transition = 'transform .18s ease';
+      card.style.transform = `translateY(${Math.min(dy, 90)}px)`;
+      card.style.opacity = String(Math.max(0, 1 - dy / 220));
+    }
+  }, { passive: true });
+  modal.addEventListener('touchend', (e) => {
+    if (!startY || modal.classList.contains('hidden')) return;
+    const card = modal.querySelector('.modal-card, .onboarding-card, .kinogod-card');
+    const dy = card ? e.changedTouches[0].clientY - startY : 0;
+    startY = 0;
+    if (card) {
+      card.style.transition = 'transform .18s ease, opacity .18s ease';
+      if (dy > 70) {
+        card.style.transform = 'translateY(120%)';
+        card.style.opacity = '0';
+        setTimeout(() => {
+          modal.classList.add('hidden');
+          card.style.transform = '';
+          card.style.opacity = '';
+        }, 150);
+      } else {
+        card.style.transform = '';
+        card.style.opacity = '';
+      }
+    }
+  }, { passive: true });
+});
+
+// ---------- Service Worker: оффлайн + мгновенные повторные загрузки ----------
+// Регистрируем только на https (в Telegram webview и на GitHub Pages).
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    // v195: когда новый service worker взял управление — один раз перезагружаемся, чтобы сразу показать свежую версию
+    // (раньше обновление «доезжало» только со второго открытия)
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      try { if (sessionStorage.getItem('sw_reloaded')) return; sessionStorage.setItem('sw_reloaded', '1'); } catch (e) { return; }
+      location.reload();
+    });
+  });
+}
+
+// v195: самопроверка версии. Если на сайте уже новая версия, а открылась старая из кэша — чистим кэш и один раз перезагружаемся.
+window.addEventListener('load', () => {
+  setTimeout(async () => {
+    try {
+      if (sessionStorage.getItem('ver_reload')) return;
+      const html = await (await fetch('./index.html?nc=' + Date.now(), { cache: 'no-store' })).text();
+      const m = html.match(/script\.js\?v=(\d+)/);
+      if (m && +m[1] > APP_VER) {
+        sessionStorage.setItem('ver_reload', '1');
+        if (window.caches) { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); }
+        location.reload();
+      }
+    } catch (e) { /* нет сети — остаёмся на текущей */ }
+  }, 2500);
+});
+
+// ======================= v151: «Сегодня вечером» и «Викторина дня» =======================
+function _seedRng(seed) {
+  let s = 0;
+  for (const ch of String(seed)) s = (s * 31 + ch.charCodeAt(0)) >>> 0;
+  return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+}
+function _todayKey() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function _lsGetJson(k, def) { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } }
+function _lsSetJson(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+const TONIGHT_MOODS = [
+  { id: 'family', emoji: '👨‍👩‍👧', name: 'Всей семьёй',
+    ok: m => _hasG(m, ['семейный', 'мультфильм', 'приключения', 'фэнтези']) && !_hasG(m, ['ужасы', 'триллер', 'криминал', 'боевик']) },
+  { id: 'laugh', emoji: '😂', name: 'Посмеяться', ok: m => _hasG(m, ['комедия']) && !_hasG(m, ['ужасы', 'криминал']) },
+  { id: 'chill', emoji: '🛋', name: 'Расслабиться',
+    ok: m => _hasG(m, ['драма', 'мелодрама', 'биография', 'комедия', 'приключения']) && !_hasG(m, ['ужасы', 'криминал', 'боевик']) },
+  { id: 'thrill', emoji: '🧠', name: 'Чтобы удивило',
+    ok: m => _hasG(m, ['фантастика', 'детектив', 'триллер', 'фэнтези']) && !_hasG(m, ['ужасы']) },
+  { id: 'short', emoji: '⏱', name: 'Недолго (до 95 мин)', ok: m => (+m.duration || 999) <= 95 },
+  { id: 'scary', emoji: '👻', name: 'Страшно',
+    ok: m => _hasG(m, ['ужасы', 'триллер']) },
+  { id: 'friends', emoji: '🍻', name: 'С друзьями',
+    ok: m => _hasG(m, ['комедия', 'боевик', 'фантастика', 'триллер', 'ужасы', 'фэнтези']) },
+  { id: 'date', emoji: '💞', name: 'Вдвоём',
+    ok: m => _hasG(m, ['мелодрама', 'комедия', 'драма', 'приключения']) && !_hasG(m, ['ужасы']) },
+  { id: 'ny', emoji: '🎄', name: 'Новогоднее',
+    ok: m => /новый год|новогодн|рождеств|санта|дед мороз|ёлк|елк/i.test((m.title || '') + ' ' + (m.description || '')) },
+];
+function _hasG(m, list) {
+  const g = (m.genres || []).map(x => String(x).toLowerCase());
+  return list.some(x => g.includes(x));
+}
+let _tonightMood = null, _tonightShift = 0;
+
+function renderTonight() {
+  const box = document.getElementById('tonight-container');
+  if (!box) return;
+  if (!ALL.length) { box.innerHTML = '<p class="empty-note">Загрузка базы…</p>'; return; }
+  const chips = TONIGHT_MOODS.map(md =>
+    `<button class="tn-chip${_tonightMood === md.id ? ' active' : ''}" data-mood="${md.id}">${md.emoji} ${esc(md.name)}</button>`).join('');
+  let body = '<p class="tn-hint">Выберите настроение — подберём один фильм на вечер.</p>';
+  if (_tonightMood) {
+    const md = TONIGHT_MOODS.find(x => x.id === _tonightMood);
+    const seen = new Set(getWatched().map(String));
+    let pool = ALL.filter(m => md.ok(m) && (+m.rating || 0) >= 6.8);
+    if (!pool.length) pool = ALL.filter(m => md.ok(m));
+    const fresh = pool.filter(m => !seen.has(String(m.code)));
+    if (fresh.length) pool = fresh;
+    if (!pool.length) {
+      body = '<p class="tn-hint">Под это настроение пока ничего нет — скоро добавим. Попробуйте другое 🙂</p>';
+    } else {
+      const rnd = _seedRng(_todayKey() + md.id);
+      pool = pool.map(m => [rnd(), m]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+      const m = pool[_tonightShift % pool.length];
+      const meta = [m.year, fmtDuration(m.duration), (m.genres || []).slice(0, 2).join(' · ')].filter(Boolean).join(' · ');
+      const desc = String(m.description || '').split(/(?<=[.!?])\s/).slice(0, 2).join(' ');
+      body = `
         <article class="tn-card" data-code="${esc(String(m.code))}">
-          <div class="tn-poster">${m.poster?`<img src="${esc(m.poster)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'"/>`:'<div class="poster-placeholder"><span>🎬</span></div>'}</div>
+          <div class="tn-poster">${m.poster ? `<img src="${esc(m.poster)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'"/>` : '<div class="poster-placeholder"><span>🎬</span></div>'}</div>
           <div class="tn-info">
-            <span class="tn-badge">${i.emoji} ${esc(i.name)}</span>
+            <span class="tn-badge">${md.emoji} ${esc(md.name)}</span>
             <h3>${esc(m.title)}</h3>
-            <div class="tn-meta">${esc(b)}</div>
+            <div class="tn-meta">${esc(meta)}</div>
             <span class="rating">${ratingBadge(m)}</span>
-            ${w?`<p class="tn-desc">${esc(w)}</p>`:""}
+            ${desc ? `<p class="tn-desc">${esc(desc)}</p>` : ''}
             <div class="tn-actions">
               <button class="btn-primary tn-open">🎬 Открыть</button>
-              ${r.length>1?'<button class="btn-secondary tn-next">🔄 Другой</button>':""}
+              ${pool.length > 1 ? '<button class="btn-secondary tn-next">🔄 Другой</button>' : ''}
             </div>
           </div>
-        </article>`}}t.innerHTML=`<div class="tn-head"><h2>🌙 Сегодня вечером</h2></div><div class="tn-chips">${e}</div>${n}`,t.querySelectorAll(".tn-chip").forEach(i=>i.onclick=()=>{_tonightMood=i.dataset.mood,_tonightShift=0,haptic("light"),renderTonight()});const s=t.querySelector(".tn-card");if(s){t.querySelector(".tn-open").onclick=()=>openDetail(s.dataset.code);const i=t.querySelector(".tn-next");i&&(i.onclick=()=>{_tonightShift++,haptic("light"),renderTonight()})}}const QUIZ_KEY="kinoafisha_quiz";let _quizState=null;function _quizBuild(){const t=_seedRng("quiz"+_todayKey()),e=c=>c[Math.floor(t()*c.length)],n=c=>c.map(a=>[t(),a]).sort((a,m)=>a[0]-m[0]).map(a=>a[1]),s=n(ALL.filter(c=>c.title)),i=[...new Set(ALL.map(c=>c.director).filter(Boolean))],o=[...new Set(ALL.map(c=>String(c.year)).filter(c=>/^\d{4}$/.test(c)))],r=[];for(const c of s){if(r.length>=5)break;const a=r.length%3;if(!r.map(b=>b.code).includes(c.code)){if(a===0&&c.director&&i.length>=4){const b=n(i.filter(w=>w!==c.director)).slice(0,3);r.push({code:c.code,q:`Кто снял фильм «${c.title}»?`,a:c.director,opts:n([c.director,...b])})}else if(a===1&&/^\d{4}$/.test(String(c.year))&&o.length>=4){const b=+c.year,w=n([b-3,b-2,b-1,b+1,b+2,b+3].filter($=>$<=2026&&$>1950)).slice(0,3);r.push({code:c.code,q:`В каком году вышел фильм «${c.title}»?`,a:String(b),opts:n([String(b),...w.map(String)])})}else if(a===2&&(c.actors||[]).length){const b=c.actors[0],w=n([...new Set(ALL.filter($=>$.code!==c.code&&!($.actors||[]).includes(b)).flatMap($=>($.actors||[]).slice(0,2)))]).slice(0,3);w.length===3&&r.push({code:c.code,q:`Кто из актёров снимался в фильме «${c.title}»?`,a:b,opts:n([b,...w])})}}}return r}function renderQuiz(){const t=document.getElementById("quiz-container");if(!t)return;if(!ALL.length){t.innerHTML='<p class="empty-note">Загрузка базы…</p>';return}const e=_lsGetJson(QUIZ_KEY,{streak:0,last:"",best:0,results:{}}),n=_todayKey(),s=e.results&&e.results[n];if(s!=null){t.innerHTML=`<div class="qz-card qz-done">
+        </article>`;
+    }
+  }
+  box.innerHTML = `<div class="tn-head"><h2>🌙 Сегодня вечером</h2></div><div class="tn-chips">${chips}</div>${body}`;
+  box.querySelectorAll('.tn-chip').forEach(b => b.onclick = () => {
+    _tonightMood = b.dataset.mood; _tonightShift = 0; haptic('light'); renderTonight();
+  });
+  const card = box.querySelector('.tn-card');
+  if (card) {
+    box.querySelector('.tn-open').onclick = () => openDetail(card.dataset.code);
+    const nx = box.querySelector('.tn-next');
+    if (nx) nx.onclick = () => { _tonightShift++; haptic('light'); renderTonight(); };
+  }
+}
+
+// ---- Викторина дня: 5 вопросов из нашей же базы, одни и те же в течение суток ----
+const QUIZ_KEY = 'kinoafisha_quiz';
+let _quizState = null;
+function _quizBuild() {
+  const rnd = _seedRng('quiz' + _todayKey());
+  const pick = a => a[Math.floor(rnd() * a.length)];
+  const shuf = a => a.map(x => [rnd(), x]).sort((p, q) => p[0] - q[0]).map(x => x[1]);
+  const pool = shuf(ALL.filter(m => m.title));
+  const directors = [...new Set(ALL.map(m => m.director).filter(Boolean))];
+  const years = [...new Set(ALL.map(m => String(m.year)).filter(y => /^\d{4}$/.test(y)))];
+  const qs = [];
+  for (const m of pool) {
+    if (qs.length >= 5) break;
+    const kind = qs.length % 3;
+    const pre = qs.map(q => q.code);
+    if (pre.includes(m.code)) continue;
+    if (kind === 0 && m.director && directors.length >= 4) {
+      const wrong = shuf(directors.filter(d => d !== m.director)).slice(0, 3);
+      qs.push({ code: m.code, q: `Кто снял фильм «${m.title}»?`, a: m.director, opts: shuf([m.director, ...wrong]) });
+    } else if (kind === 1 && /^\d{4}$/.test(String(m.year)) && years.length >= 4) {
+      const y = +m.year;
+      const near = shuf([y - 3, y - 2, y - 1, y + 1, y + 2, y + 3].filter(v => v <= 2026 && v > 1950)).slice(0, 3);
+      qs.push({ code: m.code, q: `В каком году вышел фильм «${m.title}»?`, a: String(y), opts: shuf([String(y), ...near.map(String)]) });
+    } else if (kind === 2 && (m.actors || []).length) {
+      const actor = m.actors[0];
+      const others = shuf([...new Set(ALL.filter(x => x.code !== m.code && !(x.actors || []).includes(actor))
+        .flatMap(x => (x.actors || []).slice(0, 2)))]).slice(0, 3);
+      if (others.length === 3) qs.push({ code: m.code, q: `Кто из актёров снимался в фильме «${m.title}»?`, a: actor, opts: shuf([actor, ...others]) });
+    }
+  }
+  return qs;
+}
+function renderQuiz() {
+  const box = document.getElementById('quiz-container');
+  if (!box) return;
+  if (!ALL.length) { box.innerHTML = '<p class="empty-note">Загрузка базы…</p>'; return; }
+  const st = _lsGetJson(QUIZ_KEY, { streak: 0, last: '', best: 0, results: {} });
+  const today = _todayKey();
+  const done = st.results && st.results[today];
+  if (done != null) {
+    box.innerHTML = `<div class="qz-card qz-done">
       <h2>🧠 Викторина дня</h2>
-      <div class="qz-score">${s} / 5</div>
-      <p>${s===5?"Безупречно! Вы настоящий киноман 🏆":s>=3?"Отличный результат!":"Завтра будет новый шанс 🙂"}</p>
-      <p class="qz-streak">🔥 Серия: ${e.streak} ${e.streak===1?"день":"дн."} подряд · лучший результат ${e.best}/5</p>
+      <div class="qz-score">${done} / 5</div>
+      <p>${done === 5 ? 'Безупречно! Вы настоящий киноман 🏆' : done >= 3 ? 'Отличный результат!' : 'Завтра будет новый шанс 🙂'}</p>
+      <p class="qz-streak">🔥 Серия: ${st.streak} ${st.streak === 1 ? 'день' : 'дн.'} подряд · лучший результат ${st.best}/5</p>
       <p class="tn-hint">Новые вопросы появятся завтра.</p>
-      <button class="qz-bot" type="button">💰 Играть в боте — за ответы дают кинобаллы</button></div>`;const o=t.querySelector(".qz-bot");o&&(o.onclick=()=>{haptic("light");const r="https://t.me/kapitan_kino_bot?start=dailyquiz";tg.openTelegramLink?tg.openTelegramLink(r):window.open(r,"_blank")});return}const i=_quizBuild();if(i.length<3){t.innerHTML='<p class="empty-note">Пока мало данных для викторины — скоро будет.</p>';return}_quizState={qs:i,i:0,score:0},drawQuizQuestion()}function drawQuizQuestion(){const t=document.getElementById("quiz-container"),e=_quizState;if(!t||!e)return;if(e.i>=e.qs.length)return finishQuiz();const n=e.qs[e.i];t.innerHTML=`<div class="qz-card">
-    <div class="qz-step">Вопрос ${e.i+1} из ${e.qs.length}</div>
-    <div class="qz-bar"><i style="width:${e.i/e.qs.length*100}%"></i></div>
-    <h3 class="qz-q">${esc(n.q)}</h3>
-    <div class="qz-opts">${n.opts.map(s=>`<button class="qz-opt" data-v="${esc(s)}">${esc(s)}</button>`).join("")}</div>
-  </div>`,t.querySelectorAll(".qz-opt").forEach(s=>s.onclick=()=>{const i=s.dataset.v===n.a;i&&e.score++,haptic(i?"light":"medium"),t.querySelectorAll(".qz-opt").forEach(o=>{o.disabled=!0,o.dataset.v===n.a&&o.classList.add("right")}),i||s.classList.add("wrong"),setTimeout(()=>{e.i++,drawQuizQuestion()},1100)})}function finishQuiz(){const t=_quizState,e=_lsGetJson(QUIZ_KEY,{streak:0,last:"",best:0,results:{}}),n=_todayKey(),s=new Date;s.setDate(s.getDate()-1);const i=s.getFullYear()+"-"+String(s.getMonth()+1).padStart(2,"0")+"-"+String(s.getDate()).padStart(2,"0");e.streak=e.last===i?(e.streak||0)+1:1,e.last=n,e.best=Math.max(e.best||0,t.score),e.results=e.results||{},e.results[n]=t.score,_lsSetJson(QUIZ_KEY,e),_quizState=null,renderQuiz()}function renderTodayStrip(){const t=document.getElementById("quick-row");if(!t)return;const e=capDayStr(new Date);let n=null;try{const a=JSON.parse(localStorage.getItem("kino_arena_daily")||"null");a&&a.day===e&&(n=a)}catch(a){}let s=null;try{const a=_lsGetJson(QUIZ_KEY,{results:{}});s=a.results&&a.results[_todayKey()]}catch(a){}let i=0;try{i=parseInt(localStorage.getItem(CAP_BEST_KEY)||"0",10)||0}catch(a){}const o=[{go:"arena",ico:"⚔️",t:"Дуэль дня",sub:n?`твой счёт ${n.score}`:"12 вопросов · для всех",done:!!n,todo:!n},{go:"quiz",ico:"🧠",t:"Викторина дня",sub:s!=null?`сегодня ${s}/5`:"5 вопросов",done:s!=null,todo:s==null},{go:"tonight",ico:"🌙",t:"Сегодня вечером",sub:"по настроению"},{go:"duo",ico:"👥",t:"На двоих",sub:"фильм для обоих"},{go:"cap",ico:"🎮",t:"Капитан в пути",sub:i?`рекорд ${i}`:"игра на 45 секунд"},{go:"map",ico:"🌍",t:"Кино-карта",sub:"фильмы по странам"}],c=new Date().toLocaleDateString("ru-RU",{day:"numeric",month:"long"});t.className="today-strip",t.innerHTML=`<div class="td-head"><b>📆 Сегодня</b><span>${esc(c)}</span></div>
-    <div class="td-row">${o.map(a=>`<button class="td-card${a.done?" done":""}${a.todo?" todo":""}" data-go="${a.go}">
-      <span class="td-ico">${a.ico}</span><b>${a.t}</b><i>${esc(a.sub)}</i>${a.done?'<em class="td-ok">✓</em>':""}</button>`).join("")}</div>`,t.querySelectorAll(".td-card").forEach(a=>a.addEventListener("click",()=>{haptic("light");const m=a.dataset.go;m==="arena"?openArena():m==="duo"?openDuo():m==="cap"?openCaptainGame():openView(m)}))}(function(){"use strict";var t="kino_poker",e=[["Роял-флеш",250],["Стрит-флеш",50],["Каре",25],["Фулл-хаус",9],["Флеш",6],["Стрит",4],["Тройка",3],["Две пары",2],["Валеты и выше",1]],n=["♠","♥","♦","♣"],s=["2","3","4","5","6","7","8","9","10","В","Д","К","Т"],i=null,o=[],r=[],c=[],a="bet",m=10,b=0,w="",$=null;function p(){return new Date().toISOString().slice(0,10)}function f(){try{i=JSON.parse(localStorage.getItem(t)||"null")}catch(x){i=null}(!i||typeof i.chips!="number")&&(i={chips:500,best:0,hands:0,bonus:"",refill:""})}function v(){try{localStorage.setItem(t,JSON.stringify(i))}catch(x){}}function u(x){try{var V=new Uint32Array(1);return crypto.getRandomValues(V),V[0]%x}catch(K){return Math.floor(Math.random()*x)}}function S(){for(var x=[],V=0;V<4;V++)for(var K=0;K<13;K++)x.push({r:K,s:V});for(var X=x.length-1;X>0;X--){var ct=u(X+1),St=x[X];x[X]=x[ct],x[ct]=St}return x}function g(x){var V=x.map(function(at){return at.r}).sort(function(at,ut){return at-ut}),K=x.every(function(at){return at.s===x[0].s}),X={};V.forEach(function(at){X[at]=(X[at]||0)+1});var ct=Object.keys(X).map(function(at){return[X[at],+at]}).sort(function(at,ut){return ut[0]-at[0]||ut[1]-at[1]}),St=V.every(function(at,ut){return ut===0||at!==V[ut-1]}),pt=St&&(V[4]-V[0]===4||V.join()==="0,1,2,3,12"),gt=V.join()==="8,9,10,11,12";return pt&&K?gt?e[0]:e[1]:ct[0][0]===4?e[2]:ct[0][0]===3&&ct[1][0]===2?e[3]:K?e[4]:pt?e[5]:ct[0][0]===3?e[6]:ct[0][0]===2&&ct[1][0]===2?e[7]:ct[0][0]===2&&ct[0][1]>=9?e[8]:null}function L(x){return String(x).replace(/[&<>"]/g,function(V){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[V]})}function H(x){try{typeof popMsg=="function"&&popMsg(x)}catch(V){}}function M(x){try{typeof haptic=="function"&&haptic(x)}catch(V){}}function nt(){return i.bonus!==p()?(i.bonus=p(),i.chips+=200,v(),!0):!1}function lt(){return i.chips<5&&i.refill!==p()?(i.refill=p(),i.chips=100,v(),!0):!1}var Q=null;function it(x,V,K,X,ct,St){try{if(i.snd===!1)return;if(!Q){var pt=window.AudioContext||window.webkitAudioContext;if(!pt)return;Q=new pt}Q.state==="suspended"&&Q.resume();var gt=Q.currentTime+(ct||0),at=Q.createOscillator(),ut=Q.createGain();at.type=K||"sine",at.frequency.setValueAtTime(x,gt),St&&at.frequency.exponentialRampToValueAtTime(St,gt+V),ut.gain.setValueAtTime(1e-4,gt),ut.gain.exponentialRampToValueAtTime(X||.12,gt+.01),ut.gain.exponentialRampToValueAtTime(1e-4,gt+V),at.connect(ut),ut.connect(Q.destination),at.start(gt),at.stop(gt+V+.02)}catch(Et){}}function U(x,V){if(x==="deal")for(var K=0;K<5;K++)it(500+K*40,.05,"triangle",.07,K*.07,300);else x==="hold"?it(880,.06,"square",.05):x==="win"?[523,659,784,1046,1318].slice(0,V?5:3).forEach(function(X,ct){it(X,.2,"triangle",.14,ct*.09)}):x==="lose"?it(260,.3,"sine",.1,0,130):x==="dbl"&&(it(1200,.08,"square",.06),it(1600,.1,"square",.05,.08))}var Y=!1,W=null;function dt(){if(!(!b||a!=="bet")){i.chips-=b,v();var x=S();W={stake:b,dealer:x[0],cards:x.slice(1,5),picked:-1,step:W&&W.step||0,over:!1,res:""},a="gamble",M("light"),A()}}function mt(x){if(!(!W||W.picked>=0)){W.picked=x;var V=W.cards[x],K=W.dealer;U("dbl"),V.r>K.r?(W.res="win",U("win",!0),i.chips+=W.stake*2,b=W.stake*2,W.step++,b>i.best&&(i.best=b),M("ok")):V.r===K.r?(W.res="push",i.chips+=W.stake,M("light")):(W.res="lose",b=0,w="Мимо",M("err")),v(),A()}}function rt(){var x=W.step;a="bet",W={step:x},dt()}function C(){a="bet",W=null,A()}function tt(){if(i.chips<m){H("Не хватает фишек — уменьши ставку");return}i.chips-=m,i.hands++,v(),o=S(),r=o.splice(0,5),c=[!1,!1,!1,!1,!1],a="hold",b=0,w="",M("light"),U("deal"),Y=!0,A(),Y=!1}function T(){for(var x=0;x<5;x++)c[x]||(r[x]=o.shift());var V=g(r);if(a="bet",V){b=m*V[1],w=V[0],i.chips+=b,b>i.best&&(i.best=b),M("ok"),U("win",V[1]>=6);try{V[1]>=9&&typeof confetti=="function"&&confetti(30)}catch(X){}}else w="Мимо",M("light"),U("lose");var K=lt();v(),A(),K&&H("🎞 Капитан подкинул 100 фишек")}function j(x,V){var K=x.s===1||x.s===2,X=c[V]&&a==="hold";return'<button class="pk-card'+(K?" red":"")+(X?" held":"")+(Y?" deal":"")+'" style="animation-delay:'+V*.07+'s" data-i="'+V+'"'+(a==="hold"?"":" disabled")+"><b>"+s[x.r]+"</b><span>"+n[x.s]+"</span>"+(X?"<em>ДЕРЖУ</em>":"")+"</button>"}function J(){var x=W,V=function(pt,gt){var at=pt.s===1||pt.s===2;return'<div class="pk-card'+(at?" red":"")+(gt||"")+'"><b>'+s[pt.r]+"</b><span>"+n[pt.s]+"</span></div>"},K=x.cards.map(function(pt,gt){return x.picked<0?'<button class="pk-card pk-back" data-g="'+gt+'"><span>🎬</span></button>':V(pt,gt===x.picked?" held":" dimmed")}).join(""),X=x.picked<0?"Выбери карту старше карты дилера":x.res==="win"?"🎉 Удвоил! +"+x.stake*2:x.res==="push"?"🤝 Ничья — ставка возвращена":"💔 Не угадал",ct=x.res==="win"&&x.step<3?'<button class="pk-go" id="pk-g-again">🎲 Ещё раз ×2 ('+x.stake*2+")</button>":"",St=x.picked<0?"":'<button class="pk-go alt" id="pk-g-end">'+(x.res==="win"?"✅ Забрать "+x.stake*2:"Дальше")+"</button>";return'<div class="pk-top"><button class="pk-x" id="pk-x">✕</button><div class="pk-title">🎲 Удвоение</div><div class="pk-chips">🎞 '+i.chips+'</div></div><div class="pk-status">'+X+'</div><div class="pk-felt"><div class="pk-brand">СТАВКА '+x.stake+' · ПОБЕДА ×2</div><div class="pk-dealer"><small>ДИЛЕР</small>'+V(x.dealer,"")+'</div><div class="pk-hand pk-g4">'+K+"</div></div>"+ct+St+'<div class="pk-note">Карта старше — выигрыш ×2, равная — ничья, младше — потеря. До 3 раз подряд.</div>'}function A(){if($){if(a==="gamble"&&W){$.innerHTML=J(),$.querySelector("#pk-x").onclick=function(){W&&W.picked<0&&(i.chips+=W.stake,v()),z()},$.querySelectorAll("[data-g]").forEach(function(ut){ut.onclick=function(){mt(+ut.dataset.g)}});var x=$.querySelector("#pk-g-end");x&&(x.onclick=C);var V=$.querySelector("#pk-g-again");V&&(V.onclick=function(){rt()});return}var K=r.length?r.map(j).join(""):'<div class="pk-empty">Сдай карты и выбери, что оставить</div>',X=a==="bet"?g(r.length?r:[{r:0,s:0},{r:2,s:1},{r:4,s:2},{r:6,s:3},{r:8,s:0}]):null,ct=a==="hold"?g(r)?"🃏 Сейчас: <b>"+L(g(r)[0])+"</b> ×"+g(r)[1]+" · нажми на карты, что оставить":"Нажми на карты, которые оставляешь":r.length?b?"🎉 "+L(w)+" — +"+b:"Не повезло, попробуй ещё":"Сделай ставку",St=[5,10,25,50].map(function(ut){return'<button class="pk-bet'+(ut===m?" on":"")+'" data-b="'+ut+'"'+(a==="hold"?" disabled":"")+">"+ut+"</button>"}).join(""),pt=a==="hold"?g(r):null,gt=e.map(function(ut){return'<div class="'+(b&&ut[0]===w||pt&&ut[0]===pt[0]?"on":"")+'"><span>'+ut[0]+"</span><b>×"+ut[1]+"</b></div>"}).join("");$.innerHTML='<div class="pk-top"><button class="pk-x" id="pk-x">✕</button><div class="pk-title">🃏 Видеопокер</div><div class="pk-chips">🎞 '+i.chips+'</div><button class="hd-snd" id="pk-snd">'+(i.snd===!1?"🔇":"🔊")+'</button></div><div class="pk-status'+(b&&a==="bet"?" win":"")+'">'+ct+'</div><div class="pk-felt"><div class="pk-brand">КАПИТАН КИНО · ВИДЕОПОКЕР</div><div class="pk-hand">'+K+'</div></div><div class="pk-bets"><span>Ставка</span>'+St+"</div>"+(a==="bet"&&b?'<button class="pk-go alt" id="pk-dbl">🎲 Удвоить '+b+" → "+b*2+"</button>":"")+'<button class="pk-go" id="pk-go">'+(a==="hold"?"Заменить карты":"Сдать карты")+'</button><div class="pk-pay">'+gt+'</div><div class="pk-note">Виртуальные фишки для игры. Их нельзя купить или вывести, на ранг и очки они не влияют. Рекорд выигрыша: '+i.best+" · раздач: "+i.hands+"</div>",$.querySelector("#pk-x").onclick=z,$.querySelector("#pk-snd").onclick=function(){i.snd=i.snd===!1,v(),this.textContent=i.snd===!1?"🔇":"🔊",U("hold")},$.querySelector("#pk-go").onclick=function(){a==="hold"?T():tt()};var at=$.querySelector("#pk-dbl");at&&(at.onclick=function(){W={step:0},dt()}),$.querySelectorAll(".pk-card").forEach(function(ut){ut.onclick=function(){var Et=+ut.dataset.i;c[Et]=!c[Et],M("light"),U("hold"),A()}}),$.querySelectorAll(".pk-bet").forEach(function(ut){ut.onclick=function(){m=+ut.dataset.b,M("light"),A()}})}}function F(){f();var x=nt();$&&$.remove(),$=document.createElement("div"),$.className="pk-overlay",document.body.appendChild($),r=[],c=[],a="bet",b=0,w="",i.chips<m&&(m=5),A(),x&&H("🎁 Ежедневный бонус: +200 фишек")}function z(){$&&($.remove(),$=null)}window.openPoker=F,window.__pokerEval=g})(),(function(){"use strict";var t="kino_poker",e="kino_bj",n=["♠","♥","♦","♣"],s=["2","3","4","5","6","7","8","9","10","В","Д","К","Т"],i=[10,20,50,100,250],o=6,r=78,c=0,a=!1,m=null,b=!1,w=0,$=0,p=0,f=!1,v=["green","wine","navy","night"],u={green:"Классика",wine:"Бордо",navy:"Синий",night:"Ночь"},S=[0,10,25],g=null,L=null,H=null,M=null,nt={};function lt(d){try{var E=new Uint32Array(1);return crypto.getRandomValues(E),E[0]%d}catch(_){return Math.floor(Math.random()*d)}}function Q(){for(var d=[],E=0;E<o;E++)for(var _=0;_<4;_++)for(var O=0;O<13;O++)d.push({r:O,s:_});for(var G=d.length-1;G>0;G--){var R=lt(G+1),Z=d[G];d[G]=d[R],d[R]=Z}return d}function it(d){return d.r<=8?d.r+2:d.r===12?11:10}function U(d){var E=0,_=0;for(d.forEach(function(O){E+=it(O),O.r===12&&_++});E>21&&_>0;)E-=10,_--;return{t:E,soft:_>0}}function Y(d){return d.length===2&&U(d).t===21}function W(d){return d.shoe.length||(d.shoe=Q()),d.shoe.pop()}function dt(d){return{shoe:Q(),chips:d,dealer:[],hands:[],cur:0,phase:"bet",bet:10,net:0,over:!1}}function mt(d,E,_){d.shoe.length<r&&(d.shoe=Q()),d.chips-=E,d.bet=E,d.over=!1,d.ins=0,d.insPay=0,d.side=0,d.sidePay=0,d.sideRes="",_&&d.chips>=_&&(d.chips-=_,d.side=_),d.net=-E-d.side,d.shuffled=d.shoe.length>o*52-5;var O=W(d),G=W(d),R=W(d),Z=W(d);if(d.dealer=[G,Z],d.side&&O.r===R.r){var ht=O.s===1||O.s===2,l=R.s===1||R.s===2;d.sideRes=O.s===R.s?"perfect":ht===l?"colored":"mixed",d.sidePay=d.side*{perfect:26,colored:13,mixed:6}[d.sideRes],d.chips+=d.sidePay}if(d.hands=[{cards:[O,R],bet:E,done:!1,dbl:!1,split:!1,aces:!1,res:"",pay:0}],d.cur=0,d.phase="play",it(G)===11){d.phase="ins";return}rt(d)}function rt(d){(Y(d.hands[0].cards)||it(d.dealer[0])>=10&&Y(d.dealer))&&(d.hands[0].done=!0,K(d))}function C(d,E){if(d.phase==="ins"){var _=d.bet/2;E&&d.chips>=_&&(d.ins=_,d.chips-=_),d.phase="play",rt(d)}}function tt(d){var E=d.hands[d.cur];return d.phase==="play"&&!!E&&!E.done&&E.cards.length===2&&!E.aces&&d.chips>=E.bet}function T(d){var E=d.hands[d.cur];return d.phase==="play"&&!!E&&!E.done&&d.hands.length===1&&E.cards.length===2&&it(E.cards[0])===it(E.cards[1])&&d.chips>=E.bet}function j(d){var E=d.hands[d.cur];return d.phase==="play"&&!!E&&!E.done&&d.hands.length===1&&E.cards.length===2&&!E.split}function J(d){var E=d.hands[d.cur];E.sur=!0,E.done=!0,A(d)}function A(d){for(;d.cur<d.hands.length&&d.hands[d.cur].done;)d.cur++;d.cur>=d.hands.length&&K(d)}function F(d){var E=d.hands[d.cur];E.cards.push(W(d)),U(E.cards).t>=21&&(E.done=!0),A(d)}function z(d){d.hands[d.cur].done=!0,A(d)}function x(d){var E=d.hands[d.cur];d.chips-=E.bet,E.bet*=2,E.dbl=!0,E.cards.push(W(d)),E.done=!0,A(d)}function V(d){var E=d.hands[d.cur],_=E.cards.pop(),O=E.cards[0].r===12;d.chips-=E.bet,E.cards.push(W(d)),E.split=!0,E.aces=O;var G={cards:[_,W(d)],bet:E.bet,done:!1,dbl:!1,split:!0,aces:O,res:"",pay:0};d.hands.push(G),O?(E.done=!0,G.done=!0):(U(E.cards).t===21&&(E.done=!0),U(G.cards).t===21&&(G.done=!0)),A(d)}function K(d){var E=d.hands.some(function(R){return!R.sur&&U(R.cards).t<=21&&!(Y(R.cards)&&!R.split)});if(E)for(;U(d.dealer).t<17;)d.dealer.push(W(d));var _=U(d.dealer).t,O=Y(d.dealer),G=0;d.ins&&O&&(d.insPay=d.ins*3,G+=d.insPay),d.hands.forEach(function(R){var Z=U(R.cards).t,ht=Y(R.cards)&&!R.split,l=0,h;R.sur?(h="surr",l=R.bet/2):Z>21?h="bust":ht?O?(h="push",l=R.bet):(h="bj",l=R.bet*2.5):O?h="lose":_>21||Z>_?(h="win",l=R.bet*2):Z===_?(h="push",l=R.bet):h="lose",R.res=h,R.pay=l,G+=l}),d.chips+=G,d.phase="done",d.over=!0,d.net=G-d.hands.reduce(function(R,Z){return R+Z.bet},0)-d.ins-d.side+d.sidePay}function X(d){var E=d.hands[d.cur];if(!E)return"stand";var _=U(E.cards),O=it(d.dealer[0]),G=tt(d),R=T(d);if(R){var Z=it(E.cards[0]),ht=Z===11?"P":Z===10?"S":Z===9?O===7||O>=10?"S":"P":Z===8?"P":Z===7?O<=7?"P":"H":Z===6?O<=6?"P":"H":Z===5?"D":Z===4?O===5||O===6?"P":"H":O<=7?"P":"H";return ht==="P"?"split":ht==="S"?"stand":ht==="D"&&G&&O<=9?"double":"hit"}var l=_.t;return!_.soft&&j(d)&&(l===16&&O>=9||l===15&&O===10)?"surrender":_.soft&&E.cards.length>=2?l>=20||l===19?"stand":l===18?O>=3&&O<=6?G?"double":"stand":O===2||O===7||O===8?"stand":"hit":l===17?O>=3&&O<=6&&G?"double":"hit":l===15||l===16?O>=4&&O<=6&&G?"double":"hit":O>=5&&O<=6&&G?"double":"hit":l>=17?"stand":l>=13?O<=6?"stand":"hit":l===12?O>=4&&O<=6?"stand":"hit":l===11?G&&O<=10?"double":"hit":l===10?G&&O<=9?"double":"hit":l===9&&G&&O>=3&&O<=6?"double":"hit"}window.__bj={surrender:J,canSurrender:j,insure:C,newGame:dt,startRound:mt,hit:F,stand:z,dbl:x,split:V,canDouble:tt,canSplit:T,advice:X,score:U,isBJ:Y,newShoe:Q};function ct(){return new Date().toISOString().slice(0,10)}function St(){try{H=JSON.parse(localStorage.getItem(t)||"null")}catch(d){H=null}(!H||typeof H.chips!="number")&&(H={chips:500,best:0,hands:0,bonus:"",refill:""})}function pt(){try{H.chips=L.chips,localStorage.setItem(t,JSON.stringify(H))}catch(d){}}function gt(){try{M=JSON.parse(localStorage.getItem(e)||"null")}catch(d){M=null}M||(M={hands:0,wins:0,bj:0,net:0,snd:!0,hint:!1}),M.side=M.side||0,M.theme=M.theme||0,M.hist=M.hist||[],M.dec=M.dec||0,M.ok=M.ok||0,M.bet=M.bet||10,M.streak=M.streak||0,M.bestStreak=M.bestStreak||0,M.maxWin=M.maxWin||0}function at(){try{localStorage.setItem(e,JSON.stringify(M))}catch(d){}}function ut(d){return String(d).replace(/[&<>"]/g,function(E){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[E]})}function Et(d){try{typeof popMsg=="function"&&popMsg(d)}catch(E){}}function Lt(d){try{typeof haptic=="function"&&haptic(d)}catch(E){}}function _t(d,E){try{typeof track=="function"&&track(d,E)}catch(_){}}var It=null;function Ot(d,E,_,O,G,R){try{if(M.snd===!1)return;if(!It){var Z=window.AudioContext||window.webkitAudioContext;if(!Z)return;It=new Z}It.state==="suspended"&&It.resume();var ht=It.currentTime+(G||0),l=It.createOscillator(),h=It.createGain();l.type=_||"sine",l.frequency.setValueAtTime(d,ht),R&&l.frequency.exponentialRampToValueAtTime(R,ht+E),h.gain.setValueAtTime(1e-4,ht),h.gain.exponentialRampToValueAtTime(O||.12,ht+.01),h.gain.exponentialRampToValueAtTime(1e-4,ht+E),l.connect(h),h.connect(It.destination),l.start(ht),l.stop(ht+E+.02)}catch(y){}}function Bt(d){d==="card"?Ot(520,.05,"triangle",.07,0,300):d==="win"?[523,659,784].forEach(function(E,_){Ot(E,.2,"triangle",.14,_*.09)}):d==="bj"?[523,659,784,1046,1318].forEach(function(E,_){Ot(E,.2,"triangle",.14,_*.09)}):d==="lose"&&Ot(260,.3,"sine",.1,0,130)}var Ft={hit:"Ещё",stand:"Хватит",double:"Удвоить",split:"Разделить",ins_y:"Страховка",ins_n:"Нет, спасибо",surrender:"Сдаться"},bt={hit:"🃏",stand:"✋",double:"⚡",split:"✂️",ins_y:"🛡",ins_n:"👍",surrender:"🏳️"};function ee(d,E,_,O){var G=_>=(nt[E]||0),R=G?' style="animation-delay:'+(w++*.13).toFixed(2)+'s"':"";if(O)return'<div class="pk-card bj-c pk-back'+(G?" deal":"")+'"'+R+"><span>🎬</span></div>";var Z=d.s===1||d.s===2,ht=E==="d"&&_===1&&b;return'<div class="pk-card bj-c'+(Z?" red":"")+(G?" deal":"")+(ht?" flip":"")+'"'+R+"><b>"+s[d.r]+"</b><i>"+n[d.s]+"</i><span>"+n[d.s]+"</span><u>"+s[d.r]+"</u></div>"}function At(d,E,_){var O=d.map(function(G,R){return ee(G,E,R,_&&R===1)}).join("");return nt[E]=d.length,'<div class="bj-row'+(d.length>2?" fan":"")+'">'+O+"</div>"}function qt(d,E){if(E)return'<span class="bj-pill">'+(it(d[0])===11?"Т":it(d[0]))+"</span>";var _=U(d),O=_.t>21?" bust":_.t===21?" g21":"";return'<span class="bj-pill'+O+'">'+(_.soft&&_.t<21?_.t+" / "+(_.t-10):_.t)+"</span>"}function Kt(d){return d>=250?"c250":d>=100?"c100":d>=50?"c50":d>=20?"c20":"c10"}function Gt(d,E){return'<span class="bj-chip '+Kt(d)+(E||"")+'">'+d+"</span>"}function Vt(d){p&&(cancelAnimationFrame(p),p=0);var E=$,_=0;if(E===d)return;function O(G){var R=document.getElementById("bj-cv");if(!R){$=d,p=0;return}_||(_=G);var Z=Math.min(1,(G-_)/650),ht=1-Math.pow(1-Z,3);if($=Math.round(E+(d-E)*ht),R.textContent=$,Z<1)p=requestAnimationFrame(O);else{p=0,$=d;var l=R.parentNode;l&&l.classList&&(l.classList.remove("up","down"),l.offsetWidth,l.classList.add(d>E?"up":"down"))}}p=requestAnimationFrame(O)}function Xt(){return L.phase!=="bet"&&L.phase!=="done"?"":'<div class="bj-side"><span>✨ Бонус «Пара»</span>'+S.map(function(d){var E=d&&L.chips<L.bet+d;return'<button class="bj-sb'+((M.side||0)===d?" on":"")+'" data-s="'+d+'"'+(E||c?" disabled":"")+">"+(d||"выкл")+"</button>"}).join("")+"<small>одной масти 26:1 · цвета 13:1 · пара 6:1</small></div>"}function ne(d){var E=M.dec?Math.round(M.ok/M.dec*100)+"%":"—",_=function(O,G){return"<div><b>"+G+"</b><span>"+O+"</span></div>"};return'<div class="bj-sheet"><div class="bj-card"><div class="bj-sh-t">📊 Твоя статистика</div><div class="bj-grid">'+_("раздач",M.hands)+_("побед",d+"%")+_("блэкджеков",M.bj)+_("итог",(M.net>0?"+":"")+Math.round(M.net))+_("лучшая серия",M.bestStreak)+_("рекорд выигрыша","+"+M.maxWin)+_("точность по стратегии",E)+_("карт в колоде",L.shoe.length)+'</div><button class="pk-go" id="bj-sheet-x">Закрыть</button></div></div>'}function zt(){return M.hist.length?'<div class="bj-hist">'+M.hist.map(function(d){return'<i class="h-'+d+'"></i>'}).join("")+"</div>":""}function se(d){if(!d.over||c)return"";var E=d.hands.some(function(ht){return ht.res==="bj"}),_=Math.round(d.net),O=E?"БЛЭКДЖЕК!":_>0?"ПОБЕДА":_<0?d.hands[0].res==="surr"?"СДАЛСЯ":d.hands.every(function(ht){return ht.res==="bust"})?"ПЕРЕБОР":"ПРОИГРЫШ":"НИЧЬЯ",G=E?"bj":_>0?"win":_<0?"lose":"push",R="";if(_>0)for(var Z=0;Z<14;Z++)R+='<i style="left:'+(6+Z*6.6)+"%;animation-delay:"+Z*53%400/1e3+'s">'+["🎞","✨","🪙","🎬"][Z%4]+"</i>";return'<div class="bj-banner '+G+'"><b>'+O+"</b><span>"+(_>0?"+"+_:_<0?_:"±0")+" 🎞</span></div>"+(R?'<div class="bj-fx">'+R+"</div>":"")}function ie(d,E){var _=d.hands[d.cur];if(!_)return"";var O=it(d.dealer[0]),G=U(_.cards).t;return E==="surrender"?"Слабая рука против сильной карты дилера: потерять половину ставки выгоднее, чем играть.":E==="split"?it(_.cards[0])===11?"Тузы делят всегда: две руки с тузом — это сильный старт.":"Эту пару выгодно разделить: две руки лучше одной слабой.":E==="double"?"Сильная позиция: у тебя хорошие шансы на 19–21 — удвой ставку.":E==="stand"?O>=2&&O<=6?"У дилера слабая карта (2–6): он часто переберёт — не рискуй.":"Этого достаточно: добор чаще ведёт к перебору, чем к улучшению.":G<=11?"Перебор невозможен — бери карту.":"У дилера сильная карта ("+(O===11?"туз":O)+"): сумма "+G+" слабовата — нужно добирать."}var ae={bj:"🎉 Блэкджек",win:"✅ Победа",push:"🤝 Ничья",lose:"❌ Проиграл",bust:"💥 Перебор",surr:"🏳️ Сдался"};function oe(){var d=L;if(c)return"🎬 Дилер открывает карты…";if(d.phase==="ins")return d.hands[0]&&Y(d.hands[0].cards)?"У тебя блэкджек, у дилера туз":"У дилера туз — страховка?";if(d.phase==="bet")return d.chips<10?"Фишки закончились — бонус будет завтра":"Сделай ставку";if(d.phase==="play"){var E="";return M.hint&&(E=" · 💡 лучше: <b>"+Ft[X(d)]+"</b>"),(d.hands.length>1?"Рука "+(d.cur+1)+" из 2":"Твой ход")+E}var _=d.hands.map(function(O){return ae[O.res]+(O.pay-O.bet!==0?" "+(O.pay-O.bet>0?"+":"")+(O.pay-O.bet):"")});return d.side&&_.push(d.sidePay?"✨ «Пара» ("+{perfect:"одной масти",colored:"одного цвета",mixed:"разных цветов"}[d.sideRes]+") +"+(d.sidePay-d.side):"✨ «Пара» −"+d.side),d.ins&&_.push(d.insPay?"🛡 страховка +"+(d.insPay-d.ins):"🛡 страховка −"+d.ins),M.streak>=2&&d.net>0&&_.push("🔥 серия "+M.streak),_.join(" · ")}function kt(){if(g){w=0;var d=L,E=d.phase==="play"&&!c,_=d.phase==="ins",O=d.phase==="play"||_||a,G=c?d.dealer.slice(0,c):d.dealer,R=G.length?At(G,"d",O)+'<div class="bj-total">'+qt(G,O)+"</div>":'<div class="pk-empty">Дилер ждёт ставку</div>',Z=d.hands.map(function(P,st){var et="bj-hand"+(E&&st===d.cur&&d.hands.length>1?" active":"")+(d.over&&!c?" "+P.res:""),ot=U(P.cards);return'<div class="'+et+'">'+At(P.cards,"h"+st,!1)+'<div class="bj-total">'+qt(P.cards,!1)+'<small class="bj-bet'+(nt.c?"":" drop")+'">'+Gt(P.bet/(P.dbl?2:1))+(P.dbl?Gt(P.bet/2," dbl"):"")+"</small></div></div>"+(ot.t>21,"")}).join(""),ht=E&&M.hint?X(d):"",l;if(_){var h=Y(d.hands[0].cards),y=d.chips>=d.bet/2;l='<div class="bj-acts"><button class="bj-act a-stand'+(M.hint?" rec":"")+'" data-a="ins_n"><i>'+bt.ins_n+"</i>"+(h?"Играть дальше":Ft.ins_n)+'</button><button class="bj-act a-double" data-a="ins_y"'+(y?"":" disabled")+"><i>"+bt.ins_y+"</i>"+(h?"Ровно 1:1":"Страховка "+d.bet/2)+"</button></div>"}else if(E){var k=[["hit",!0],["stand",!0],["double",tt(d)],["split",T(d)]];j(d)&&k.push(["surrender",!0]),l='<div class="bj-acts">'+k.map(function(P){return'<button class="bj-act a-'+P[0]+(ht===P[0]?" rec":"")+'" data-a="'+P[0]+'"'+(P[1]?"":" disabled")+"><i>"+bt[P[0]]+"</i>"+Ft[P[0]]+"</button>"}).join("")+"</div>"+(M.hint?'<div class="bj-why">💡 '+ie(d,X(d))+"</div>":"")}else{var q=d.chips>=d.bet&&d.chips>=10&&!c;l='<div class="pk-bets"><span>Ставка</span>'+i.map(function(P){return'<button class="pk-bet bj-chipbtn '+Kt(P)+(P===d.bet?" on":"")+'" data-b="'+P+'"'+(P>d.chips||c?" disabled":"")+">"+P+"</button>"}).join("")+'</div><button class="pk-go" id="bj-go"'+(q?"":" disabled")+">"+(d.phase==="done"?"🔁 Ещё раздача":"🃏 Раздать")+"</button>"}var N=M.hands?Math.round(M.wins/M.hands*100):0;g.innerHTML='<div class="pk-top"><button class="pk-x" id="bj-x">✕</button><div class="pk-title">♠️ Блэкджек</div><div class="pk-chips">🎞 <span id="bj-cv">'+$+'</span></div><button class="hd-snd" id="bj-hint" title="Подсказка">'+(M.hint?"💡":"🕯")+'</button><button class="hd-snd" id="bj-snd">'+(M.snd===!1?"🔇":"🔊")+'</button></div><div class="pk-status'+(d.over&&!c&&d.net>0?" win":"")+'">'+oe()+'</div><div class="pk-felt bj-felt"><div class="pk-brand">КАПИТАН КИНО · БЛЭКДЖЕК 3:2</div><div class="bj-shoe" title="Карт в колоде"><s></s><s></s><s></s><em>'+d.shoe.length+'</em></div><div class="bj-lbl">🎩 ДИЛЕР</div>'+R+'<div class="bj-gap"></div><div class="bj-lbl">ТЫ</div>'+(Z||'<div class="pk-empty">Выбери ставку и раздай</div>')+se(d)+"</div>"+zt()+Xt()+l+'<div class="bj-tools"><button id="bj-th">🎨 Стол: '+u[v[M.theme%v.length]]+'</button><button id="bj-stat">📊 Статистика</button></div><div class="pk-note">Дилер стоит на 17 · блэкджек 3:2 · удвоение, разделение, сдача · '+o+" колод. Виртуальные фишки, общие с видеопокером; купить или вывести их нельзя.</div>"+(f?ne(N):""),g.setAttribute("data-th",v[M.theme%v.length]),Vt(c?$:d.chips),nt.c=1,g.querySelector("#bj-x").onclick=B,g.querySelector("#bj-th").onclick=function(){M.theme=(M.theme+1)%v.length,at(),Lt("light"),kt()},g.querySelector("#bj-stat").onclick=function(){f=!0,kt()};var I=g.querySelector("#bj-sheet-x");I&&(I.onclick=function(){f=!1,kt()}),g.querySelectorAll(".bj-sb").forEach(function(P){P.onclick=function(){M.side=+P.dataset.s,at(),Lt("light"),kt()}}),g.querySelector("#bj-snd").onclick=function(){M.snd=M.snd===!1,at(),Bt("card"),kt()},g.querySelector("#bj-hint").onclick=function(){M.hint=!M.hint,at(),kt()};var D=g.querySelector("#bj-go");D&&(D.onclick=Yt),g.querySelectorAll(".pk-bet").forEach(function(P){P.onclick=function(){L.bet=+P.dataset.b,Lt("light"),kt()}}),g.querySelectorAll(".bj-act").forEach(function(P){P.onclick=function(){Ht(P.dataset.a)}})}}function Rt(){var d=L.net>0;Bt(L.hands.some(function(E){return E.res==="bj"})?"bj":d?"win":L.net<0?"lose":"card"),Lt(d?"success":"light")}function Jt(){if(m=null,!g||!L){c=0,a=!1;return}if(a)a=!1,b=!0,Bt("card");else if(c<L.dealer.length)c++,Bt("card");else{c=0,Rt(),kt();return}kt(),b=!1,m=setTimeout(Jt,600)}function Nt(){if(L.phase==="done"){M.hands++,M.net+=L.net;var d=L.net>0;d&&M.wins++,d?(M.streak++,M.streak>M.bestStreak&&(M.bestStreak=M.streak),L.net>M.maxWin&&(M.maxWin=L.net)):L.net<0&&(M.streak=0),L.hands.some(function(_){return _.res==="bj"})&&M.bj++,M.hist.push(L.hands.some(function(_){return _.res==="bj"})?"b":L.net>0?"w":L.net<0?"l":"p"),M.hist.length>14&&M.hist.shift(),at(),pt();var E=L.hands.some(function(_){return!_.sur&&U(_.cards).t<=21&&!(Y(_.cards)&&!_.split)});E?(c=2,a=!0,m=setTimeout(Jt,650)):Rt()}}function Yt(){L.phase==="play"||L.phase==="ins"||c||(L.chips<L.bet&&(L.bet=i.filter(function(d){return d<=L.chips}).pop()||10),!(L.chips<L.bet)&&(nt={},M.bet=L.bet,mt(L,L.bet,M.side||0),pt(),Bt("card"),Lt("light"),_t("bj_hand",L.bet),L.shuffled&&Et("🔀 Колоду перетасовали"),Nt(),kt()))}function Ht(d){if(!(!L||c)){if(L.phase==="ins"){(d==="ins_y"||d==="ins_n")&&(M.dec++,d==="ins_n"&&M.ok++,C(L,d==="ins_y"),Bt("card"),Lt("light"),pt(),Nt(),kt());return}if(L.phase==="play"){var E=X(L);if((d==="hit"||d==="stand"||d==="double"&&tt(L)||d==="split"&&T(L)||d==="surrender"&&j(L))&&(M.dec++,d===E&&M.ok++),d==="surrender"&&j(L))J(L);else if(d==="hit")F(L);else if(d==="stand")z(L);else if(d==="double"&&tt(L))x(L);else if(d==="split"&&T(L))V(L);else return;Bt("card"),Lt("light"),pt(),Nt(),kt()}}}function Qt(){St(),gt();var d=!1;H.bonus!==ct()&&(H.bonus=ct(),H.chips+=200,d=!0),H.chips<10&&H.refill!==ct()&&(H.refill=ct(),H.chips=100,d="refill");try{localStorage.setItem(t,JSON.stringify(H))}catch(E){}g&&g.remove(),m&&(clearTimeout(m),m=null),c=0,a=!1,g=document.createElement("div"),g.className="pk-overlay bj-overlay",document.body.appendChild(g),L=dt(H.chips),nt={},$=H.chips,f=!1,i.indexOf(M.bet)>=0&&M.bet<=L.chips&&(L.bet=M.bet),L.chips<L.bet&&(L.bet=10),_t("bj_open"),kt(),d===!0?Et("🎁 Ежедневный бонус: +200 фишек"):d==="refill"&&Et("🎞 Фишки закончились — держи 100 на сегодня")}function B(){m&&(clearTimeout(m),m=null),c=0,a=!1,p&&(cancelAnimationFrame(p),p=0),L&&(L.phase==="play"||L.phase==="ins")&&Et("Раздача не закончена: ставка сгорела"),g&&(g.remove(),g=null)}window.openBlackjack=Qt})();const HE=(function(){const t="23456789TJQKA",e="♠♥♦♣",n={T:"10",J:"В",Q:"Д",K:"К",A:"Т"},s=["Старшая карта","Пара","Две пары","Тройка","Стрит","Флеш","Фулл-хаус","Каре","Стрит-флеш"],i=p=>(n[t[p%13]]||t[p%13])+e[Math.floor(p/13)],o=p=>p%13,r=p=>Math.floor(p/13);function c(p,f){for(let v=0;v<Math.max(p.length,f.length);v++){const u=(p[v]||0)-(f[v]||0);if(u)return u<0?-1:1}return 0}function a(p){const f=p.map(o).sort((nt,lt)=>lt-nt),v=new Set(p.map(r)).size===1,u=[...new Set(f)];let S=null;u.length===5&&(u[0]-u[4]===4?S=u[0]:u.join()==="12,3,2,1,0"&&(S=3));const g={};f.forEach(nt=>g[nt]=(g[nt]||0)+1);const L=Object.entries(g).map(([nt,lt])=>[lt,+nt]).sort((nt,lt)=>lt[0]-nt[0]||lt[1]-nt[1]),H=L.map(nt=>nt[0]).join(""),M=L.map(nt=>nt[1]);return S!==null&&v?[8,S]:H==="41"?[7,...M]:H==="32"?[6,...M]:v?[5,...f]:S!==null?[4,S]:H==="311"?[3,...M]:H==="221"?[2,...M]:H==="2111"?[1,...M]:[0,...f]}function m(p,f){const v=[];return(function u(S,g){if(g.length===f){v.push(g.slice());return}for(let L=S;L<p.length;L++)g.push(p[L]),u(L+1,g),g.pop()})(0,[]),v}function b(p){let f=null;for(const v of m(p,5)){const u=a(v);(!f||c(u,f)>0)&&(f=u)}return f}function w(p){return p[0]===8&&p[1]===12?"Роял-флеш":p[0]===1?"Пара "+(n[t[p[1]]]||t[p[1]]):s[p[0]]}class ${constructor(f=10,v=20,u=Math.random){this.sb=f,this.bb=v,this.rnd=u,this.players=[],this.dealer=-1,this.community=[],this.deck=[],this.stage="wait",this.toAct=-1,this.currentBet=0,this.minRaise=v,this.log=[],this.result=[]}seat(f,v,u,S){const g=Object.assign({id:f,name:v,chips:u,hole:[],bet:0,total:0,folded:!1,allin:!1,acted:!1},S||{});return this.players.push(g),g}get(f){return this.players.find(v=>v.id===f)}live(f){return f.hole.length>0&&!f.folded}canAct(f){return this.live(f)&&!f.allin}shuffle(f){for(let v=f.length-1;v>0;v--){const u=Math.floor(this.rnd()*(v+1));[f[v],f[u]]=[f[u],f[v]]}}nextIdx(f,v){const u=this.players.length;for(let S=1;S<=u;S++){const g=(f+S)%u;if(v(this.players[g]))return g}return-1}post(f,v){v=Math.min(v,f.chips),f.chips-=v,f.bet+=v,f.total+=v,f.chips===0&&(f.allin=!0)}startHand(){if(this.players=this.players.filter(L=>L.chips>0),this.players.length<2)return this.stage="wait",!1;this.log=[],this.result=[],this.community=[],this.players.forEach(L=>{L.hole=[],L.bet=0,L.total=0,L.folded=L.allin=L.acted=!1}),this.deck=Array.from({length:52},(L,H)=>H),this.shuffle(this.deck);const f=this.players.length;this.dealer=(this.dealer+1)%f;const v=f===2,u=v?this.dealer:(this.dealer+1)%f,S=v?(this.dealer+1)%f:(this.dealer+2)%f;this.players.forEach(L=>{L.hole=[this.deck.pop(),this.deck.pop()]}),this.post(this.players[u],this.sb),this.post(this.players[S],this.bb),this.currentBet=Math.max(this.bb,this.players[S].bet),this.minRaise=this.bb,this.stage="preflop";const g=v?u:(S+1)%f;return this.toAct=this.canAct(this.players[g])?g:this.nextIdx(g,L=>this.canAct(L)),(this.toAct===-1||this.roundDone())&&this.advance(),!0}current(){return this.toAct>=0&&["preflop","flop","turn","river"].includes(this.stage)?this.players[this.toAct]:null}toCall(f){return Math.max(0,Math.min(this.currentBet-f.bet,f.chips))}minRaiseTo(f){return Math.min(f.bet+f.chips,this.currentBet+this.minRaise)}legal(f){if(this.current()!==f)return[];const v=["fold",this.currentBet>f.bet?"call":"check"];return f.chips>this.toCall(f)&&v.push("raise","allin"),v}act(f,v,u){const S=this.get(f);if(!S||this.current()!==S)return"Сейчас не твой ход";if(!this.legal(S).includes(v))return"Так сейчас нельзя";if(v==="fold")S.folded=!0,this.log.push([S.id,"fold",0]);else if(v==="check"||v==="call"){const g=this.toCall(S);this.post(S,g),this.log.push([S.id,v,g])}else{let g=v==="allin"?S.bet+S.chips:Math.max(this.minRaiseTo(S),Math.min(u||0,S.bet+S.chips));g=Math.min(g,S.bet+S.chips);const L=g-S.bet,H=g-this.currentBet;this.post(S,L),S.bet>this.currentBet&&(H>=this.minRaise&&(this.minRaise=H),this.currentBet=S.bet,this.players.forEach(M=>{M!==S&&this.canAct(M)&&(M.acted=!1)})),this.log.push([S.id,S.allin?"allin":"raise",S.bet])}return S.acted=!0,this.afterAction(),null}roundDone(){const f=this.players.filter(v=>this.live(v));return f.length<=1?!0:f.every(v=>v.acted&&v.bet===this.currentBet||v.allin)}afterAction(){this.roundDone()?this.advance():this.toAct=this.nextIdx(this.toAct,f=>this.canAct(f)&&!(f.acted&&f.bet===this.currentBet))}advance(){if(this.players.filter(v=>this.live(v)).length===1){this.showdown();return}for(;;){if(this.stage==="preflop"){this.stage="flop";for(let v=0;v<3;v++)this.community.push(this.deck.pop())}else if(this.stage==="flop")this.stage="turn",this.community.push(this.deck.pop());else if(this.stage==="turn")this.stage="river",this.community.push(this.deck.pop());else{this.showdown();return}if(this.players.forEach(v=>{v.bet=0,v.acted=!1}),this.currentBet=0,this.minRaise=this.bb,this.players.filter(v=>this.canAct(v)).length>=2){this.toAct=this.nextIdx(this.dealer,v=>this.canAct(v));return}}}sidePots(){const f=[...new Set(this.players.filter(S=>S.total>0).map(S=>S.total))].sort((S,g)=>S-g),v=[];let u=0;for(const S of f){const g=this.players.reduce((H,M)=>H+Math.min(M.total,S)-Math.min(M.total,u),0),L=this.players.filter(H=>this.live(H)&&H.total>=S);g&&L.length?v.push([g,L]):g&&v.length&&(v[v.length-1][0]+=g),u=S}return v}pot(){return this.players.reduce((f,v)=>f+v.total,0)}showdown(){const f=this.players.filter(S=>this.live(S)),v=new Map;f.length>1&&this.community.length===5&&f.forEach(S=>v.set(S.id,b(S.hole.concat(this.community))));const u=new Map;for(const[S,g]of this.sidePots()){let L;if(g.length===1||!v.size)L=g.length===1?[g[0]]:g;else{let Q=null;g.forEach(it=>{const U=v.get(it.id);(!Q||c(U,Q)>0)&&(Q=U)}),L=g.filter(it=>c(v.get(it.id),Q)===0)}const H=Math.floor(S/L.length);let M=S-H*L.length;const nt=this.players.length;L.slice().sort((Q,it)=>(this.players.indexOf(Q)-this.dealer-1+nt)%nt-(this.players.indexOf(it)-this.dealer-1+nt)%nt).forEach(Q=>{u.set(Q.id,(u.get(Q.id)||0)+H+(M-- >0?1:0))})}this.players.forEach(S=>{S.chips+=u.get(S.id)||0}),this.result=this.players.filter(S=>u.get(S.id)||v.has(S.id)||S.total).map(S=>({id:S.id,name:S.name,won:u.get(S.id)||0,net:(u.get(S.id)||0)-S.total,hand:v.has(S.id)?w(v.get(S.id)):"",shown:v.has(S.id)})),this.stage="done",this.toAct=-1}}return{Table:$,best:b,cmp:c,rank5:a,handName:w,cardStr:i,rankOf:o,suitOf:r}})();(function(){"use strict";var t="kino_poker",e=null,n=null,s=null,i={},o=[{id:"b1",name:"Капитан",emoji:"🧢",aggr:.5,tight:.5,bot:!0},{id:"b2",name:"Режиссёр",emoji:"🎬",aggr:.8,tight:.2,bot:!0},{id:"b3",name:"Критик",emoji:"🕶️",aggr:.3,tight:.8,bot:!0}],r=["hd-s-left","hd-s-top","hd-s-right"],c=[{id:"classic",n:"Классика",e:"🟢",need:0},{id:"noir",n:"Нуар",e:"🔵",need:10},{id:"velvet",n:"Бархат",e:"🔴",need:30},{id:"oscar",n:"Оскар",e:"🟡",need:60}],a=[{id:"win1",e:"🥇",n:"Первая победа",d:"Выиграй раздачу"},{id:"hands10",e:"🎞",n:"Завсегдатай",d:"10 раздач"},{id:"hands50",e:"🎬",n:"Режиссёр стола",d:"50 раздач"},{id:"streak3",e:"🔥",n:"Хет-трик",d:"3 победы подряд"},{id:"allin",e:"💥",n:"Ва-банк!",d:"Выиграй, идя ва-банк"},{id:"big",e:"💰",n:"Крупный куш",d:"Банк 500+ за раздачу"},{id:"flush",e:"🌊",n:"Сильная рука",d:"Победа флешем или лучше"},{id:"royal",e:"👑",n:"Королевский выход",d:"Победа каре или стрит-флешем"}],m=[{id:"play5",t:"Сыграй 5 раздач",n:5,r:60},{id:"win3",t:"Выиграй 3 раздачи",n:3,r:100},{id:"three",t:"Выиграй рукой «тройка» и выше",n:1,r:120},{id:"allin",t:"Выиграй, идя ва-банк",n:1,r:150},{id:"pot300",t:"Выиграй банк от 300",n:1,r:100},{id:"tour",t:"Сыграй турнир до конца",n:1,r:150}];function b(l){var h=u(),y=l.q;if(!y||y.d!==h){for(var k=0,q=0;q<h.length;q++)k=(k*31+h.charCodeAt(q))%9973;for(var N=m.slice(),I=[],D=0;D<3;D++){var P=(k+D*7)%N.length;I.push(N.splice(P,1)[0].id)}y=l.q={d:h,ids:I,p:{},c:{}}}return y}function w(l,h){var y=b(l),k=function(q,N){y.ids.indexOf(q)>=0&&(y.p[q]=(y.p[q]||0)+(N||1))};h.play&&k("play5"),h.won&&(k("win3"),h.allin&&k("allin"),h.pot>=300&&k("pot300"),/Тройка|Стрит|Флеш|Фулл|Каре/.test(h.hand||"")&&k("three")),h.tour&&k("tour")}function $(l){var h=b(l);return'<div class="hd-quests"><b>📅 Задания дня</b>'+h.ids.map(function(y){var k=m.filter(function(D){return D.id===y})[0],q=Math.min(k.n,h.p[y]||0),N=q>=k.n,I=h.c[y];return'<div class="hd-q'+(I?" got":"")+'"><div class="hd-qt"><span>'+k.t+"</span><small>"+q+"/"+k.n+'</small></div><div class="hd-qb"><i style="width:'+Math.round(q/k.n*100)+'%"></i></div>'+(I?"<em>✅ +"+k.r+"</em>":N?'<button data-claim="'+y+'">Забрать +'+k.r+" 🎞</button>":"<em>🎞 "+k.r+"</em>")+"</div>"}).join("")+"</div>"}function p(l,h,y){var k=[],q=l.ach=l.ach||{},N=h&&h.hand||"";function I(P,st){st&&!q[P]&&(q[P]=1,k.push(a.filter(function(et){return et.id===P})[0]))}var D=h&&h.won>0;return I("win1",D),I("hands10",l.hands>=10),I("hands50",l.hands>=50),I("streak3",l.streak>=3),I("allin",D&&y),I("big",D&&h.won>=500),I("flush",D&&/Флеш|Фулл|Каре|Стрит/.test(N)),I("royal",D&&/Каре|Стрит-флеш|Роял/.test(N)),k}function f(l){var h=document.createElement("div");h.className="hd-ach",h.innerHTML="<i>"+l.e+"</i><div><b>Достижение!</b><span>"+l.n+"</span></div>",e.appendChild(h),setTimeout(function(){h.classList.add("out"),setTimeout(function(){h.remove()},400)},2600)}function v(l){var h=c.filter(function(y){return y.id===l.theme&&(l.hands||0)>=y.need})[0];return h?h.id:"classic"}function u(){return new Date().toISOString().slice(0,10)}function S(){var l=null;try{l=JSON.parse(localStorage.getItem(t)||"null")}catch(h){}return(!l||typeof l.chips!="number")&&(l={chips:500,best:0,hands:0,bonus:"",refill:""}),typeof l.table!="number"&&(l.table=0),l}var g=null,L=!1;function H(){try{return!!(tg&&tg.CloudStorage&&typeof tg.CloudStorage.setItem=="function")}catch(l){return!1}}function M(l){return JSON.stringify({ts:l.ts||0,c:(l.chips||0)+(l.table||0),b:l.best||0,h:l.hands||0,w:l.wins||0,s:l.bestStreak||0,th:l.theme||"",a:Object.keys(l.ach||{}).join(","),t:l.tours||0,tw:l.tourWins||0,d:l.diff===void 0?1:l.diff,sn:l.snd===!1?0:1,hn:l.hints===!1?0:1,wh:l.wheel||"",ch:l.chal||""})}function nt(l){H()&&(clearTimeout(g),g=setTimeout(function(){try{tg.CloudStorage.setItem("kp1",M(l),function(){})}catch(h){}},1500))}function lt(l){if(!(L||!H())){L=!0;try{tg.CloudStorage.getItem("kp1",function(h,y){if(!(h||!y)){var k;try{k=JSON.parse(y)}catch(D){return}var q=S(),N=!1;if(k&&k.wh&&k.wh>(q.wheel||"")&&(q.wheel=k.wh,N=!0),k&&k.ch&&k.ch>(q.chal||"")&&(q.chal=k.ch,N=!0),N)try{localStorage.setItem(t,JSON.stringify(q))}catch(D){}var I=S();if(!(!k||!(k.h>(I.hands||0)||k.h===(I.hands||0)&&k.ts>(I.ts||0)))){I.chips=k.c,I.table=0,I.best=k.b,I.hands=k.h,I.wins=k.w,I.bestStreak=k.s,I.theme=k.th||I.theme,I.tours=k.t,I.tourWins=k.tw,I.diff=k.d,I.snd=k.sn?void 0:!1,I.hints=k.hn?void 0:!1,I.ach={},(k.a||"").split(",").forEach(function(D){D&&(I.ach[D]=1)}),I.ts=k.ts;try{localStorage.setItem(t,JSON.stringify(I))}catch(D){}l&&l()}}})}catch(h){}}}function Q(l){l.ts=Date.now();try{localStorage.setItem(t,JSON.stringify(l))}catch(h){}nt(l)}function it(l){try{typeof popMsg=="function"&&popMsg(l)}catch(h){}}function U(l){try{typeof haptic=="function"&&haptic(l)}catch(h){}}var Y=null;function W(){return S().snd!==!1}function dt(l,h,y,k,q,N){try{if(!Y){var I=window.AudioContext||window.webkitAudioContext;if(!I)return;Y=new I}Y.state==="suspended"&&Y.resume();var D=Y.currentTime+(q||0),P=Y.createOscillator(),st=Y.createGain();P.type=y||"sine",P.frequency.setValueAtTime(l,D),N&&P.frequency.exponentialRampToValueAtTime(N,D+h),st.gain.setValueAtTime(1e-4,D),st.gain.exponentialRampToValueAtTime(k||.15,D+.01),st.gain.exponentialRampToValueAtTime(1e-4,D+h),P.connect(st),st.connect(Y.destination),P.start(D),P.stop(D+h+.02)}catch(et){}}function mt(l,h,y,k){try{if(!Y){var q=window.AudioContext||window.webkitAudioContext;if(!q)return;Y=new q}for(var N=Math.floor(Y.sampleRate*l),I=Y.createBuffer(1,N,Y.sampleRate),D=I.getChannelData(0),P=0;P<N;P++)D[P]=(Math.random()*2-1)*(1-P/N);var st=Y.createBufferSource(),et=Y.createGain(),ot=Y.createBiquadFilter();ot.type="highpass",ot.frequency.value=k||2500,et.gain.value=h||.2,st.buffer=I,st.connect(ot),ot.connect(et),et.connect(Y.destination),st.start(Y.currentTime+(y||0))}catch(vt){}}function rt(l){if(W())if(l==="deal")mt(.06,.25,0,3e3),dt(300,.05,"triangle",.05);else if(l==="chip")dt(1800,.05,"square",.05),dt(2400,.06,"square",.04,.05),mt(.03,.1,0,5e3);else if(l==="check")dt(160,.08,"sine",.3,0,90),dt(160,.08,"sine",.3,.12,90);else if(l==="fold")mt(.18,.18,0,1200);else if(l==="allin"){for(var h=0;h<5;h++)dt(1500+h*150,.05,"square",.05,h*.05);dt(220,.35,"sawtooth",.08,.1,110)}else l==="turn"?(dt(880,.12,"sine",.12),dt(1320,.18,"sine",.1,.1)):l==="win"?[523,659,784,1046].forEach(function(y,k){dt(y,.22,"triangle",.14,k*.1)}):l==="lose"&&dt(300,.3,"sine",.12,0,150)}function C(l){return String(l).replace(/[&<>"]/g,function(h){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[h]})}function tt(){return e&&e.remove(),e=document.createElement("div"),e.className="pk-overlay hd-overlay",document.body.appendChild(e),e}function T(){clearTimeout(s),n&&n.hero&&j(),e&&(e.remove(),e=null),n=null}function j(){if(!(!n||n.cashed)){n.cashed=!0;var l=S();l.chips+=Math.max(0,n.hero.chips),l.table=0,Q(l)}}function J(){if(!(n&&n.tour)){var l=S();l.table=Math.max(0,n.hero.chips),Q(l)}}function A(){clearTimeout(s),n=null,lt(function(){if(e&&!n){A();try{typeof popMsg=="function"&&popMsg("☁️ Прогресс покера восстановлен")}catch(y){}}});var l=S(),h="";l.table>0&&(l.chips+=l.table,h="🎞 Фишки со стола вернулись в кошелёк: +"+l.table,l.table=0),l.bonus!==u()&&(l.bonus=u(),l.chips+=200,h="🎁 Ежедневный бонус: +200 фишек"),l.chips<5&&l.refill!==u()&&(l.refill=u(),l.chips=100,h="🎞 Капитан подкинул 100 фишек"),Q(l),tt(),e.innerHTML='<div class="pk-top"><button class="pk-x" id="hd-x">✕</button><div class="pk-title">🃏 Кино-покер</div><div class="pk-chips">🎞 '+l.chips+'</div></div><div class="hd-menu-hero"><div class="hd-logo">🎬</div><b>КАПИТАН КИНО</b><span>покерный клуб</span></div><button class="hd-mode" id="hd-m-table"><i>🎬</i><div><b>Стол Капитана</b><span>Холдем с командой: Капитан, Режиссёр и Критик</span></div></button><button class="hd-mode" id="hd-m-tour"><i>🏆</i><div><b>Турнир на вылет</b><span>Взнос '+z.entry+" 🎞 · 1-е место "+z.prize[0]+' · блайнды растут</span></div></button><button class="hd-mode" id="hd-m-short"><i>⚡</i><div><b>Шорт-стек</b><span>500 🎞 · блайнды 50/100 · быстрые решения</span></div></button><button class="hd-mode" id="hd-m-chal"><i>📆</i><div><b>Челлендж дня'+(l.chal===u()?" · пройден":" · +150 🎞")+'</b><span>одна раздача, у всех сегодня одни карты</span></div></button><button class="hd-mode" id="hd-m-video"><i>🎰</i><div><b>Видеопокер</b><span>быстрая игра против таблицы выплат</span></div></button><button class="hd-mode" id="hd-m-friends"><i>👥</i><div><b>С друзьями</b><span>живой стол в чате, ведёт бот</span></div></button><button class="hd-mode small" id="hd-m-wheel"><i>🎡</i><div><b>Колесо Капитана'+(l.wheel===u()?"":" · подарок!")+'</b><span>одно вращение в день, до 500 🎞</span></div></button><button class="hd-mode small" id="hd-m-invite"><i>👥</i><div><b>Позвать друга играть</b><span>отправь ссылку на покер в мини-аппке</span></div></button><button class="hd-mode small" id="hd-m-rate"><i>📤</i><div><b>Отправить рейтинг боту</b><span>попасть в /pokertop в чате</span></div></button><button class="hd-mode small" id="hd-m-cheat"><i>📖</i><div><b>Шпаргалка комбинаций</b><span>что старше чего — с примерами</span></div></button><div class="hd-lvl"><b>🤖 Уровень ботов</b><div>'+[["Новичок",0,"🟢"],["Обычный",1,"🟡"],["Профи",2,"🔴"]].map(function(y){return'<button class="hd-th'+((l.diff===void 0?1:l.diff)===y[1]?" on":"")+'" data-df="'+y[1]+'"><i>'+y[2]+"</i>"+y[0]+"</button>"}).join("")+'</div></div><button class="hd-mode small" id="hd-m-hints"><i>💡</i><div><b>Подсказки шансов: '+(l.hints===!1?"выкл":"вкл")+"</b><span>шанс выиграть и выгодность колла за столом</span></div></button>"+$(l)+'<div class="hd-achs"><b>🏅 Достижения '+Object.keys(l.ach||{}).length+"/"+a.length+"</b>"+a.map(function(y){var k=l.ach&&l.ach[y.id];return'<div class="hd-a'+(k?" ok":"")+'" title="'+y.d+'"><i>'+(k?y.e:"🔒")+"</i><span>"+y.n+"</span><small>"+y.d+"</small></div>"}).join("")+'</div><div class="hd-themes">'+c.map(function(y){var k=(l.hands||0)>=y.need;return'<button class="hd-th'+(v(l)===y.id?" on":"")+(k?"":" lock")+'" data-th="'+y.id+'" data-need="'+y.need+'"><i>'+(k?y.e:"🔒")+"</i>"+y.n+(k?"":"<small>"+y.need+" раздач</small>")+"</button>"}).join("")+"</div>"+(l.hands?'<div class="hd-stats"><div><b>'+l.hands+"</b><span>раздач</span></div><div><b>"+Math.round((l.wins||0)/l.hands*100)+"%</b><span>побед</span></div><div><b>"+(l.best||0)+"</b><span>макс. банк</span></div><div><b>"+(l.bestStreak||0)+"</b><span>серия</span></div></div>":"")+'<div class="pk-note">Виртуальные фишки для игры. Их нельзя купить или вывести, на ранг и очки они не влияют.'+(h?"<br>"+h:"")+"</div>",e.querySelector("#hd-x").onclick=T,e.querySelector("#hd-m-table").onclick=F,e.querySelector("#hd-m-short").onclick=function(){if(S().chips<500){U("light");return}gt(500,[50,100])},e.querySelector("#hd-m-chal").onclick=function(){if(S().chal===u()){U("light");return}ct()},e.querySelector("#hd-m-tour").onclick=function(){if(S().chips<z.entry){U("light");return}x()},e.querySelectorAll("[data-th]").forEach(function(y){y.onclick=function(){var k=S();if((k.hands||0)<+y.getAttribute("data-need")){U("light");return}k.theme=y.getAttribute("data-th"),Q(k),e.querySelectorAll("[data-th]").forEach(function(q){q.classList.toggle("on",q===y)}),rt("chip")}}),e.querySelector("#hd-m-video").onclick=function(){T(),window.openVideoPoker&&window.openVideoPoker()},e.querySelector("#hd-m-cheat").onclick=Rt,e.querySelector("#hd-m-invite").onclick=function(){var y="https://t.me/share/url?url="+encodeURIComponent("https://t.me/kapitan_kino_bot")+"&text="+encodeURIComponent("🃏 Заходи в покер Капитана Кино: Холдем против ботов, видеопокер, турниры и колесо удачи. Открой бота и нажми «Киноафиша» → Покер. Фишки бесплатные!");try{tg.openTelegramLink(y)}catch(k){window.open(y,"_blank")}},e.querySelector("#hd-m-rate").onclick=function(){var y=S(),k=function(N){return Math.max(0,Math.floor(N||0)).toString(36)},q="https://t.me/kapitan_kino_bot?start=pk_"+[k((y.chips||0)+(y.table||0)),k(y.hands),k(y.wins),k(y.best)].join("_");try{tg.openTelegramLink(q)}catch(N){window.open(q,"_blank")}},e.querySelector("#hd-m-wheel").onclick=ae,e.querySelectorAll("[data-df]").forEach(function(y){y.onclick=function(){var k=S();k.diff=+y.getAttribute("data-df"),Q(k),e.querySelectorAll("[data-df]").forEach(function(q){q.classList.toggle("on",q===y)}),rt("chip")}}),e.querySelector("#hd-m-hints").onclick=function(){var y=S();y.hints=y.hints===!1,Q(y),A()},e.querySelectorAll("[data-claim]").forEach(function(y){y.onclick=function(){var k=S(),q=b(k),N=y.getAttribute("data-claim"),I=m.filter(function(D){return D.id===N})[0];!I||q.c[N]||(q.p[N]||0)<I.n||(q.c[N]=1,k.chips+=I.r,Q(k),rt("win"),U("ok"),A())}}),e.querySelector("#hd-m-friends").onclick=function(){typeof openFriendsPoker=="function"&&openFriendsPoker()}}function F(){var l=S();tt();var h=[200,500,1e3].filter(function(k){return k<=l.chips});l.chips>=100&&h.indexOf(l.chips)<0&&l.chips<1e3&&h.push(l.chips);var y=h.length?h.map(function(k){return'<button class="hd-buy" data-v="'+k+'">🎞 '+k+"</button>"}).join(""):'<p class="hd-empty">Мало фишек для стола (нужно от 100). Загляни завтра или сыграй в видеопокер.</p>';e.innerHTML='<div class="pk-top"><button class="pk-x" id="hd-x">✕</button><div class="pk-title">🎬 Стол Капитана</div><div class="pk-chips">🎞 '+l.chips+'</div></div><div class="hd-menu-hero"><span>Блайнды 10 / 20 · четверо за столом</span></div><div class="hd-seats-preview">'+o.map(function(k){return"<div><i>"+k.emoji+"</i><b>"+k.name+"</b></div>"}).join("")+'</div><div class="hd-buyin-t">Сколько фишек берёшь за стол?</div><div class="hd-buys">'+y+'</div><button class="hd-back" id="hd-back">◀️ Назад</button>',e.querySelector("#hd-x").onclick=T,e.querySelector("#hd-back").onclick=A,e.querySelectorAll(".hd-buy").forEach(function(k){k.onclick=function(){gt(+k.dataset.v)}})}var z={entry:300,stack:1e3,every:5,prize:[750,300,150,0],lv:[[10,20],[20,40],[40,80],[80,160],[150,300],[300,600],[500,1e3]]};function x(){var l=S();if(!(l.chips<z.entry)){l.chips-=z.entry,l.table=0,Q(l);var h=new HE.Table(z.lv[0][0],z.lv[0][1]),y=h.seat("me","Ты",z.stack,{emoji:"🙂"});o.forEach(function(k){h.seat(k.id,k.name,z.stack,{emoji:k.emoji,bot:!0,aggr:k.aggr,tight:k.tight})}),n={t:h,hero:y,buyin:z.stack,notes:[],busy:!1,cashed:!0,shown:0,lastMsg:"Турнир начался!",acts:{},street:0,tour:{hands:0,lvl:0,outAt:{},end:null}},at()}}function V(l){var h=n.tour,y=n.t,k=[{e:"🙂",n:Nt(),alive:l===1,chips:n.hero.chips,dead:l,me:1}];o.forEach(function(I){var D=y.get(I.id),P=D?D.chips:0;k.push({e:I.emoji,n:I.name,alive:P>0,chips:P,dead:h.outAt[I.id]||9})}),k.sort(function(I,D){return I.alive!==D.alive?I.alive?-1:1:I.alive?D.chips-I.chips:I.dead-D.dead}),k.forEach(function(I,D){I.p=D+1});var q=[k[1],k[0],k[2]],N={1:74,2:54,3:40};return'<div class="hd-podium">'+q.map(function(I){return I?'<div class="pd p'+I.p+(I.me?" me":"")+'"><i>'+(I.p===1?"👑":"")+'</i><div class="av">'+I.e+"</div><b>"+C(I.n)+'</b><div class="st" style="height:'+N[I.p]+'px">'+I.p+"</div></div>":""}).join("")+"</div>"}function K(l){return function(){l|=0,l=l+1831565813|0;var h=Math.imul(l^l>>>15,1|l);return h=h+Math.imul(h^h>>>7,61|h)^h,((h^h>>>14)>>>0)/4294967296}}var X=150;function ct(){var l=S();if(l.chal!==u()){l.chal=u(),l.table=0,Q(l);for(var h=0,y=u(),k=0;k<y.length;k++)h=(h*131+y.charCodeAt(k))%1000003;var q=new HE.Table(10,20,K(h+7)),N=q.seat("me","Ты",1e3,{emoji:"🙂"});o.forEach(function(I){q.seat(I.id,I.name,1e3,{emoji:I.emoji,bot:!0,aggr:I.aggr,tight:I.tight})}),n={t:q,hero:N,buyin:1e3,notes:[],busy:!1,cashed:!0,shown:0,lastMsg:"Челлендж дня: у всех игроков сегодня те же карты",acts:{},street:0,chal:{paid:!1}},at()}}function St(){if(!(!n||!n.chal||n.chal.paid)){n.chal.paid=!0;var l=n.t.result.some(function(y){return y.id==="me"&&y.won>0});if(n.chal.won=l,l){var h=S();h.chips+=X,Q(h)}}}function pt(){var l=n.tour,h=n.t;if(!(!l||l.end)){var y=h.players.filter(function(st){return st.chips>0});h.players.forEach(function(st){st.chips<=0&&st.id!=="me"&&!l.outAt[st.id]&&(l.outAt[st.id]=y.length+1)});var k=n.hero.chips>0;if(!k||y.length===1){var q=k?1:y.length+1,N=z.prize[q-1]||0,I=S();I.chips+=N,I.tours=(I.tours||0)+1,w(I,{tour:1}),q===1&&(I.tourWins=(I.tourWins||0)+1);var D=I.ach=I.ach||{},P=null;q===1&&!D.champ&&(D.champ=1,P={e:"🏆",n:"Чемпион турнира"}),Q(I),l.end={place:q,prize:N},P&&setTimeout(function(){f(P),rt("win")},1200)}}}function gt(l,h){var y=S();if(!(l>y.chips)){track("poker_start",l),y.chips-=l,y.table=l,Q(y);var k=new HE.Table(h?h[0]:10,h?h[1]:20),q=k.seat("me","Ты",l,{emoji:"🙂"});o.forEach(function(N){k.seat(N.id,N.name,l,{emoji:N.emoji,bot:!0,aggr:N.aggr,tight:N.tight})}),n={t:k,hero:q,buyin:l,notes:[],busy:!1,cashed:!1,shown:0,lastMsg:"Карты розданы",acts:{},street:0},at()}}function at(){track("poker_hand",n.tour?"tour":"cash");var l=n.t;if(n.shareTxt=null,n.notes=[],n.shoves=(n.shoves||0)*.8,n.hl=null,n.dec=[],n.talk={},n.tour){var h=n.tour;h.hands>0&&h.hands%z.every===0&&h.lvl<z.lv.length-1&&!h.bumped?(h.lvl++,l.sb=z.lv[h.lvl][0],l.bb=z.lv[h.lvl][1],n.notes.push("⬆️ Блайнды "+l.sb+"/"+l.bb),h.bumped=!0):h.hands%z.every!==0&&(h.bumped=!1),h.hands++}else l.players.forEach(function(y){y.bot&&y.chips<l.bb*2&&(y.chips=n.buyin,n.notes.push(y.name+" докупил фишки"))});if(n.hero.chips<=0){ht();return}l.startHand(),rt("deal"),n.shown=0,n.acts={},n.street=0,n.lastMsg=n.notes.join(" · ")||"Новая раздача",U("light"),ht(),bt()}function ut(l){var h=n.t.get(l[0]),y=h?h.name:"?",k=l[1];return y+": "+(k==="fold"?"фолд":k==="check"?"чек":k==="call"?"колл "+l[2]:k==="raise"?"рейз до "+l[2]:"ва-банк "+l[2])}var Et={b1:{raise:["Поднимаю!","Капитан на мостике 🧢","Держим курс"],allin:["Всё на кон!","Идём ва-банк!"],fold:["Пас, коллеги","Не мой кадр"],win:["Отличный дубль!","Капитан знает толк"],call:["Уравниваю","Посмотрим"]},b2:{raise:["Мотор! 🎬","Сцена накаляется","Ставка на крупный план"],allin:["Финальная сцена!","Снимаем без дублей!"],fold:["Стоп, снято","Режу эту сцену"],win:["Это шедевр!","Оскар мой 🏆"],call:["Принято","Продолжаем съёмку"]},b3:{raise:["Хм, дерзко…","Критика с ставкой"],allin:["Рискну репутацией","Ва-банк. Удивите меня"],fold:["Слабый сюжет","Не впечатлило"],win:["Оценка: 10/10","Как и предсказывал"],call:["Допустим","Проверим вас"]}};function Lt(l,h,y){var k=Et[l];!k||!k[h]||!y&&Math.random()>(h==="call"?.18:.5)||(n.talk={},n.talk[l]=k[h][Math.floor(Math.random()*k[h].length)])}var _t=[["🎬","Снято!"],["👏","Браво"],["😈","Ну-ну…"],["🤔","Думаю"],["😎","Легко"],["💥","Держитесь!"]],It={b1:["Принято, капитан","Хм, смело"],b2:["Мотор! 🎬","Эффектно"],b3:["Оценим…","Критика не боится"]};function Ot(){if(!e.querySelector(".hd-emopop")){var l=document.createElement("div");l.className="hd-emopop",l.innerHTML=_t.map(function(h,y){return'<button data-e="'+y+'"><i>'+h[0]+"</i><span>"+h[1]+"</span></button>"}).join(""),e.appendChild(l),l.onclick=function(h){var y=h.target.closest("[data-e]");n.emoOpen=!1,l.remove(),y&&Bt(+y.getAttribute("data-e"))}}}function Bt(l){if(n){n.emoMe=_t[l][0]+" "+_t[l][1],rt("chip"),n.talk={};var h=o.filter(function(k){return n.t.get(k.id)&&n.t.players.indexOf(n.t.get(k.id))>=0});if(h.length&&Math.random()<.7){var y=h[Math.floor(Math.random()*h.length)];n.talk[y.id]=It[y.id]?It[y.id][Math.floor(Math.random()*It[y.id].length)]:_t[l][0]}ht(),clearTimeout(n.emoT),n.emoT=setTimeout(function(){n&&(n.emoMe="",n.talk={},ht())},2800)}}function Ft(l){n.talk={},n.t.log.slice(l).forEach(function(h){var y=h[1];Lt(h[0],y==="raise"?"raise":y==="allin"?"allin":y==="fold"?"fold":y==="call"?"call":"_"),h[0]==="me"&&y==="allin"&&(n.shoves=(n.shoves||0)+1),rt(y==="fold"?"fold":y==="check"?"check":y==="allin"?"allin":"chip"),n.acts[h[0]]=y==="fold"?"Фолд":y==="check"?"Чек":y==="call"?"Колл "+h[2]:y==="raise"?"Рейз "+h[2]:"Ва-банк"})}function bt(){var l=n.t;if(l.stage==="done"){ee();return}var h=l.current();h&&(h.bot||rt("turn"),ht(),h.bot&&(n.busy=!0,s=setTimeout(function(){if(n){var y=Xt(l,h),k=l.log.length;l.act(h.id,y.a,y.to),l.log.slice(k).forEach(function(q){n.lastMsg=ut(q)}),Ft(k),n.busy=!1,bt()}},S().fast?220+Math.random()*220:800+Math.random()*700)))}function ee(){var l=n.t,h=l.result.filter(function(et){return et.won>0}).sort(function(et,ot){return ot.won-et.won}),y=h[0],k="";y&&(k="🏆 "+(y.id==="me"?"Ты":y.name)+(y.hand?" — "+y.hand:" — все сфолдили")+", +"+y.won),n.lastMsg=k,n.win=h.map(function(et){return et.id});var q=l.result.filter(function(et){return et.id==="me"})[0];if(n.hl=null,y&&y.hand&&l.community.length===5){var N=l.get(y.id);N&&(n.hl={},_(N.hole.concat(l.community)).forEach(function(et){n.hl[et]=1}))}n.talk={},(function(){var et=y&&y.id!=="me"?y.id:null;et&&Lt(et,"win",!0)})(),q&&q.won>0?(U("ok"),At(),rt("win")):(U("light"),rt(q&&q.net<0?"lose":"deal"));var I=S();I.hands=(I.hands||0)+1,q&&q.won>0&&(I.wins=(I.wins||0)+1),q&&q.won>(I.best||0)&&(I.best=q.won,I.bestHand=q.hand||I.bestHand||"");var D=q?q.net:0;I.streak=D>0?(I.streak||0)+1:0,I.streak>(I.bestStreak||0)&&(I.bestStreak=I.streak),I.hist=I.hist||[],I.hist.unshift({w:y?y.id==="me"?"Ты":y.name:"",h:y?y.hand||"все сфолдили":"",p:y?y.won:0,n:D}),I.hist=I.hist.slice(0,10);var P=n.t.log.some(function(et){return et[0]==="me"&&et[1]==="allin"});w(I,{play:1,won:q&&q.won>0,hand:q&&q.hand,allin:P,pot:q?q.won:0});var st=p(I,q,P);st.forEach(function(et,ot){setTimeout(function(){f(et),rt("win")},900+ot*2800)}),n.streak=I.streak,Q(I),J(),pt(),St(),ht(),y&&d(y.id)}function At(){if(e){var l=document.createElement("div"),h=["#f5b942","#3ddc84","#ff5d73","#7aa8ff","#fff"];l.className="hd-conf";for(var y=0;y<34;y++){var k=document.createElement("i");k.style.left=Math.random()*100+"%",k.style.background=h[y%5],k.style.animationDelay=Math.random()*.5+"s",k.style.animationDuration=1.6+Math.random()*1.2+"s",l.appendChild(k)}e.appendChild(l),setTimeout(function(){l.parentNode&&l.remove()},3200)}}function qt(l,h,y){var k=h.hole.concat(l.community),q={};k.forEach(function(Dt){q[Dt]=1});for(var N=[],I=0;I<52;I++)q[I]||N.push(I);var D=l.players.filter(function(Dt){return Dt!==h&&l.live(Dt)}).length;if(!D)return 1;for(var P=5-l.community.length,st=0,et=0;et<y;et++){for(var ot=0;ot<2*D+P;ot++){var vt=ot+Math.floor(Math.random()*(N.length-ot)),jt=N[ot];N[ot]=N[vt],N[vt]=jt}for(var xt=l.community.concat(N.slice(2*D,2*D+P)),wt=HE.best(h.hole.concat(xt)),yt=1,Mt=0;Mt<D;Mt++){var Ut=HE.cmp(HE.best(N.slice(2*Mt,2*Mt+2).concat(xt)),wt);if(Ut>0){yt=0;break}Ut===0&&(yt=Math.min(yt,.5))}st+=yt}return st/y}function Kt(l,h){if(S().hints===!1)return"";var y=h.hole.join()+"|"+l.community.join();(!n.eq||n.eq.key!==y)&&(n.eq={key:y,v:qt(l,h,220)});var k=Math.round(n.eq.v*100),q=l.toCall(h),N=l.pot(),I=q?Math.round(q/(N+q)*100):0,D=q?k>=I+8?"Колл выгоден":k>=I-3?"На грани":"Колл невыгоден":k>=60?"Рука сильная — можно ставить":k>=35?"Можно проверить":"Слабовато — лучше чек";return'<div class="hd-hint"><div class="hd-eq"><i style="width:'+k+'%"></i></div><span>Шанс выиграть ~'+k+"%"+(q?" · для колла нужно "+I+"%":"")+" · "+D+"</span></div>"}function Gt(l,h){if(!(!n||n.busy)){var y=n.t;if(y.current()===n.hero){try{var k=y.toCall(n.hero),q=y.pot(),N=n.hero.hole.join()+"|"+y.community.join();k>0&&(n.hr=n.hr||{f:0,n:0},n.hr.n++,l==="fold"&&n.hr.f++);var I=n.eq&&n.eq.key===N?n.eq.v:qt(y,n.hero,150);(n.dec=n.dec||[]).push({s:["Префлоп","","","Флоп","Тёрн","Ривер"][y.community.length]||"Префлоп",a:l,to:h,call:k,pot:q,eq:I,need:k?k/(q+k):0})}catch(st){}var D=y.log.length,P=y.act("me",l,h);if(P){it(P);return}U("light"),y.log.slice(D).forEach(function(st){n.lastMsg=ut(st)}),Ft(D),bt()}}}function Vt(l,h){var y=h.hole,k=l.community,q=HE.rankOf,N=HE.suitOf;if(!k.length){var I=y.map(q).sort(function(jt,xt){return xt-jt}),D=N(y[0])===N(y[1]),P;return I[0]===I[1]?P=.5+I[0]/12*.45:(P=(I[0]+I[1])/24*.55,D&&(P+=.06),I[0]-I[1]<=2&&(P+=.05),I[0]>=10&&(P+=.06)),Math.min(P,1)}var st=HE.best(y.concat(k)),et=st[0],ot;if(et>=6?ot=.97:et===5?ot=.92:et===4?ot=.88:et===3?ot=.82:et===2?ot=.72:et===1?ot=y.some(function(jt){return q(jt)===st[1]})?.45+st[1]/12*.2:.3:ot=.12+st[1]/12*.1,k.length<5&&et<5){var vt=[0,0,0,0];y.concat(k).forEach(function(jt){vt[N(jt)]++}),Math.max.apply(null,vt)===4&&(ot+=.18)}return Math.min(ot,1)}function Xt(l,h){var y=Vt(l,h),k=l.toCall(h),q=l.pot(),N=l.legal(h),I=N.indexOf("raise")>=0,D=Math.random(),P=k/(q+k||1),st=l.community.length===0,et=S().diff,ot=et===0?{m:-.1,up:.86,sims:70,bl:0,op:.5}:et===2?{m:.03,up:.66,sims:220,bl:.03,op:.4}:{m:0,up:.74,sims:120,bl:0,op:.45},vt=n.hr||{f:0,n:0},jt=vt.n>=6?vt.f/vt.n:.4,xt=Math.max(.5,Math.min(1.7,1+(jt-.4)*1.6))*(et===0?.6:1),wt=l.players.filter(function(Ct){return Ct!==h&&l.live(Ct)}).length;function yt(Ct){var ue=l.currentBet+Math.max(l.minRaise,Math.round(q*Ct/10)*10);return ue>=h.bet+h.chips?{a:"allin"}:{a:"raise",to:ue}}function Mt(){return k?{a:"call"}:{a:"check"}}function Ut(){return k?{a:"fold"}:{a:"check"}}var Dt=st&&l.currentBet<=l.bb;if(Dt&&I&&k<=l.bb){var re=qt(l,h,Math.max(50,ot.sims*.6)),le=ot.op+.05*h.tight-.04*h.aggr;if(re>le+.17||re>le&&D<.55+.35*h.aggr){var Pt=l.currentBet+Math.round(l.bb*(1.6+Math.random()*1.2)/10)*10+l.bb*Math.max(0,l.players.filter(function(Ct){return Ct.bet===l.bb&&Ct!==h}).length-1);return Pt=Math.max(Pt,l.currentBet+l.minRaise),Pt>=h.bet+h.chips?{a:"allin"}:{a:"raise",to:Pt}}}if(k>0){var Zt=qt(l,h,ot.sims),Wt=ot.m+P+.05+.08*h.tight-.05*h.aggr+(k>=h.chips?.05:0)-Math.min(.22,.07*(n.shoves||0)*(k>.4*h.chips?1:0));if(st&&k>l.bb*1.5&&(Wt+=.05),st||(Wt+=.06*Math.min(1,k/(q-k||1))),Zt>ot.up&&I&&D<.55)return yt(.6+Math.random()*.5);if(Zt>Wt){var de=!st&&l.community.length<5&&y<.6;return de&&I&&Zt>Wt+.1&&D<.12*h.aggr*xt&&k<=.2*h.chips?yt(.7):{a:"call"}}return I&&D<(.03+ot.bl+.04*h.aggr)*xt&&k<=.15*h.chips&&wt<=2?yt(.6):Ut()}if(!st&&wt>=1){var te=qt(l,h,Math.max(50,ot.sims*.6));return te>=.78?I&&D<.8?yt(.65+Math.random()*.3):{a:"check"}:te>=.58?I&&D<.5+.3*h.aggr?yt(.4+Math.random()*.2):{a:"check"}:te>=.4?I&&D<.1*h.aggr*xt?yt(.4):{a:"check"}:I&&wt<=2&&D<(.05+.1*h.aggr)*xt?yt(.55):{a:"check"}}return y>=.85?I&&D<.75?yt(.6+Math.random()*.5):Mt():{a:"check"}}var ne=[["Роял-флеш","Т-К-Д-В-10 одной масти",[8,9,10,11,12]],["Стрит-флеш","Пять подряд одной масти",[5,6,7,8,9]],["Каре","Четыре одинаковые",[12,25,38,51,0]],["Фулл-хаус","Тройка + пара",[11,24,37,7,20]],["Флеш","Пять одной масти",[14,17,19,22,24]],["Стрит","Пять подряд",[4,18,32,46,8]],["Тройка","Три одинаковые",[9,22,35,41,5]],["Две пары","Две пары карт",[10,23,5,18,12]],["Пара","Две одинаковые",[8,21,0,16,29]],["Старшая карта","Ничего из перечисленного",[12,37,20,6,3]]],zt=[50,100,75,150,50,300,100,500],se=["#5b8cff","#3ddc84","#ff5d73","#f5b942","#5b8cff","#a66bff","#3ddc84","#ffd24a"];function ie(){for(var l=[22,20,16,10,22,4,20,1.5],h=l.reduce(function(q,N){return q+N},0),y=Math.random()*h,k=0;k<l.length&&(y-=l[k],!(y<=0));k++);return Math.min(k,l.length-1)}function ae(){var l=S(),h=l.wheel===u(),y=360/zt.length,k=zt.map(function(D,P){return se[P]+" "+P*y+"deg "+(P+1)*y+"deg"}).join(","),q=zt.map(function(D,P){return'<b style="transform:rotate('+(P*y+y/2)+'deg) translateY(-92px)">'+D+"</b>"}).join(""),N=document.createElement("div");N.className="hd-histbox",N.innerHTML='<div class="hd-histcard hd-wheelcard"><b>🎡 Колесо Капитана</b><p>'+(h?"Сегодня вы уже крутили. Возвращайтесь завтра!":"Одно вращение в день — фишки в подарок")+'</p><div class="hd-wheelwrap"><i class="hd-ptr">▼</i><div class="hd-wheel" id="hd-wheel" style="background:conic-gradient('+k+')">'+q+'<span>🎬</span></div></div><div class="hd-wres" id="hd-wres"></div><button class="hd-btn go" id="hd-wspin"'+(h?" disabled":"")+">"+(h?"Уже крутили":"🎡 Крутить")+'</button><button class="hd-btn" id="hd-hclose">Закрыть</button></div>',e.appendChild(N),N.onclick=function(D){(D.target===N||D.target.id==="hd-hclose")&&(N.remove(),A())};var I=N.querySelector("#hd-wspin");I.onclick=function(){var D=S();if(D.wheel!==u()){D.wheel=u();var P=ie(),st=zt[P],et=360*5+(360-(P*y+y/2));D.chips+=st,Q(D),I.disabled=!0,I.textContent="Крутится…";var ot=N.querySelector("#hd-wheel");ot.style.transition="transform 4s cubic-bezier(.12,.7,.15,1)",ot.style.transform="rotate("+et+"deg)";var vt=setInterval(function(){rt("chip")},260);setTimeout(function(){clearInterval(vt)},3600),setTimeout(function(){N.querySelector("#hd-wres").innerHTML="🎉 +"+st+" 🎞",I.textContent="Готово",rt("win"),U("ok"),st>=300&&At()},4100)}}}function oe(l){var h=l.eq,y=Math.round(h*100),k=Math.round(l.need*100);return l.a==="fold"?l.call&&h>l.need+.12?["bad","Фолд был лишним: шанс ~"+y+"% при нужных "+k+"%"]:l.call?["ok","Верный фолд: шанс ~"+y+"% ниже нужных "+k+"%"]:["mid","Фолд без ставки: можно было проверить бесплатно"]:l.a==="call"?h<l.need-.08?["bad","Колл невыгоден: шанс ~"+y+"% при нужных "+k+"%"]:["ok","Колл по шансам: ~"+y+"% (нужно "+k+"%)"]:l.a==="check"?h>.65?["mid","Рука сильная (~"+y+"%), можно было ставить"]:["ok","Чек: рука ~"+y+"%"]:h<.33?["mid","Блеф: шанс всего ~"+y+"%. Работает, если соперники пасуют"]:h>.6?["ok","Ставка за ценность: ~"+y+"%"]:["ok","Агрессия при шансе ~"+y+"%"]}function kt(){var l=n&&n.dec||[],h=n.t,y=n.hero,k={fold:"Фолд",call:"Колл",check:"Чек",raise:"Рейз",allin:"Ва-банк"},q=document.createElement("div");q.className="hd-histbox";var N='<div class="hd-rvc">'+y.hole.map(function(I){return O(I,"mini")}).join("")+"<span>·</span>"+h.community.map(function(I){return O(I,"mini")}).join("")+"</div>";q.innerHTML='<div class="hd-histcard"><b>🔍 Разбор раздачи</b>'+N+(l.length?l.map(function(I){var D=oe(I);return'<div class="hd-rv '+D[0]+'"><div><b>'+I.s+" · "+k[I.a]+(I.a==="raise"&&I.to?" до "+I.to:"")+"</b><span>"+D[1]+"</span></div><i>"+(D[0]==="ok"?"✅":D[0]==="bad"?"❌":"⚠️")+"</i></div>"}).join(""):"<p>В этой раздаче ты не принимал решений.</p>")+'<button class="hd-btn go" id="hd-hclose">Закрыть</button></div>',e.appendChild(q),q.onclick=function(I){(I.target===q||I.target.id==="hd-hclose")&&q.remove()}}function Rt(){var l=document.createElement("div");l.className="hd-histbox",l.innerHTML='<div class="hd-histcard"><b>📖 Комбинации от старшей к младшей</b>'+ne.map(function(h,y){return'<div class="hd-chrow"><div class="hd-chn"><i>'+(y+1)+"</i><div><b>"+h[0]+"</b><span>"+h[1]+'</span></div></div><div class="hd-chc">'+h[2].map(function(k){return O(k,"mini")}).join("")+"</div></div>"}).join("")+'<button class="hd-btn go" id="hd-hclose">Понятно</button></div>',e.appendChild(l),l.onclick=function(h){(h.target===l||h.target.id==="hd-hclose")&&l.remove()}}function Jt(){try{return window.Telegram&&Telegram.WebApp&&Telegram.WebApp.initDataUnsafe&&Telegram.WebApp.initDataUnsafe.user||null}catch(l){return null}}function Nt(){var l=Jt();return l&&l.first_name?String(l.first_name).slice(0,12):"Ты"}function Yt(){var l=Jt();return l&&l.photo_url?'<img class="hd-photo" src="'+C(l.photo_url)+`" alt="" referrerpolicy="no-referrer" onerror="this.replaceWith(document.createTextNode('🙂'))">`:"🙂"}function Ht(l){try{typeof popMsg=="function"&&popMsg(l?"⚡ Быстрая игра: боты ходят шустрее":"Обычный темп")}catch(h){}}function Qt(l){var h=Object.keys(l.ach||{}).length;return h>=8?"fr4":h>=6?"fr3":h>=4?"fr2":h>=2?"fr1":""}function B(l){return l?/Роял|Стрит-флеш|Каре/.test(l)?"l5":/Фулл|Флеш|Стрит/.test(l)?"l4":/Тройка/.test(l)?"l3":/Две пары/.test(l)?"l2":/Пара/.test(l)?"l1":"l0":""}function d(l){try{var h=e.querySelector(".hd-pot"),y=l==="me"?e.querySelector(".hd-me .hd-av"):e.querySelector('[data-pid="'+l+'"] .hd-av');if(!h||!y||!h.animate)return;for(var k=h.getBoundingClientRect(),q=y.getBoundingClientRect(),N=9,I=0;I<N;I++)(function(D){var P=document.createElement("div");P.className="hd-fly",P.style.left=k.left+k.width/2-8+"px",P.style.top=k.top+4+"px",document.body.appendChild(P);var st=q.left+q.width/2-k.left-k.width/2,et=q.top+q.height/2-k.top-4,ot=(Math.random()-.5)*40,vt=P.animate([{transform:"translate("+ot+"px,0) scale(.8)",opacity:1},{transform:"translate("+(st*.5+ot)+"px,"+(et*.5-40)+"px) scale(1.1)",opacity:1,offset:.5},{transform:"translate("+st+"px,"+et+"px) scale(.6)",opacity:.2}],{duration:750+D*40,delay:500+D*70,easing:"cubic-bezier(.4,0,.2,1)",fill:"both"});vt.onfinish=function(){P.remove(),D===N-1&&rt("chip")}})(I)}catch(D){}}function E(l){if(l<=0)return"";var h=[[200,"c500"],[50,"c100"],[20,"c25"],[5,"c5"]],y="",k=l,q=0;return h.forEach(function(N){var I=Math.min(6,Math.floor(k/N[0]));I>0&&(k-=I*N[0],q+=I,y+='<div class="hd-stk '+N[1]+'">'+new Array(I+1).join("<i></i>")+"</div>")}),y||(y='<div class="hd-stk c5"><i></i></div>'),'<div class="hd-pile">'+y+"</div>"}function _(l){for(var h=null,y=null,k=l.length,q=0;q<k-4;q++)for(var N=q+1;N<k-3;N++)for(var I=N+1;I<k-2;I++)for(var D=I+1;D<k-1;D++)for(var P=D+1;P<k;P++){var st=[l[q],l[N],l[I],l[D],l[P]],et=HE.best(st);(!h||HE.cmp(et,h)>0)&&(h=et,y=st)}return y||[]}function O(l,h){n&&n.hl&&n.t.stage==="done"&&(h=(h||"")+(n.hl[l]?" hl":" dim"));var y=HE.suitOf(l)===1||HE.suitOf(l)===2,k=HE.cardStr(l),q=k.slice(0,k.length-1),N=k.slice(-1);return'<div class="hd-c'+(y?" red":"")+(h?" "+h:"")+'"><b>'+q+"</b><span>"+N+"</span></div>"}function G(){return'<div class="hd-c back mini"></div>'}function R(l,h){if(l.folded)return'<em class="fold">фолд</em>';if(l.allin)return'<em class="allin">ва-банк</em>';var y=!h&&n.acts[l.id],k=l.bet?'<em class="bet"><s></s>'+l.bet+"</em>":"";return(y?'<em class="act">'+C(y)+"</em>":"")+k}function Z(l,h){var y=n.t,k=y.stage==="done",q=y.current()===l,N=k&&y.result.some(function(vt){return vt.id===l.id&&vt.shown}),I=R(l,k),D=l.hole.length?N?l.hole.map(function(vt){return O(vt,"mini flip")}).join(""):l.folded?"":G()+G():"",P=n.win&&n.win.indexOf(l.id)>=0&&k,st=y.players.indexOf(l)===y.dealer?'<u class="hd-dealer">D</u>':"",et=k?y.result.filter(function(vt){return vt.id===l.id})[0]:null,ot=et&&et.won>0?'<strong class="hd-gain">+'+et.won+"</strong>":"";return'<div data-pid="'+l.id+'" class="hd-seat '+r[h]+(q?" turn":"")+(P?" win":"")+(l.folded?" out":"")+'">'+(n.talk&&n.talk[l.id]?'<div class="hd-say">'+C(n.talk[l.id])+"</div>":"")+'<div class="hd-av">'+l.emoji+st+'</div><div class="hd-nm">'+C(l.name)+'</div><div class="hd-st">🎞 '+l.chips+'</div><div class="hd-mc">'+D+"</div>"+(q?'<em class="think">думает…</em>':I)+ot+"</div>"}function ht(){if(!(!e||!n)){var l=n.t,h=n.hero,y=l.stage==="done",k=S();l.community.length!==n.street&&(n.street=l.community.length,n.acts={});for(var q="",N=0;N<5;N++)q+=l.community[N]!==void 0?O(l.community[N],N>=n.shown?"new":""):'<div class="hd-c slot"></div>';l.community.length>n.shown&&rt("deal"),n.shown=l.community.length;var I=o.map(function(ft,$t){var Tt=l.get(ft.id);return Tt&&l.players.indexOf(Tt)>=0?Z(Tt,$t):'<div class="hd-seat '+r[$t]+' out gone"><div class="hd-av">'+ft.emoji+'</div><div class="hd-nm">'+C(ft.name)+'</div><div class="hd-st">'+(n.tour&&n.tour.outAt[ft.id]?"вылетел · "+n.tour.outAt[ft.id]+" место":"")+"</div></div>"}).join(""),D=h.hole.join(),P=D!==n.heroKey;n.heroKey=D;var st=h.hole.length?h.hole.map(function(ft){return O(ft,"big"+(P?" dealt":""))}).join(""):"",et="";h.hole.length&&!h.folded&&(et=l.community.length>=3?HE.handName(HE.best(h.hole.concat(l.community))):HE.rankOf(h.hole[0])===HE.rankOf(h.hole[1])?"Карманная пара":"");var ot=l.current()===h,vt=R(h,y),jt='<div class="hd-me'+(ot?" turn":"")+(n.win&&n.win.indexOf("me")>=0&&y?" win":"")+'"><div class="hd-me-info">'+(n.emoMe?'<div class="hd-say hd-say-me">'+C(n.emoMe)+"</div>":"")+'<div class="hd-av '+Qt(k)+'">'+Yt()+(l.players.indexOf(h)===l.dealer?'<u class="hd-dealer">D</u>':"")+'</div><div class="hd-nm">'+C(Nt())+'</div><div class="hd-st">🎞 '+h.chips+"</div>"+vt+'</div><div class="hd-mycards">'+st+'</div><div class="hd-label '+B(et)+'">'+C(et)+'</div><button class="hd-emo" id="hd-emo">💬</button></div>',xt="";if(y&&n.win&&n.win.length){var wt=l.result.filter(function(ft){return ft.won>0}).sort(function(ft,$t){return $t.won-ft.won})[0];wt&&wt.id==="me"&&wt.won>=300&&(n.shareTxt="🃏 Выиграл банк +"+wt.won+" в покере Капитана Кино"+(wt.hand?" ("+wt.hand+")":"")+"! Сыграй со мной в мини-аппке 🎬"),wt&&(xt='<div class="hd-banner"><b>🏆 '+(wt.id==="me"?"Ты":C(wt.name))+" +"+wt.won+"</b><span>"+C(wt.hand||"все сфолдили")+(wt.id==="me"&&n.streak>1?" · 🔥 серия "+n.streak:"")+"</span></div>")}var yt="";if(n.tour&&n.tour.end){var Mt=n.tour.end;yt=V(Mt.place)+'<div class="hd-over">'+(Mt.place===1?"🏆 Ты выиграл турнир! +"+Mt.prize+" 🎞":"Ты занял "+Mt.place+" место"+(Mt.prize?" · приз +"+Mt.prize+" 🎞":""))+'</div><div class="hd-row">'+(k.chips>=z.entry?'<button class="hd-btn go" id="hd-again">🔁 Ещё турнир</button>':"")+'<button class="hd-btn" id="hd-leave">🚪 В меню</button></div>'}else if(n.chal&&y)yt='<div class="hd-over">'+(n.chal.won?"🏆 Челлендж выигран! +"+X+" 🎞":"Челлендж не засчитан. Завтра будет новая раздача!")+'</div><div class="hd-row"><button class="hd-btn" id="hd-rev">🔍 Разбор</button><button class="hd-btn go" id="hd-leave">В меню</button></div>';else if(h.chips<=0&&(y||!h.hole.length))yt='<div class="hd-over">Ты проиграл все фишки за столом</div><div class="hd-row"><button class="hd-btn" id="hd-rev">🔍 Разбор</button></div><div class="hd-row">'+(k.chips>=100?'<button class="hd-btn go" id="hd-rebuy">Сесть заново</button>':"")+'<button class="hd-btn" id="hd-leave">🚪 Выйти</button></div>';else if(y)yt='<div class="hd-row"><button class="hd-btn go" id="hd-next">▶️ Следующая раздача</button><button class="hd-btn" id="hd-leave">🚪 Выйти со столом</button></div><div class="hd-row"><button class="hd-hist-btn" id="hd-rev">🔍 Разбор</button><button class="hd-hist-btn" id="hd-hist">📜 История</button>'+(n.shareTxt?'<button class="hd-hist-btn" id="hd-share">📣 Похвастаться</button>':"")+"</div>";else if(ot){var Ut=l.toCall(h),Dt=l.legal(h),re=l.pot(),le='<button class="hd-btn fold" data-a="fold">Фолд</button><button class="hd-btn go" data-a="'+(Ut?"call":"check")+'">'+(Ut?"Колл "+Ut:"Чек")+"</button>",Pt="";if(Dt.indexOf("raise")>=0){var Zt=l.minRaiseTo(h),Wt=h.bet+h.chips,de={};[["Мин",Zt],["½ банка",l.currentBet+Math.round(re/2/10)*10],["Банк",l.currentBet+re]].forEach(function(ft){var $t=Math.max(Zt,Math.min(ft[1],Wt));$t>=Wt||de[$t]||(de[$t]=1,Pt+='<button class="hd-btn sm" data-a="raise" data-to="'+$t+'">'+ft[0]+" · "+$t+"</button>")}),Pt+='<button class="hd-btn sm allin" data-a="allin">🔥 Ва-банк '+Wt+"</button>"}var te="";if(Dt.indexOf("raise")>=0&&h.bet+h.chips>l.minRaiseTo(h)){var Ct=l.minRaiseTo(h),ue=h.bet+h.chips;te='<div class="hd-slider"><input type="range" id="hd-rng" min="'+Ct+'" max="'+ue+'" step="1" value="'+Ct+'"><button class="hd-btn sm go" id="hd-rz">Рейз до <b id="hd-rv">'+Ct+"</b></button></div>"}yt=Kt(l,h)+'<div class="hd-row">'+le+"</div>"+te+(Pt?'<div class="hd-row wrap">'+Pt+"</div>":"")}else yt='<div class="hd-wait">'+(l.current()?"Ходит "+C(l.current().name)+"…":"")+"</div>";e.innerHTML='<div class="pk-top"><button class="pk-x" id="hd-x">✕</button><div class="pk-title">🎬 Стол Капитана</div><div class="pk-chips">🎞 '+k.chips+'</div><button class="hd-snd" id="hd-help">❓</button><button class="hd-snd'+(k.fast?" on":"")+'" id="hd-fast" title="Быстрая игра">⚡</button><button class="hd-snd" id="hd-snd">'+(k.snd===!1?"🔇":"🔊")+'</button></div><div class="hd-table th-'+v(k)+'"><div class="hd-felt"><div class="hd-brand">КАПИТАН КИНО</div><div class="hd-wm">🎬</div><div class="hd-board">'+q+'</div><div class="hd-pot">'+E(l.pot())+"<span>Банк <b>"+l.pot()+"</b></span></div>"+xt+"</div>"+I+'</div><div class="hd-msg">'+C(n.lastMsg||"")+"</div>"+jt+yt+'<div class="pk-note">'+(n.tour?"🏆 Турнир · уровень "+(n.tour.lvl+1)+" · ":"")+"Блайнды "+l.sb+"/"+l.bb+" · виртуальные фишки · на ранг и очки не влияют</div>",e.querySelector("#hd-x").onclick=function(){T()},e.querySelector("#hd-help").onclick=Rt;var fe=e.querySelector("#hd-emo");fe&&(fe.onclick=function(){n.emoOpen=!0,Ot()}),n.emoOpen&&Ot(),e.querySelector("#hd-fast").onclick=function(){var ft=S();ft.fast=!ft.fast,Q(ft),this.classList.toggle("on",!!ft.fast),rt("chip"),Ht(ft.fast)},e.querySelector("#hd-snd").onclick=function(){var ft=S();ft.snd=ft.snd===!1,Q(ft),this.textContent=ft.snd===!1?"🔇":"🔊",ft.snd!==!1&&rt("chip")},e.querySelectorAll("[data-a]").forEach(function(ft){ft.onclick=function(){Gt(ft.dataset.a,+ft.dataset.to||0)}});var he=e.querySelector("#hd-rng");he&&(he.oninput=function(){e.querySelector("#hd-rv").textContent=he.value},e.querySelector("#hd-rz").onclick=function(){Gt("raise",+he.value)});var ce=e.querySelector("#hd-rev");ce&&(ce.onclick=kt);var me=e.querySelector("#hd-hist");me&&(me.onclick=function(){var ft=S().hist||[],$t=document.createElement("div");$t.className="hd-histbox",$t.innerHTML='<div class="hd-histcard"><b>📜 Последние раздачи</b>'+(ft.length?ft.map(function(Tt){return'<div class="hd-hrow"><span>'+C(Tt.w)+" · "+C(Tt.h)+'</span><em class="'+(Tt.n>0?"up":Tt.n<0?"dn":"")+'">'+(Tt.n>0?"+":"")+Tt.n+"</em></div>"}).join(""):"<p>Пока пусто</p>")+'<button class="hd-btn go" id="hd-hclose">Закрыть</button></div>',e.appendChild($t),$t.onclick=function(Tt){(Tt.target===$t||Tt.target.id==="hd-hclose")&&$t.remove()}});var pe=e.querySelector("#hd-again");pe&&(pe.onclick=x);var ge=e.querySelector("#hd-next");ge&&(ge.onclick=at);var ve=e.querySelector("#hd-share");ve&&(ve.onclick=function(){var ft="https://t.me/share/url?url="+encodeURIComponent("https://t.me/kapitan_kino_bot")+"&text="+encodeURIComponent(n.shareTxt||"");try{tg.openTelegramLink(ft)}catch($t){window.open(ft,"_blank")}});var ye=e.querySelector("#hd-leave");ye&&(ye.onclick=function(){T(),A()});var ce=e.querySelector("#hd-rebuy");ce&&(ce.onclick=function(){j(),F()})}}window.openVideoPoker=window.openVideoPoker||window.openPoker,window.openPoker=A,window.__holdemAI={strength:Vt,aiDecide:Xt}})();
+      <button class="qz-bot" type="button">💰 Играть в боте — за ответы дают кинобаллы</button></div>`;
+    const qb = box.querySelector('.qz-bot');
+    if (qb) qb.onclick = () => {
+      haptic('light');
+      const url = 'https://t.me/kapitan_kino_bot?start=dailyquiz';
+      if (tg.openTelegramLink) tg.openTelegramLink(url); else window.open(url, '_blank');
+    };
+    return;
+  }
+  const qs = _quizBuild();
+  if (qs.length < 3) { box.innerHTML = '<p class="empty-note">Пока мало данных для викторины — скоро будет.</p>'; return; }
+  _quizState = { qs, i: 0, score: 0 };
+  drawQuizQuestion();
+}
+function drawQuizQuestion() {
+  const box = document.getElementById('quiz-container');
+  const s = _quizState;
+  if (!box || !s) return;
+  if (s.i >= s.qs.length) return finishQuiz();
+  const q = s.qs[s.i];
+  box.innerHTML = `<div class="qz-card">
+    <div class="qz-step">Вопрос ${s.i + 1} из ${s.qs.length}</div>
+    <div class="qz-bar"><i style="width:${(s.i / s.qs.length) * 100}%"></i></div>
+    <h3 class="qz-q">${esc(q.q)}</h3>
+    <div class="qz-opts">${q.opts.map(o => `<button class="qz-opt" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>
+  </div>`;
+  box.querySelectorAll('.qz-opt').forEach(b => b.onclick = () => {
+    const ok = b.dataset.v === q.a;
+    if (ok) s.score++;
+    haptic(ok ? 'light' : 'medium');
+    box.querySelectorAll('.qz-opt').forEach(x => {
+      x.disabled = true;
+      if (x.dataset.v === q.a) x.classList.add('right');
+    });
+    if (!ok) b.classList.add('wrong');
+    setTimeout(() => { s.i++; drawQuizQuestion(); }, 1100);
+  });
+}
+function finishQuiz() {
+  const s = _quizState;
+  const st = _lsGetJson(QUIZ_KEY, { streak: 0, last: '', best: 0, results: {} });
+  const today = _todayKey();
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const yKey = y.getFullYear() + '-' + String(y.getMonth() + 1).padStart(2, '0') + '-' + String(y.getDate()).padStart(2, '0');
+  st.streak = st.last === yKey ? (st.streak || 0) + 1 : 1;
+  st.last = today;
+  st.best = Math.max(st.best || 0, s.score);
+  st.results = st.results || {};
+  st.results[today] = s.score;
+  _lsSetJson(QUIZ_KEY, st);
+  _quizState = null;
+  renderQuiz();
+}
+// ---------- v179: стартовая панель «Сегодня» над афишей ----------
+function renderTodayStrip() {
+  const box = document.getElementById('quick-row');
+  if (!box) return;
+  const today = capDayStr(new Date());
+  let arenaDaily = null; try { const d = JSON.parse(localStorage.getItem('kino_arena_daily') || 'null'); if (d && d.day === today) arenaDaily = d; } catch (e) {}
+  let quizDone = null; try { const st = _lsGetJson(QUIZ_KEY, { results: {} }); quizDone = st.results && st.results[_todayKey()]; } catch (e) {}
+  let capBest = 0; try { capBest = parseInt(localStorage.getItem(CAP_BEST_KEY) || '0', 10) || 0; } catch (e) {}
+  const cards = [
+    { go: 'arena', ico: '⚔️', t: 'Дуэль дня', sub: arenaDaily ? `твой счёт ${arenaDaily.score}` : '12 вопросов · для всех', done: !!arenaDaily, todo: !arenaDaily },
+    { go: 'quiz', ico: '🧠', t: 'Викторина дня', sub: quizDone != null ? `сегодня ${quizDone}/5` : '5 вопросов', done: quizDone != null, todo: quizDone == null },
+    { go: 'tonight', ico: '🌙', t: 'Сегодня вечером', sub: 'по настроению' },
+    { go: 'duo', ico: '👥', t: 'На двоих', sub: 'фильм для обоих' },
+    { go: 'cap', ico: '🎮', t: 'Капитан в пути', sub: capBest ? `рекорд ${capBest}` : 'игра на 45 секунд' },
+    { go: 'map', ico: '🌍', t: 'Кино-карта', sub: 'фильмы по странам' },
+  ];
+  const d = new Date();
+  const dt = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+  box.className = 'today-strip';
+  box.innerHTML = `<div class="td-head"><b>📆 Сегодня</b><span>${esc(dt)}</span></div>
+    <div class="td-row">${cards.map(c => `<button class="td-card${c.done ? ' done' : ''}${c.todo ? ' todo' : ''}" data-go="${c.go}">
+      <span class="td-ico">${c.ico}</span><b>${c.t}</b><i>${esc(c.sub)}</i>${c.done ? '<em class="td-ok">✓</em>' : ''}</button>`).join('')}</div>`;
+  box.querySelectorAll('.td-card').forEach(b => b.addEventListener('click', () => {
+    haptic('light');
+    const g = b.dataset.go;
+    if (g === 'arena') openArena();
+    else if (g === 'duo') openDuo();
+    else if (g === 'cap') openCaptainGame();
+    else openView(g);
+  }));
+}
+
+// ===== v193: Кино-покер встроен в script.js (раньше был отдельным poker.js — при частичной выгрузке файлов не открывался) =====
+/* v190: «Кино-покер» — видеопокер (Jacks or Better) на виртуальных кинофишках.
+   Фишки хранятся отдельно (kino_poker) и НЕ влияют на ранг/очки/достижения. Купить или вывести их нельзя. */
+(function () {
+  'use strict';
+  var KEY = 'kino_poker';
+  var PAY = [['Роял-флеш', 250], ['Стрит-флеш', 50], ['Каре', 25], ['Фулл-хаус', 9], ['Флеш', 6], ['Стрит', 4], ['Тройка', 3], ['Две пары', 2], ['Валеты и выше', 1]];
+  var SUITS = ['♠', '♥', '♦', '♣'], RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'В', 'Д', 'К', 'Т'];
+  var st = null, deck = [], hand = [], held = [], phase = 'bet', bet = 10, lastWin = 0, lastName = '', root = null;
+
+  function today() { return new Date().toISOString().slice(0, 10); }
+  function load() {
+    try { st = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { st = null; }
+    if (!st || typeof st.chips !== 'number') st = { chips: 500, best: 0, hands: 0, bonus: '', refill: '' };
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
+  function rnd(n) {
+    try { var a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; } catch (e) { return Math.floor(Math.random() * n); }
+  }
+  function newDeck() {
+    var d = []; for (var s = 0; s < 4; s++) for (var r = 0; r < 13; r++) d.push({ r: r, s: s });
+    for (var i = d.length - 1; i > 0; i--) { var j = rnd(i + 1), t = d[i]; d[i] = d[j]; d[j] = t; }
+    return d;
+  }
+  // Оценка руки: возвращает [название, множитель] или null
+  function evaluate(h) {
+    var rs = h.map(function (c) { return c.r; }).sort(function (a, b) { return a - b; });
+    var flush = h.every(function (c) { return c.s === h[0].s; });
+    var cnt = {}; rs.forEach(function (r) { cnt[r] = (cnt[r] || 0) + 1; });
+    var groups = Object.keys(cnt).map(function (k) { return [cnt[k], +k]; }).sort(function (a, b) { return b[0] - a[0] || b[1] - a[1]; });
+    var uniq = rs.every(function (r, i) { return i === 0 || r !== rs[i - 1]; });
+    var straight = uniq && (rs[4] - rs[0] === 4 || (rs.join() === '0,1,2,3,12'));
+    var high = rs.join() === '8,9,10,11,12';
+    if (straight && flush) return high ? PAY[0] : PAY[1];
+    if (groups[0][0] === 4) return PAY[2];
+    if (groups[0][0] === 3 && groups[1][0] === 2) return PAY[3];
+    if (flush) return PAY[4];
+    if (straight) return PAY[5];
+    if (groups[0][0] === 3) return PAY[6];
+    if (groups[0][0] === 2 && groups[1][0] === 2) return PAY[7];
+    if (groups[0][0] === 2 && groups[0][1] >= 9) return PAY[8];
+    return null;
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function msg(t) { try { if (typeof popMsg === 'function') popMsg(t); } catch (e) {} }
+  function buzz(k) { try { if (typeof haptic === 'function') haptic(k); } catch (e) {} }
+
+  function dailyBonus() {
+    if (st.bonus !== today()) { st.bonus = today(); st.chips += 200; save(); return true; }
+    return false;
+  }
+  function refillIfBroke() {
+    if (st.chips < 5 && st.refill !== today()) { st.refill = today(); st.chips = 100; save(); return true; }
+    return false;
+  }
+  // звуки видеопокера (WebAudio, без файлов)
+  var VAC = null;
+  function vtone(f, d, type, vol, delay, slide) {
+    try {
+      if (st.snd === false) return;
+      if (!VAC) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return; VAC = new C(); }
+      if (VAC.state === 'suspended') VAC.resume();
+      var t0 = VAC.currentTime + (delay || 0), o = VAC.createOscillator(), g = VAC.createGain();
+      o.type = type || 'sine'; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(slide, t0 + d);
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol || 0.12, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+      o.connect(g); g.connect(VAC.destination); o.start(t0); o.stop(t0 + d + 0.02);
+    } catch (e) {}
+  }
+  function vsfx(k, big) {
+    if (k === 'deal') { for (var i = 0; i < 5; i++) vtone(500 + i * 40, 0.05, 'triangle', 0.07, i * 0.07, 300); }
+    else if (k === 'hold') { vtone(880, 0.06, 'square', 0.05); }
+    else if (k === 'win') { [523, 659, 784, 1046, 1318].slice(0, big ? 5 : 3).forEach(function (f, i) { vtone(f, 0.2, 'triangle', 0.14, i * 0.09); }); }
+    else if (k === 'lose') { vtone(260, 0.3, 'sine', 0.1, 0, 130); }
+    else if (k === 'dbl') { vtone(1200, 0.08, 'square', 0.06); vtone(1600, 0.1, 'square', 0.05, 0.08); }
+  }
+  var dealAnim = false, G2 = null;   // G2: режим «Удвоить»
+  function gambleStart() {
+    if (!lastWin || phase !== 'bet') return;
+    st.chips -= lastWin; save();
+    var d = newDeck(); G2 = { stake: lastWin, dealer: d[0], cards: d.slice(1, 5), picked: -1, step: (G2 && G2.step) || 0, over: false, res: '' };
+    phase = 'gamble'; buzz('light'); draw();
+  }
+  function gamblePick(i) {
+    if (!G2 || G2.picked >= 0) return;
+    G2.picked = i; var me = G2.cards[i], dl = G2.dealer;
+    vsfx('dbl'); if (me.r > dl.r) { G2.res = 'win'; vsfx('win', true); st.chips += G2.stake * 2; lastWin = G2.stake * 2; G2.step++; if (lastWin > st.best) st.best = lastWin; buzz('ok'); }
+    else if (me.r === dl.r) { G2.res = 'push'; st.chips += G2.stake; buzz('light'); }
+    else { G2.res = 'lose'; lastWin = 0; lastName = 'Мимо'; buzz('err'); }
+    save(); draw();
+  }
+  function gambleStart2() { var step = G2.step; phase = 'bet'; G2 = { step: step }; gambleStart(); }
+  function gambleEnd() { phase = 'bet'; G2 = null; draw(); }
+  function deal() {
+    if (st.chips < bet) { msg('Не хватает фишек — уменьши ставку'); return; }
+    st.chips -= bet; st.hands++; save();
+    deck = newDeck(); hand = deck.splice(0, 5); held = [false, false, false, false, false]; phase = 'hold'; lastWin = 0; lastName = '';
+    buzz('light'); vsfx('deal'); dealAnim = true; draw(); dealAnim = false;
+  }
+  function drawCards() {
+    for (var i = 0; i < 5; i++) if (!held[i]) hand[i] = deck.shift();
+    var res = evaluate(hand); phase = 'bet';
+    if (res) {
+      lastWin = bet * res[1]; lastName = res[0]; st.chips += lastWin; if (lastWin > st.best) st.best = lastWin; buzz('ok'); vsfx('win', res[1] >= 6);
+      try { if (res[1] >= 9 && typeof confetti === 'function') confetti(30); } catch (e) {}
+    } else { lastName = 'Мимо'; buzz('light'); vsfx('lose'); }
+    var broke = refillIfBroke(); save(); draw();
+    if (broke) msg('🎞 Капитан подкинул 100 фишек');
+  }
+  function cardHtml(c, i) {
+    var red = c.s === 1 || c.s === 2, h = held[i] && phase === 'hold';
+    return '<button class="pk-card' + (red ? ' red' : '') + (h ? ' held' : '') + (dealAnim ? ' deal' : '') + '" style="animation-delay:' + (i * 0.07) + 's" data-i="' + i + '"' + (phase === 'hold' ? '' : ' disabled') + '>' +
+      '<b>' + RANKS[c.r] + '</b><span>' + SUITS[c.s] + '</span>' + (h ? '<em>ДЕРЖУ</em>' : '') + '</button>';
+  }
+  function gambleView() {
+    var g = G2, face = function (c, cls) { var red = c.s === 1 || c.s === 2; return '<div class="pk-card' + (red ? ' red' : '') + (cls || '') + '"><b>' + RANKS[c.r] + '</b><span>' + SUITS[c.s] + '</span></div>'; };
+    var cards = g.cards.map(function (c, i) { return g.picked < 0 ? '<button class="pk-card pk-back" data-g="' + i + '"><span>🎬</span></button>' : face(c, (i === g.picked ? ' held' : ' dimmed')); }).join('');
+    var status = g.picked < 0 ? 'Выбери карту старше карты дилера' : g.res === 'win' ? '🎉 Удвоил! +' + g.stake * 2 : g.res === 'push' ? '🤝 Ничья — ставка возвращена' : '💔 Не угадал';
+    var again = g.res === 'win' && g.step < 3 ? '<button class="pk-go" id="pk-g-again">🎲 Ещё раз ×2 (' + g.stake * 2 + ')</button>' : '';
+    var take = g.picked < 0 ? '' : '<button class="pk-go alt" id="pk-g-end">' + (g.res === 'win' ? '✅ Забрать ' + g.stake * 2 : 'Дальше') + '</button>';
+    return '<div class="pk-top"><button class="pk-x" id="pk-x">✕</button><div class="pk-title">🎲 Удвоение</div><div class="pk-chips">🎞 ' + st.chips + '</div></div>' +
+      '<div class="pk-status">' + status + '</div><div class="pk-felt"><div class="pk-brand">СТАВКА ' + g.stake + ' · ПОБЕДА ×2</div><div class="pk-dealer"><small>ДИЛЕР</small>' + face(g.dealer, '') + '</div><div class="pk-hand pk-g4">' + cards + '</div></div>' + again + take +
+      '<div class="pk-note">Карта старше — выигрыш ×2, равная — ничья, младше — потеря. До 3 раз подряд.</div>';
+  }
+  function draw() {
+    if (!root) return;
+    if (phase === 'gamble' && G2) {
+      root.innerHTML = gambleView();
+      root.querySelector('#pk-x').onclick = function () { if (G2 && G2.picked < 0) { st.chips += G2.stake; save(); } close(); };
+      root.querySelectorAll('[data-g]').forEach(function (b) { b.onclick = function () { gamblePick(+b.dataset.g); }; });
+      var e = root.querySelector('#pk-g-end'); if (e) e.onclick = gambleEnd;
+      var a = root.querySelector('#pk-g-again'); if (a) a.onclick = function () { gambleStart2(); };
+      return;
+    }
+    var cards = hand.length ? hand.map(cardHtml).join('') : '<div class="pk-empty">Сдай карты и выбери, что оставить</div>';
+    var cur = phase === 'bet' ? evaluate(hand.length ? hand : [{ r: 0, s: 0 }, { r: 2, s: 1 }, { r: 4, s: 2 }, { r: 6, s: 3 }, { r: 8, s: 0 }]) : null;
+    var status = phase === 'hold' ? (evaluate(hand) ? '🃏 Сейчас: <b>' + esc(evaluate(hand)[0]) + '</b> ×' + evaluate(hand)[1] + ' · нажми на карты, что оставить' : 'Нажми на карты, которые оставляешь') :
+      (hand.length ? (lastWin ? '🎉 ' + esc(lastName) + ' — +' + lastWin : 'Не повезло, попробуй ещё') : 'Сделай ставку');
+    var bets = [5, 10, 25, 50].map(function (b) { return '<button class="pk-bet' + (b === bet ? ' on' : '') + '" data-b="' + b + '"' + (phase === 'hold' ? ' disabled' : '') + '>' + b + '</button>'; }).join('');
+    var liveR = phase === 'hold' ? evaluate(hand) : null;
+    var pay = PAY.map(function (p) { return '<div class="' + ((lastWin && p[0] === lastName) || (liveR && p[0] === liveR[0]) ? 'on' : '') + '"><span>' + p[0] + '</span><b>×' + p[1] + '</b></div>'; }).join('');
+    root.innerHTML = '<div class="pk-top"><button class="pk-x" id="pk-x">✕</button><div class="pk-title">🃏 Видеопокер</div><div class="pk-chips">🎞 ' + st.chips + '</div><button class="hd-snd" id="pk-snd">' + (st.snd === false ? '🔇' : '🔊') + '</button></div>' +
+      '<div class="pk-status' + (lastWin && phase === 'bet' ? ' win' : '') + '">' + status + '</div><div class="pk-felt"><div class="pk-brand">КАПИТАН КИНО · ВИДЕОПОКЕР</div><div class="pk-hand">' + cards + '</div></div>' +
+      '<div class="pk-bets"><span>Ставка</span>' + bets + '</div>' +
+      (phase === 'bet' && lastWin ? '<button class="pk-go alt" id="pk-dbl">🎲 Удвоить ' + lastWin + ' → ' + lastWin * 2 + '</button>' : '') + '<button class="pk-go" id="pk-go">' + (phase === 'hold' ? 'Заменить карты' : 'Сдать карты') + '</button>' +
+      '<div class="pk-pay">' + pay + '</div>' +
+      '<div class="pk-note">Виртуальные фишки для игры. Их нельзя купить или вывести, на ранг и очки они не влияют. Рекорд выигрыша: ' + st.best + ' · раздач: ' + st.hands + '</div>';
+    root.querySelector('#pk-x').onclick = close;
+    root.querySelector('#pk-snd').onclick = function () { st.snd = st.snd === false; save(); this.textContent = st.snd === false ? '🔇' : '🔊'; vsfx('hold'); };
+    root.querySelector('#pk-go').onclick = function () { phase === 'hold' ? drawCards() : deal(); };
+    var dbl = root.querySelector('#pk-dbl'); if (dbl) dbl.onclick = function () { G2 = { step: 0 }; gambleStart(); };
+    root.querySelectorAll('.pk-card').forEach(function (b) { b.onclick = function () { var i = +b.dataset.i; held[i] = !held[i]; buzz('light'); vsfx('hold'); draw(); }; });
+    root.querySelectorAll('.pk-bet').forEach(function (b) { b.onclick = function () { bet = +b.dataset.b; buzz('light'); draw(); }; });
+    void cur;
+  }
+  function open() {
+    load(); var got = dailyBonus();
+    if (root) root.remove();
+    root = document.createElement('div'); root.className = 'pk-overlay'; document.body.appendChild(root);
+    hand = []; held = []; phase = 'bet'; lastWin = 0; lastName = '';
+    if (st.chips < bet) bet = 5;
+    draw();
+    if (got) msg('🎁 Ежедневный бонус: +200 фишек');
+  }
+  function close() { if (root) { root.remove(); root = null; } }
+  window.openPoker = open;
+  window.__pokerEval = evaluate;   // для тестов
+})();
+
+// <blackjack>
+// v236: Блэкджек. Шесть колод, дилер стоит на всех 17, блэкджек 3:2, удвоение (в т.ч. после сплита),
+// одно разделение пар (у тузов — по одной карте), дилер заглядывает под десятку/туз. Есть страховка (2:1), «ровно 1:1» и поздняя сдача (возврат половины ставки).
+// Фишки общие с видеопокером (localStorage kino_poker): один кошелёк на обе игры.
+(function () {
+  'use strict';
+  var WKEY = 'kino_poker', SKEY = 'kino_bj';
+  var SUITS = ['♠', '♥', '♦', '♣'], RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'В', 'Д', 'К', 'Т'];
+  var BETS = [10, 20, 50, 100, 250], DECKS = 6, CUT = 78;
+  var revN = 0, revHide = false, revTimer = null, flipNext = false, dealSeq = 0, shownChips = 0, chipRaf = 0, showSheet = false;
+  var THEMES = ['green', 'wine', 'navy', 'night'], THEME_RU = { green: 'Классика', wine: 'Бордо', navy: 'Синий', night: 'Ночь' }, SIDES = [0, 10, 25];
+  var root = null, G = null, wal = null, st = null, seen = {};
+
+  // ---------- движок (чистые функции от состояния g) ----------
+  function rnd(n) {
+    try { var a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; } catch (e) { return Math.floor(Math.random() * n); }
+  }
+  function newShoe() {
+    var d = [];
+    for (var k = 0; k < DECKS; k++) for (var s = 0; s < 4; s++) for (var r = 0; r < 13; r++) d.push({ r: r, s: s });
+    for (var i = d.length - 1; i > 0; i--) { var j = rnd(i + 1), t = d[i]; d[i] = d[j]; d[j] = t; }
+    return d;
+  }
+  function val(c) { return c.r <= 8 ? c.r + 2 : (c.r === 12 ? 11 : 10); }
+  function score(cards) {
+    var t = 0, a = 0;
+    cards.forEach(function (c) { t += val(c); if (c.r === 12) a++; });
+    while (t > 21 && a > 0) { t -= 10; a--; }
+    return { t: t, soft: a > 0 };
+  }
+  function isBJ(cards) { return cards.length === 2 && score(cards).t === 21; }
+  function draw(g) { if (!g.shoe.length) g.shoe = newShoe(); return g.shoe.pop(); }
+  function newGame(chips) { return { shoe: newShoe(), chips: chips, dealer: [], hands: [], cur: 0, phase: 'bet', bet: 10, net: 0, over: false }; }
+
+  function startRound(g, bet, side) {
+    if (g.shoe.length < CUT) g.shoe = newShoe();
+    g.chips -= bet; g.bet = bet; g.over = false; g.ins = 0; g.insPay = 0; g.side = 0; g.sidePay = 0; g.sideRes = '';
+    if (side && g.chips >= side) { g.chips -= side; g.side = side; }
+    g.net = -bet - g.side; g.shuffled = g.shoe.length > DECKS * 52 - 5;
+    var p1 = draw(g), d1 = draw(g), p2 = draw(g), d2 = draw(g);
+    g.dealer = [d1, d2];
+    if (g.side && p1.r === p2.r) {      // бонус «Пара»: 6:1 разномастная пара обычная, 13:1 одного цвета, 26:1 одной масти (с возвратом ставки)
+      var red1 = p1.s === 1 || p1.s === 2, red2 = p2.s === 1 || p2.s === 2;
+      g.sideRes = p1.s === p2.s ? 'perfect' : (red1 === red2 ? 'colored' : 'mixed');
+      g.sidePay = g.side * { perfect: 26, colored: 13, mixed: 6 }[g.sideRes]; g.chips += g.sidePay;
+    }
+    g.hands = [{ cards: [p1, p2], bet: bet, done: false, dbl: false, split: false, aces: false, res: '', pay: 0 }];
+    g.cur = 0; g.phase = 'play';
+    if (val(d1) === 11) { g.phase = 'ins'; return; }     // туз у дилера: сначала предложение страховки
+    peekEnd(g);
+  }
+  function peekEnd(g) {
+    if (isBJ(g.hands[0].cards) || (val(g.dealer[0]) >= 10 && isBJ(g.dealer))) { g.hands[0].done = true; settle(g); }
+  }
+  function insure(g, yes) {
+    if (g.phase !== 'ins') return;
+    var c = g.bet / 2;
+    if (yes && g.chips >= c) { g.ins = c; g.chips -= c; }
+    g.phase = 'play'; peekEnd(g);
+  }
+  function canDouble(g) {
+    var h = g.hands[g.cur];
+    return g.phase === 'play' && !!h && !h.done && h.cards.length === 2 && !h.aces && g.chips >= h.bet;
+  }
+  function canSplit(g) {
+    var h = g.hands[g.cur];
+    return g.phase === 'play' && !!h && !h.done && g.hands.length === 1 && h.cards.length === 2 &&
+      val(h.cards[0]) === val(h.cards[1]) && g.chips >= h.bet;
+  }
+  function canSurrender(g) {
+    var h = g.hands[g.cur];
+    return g.phase === 'play' && !!h && !h.done && g.hands.length === 1 && h.cards.length === 2 && !h.split;
+  }
+  function surrender(g) { var h = g.hands[g.cur]; h.sur = true; h.done = true; advance(g); }
+  function advance(g) {
+    while (g.cur < g.hands.length && g.hands[g.cur].done) g.cur++;
+    if (g.cur >= g.hands.length) settle(g);
+  }
+  function hit(g) {
+    var h = g.hands[g.cur]; h.cards.push(draw(g));
+    if (score(h.cards).t >= 21) h.done = true;
+    advance(g);
+  }
+  function stand(g) { g.hands[g.cur].done = true; advance(g); }
+  function dbl(g) {
+    var h = g.hands[g.cur]; g.chips -= h.bet; h.bet *= 2; h.dbl = true; h.cards.push(draw(g)); h.done = true; advance(g);
+  }
+  function split(g) {
+    var h = g.hands[g.cur], c2 = h.cards.pop(), aces = h.cards[0].r === 12;
+    g.chips -= h.bet;
+    h.cards.push(draw(g)); h.split = true; h.aces = aces;
+    var h2 = { cards: [c2, draw(g)], bet: h.bet, done: false, dbl: false, split: true, aces: aces, res: '', pay: 0 };
+    g.hands.push(h2);
+    if (aces) { h.done = true; h2.done = true; }
+    else { if (score(h.cards).t === 21) h.done = true; if (score(h2.cards).t === 21) h2.done = true; }
+    advance(g);
+  }
+  function settle(g) {
+    var live = g.hands.some(function (h) { return !h.sur && score(h.cards).t <= 21 && !(isBJ(h.cards) && !h.split); });
+    if (live) { while (score(g.dealer).t < 17) g.dealer.push(draw(g)); }       // дилер стоит на всех 17
+    var ds = score(g.dealer).t, dBJ = isBJ(g.dealer), total = 0;
+    if (g.ins && dBJ) { g.insPay = g.ins * 3; total += g.insPay; }
+    g.hands.forEach(function (h) {
+      var ps = score(h.cards).t, pBJ = isBJ(h.cards) && !h.split, pay = 0, res;
+      if (h.sur) { res = 'surr'; pay = h.bet / 2; }
+      else if (ps > 21) res = 'bust';
+      else if (pBJ) { if (dBJ) { res = 'push'; pay = h.bet; } else { res = 'bj'; pay = h.bet * 2.5; } }
+      else if (dBJ) res = 'lose';
+      else if (ds > 21 || ps > ds) { res = 'win'; pay = h.bet * 2; }
+      else if (ps === ds) { res = 'push'; pay = h.bet; }
+      else res = 'lose';
+      h.res = res; h.pay = pay; total += pay;
+    });
+    g.chips += total; g.phase = 'done'; g.over = true;
+    g.net = total - g.hands.reduce(function (s, h) { return s + h.bet; }, 0) - g.ins - g.side + g.sidePay;
+  }
+
+  // Базовая стратегия (S17, 6 колод, удвоение после сплита, дилер смотрит под туза/десятку).
+  function advice(g) {
+    var h = g.hands[g.cur]; if (!h) return 'stand';
+    var s = score(h.cards), up = val(g.dealer[0]), cd = canDouble(g), cs = canSplit(g);
+    if (cs) {
+      var v = val(h.cards[0]);
+      var p = v === 11 ? 'P' : v === 10 ? 'S' : v === 9 ? (up === 7 || up >= 10 ? 'S' : 'P') : v === 8 ? 'P' :
+        v === 7 ? (up <= 7 ? 'P' : 'H') : v === 6 ? (up <= 6 ? 'P' : 'H') : v === 5 ? 'D' :
+        v === 4 ? (up === 5 || up === 6 ? 'P' : 'H') : (up <= 7 ? 'P' : 'H');
+      if (p === 'P') return 'split';
+      if (p === 'S') return 'stand';
+      if (p === 'D') return cd && up <= 9 ? 'double' : 'hit';
+      return 'hit';
+    }
+    var t = s.t;
+    if (!s.soft && canSurrender(g) && ((t === 16 && up >= 9) || (t === 15 && up === 10))) return 'surrender';
+    if (s.soft && h.cards.length >= 2) {
+      if (t >= 20) return 'stand';
+      if (t === 19) return 'stand';
+      if (t === 18) { if (up >= 3 && up <= 6) return cd ? 'double' : 'stand'; return (up === 2 || up === 7 || up === 8) ? 'stand' : 'hit'; }
+      if (t === 17) return (up >= 3 && up <= 6 && cd) ? 'double' : 'hit';
+      if (t === 15 || t === 16) return (up >= 4 && up <= 6 && cd) ? 'double' : 'hit';
+      return (up >= 5 && up <= 6 && cd) ? 'double' : 'hit';            // 13–14
+    }
+    if (t >= 17) return 'stand';
+    if (t >= 13) return up <= 6 ? 'stand' : 'hit';
+    if (t === 12) return (up >= 4 && up <= 6) ? 'stand' : 'hit';
+    if (t === 11) return (cd && up <= 10) ? 'double' : 'hit';
+    if (t === 10) return (cd && up <= 9) ? 'double' : 'hit';
+    if (t === 9) return (cd && up >= 3 && up <= 6) ? 'double' : 'hit';
+    return 'hit';
+  }
+  window.__bj = { surrender: surrender, canSurrender: canSurrender, insure: insure, newGame: newGame, startRound: startRound, hit: hit, stand: stand, dbl: dbl, split: split, canDouble: canDouble, canSplit: canSplit, advice: advice, score: score, isBJ: isBJ, newShoe: newShoe };
+
+  // ---------- кошелёк и статистика ----------
+  function today() { return new Date().toISOString().slice(0, 10); }
+  function loadWallet() {
+    try { wal = JSON.parse(localStorage.getItem(WKEY) || 'null'); } catch (e) { wal = null; }
+    if (!wal || typeof wal.chips !== 'number') wal = { chips: 500, best: 0, hands: 0, bonus: '', refill: '' };
+  }
+  function saveWallet() { try { wal.chips = G.chips; localStorage.setItem(WKEY, JSON.stringify(wal)); } catch (e) {} }
+  function loadSt() {
+    try { st = JSON.parse(localStorage.getItem(SKEY) || 'null'); } catch (e) { st = null; }
+    if (!st) st = { hands: 0, wins: 0, bj: 0, net: 0, snd: true, hint: false };
+    st.side = st.side || 0; st.theme = st.theme || 0; st.hist = st.hist || []; st.dec = st.dec || 0; st.ok = st.ok || 0; st.bet = st.bet || 10;
+    st.streak = st.streak || 0; st.bestStreak = st.bestStreak || 0; st.maxWin = st.maxWin || 0;
+  }
+  function saveSt() { try { localStorage.setItem(SKEY, JSON.stringify(st)); } catch (e) {} }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function msg(t) { try { if (typeof popMsg === 'function') popMsg(t); } catch (e) {} }
+  function buzz(k) { try { if (typeof haptic === 'function') haptic(k); } catch (e) {} }
+  function trk(n, a) { try { if (typeof track === 'function') track(n, a); } catch (e) {} }
+
+  // ---------- звук ----------
+  var AC = null;
+  function tone(f, d, type, vol, delay, slide) {
+    try {
+      if (st.snd === false) return;
+      if (!AC) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return; AC = new C(); }
+      if (AC.state === 'suspended') AC.resume();
+      var t0 = AC.currentTime + (delay || 0), o = AC.createOscillator(), g = AC.createGain();
+      o.type = type || 'sine'; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(slide, t0 + d);
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol || 0.12, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+      o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0 + d + 0.02);
+    } catch (e) {}
+  }
+  function sfx(k) {
+    if (k === 'card') tone(520, 0.05, 'triangle', 0.07, 0, 300);
+    else if (k === 'win') [523, 659, 784].forEach(function (f, i) { tone(f, 0.2, 'triangle', 0.14, i * 0.09); });
+    else if (k === 'bj') [523, 659, 784, 1046, 1318].forEach(function (f, i) { tone(f, 0.2, 'triangle', 0.14, i * 0.09); });
+    else if (k === 'lose') tone(260, 0.3, 'sine', 0.1, 0, 130);
+  }
+
+  // ---------- интерфейс ----------
+  var ACT_RU = { hit: 'Ещё', stand: 'Хватит', double: 'Удвоить', split: 'Разделить', ins_y: 'Страховка', ins_n: 'Нет, спасибо', surrender: 'Сдаться' };
+  var ACT_IC = { hit: '🃏', stand: '✋', double: '⚡', split: '✂️', ins_y: '🛡', ins_n: '👍', surrender: '🏳️' };
+  function cardHtml(c, key, i, hidden) {
+    var anim = i >= (seen[key] || 0), dl = anim ? ' style="animation-delay:' + ((dealSeq++) * 0.13).toFixed(2) + 's"' : '';
+    if (hidden) return '<div class="pk-card bj-c pk-back' + (anim ? ' deal' : '') + '"' + dl + '><span>🎬</span></div>';
+    var red = c.s === 1 || c.s === 2, flip = key === 'd' && i === 1 && flipNext;
+    return '<div class="pk-card bj-c' + (red ? ' red' : '') + (anim ? ' deal' : '') + (flip ? ' flip' : '') + '"' + dl + '><b>' + RANKS[c.r] + '</b><i>' + SUITS[c.s] +
+      '</i><span>' + SUITS[c.s] + '</span><u>' + RANKS[c.r] + '</u></div>';
+  }
+  function rowHtml(cards, key, hideSecond) {
+    var html = cards.map(function (c, i) { return cardHtml(c, key, i, hideSecond && i === 1); }).join('');
+    seen[key] = cards.length;
+    return '<div class="bj-row' + (cards.length > 2 ? ' fan' : '') + '">' + html + '</div>';
+  }
+  function totalLabel(cards, hide) {
+    if (hide) return '<span class="bj-pill">' + (val(cards[0]) === 11 ? 'Т' : val(cards[0])) + '</span>';
+    var s = score(cards), cl = s.t > 21 ? ' bust' : (s.t === 21 ? ' g21' : '');
+    return '<span class="bj-pill' + cl + '">' + (s.soft && s.t < 21 ? s.t + ' / ' + (s.t - 10) : s.t) + '</span>';
+  }
+  function chipCls(b) { return b >= 250 ? 'c250' : b >= 100 ? 'c100' : b >= 50 ? 'c50' : b >= 20 ? 'c20' : 'c10'; }
+  function chipHtml(b, extra) { return '<span class="bj-chip ' + chipCls(b) + (extra || '') + '">' + b + '</span>'; }
+  function animChips(target) {
+    if (chipRaf) { cancelAnimationFrame(chipRaf); chipRaf = 0; }
+    var from = shownChips, t0 = 0;
+    if (from === target) return;
+    function step(ts) {
+      var el = document.getElementById('bj-cv'); if (!el) { shownChips = target; chipRaf = 0; return; }
+      if (!t0) t0 = ts;
+      var k = Math.min(1, (ts - t0) / 650), e = 1 - Math.pow(1 - k, 3);
+      shownChips = Math.round(from + (target - from) * e); el.textContent = shownChips;
+      if (k < 1) chipRaf = requestAnimationFrame(step); else { chipRaf = 0; shownChips = target; var pc = el.parentNode; if (pc && pc.classList) { pc.classList.remove('up', 'down'); void pc.offsetWidth; pc.classList.add(target > from ? 'up' : 'down'); } }
+    }
+    chipRaf = requestAnimationFrame(step);
+  }
+  function sideHtml() {
+    if (G.phase !== 'bet' && G.phase !== 'done') return '';
+    return '<div class="bj-side"><span>✨ Бонус «Пара»</span>' + SIDES.map(function (v) {
+      var dis = v && G.chips < G.bet + v;
+      return '<button class="bj-sb' + ((st.side || 0) === v ? ' on' : '') + '" data-s="' + v + '"' + (dis || revN ? ' disabled' : '') + '>' + (v ? v : 'выкл') + '</button>';
+    }).join('') + '<small>одной масти 26:1 · цвета 13:1 · пара 6:1</small></div>';
+  }
+  function sheetHtml(winrate) {
+    var acc = st.dec ? Math.round(st.ok / st.dec * 100) + '%' : '—';
+    var cell = function (k, v) { return '<div><b>' + v + '</b><span>' + k + '</span></div>'; };
+    return '<div class="bj-sheet"><div class="bj-card"><div class="bj-sh-t">📊 Твоя статистика</div><div class="bj-grid">' +
+      cell('раздач', st.hands) + cell('побед', winrate + '%') + cell('блэкджеков', st.bj) + cell('итог', (st.net > 0 ? '+' : '') + Math.round(st.net)) +
+      cell('лучшая серия', st.bestStreak) + cell('рекорд выигрыша', '+' + st.maxWin) + cell('точность по стратегии', acc) + cell('карт в колоде', G.shoe.length) +
+      '</div><button class="pk-go" id="bj-sheet-x">Закрыть</button></div></div>';
+  }
+  function histHtml() {
+    if (!st.hist.length) return '';
+    return '<div class="bj-hist">' + st.hist.map(function (c) { return '<i class="h-' + c + '"></i>'; }).join('') + '</div>';
+  }
+  function bannerHtml(g) {
+    if (!g.over || revN) return '';
+    var bj = g.hands.some(function (h) { return h.res === 'bj'; }), n = Math.round(g.net);
+    var t = bj ? 'БЛЭКДЖЕК!' : n > 0 ? 'ПОБЕДА' : n < 0 ? (g.hands[0].res === 'surr' ? 'СДАЛСЯ' : g.hands.every(function (h) { return h.res === 'bust'; }) ? 'ПЕРЕБОР' : 'ПРОИГРЫШ') : 'НИЧЬЯ';
+    var cls = bj ? 'bj' : n > 0 ? 'win' : n < 0 ? 'lose' : 'push', fx = '';
+    if (n > 0) for (var i = 0; i < 14; i++) fx += '<i style="left:' + (6 + i * 6.6) + '%;animation-delay:' + ((i * 53) % 400) / 1000 + 's">' + ['🎞', '✨', '🪙', '🎬'][i % 4] + '</i>';
+    return '<div class="bj-banner ' + cls + '"><b>' + t + '</b><span>' + (n > 0 ? '+' + n : n < 0 ? n : '±0') + ' 🎞</span></div>' + (fx ? '<div class="bj-fx">' + fx + '</div>' : '');
+  }
+  function why(g, a) {
+    var h = g.hands[g.cur]; if (!h) return '';
+    var up = val(g.dealer[0]), t = score(h.cards).t;
+    if (a === 'surrender') return 'Слабая рука против сильной карты дилера: потерять половину ставки выгоднее, чем играть.';
+    if (a === 'split') return val(h.cards[0]) === 11 ? 'Тузы делят всегда: две руки с тузом — это сильный старт.' : 'Эту пару выгодно разделить: две руки лучше одной слабой.';
+    if (a === 'double') return 'Сильная позиция: у тебя хорошие шансы на 19–21 — удвой ставку.';
+    if (a === 'stand') return up >= 2 && up <= 6 ? 'У дилера слабая карта (2–6): он часто переберёт — не рискуй.' : 'Этого достаточно: добор чаще ведёт к перебору, чем к улучшению.';
+    return t <= 11 ? 'Перебор невозможен — бери карту.' : 'У дилера сильная карта (' + (up === 11 ? 'туз' : up) + '): сумма ' + t + ' слабовата — нужно добирать.';
+  }
+  var RES_RU = { bj: '🎉 Блэкджек', win: '✅ Победа', push: '🤝 Ничья', lose: '❌ Проиграл', bust: '💥 Перебор', surr: '🏳️ Сдался' };
+  function statusText() {
+    var g = G;
+    if (revN) return '🎬 Дилер открывает карты…';
+    if (g.phase === 'ins') return g.hands[0] && isBJ(g.hands[0].cards) ? 'У тебя блэкджек, у дилера туз' : 'У дилера туз — страховка?';
+    if (g.phase === 'bet') return g.chips < 10 ? 'Фишки закончились — бонус будет завтра' : 'Сделай ставку';
+    if (g.phase === 'play') {
+      var tip = '';
+      if (st.hint) tip = ' · 💡 лучше: <b>' + ACT_RU[advice(g)] + '</b>';
+      return (g.hands.length > 1 ? 'Рука ' + (g.cur + 1) + ' из 2' : 'Твой ход') + tip;
+    }
+    var parts = g.hands.map(function (h) { return RES_RU[h.res] + (h.pay - h.bet !== 0 ? ' ' + (h.pay - h.bet > 0 ? '+' : '') + (h.pay - h.bet) : ''); });
+    if (g.side) parts.push(g.sidePay ? '✨ «Пара» (' + { perfect: 'одной масти', colored: 'одного цвета', mixed: 'разных цветов' }[g.sideRes] + ') +' + (g.sidePay - g.side) : '✨ «Пара» −' + g.side);
+    if (g.ins) parts.push(g.insPay ? '🛡 страховка +' + (g.insPay - g.ins) : '🛡 страховка −' + g.ins);
+    if (st.streak >= 2 && g.net > 0) parts.push('🔥 серия ' + st.streak);
+    return parts.join(' · ');
+  }
+  function draw_ui() {
+    if (!root) return;
+    dealSeq = 0;
+    var g = G, play = g.phase === 'play' && !revN, ins = g.phase === 'ins', hideHole = g.phase === 'play' || ins || revHide, shown = revN ? g.dealer.slice(0, revN) : g.dealer;
+    var dealerHtml = shown.length ? rowHtml(shown, 'd', hideHole) +
+      '<div class="bj-total">' + totalLabel(shown, hideHole) + '</div>' : '<div class="pk-empty">Дилер ждёт ставку</div>';
+    var handsHtml = g.hands.map(function (h, i) {
+      var cls = 'bj-hand' + (play && i === g.cur && g.hands.length > 1 ? ' active' : '') + (g.over && !revN ? ' ' + h.res : '');
+      var s = score(h.cards);
+      return '<div class="' + cls + '">' + rowHtml(h.cards, 'h' + i, false) +
+        '<div class="bj-total">' + totalLabel(h.cards, false) + '<small class="bj-bet' + (seen.c ? '' : ' drop') + '">' + chipHtml(h.bet / (h.dbl ? 2 : 1)) + (h.dbl ? chipHtml(h.bet / 2, ' dbl') : '') + '</small></div></div>' + (s.t > 21 ? '' : '');
+    }).join('');
+    var rec = (play && st.hint) ? advice(g) : '';
+    var ctl;
+    if (ins) {
+      var bjNow = isBJ(g.hands[0].cards), can2 = g.chips >= g.bet / 2;
+      ctl = '<div class="bj-acts"><button class="bj-act a-stand' + (st.hint ? ' rec' : '') + '" data-a="ins_n"><i>' + ACT_IC.ins_n + '</i>' + (bjNow ? 'Играть дальше' : ACT_RU.ins_n) + '</button>' +
+        '<button class="bj-act a-double" data-a="ins_y"' + (can2 ? '' : ' disabled') + '><i>' + ACT_IC.ins_y + '</i>' + (bjNow ? 'Ровно 1:1' : 'Страховка ' + g.bet / 2) + '</button></div>';
+    } else if (play) {
+      var acts = [['hit', true], ['stand', true], ['double', canDouble(g)], ['split', canSplit(g)]];
+      if (canSurrender(g)) acts.push(['surrender', true]);
+      ctl = '<div class="bj-acts">' + acts.map(function (a) {
+        return '<button class="bj-act a-' + a[0] + (rec === a[0] ? ' rec' : '') + '" data-a="' + a[0] + '"' + (a[1] ? '' : ' disabled') + '><i>' + ACT_IC[a[0]] + '</i>' + ACT_RU[a[0]] + '</button>';
+      }).join('') + '</div>' + (st.hint ? '<div class="bj-why">💡 ' + why(g, advice(g)) + '</div>' : '');
+    } else {
+      var can = g.chips >= g.bet && g.chips >= 10 && !revN;
+      ctl = '<div class="pk-bets"><span>Ставка</span>' + BETS.map(function (b) {
+        return '<button class="pk-bet bj-chipbtn ' + chipCls(b) + (b === g.bet ? ' on' : '') + '" data-b="' + b + '"' + (b > g.chips || revN ? ' disabled' : '') + '>' + b + '</button>';
+      }).join('') + '</div><button class="pk-go" id="bj-go"' + (can ? '' : ' disabled') + '>' + (g.phase === 'done' ? '🔁 Ещё раздача' : '🃏 Раздать') + '</button>';
+    }
+    var winrate = st.hands ? Math.round(st.wins / st.hands * 100) : 0;
+    root.innerHTML = '<div class="pk-top"><button class="pk-x" id="bj-x">✕</button><div class="pk-title">♠️ Блэкджек</div><div class="pk-chips">🎞 <span id="bj-cv">' + shownChips + '</span>' +
+      '</div><button class="hd-snd" id="bj-hint" title="Подсказка">' + (st.hint ? '💡' : '🕯') + '</button><button class="hd-snd" id="bj-snd">' + (st.snd === false ? '🔇' : '🔊') + '</button></div>' +
+      '<div class="pk-status' + (g.over && !revN && g.net > 0 ? ' win' : '') + '">' + statusText() + '</div>' +
+      '<div class="pk-felt bj-felt"><div class="pk-brand">КАПИТАН КИНО · БЛЭКДЖЕК 3:2</div><div class="bj-shoe" title="Карт в колоде"><s></s><s></s><s></s><em>' + g.shoe.length + '</em></div>' +
+      '<div class="bj-lbl">🎩 ДИЛЕР</div>' + dealerHtml + '<div class="bj-gap"></div>' +
+      '<div class="bj-lbl">ТЫ</div>' + (handsHtml || '<div class="pk-empty">Выбери ставку и раздай</div>') + bannerHtml(g) + '</div>' + histHtml() + sideHtml() + ctl +
+      '<div class="bj-tools"><button id="bj-th">🎨 Стол: ' + THEME_RU[THEMES[st.theme % THEMES.length]] + '</button><button id="bj-stat">📊 Статистика</button></div>' +
+      '<div class="pk-note">Дилер стоит на 17 · блэкджек 3:2 · удвоение, разделение, сдача · ' + DECKS + ' колод. Виртуальные фишки, общие с видеопокером; купить или вывести их нельзя.</div>' +
+      (showSheet ? sheetHtml(winrate) : '');
+    root.setAttribute('data-th', THEMES[st.theme % THEMES.length]);
+    animChips(revN ? shownChips : g.chips);
+    seen.c = 1;
+    root.querySelector('#bj-x').onclick = close;
+    root.querySelector('#bj-th').onclick = function () { st.theme = (st.theme + 1) % THEMES.length; saveSt(); buzz('light'); draw_ui(); };
+    root.querySelector('#bj-stat').onclick = function () { showSheet = true; draw_ui(); };
+    var shx = root.querySelector('#bj-sheet-x'); if (shx) shx.onclick = function () { showSheet = false; draw_ui(); };
+    root.querySelectorAll('.bj-sb').forEach(function (b) { b.onclick = function () { st.side = +b.dataset.s; saveSt(); buzz('light'); draw_ui(); }; });
+    root.querySelector('#bj-snd').onclick = function () { st.snd = st.snd === false; saveSt(); sfx('card'); draw_ui(); };
+    root.querySelector('#bj-hint').onclick = function () { st.hint = !st.hint; saveSt(); draw_ui(); };
+    var go = root.querySelector('#bj-go'); if (go) go.onclick = deal;
+    root.querySelectorAll('.pk-bet').forEach(function (b) { b.onclick = function () { G.bet = +b.dataset.b; buzz('light'); draw_ui(); }; });
+    root.querySelectorAll('.bj-act').forEach(function (b) { b.onclick = function () { act(b.dataset.a); }; });
+  }
+  function applyEnd() {
+    var won = G.net > 0;
+    sfx(G.hands.some(function (h) { return h.res === 'bj'; }) ? 'bj' : (won ? 'win' : (G.net < 0 ? 'lose' : 'card')));
+    buzz(won ? 'success' : 'light');
+  }
+  function revStep() {
+    revTimer = null;
+    if (!root || !G) { revN = 0; revHide = false; return; }
+    if (revHide) { revHide = false; flipNext = true; sfx('card'); }
+    else if (revN < G.dealer.length) { revN++; sfx('card'); }
+    else { revN = 0; applyEnd(); draw_ui(); return; }
+    draw_ui(); flipNext = false; revTimer = setTimeout(revStep, 600);
+  }
+  function finishIfOver() {
+    if (G.phase !== 'done') return;
+    st.hands++; st.net += G.net;
+    var won = G.net > 0; if (won) st.wins++;
+    if (won) { st.streak++; if (st.streak > st.bestStreak) st.bestStreak = st.streak; if (G.net > st.maxWin) st.maxWin = G.net; } else if (G.net < 0) st.streak = 0;
+    if (G.hands.some(function (h) { return h.res === 'bj'; })) st.bj++;
+    st.hist.push(G.hands.some(function (h) { return h.res === 'bj'; }) ? 'b' : G.net > 0 ? 'w' : G.net < 0 ? 'l' : 'p'); if (st.hist.length > 14) st.hist.shift();
+    saveSt(); saveWallet();
+    var live = G.hands.some(function (h) { return !h.sur && score(h.cards).t <= 21 && !(isBJ(h.cards) && !h.split); });
+    if (live) { revN = 2; revHide = true; revTimer = setTimeout(revStep, 650); } else applyEnd();
+  }
+  function deal() {
+    if (G.phase === 'play' || G.phase === 'ins' || revN) return;
+    if (G.chips < G.bet) G.bet = BETS.filter(function (b) { return b <= G.chips; }).pop() || 10;
+    if (G.chips < G.bet) return;
+    seen = {}; st.bet = G.bet; startRound(G, G.bet, st.side || 0); saveWallet(); sfx('card'); buzz('light'); trk('bj_hand', G.bet);
+    if (G.shuffled) msg('🔀 Колоду перетасовали');
+    finishIfOver(); draw_ui();
+  }
+  function act(a) {
+    if (!G || revN) return;
+    if (G.phase === 'ins') { if (a === 'ins_y' || a === 'ins_n') { st.dec++; if (a === 'ins_n') st.ok++; insure(G, a === 'ins_y'); sfx('card'); buzz('light'); saveWallet(); finishIfOver(); draw_ui(); } return; }
+    if (G.phase !== 'play') return;
+    var best = advice(G);
+    if (a === 'hit' || a === 'stand' || (a === 'double' && canDouble(G)) || (a === 'split' && canSplit(G)) || (a === 'surrender' && canSurrender(G))) { st.dec++; if (a === best) st.ok++; }
+    if (a === 'surrender' && canSurrender(G)) surrender(G); else if (a === 'hit') hit(G); else if (a === 'stand') stand(G);
+    else if (a === 'double' && canDouble(G)) dbl(G); else if (a === 'split' && canSplit(G)) split(G); else return;
+    sfx('card'); buzz('light'); saveWallet(); finishIfOver(); draw_ui();
+  }
+  function open() {
+    loadWallet(); loadSt();
+    var got = false;
+    if (wal.bonus !== today()) { wal.bonus = today(); wal.chips += 200; got = true; }
+    if (wal.chips < 10 && wal.refill !== today()) { wal.refill = today(); wal.chips = 100; got = 'refill'; }
+    try { localStorage.setItem(WKEY, JSON.stringify(wal)); } catch (e) {}
+    if (root) root.remove();
+    if (revTimer) { clearTimeout(revTimer); revTimer = null; } revN = 0; revHide = false;
+    root = document.createElement('div'); root.className = 'pk-overlay bj-overlay'; document.body.appendChild(root);
+    G = newGame(wal.chips); seen = {}; shownChips = wal.chips; showSheet = false;
+    if (BETS.indexOf(st.bet) >= 0 && st.bet <= G.chips) G.bet = st.bet;
+    if (G.chips < G.bet) G.bet = 10;
+    trk('bj_open');
+    draw_ui();
+    if (got === true) msg('🎁 Ежедневный бонус: +200 фишек');
+    else if (got === 'refill') msg('🎞 Фишки закончились — держи 100 на сегодня');
+  }
+  function close() {
+    if (revTimer) { clearTimeout(revTimer); revTimer = null; } revN = 0; revHide = false; if (chipRaf) { cancelAnimationFrame(chipRaf); chipRaf = 0; }
+    if (G && (G.phase === 'play' || G.phase === 'ins')) { msg('Раздача не закончена: ставка сгорела'); }
+    if (root) { root.remove(); root = null; }
+  }
+  window.openBlackjack = open;
+})();
+// </blackjack>
+
+/* ===== HOLDEM:BEGIN (v196: Стол Капитана) ===== */
+// <engine>
+const HE = (function () {
+  const RANK_CH = '23456789TJQKA', SUIT_CH = '♠♥♦♣', RU = { T: '10', J: 'В', Q: 'Д', K: 'К', A: 'Т' };
+  const CAT = ['Старшая карта', 'Пара', 'Две пары', 'Тройка', 'Стрит', 'Флеш', 'Фулл-хаус', 'Каре', 'Стрит-флеш'];
+  const cardStr = c => (RU[RANK_CH[c % 13]] || RANK_CH[c % 13]) + SUIT_CH[Math.floor(c / 13)];
+  const rankOf = c => c % 13, suitOf = c => Math.floor(c / 13);
+  function cmp(a, b) { for (let i = 0; i < Math.max(a.length, b.length); i++) { const d = (a[i] || 0) - (b[i] || 0); if (d) return d < 0 ? -1 : 1; } return 0; }
+  function rank5(cards) {
+    const rs = cards.map(rankOf).sort((a, b) => b - a);
+    const flush = new Set(cards.map(suitOf)).size === 1;
+    const uniq = [...new Set(rs)];
+    let sh = null;
+    if (uniq.length === 5) { if (uniq[0] - uniq[4] === 4) sh = uniq[0]; else if (uniq.join() === '12,3,2,1,0') sh = 3; }
+    const cnt = {}; rs.forEach(r => cnt[r] = (cnt[r] || 0) + 1);
+    const groups = Object.entries(cnt).map(([r, n]) => [n, +r]).sort((a, b) => b[0] - a[0] || b[1] - a[1]);
+    const shape = groups.map(g => g[0]).join(''), ord = groups.map(g => g[1]);
+    if (sh !== null && flush) return [8, sh];
+    if (shape === '41') return [7, ...ord];
+    if (shape === '32') return [6, ...ord];
+    if (flush) return [5, ...rs];
+    if (sh !== null) return [4, sh];
+    if (shape === '311') return [3, ...ord];
+    if (shape === '221') return [2, ...ord];
+    if (shape === '2111') return [1, ...ord];
+    return [0, ...rs];
+  }
+  function combos(arr, k) { const out = []; (function rec(s, cur) { if (cur.length === k) { out.push(cur.slice()); return; } for (let i = s; i < arr.length; i++) { cur.push(arr[i]); rec(i + 1, cur); cur.pop(); } })(0, []); return out; }
+  function best(cards) { let b = null; for (const c of combos(cards, 5)) { const r = rank5(c); if (!b || cmp(r, b) > 0) b = r; } return b; }
+  function handName(s) {
+    if (s[0] === 8 && s[1] === 12) return 'Роял-флеш';
+    if (s[0] === 1) return 'Пара ' + (RU[RANK_CH[s[1]]] || RANK_CH[s[1]]);
+    return CAT[s[0]];
+  }
+  class Table {
+    constructor(sb = 10, bb = 20, rnd = Math.random) { this.sb = sb; this.bb = bb; this.rnd = rnd; this.players = []; this.dealer = -1; this.community = []; this.deck = []; this.stage = 'wait'; this.toAct = -1; this.currentBet = 0; this.minRaise = bb; this.log = []; this.result = []; }
+    seat(id, name, chips, extra) { const p = Object.assign({ id, name, chips, hole: [], bet: 0, total: 0, folded: false, allin: false, acted: false }, extra || {}); this.players.push(p); return p; }
+    get(id) { return this.players.find(p => p.id === id); }
+    live(p) { return p.hole.length > 0 && !p.folded; }
+    canAct(p) { return this.live(p) && !p.allin; }
+    shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(this.rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
+    nextIdx(i, pred) { const n = this.players.length; for (let k = 1; k <= n; k++) { const j = (i + k) % n; if (pred(this.players[j])) return j; } return -1; }
+    post(p, amt) { amt = Math.min(amt, p.chips); p.chips -= amt; p.bet += amt; p.total += amt; if (p.chips === 0) p.allin = true; }
+    startHand() {
+      this.players = this.players.filter(p => p.chips > 0);
+      if (this.players.length < 2) { this.stage = 'wait'; return false; }
+      this.log = []; this.result = []; this.community = [];
+      this.players.forEach(p => { p.hole = []; p.bet = 0; p.total = 0; p.folded = p.allin = p.acted = false; });
+      this.deck = Array.from({ length: 52 }, (_, i) => i); this.shuffle(this.deck);
+      const n = this.players.length; this.dealer = (this.dealer + 1) % n;
+      const hu = n === 2, sbI = hu ? this.dealer : (this.dealer + 1) % n, bbI = hu ? (this.dealer + 1) % n : (this.dealer + 2) % n;
+      this.players.forEach(p => { p.hole = [this.deck.pop(), this.deck.pop()]; });
+      this.post(this.players[sbI], this.sb); this.post(this.players[bbI], this.bb);
+      this.currentBet = Math.max(this.bb, this.players[bbI].bet); this.minRaise = this.bb; this.stage = 'preflop';
+      const first = hu ? sbI : (bbI + 1) % n;
+      this.toAct = this.canAct(this.players[first]) ? first : this.nextIdx(first, p => this.canAct(p));
+      if (this.toAct === -1 || this.roundDone()) this.advance();
+      return true;
+    }
+    current() { return (this.toAct >= 0 && ['preflop', 'flop', 'turn', 'river'].includes(this.stage)) ? this.players[this.toAct] : null; }
+    toCall(p) { return Math.max(0, Math.min(this.currentBet - p.bet, p.chips)); }
+    minRaiseTo(p) { return Math.min(p.bet + p.chips, this.currentBet + this.minRaise); }
+    legal(p) { if (this.current() !== p) return []; const a = ['fold', this.currentBet > p.bet ? 'call' : 'check']; if (p.chips > this.toCall(p)) a.push('raise', 'allin'); return a; }
+    act(id, action, raiseTo) {
+      const p = this.get(id);
+      if (!p || this.current() !== p) return 'Сейчас не твой ход';
+      if (!this.legal(p).includes(action)) return 'Так сейчас нельзя';
+      if (action === 'fold') { p.folded = true; this.log.push([p.id, 'fold', 0]); }
+      else if (action === 'check' || action === 'call') { const amt = this.toCall(p); this.post(p, amt); this.log.push([p.id, action, amt]); }
+      else {
+        let target = action === 'allin' ? p.bet + p.chips : Math.max(this.minRaiseTo(p), Math.min(raiseTo || 0, p.bet + p.chips));
+        target = Math.min(target, p.bet + p.chips);
+        const add = target - p.bet, by = target - this.currentBet;
+        this.post(p, add);
+        if (p.bet > this.currentBet) { if (by >= this.minRaise) this.minRaise = by; this.currentBet = p.bet; this.players.forEach(q => { if (q !== p && this.canAct(q)) q.acted = false; }); }
+        this.log.push([p.id, p.allin ? 'allin' : 'raise', p.bet]);
+      }
+      p.acted = true; this.afterAction(); return null;
+    }
+    roundDone() { const live = this.players.filter(p => this.live(p)); if (live.length <= 1) return true; return live.every(p => (p.acted && p.bet === this.currentBet) || p.allin); }
+    afterAction() { if (this.roundDone()) this.advance(); else this.toAct = this.nextIdx(this.toAct, p => this.canAct(p) && !(p.acted && p.bet === this.currentBet)); }
+    advance() {
+      const live = this.players.filter(p => this.live(p));
+      if (live.length === 1) { this.showdown(); return; }
+      for (;;) {
+        if (this.stage === 'preflop') { this.stage = 'flop'; for (let i = 0; i < 3; i++) this.community.push(this.deck.pop()); }
+        else if (this.stage === 'flop') { this.stage = 'turn'; this.community.push(this.deck.pop()); }
+        else if (this.stage === 'turn') { this.stage = 'river'; this.community.push(this.deck.pop()); }
+        else { this.showdown(); return; }
+        this.players.forEach(p => { p.bet = 0; p.acted = false; }); this.currentBet = 0; this.minRaise = this.bb;
+        if (this.players.filter(p => this.canAct(p)).length >= 2) { this.toAct = this.nextIdx(this.dealer, p => this.canAct(p)); return; }
+      }
+    }
+    sidePots() {
+      const levels = [...new Set(this.players.filter(p => p.total > 0).map(p => p.total))].sort((a, b) => a - b);
+      const pots = []; let prev = 0;
+      for (const lv of levels) {
+        const contrib = this.players.reduce((s, p) => s + Math.min(p.total, lv) - Math.min(p.total, prev), 0);
+        const elig = this.players.filter(p => this.live(p) && p.total >= lv);
+        if (contrib && elig.length) pots.push([contrib, elig]); else if (contrib && pots.length) pots[pots.length - 1][0] += contrib;
+        prev = lv;
+      }
+      return pots;
+    }
+    pot() { return this.players.reduce((s, p) => s + p.total, 0); }
+    showdown() {
+      const live = this.players.filter(p => this.live(p));
+      const scores = new Map();
+      if (live.length > 1 && this.community.length === 5) live.forEach(p => scores.set(p.id, best(p.hole.concat(this.community))));
+      const won = new Map();
+      for (const [amount, elig] of this.sidePots()) {
+        let winners;
+        if (elig.length === 1 || !scores.size) winners = elig.length === 1 ? [elig[0]] : elig;
+        else { let top = null; elig.forEach(p => { const s = scores.get(p.id); if (!top || cmp(s, top) > 0) top = s; }); winners = elig.filter(p => cmp(scores.get(p.id), top) === 0); }
+        const share = Math.floor(amount / winners.length); let rem = amount - share * winners.length;
+        const n = this.players.length;
+        const order = winners.slice().sort((a, b) => ((this.players.indexOf(a) - this.dealer - 1 + n) % n) - ((this.players.indexOf(b) - this.dealer - 1 + n) % n));
+        order.forEach(w => { won.set(w.id, (won.get(w.id) || 0) + share + (rem-- > 0 ? 1 : 0)); });
+      }
+      this.players.forEach(p => { p.chips += won.get(p.id) || 0; });
+      this.result = this.players.filter(p => won.get(p.id) || scores.has(p.id) || p.total).map(p => ({ id: p.id, name: p.name, won: won.get(p.id) || 0, net: (won.get(p.id) || 0) - p.total, hand: scores.has(p.id) ? handName(scores.get(p.id)) : '', shown: scores.has(p.id) }));
+      this.stage = 'done'; this.toAct = -1;
+    }
+  }
+  return { Table, best, cmp, rank5, handName, cardStr, rankOf, suitOf };
+})();
+// </engine>
+
+// <ui>
+(function () {
+  'use strict';
+  var KEY = 'kino_poker', root = null, G = null, timer = null;
+  var ACT = {};
+  var BOTS = [
+    { id: 'b1', name: 'Капитан', emoji: '🧢', aggr: 0.5, tight: 0.5, bot: true },
+    { id: 'b2', name: 'Режиссёр', emoji: '🎬', aggr: 0.8, tight: 0.2, bot: true },
+    { id: 'b3', name: 'Критик', emoji: '🕶️', aggr: 0.3, tight: 0.8, bot: true }
+  ];
+  var POS = ['hd-s-left', 'hd-s-top', 'hd-s-right'];
+  var THEMES = [
+    { id: 'classic', n: 'Классика', e: '🟢', need: 0 }, { id: 'noir', n: 'Нуар', e: '🔵', need: 10 },
+    { id: 'velvet', n: 'Бархат', e: '🔴', need: 30 }, { id: 'oscar', n: 'Оскар', e: '🟡', need: 60 }
+  ];
+  var ACH = [
+    { id: 'win1', e: '🥇', n: 'Первая победа', d: 'Выиграй раздачу' },
+    { id: 'hands10', e: '🎞', n: 'Завсегдатай', d: '10 раздач' },
+    { id: 'hands50', e: '🎬', n: 'Режиссёр стола', d: '50 раздач' },
+    { id: 'streak3', e: '🔥', n: 'Хет-трик', d: '3 победы подряд' },
+    { id: 'allin', e: '💥', n: 'Ва-банк!', d: 'Выиграй, идя ва-банк' },
+    { id: 'big', e: '💰', n: 'Крупный куш', d: 'Банк 500+ за раздачу' },
+    { id: 'flush', e: '🌊', n: 'Сильная рука', d: 'Победа флешем или лучше' },
+    { id: 'royal', e: '👑', n: 'Королевский выход', d: 'Победа каре или стрит-флешем' }
+  ];
+  // ---- задания дня ----
+  var QPOOL = [
+    { id: 'play5', t: 'Сыграй 5 раздач', n: 5, r: 60 }, { id: 'win3', t: 'Выиграй 3 раздачи', n: 3, r: 100 },
+    { id: 'three', t: 'Выиграй рукой «тройка» и выше', n: 1, r: 120 }, { id: 'allin', t: 'Выиграй, идя ва-банк', n: 1, r: 150 },
+    { id: 'pot300', t: 'Выиграй банк от 300', n: 1, r: 100 }, { id: 'tour', t: 'Сыграй турнир до конца', n: 1, r: 150 }
+  ];
+  function dayQuests(st) {
+    var d = today(), q = st.q;
+    if (!q || q.d !== d) {
+      var seed = 0; for (var i = 0; i < d.length; i++) seed = (seed * 31 + d.charCodeAt(i)) % 9973;
+      var pool = QPOOL.slice(), pick = [];
+      for (var k = 0; k < 3; k++) { var j = (seed + k * 7) % pool.length; pick.push(pool.splice(j, 1)[0].id); }
+      q = st.q = { d: d, ids: pick, p: {}, c: {} };
+    }
+    return q;
+  }
+  function qProgress(st, ev) {          // ev: {play, won, hand, allin, pot, tour}
+    var q = dayQuests(st), add = function (id, n) { if (q.ids.indexOf(id) >= 0) q.p[id] = (q.p[id] || 0) + (n || 1); };
+    if (ev.play) add('play5'); if (ev.won) { add('win3'); if (ev.allin) add('allin'); if (ev.pot >= 300) add('pot300'); if (/Тройка|Стрит|Флеш|Фулл|Каре/.test(ev.hand || '')) add('three'); }
+    if (ev.tour) add('tour');
+  }
+  function questsHtml(st) {
+    var q = dayQuests(st);
+    return '<div class="hd-quests"><b>📅 Задания дня</b>' + q.ids.map(function (id) {
+      var d = QPOOL.filter(function (x) { return x.id === id; })[0], p = Math.min(d.n, q.p[id] || 0), done = p >= d.n, got = q.c[id];
+      return '<div class="hd-q' + (got ? ' got' : '') + '"><div class="hd-qt"><span>' + d.t + '</span><small>' + p + '/' + d.n + '</small></div><div class="hd-qb"><i style="width:' + Math.round(p / d.n * 100) + '%"></i></div>' +
+        (got ? '<em>✅ +' + d.r + '</em>' : done ? '<button data-claim="' + id + '">Забрать +' + d.r + ' 🎞</button>' : '<em>🎞 ' + d.r + '</em>') + '</div>';
+    }).join('') + '</div>';
+  }
+  function unlockAch(st, me, allin) {
+    var got = [], A = st.ach = st.ach || {}, h = me && me.hand || '';
+    function g(id, c) { if (c && !A[id]) { A[id] = 1; got.push(ACH.filter(function (x) { return x.id === id; })[0]); } }
+    var won = me && me.won > 0;
+    g('win1', won); g('hands10', st.hands >= 10); g('hands50', st.hands >= 50); g('streak3', st.streak >= 3);
+    g('allin', won && allin); g('big', won && me.won >= 500);
+    g('flush', won && /Флеш|Фулл|Каре|Стрит/.test(h)); g('royal', won && /Каре|Стрит-флеш|Роял/.test(h));
+    return got;
+  }
+  function achToast(a) {
+    var d = document.createElement('div'); d.className = 'hd-ach'; d.innerHTML = '<i>' + a.e + '</i><div><b>Достижение!</b><span>' + a.n + '</span></div>';
+    root.appendChild(d); setTimeout(function () { d.classList.add('out'); setTimeout(function () { d.remove(); }, 400); }, 2600);
+  }
+  function themeId(st) { var t = THEMES.filter(function (x) { return x.id === st.theme && (st.hands || 0) >= x.need; })[0]; return t ? t.id : 'classic'; }
+  function today() { return new Date().toISOString().slice(0, 10); }
+  function loadSt() {
+    var st = null; try { st = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+    if (!st || typeof st.chips !== 'number') st = { chips: 500, best: 0, hands: 0, bonus: '', refill: '' };
+    if (typeof st.table !== 'number') st.table = 0;
+    return st;
+  }
+  var cloudT = null, cloudPulled = false;
+  function cloudOk() { try { return !!(tg && tg.CloudStorage && typeof tg.CloudStorage.setItem === 'function'); } catch (e) { return false; } }
+  function cloudPack(st) {
+    return JSON.stringify({ ts: st.ts || 0, c: (st.chips || 0) + (st.table || 0), b: st.best || 0, h: st.hands || 0, w: st.wins || 0, s: st.bestStreak || 0,
+      th: st.theme || '', a: Object.keys(st.ach || {}).join(','), t: st.tours || 0, tw: st.tourWins || 0, d: st.diff === undefined ? 1 : st.diff, sn: st.snd === false ? 0 : 1, hn: st.hints === false ? 0 : 1, wh: st.wheel || '', ch: st.chal || '' });
+  }
+  function cloudPush(st) {
+    if (!cloudOk()) return; clearTimeout(cloudT);
+    cloudT = setTimeout(function () { try { tg.CloudStorage.setItem('kp1', cloudPack(st), function () {}); } catch (e) {} }, 1500);
+  }
+  function cloudPull(done) {
+    if (cloudPulled || !cloudOk()) return; cloudPulled = true;
+    try {
+      tg.CloudStorage.getItem('kp1', function (err, val) {
+        if (err || !val) return; var c; try { c = JSON.parse(val); } catch (e) { return; }
+        var st0 = loadSt(), mergedD = false;
+        if (c && c.wh && c.wh > (st0.wheel || '')) { st0.wheel = c.wh; mergedD = true; } if (c && c.ch && c.ch > (st0.chal || '')) { st0.chal = c.ch; mergedD = true; }
+        if (mergedD) { try { localStorage.setItem(KEY, JSON.stringify(st0)); } catch (e) {} }
+        var st = loadSt(); if (!c || !(c.h > (st.hands || 0) || (c.h === (st.hands || 0) && c.ts > (st.ts || 0)))) return;
+        st.chips = c.c; st.table = 0; st.best = c.b; st.hands = c.h; st.wins = c.w; st.bestStreak = c.s; st.theme = c.th || st.theme; st.tours = c.t; st.tourWins = c.tw;
+        st.diff = c.d; st.snd = !!c.sn ? undefined : false; st.hints = !!c.hn ? undefined : false; st.ach = {}; (c.a || '').split(',').forEach(function (x) { if (x) st.ach[x] = 1; });
+        st.ts = c.ts; try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} if (done) done();
+        return;
+      });
+    } catch (e) {}
+  }
+  function saveSt(st) { st.ts = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} cloudPush(st); }
+  function msg(t) { try { if (typeof popMsg === 'function') popMsg(t); } catch (e) {} }
+  function buzz(k) { try { if (typeof haptic === 'function') haptic(k); } catch (e) {} }
+  // v202: звуки (синтез WebAudio, без файлов)
+  var AC = null;
+  function sndOn() { return loadSt().snd !== false; }
+  function tone(f, d, type, vol, delay, slide) {
+    try {
+      if (!AC) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return; AC = new C(); }
+      if (AC.state === 'suspended') AC.resume();
+      var t0 = AC.currentTime + (delay || 0), o = AC.createOscillator(), g = AC.createGain();
+      o.type = type || 'sine'; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(slide, t0 + d);
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol || 0.15, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+      o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0 + d + 0.02);
+    } catch (e) {}
+  }
+  function noise(d, vol, delay, hp) {
+    try {
+      if (!AC) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return; AC = new C(); }
+      var n = Math.floor(AC.sampleRate * d), buf = AC.createBuffer(1, n, AC.sampleRate), ch = buf.getChannelData(0);
+      for (var i = 0; i < n; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / n);
+      var src = AC.createBufferSource(), g = AC.createGain(), f = AC.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp || 2500;
+      g.gain.value = vol || 0.2; src.buffer = buf; src.connect(f); f.connect(g); g.connect(AC.destination); src.start(AC.currentTime + (delay || 0));
+    } catch (e) {}
+  }
+  function sfx(k) {
+    if (!sndOn()) return;
+    if (k === 'deal') { noise(0.06, 0.25, 0, 3000); tone(300, 0.05, 'triangle', 0.05); }
+    else if (k === 'chip') { tone(1800, 0.05, 'square', 0.05); tone(2400, 0.06, 'square', 0.04, 0.05); noise(0.03, 0.1, 0, 5000); }
+    else if (k === 'check') { tone(160, 0.08, 'sine', 0.3, 0, 90); tone(160, 0.08, 'sine', 0.3, 0.12, 90); }
+    else if (k === 'fold') { noise(0.18, 0.18, 0, 1200); }
+    else if (k === 'allin') { for (var i = 0; i < 5; i++) { tone(1500 + i * 150, 0.05, 'square', 0.05, i * 0.05); } tone(220, 0.35, 'sawtooth', 0.08, 0.1, 110); }
+    else if (k === 'turn') { tone(880, 0.12, 'sine', 0.12); tone(1320, 0.18, 'sine', 0.1, 0.1); }
+    else if (k === 'win') { [523, 659, 784, 1046].forEach(function (f, i) { tone(f, 0.22, 'triangle', 0.14, i * 0.1); }); }
+    else if (k === 'lose') { tone(300, 0.3, 'sine', 0.12, 0, 150); }
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function mount() { if (root) root.remove(); root = document.createElement('div'); root.className = 'pk-overlay hd-overlay'; document.body.appendChild(root); return root; }
+  function close() { clearTimeout(timer); if (G && G.hero) cashOut(); if (root) { root.remove(); root = null; } G = null; }
+
+  // ---------- фишки: кошелёк <-> стол ----------
+  function cashOut() {
+    if (!G || G.cashed) return; G.cashed = true;
+    var st = loadSt(); st.chips += Math.max(0, G.hero.chips); st.table = 0; saveSt(st);
+  }
+  function checkpoint() { if (G && G.tour) return; var st = loadSt(); st.table = Math.max(0, G.hero.chips); saveSt(st); }
+
+  // ---------- меню режимов ----------
+  function openMenu() {
+    clearTimeout(timer); G = null;
+    cloudPull(function () { if (root && !G) { openMenu(); try { if (typeof popMsg === 'function') popMsg('☁️ Прогресс покера восстановлен'); } catch (e) {} } });
+    var st = loadSt(), note = '';
+    if (st.table > 0) { st.chips += st.table; note = '🎞 Фишки со стола вернулись в кошелёк: +' + st.table; st.table = 0; }
+    if (st.bonus !== today()) { st.bonus = today(); st.chips += 200; note = '🎁 Ежедневный бонус: +200 фишек'; }
+    if (st.chips < 5 && st.refill !== today()) { st.refill = today(); st.chips = 100; note = '🎞 Капитан подкинул 100 фишек'; }
+    saveSt(st);
+    mount();
+    root.innerHTML = '<div class="pk-top"><button class="pk-x" id="hd-x">✕</button><div class="pk-title">🃏 Кино-покер</div><div class="pk-chips">🎞 ' + st.chips + '</div></div>' +
+      '<div class="hd-menu-hero"><div class="hd-logo">🎬</div><b>КАПИТАН КИНО</b><span>покерный клуб</span></div>' +
+      '<button class="hd-mode" id="hd-m-table"><i>🎬</i><div><b>Стол Капитана</b><span>Холдем с командой: Капитан, Режиссёр и Критик</span></div></button>' +
+      '<button class="hd-mode" id="hd-m-tour"><i>🏆</i><div><b>Турнир на вылет</b><span>Взнос ' + TOUR.entry + ' 🎞 · 1-е место ' + TOUR.prize[0] + ' · блайнды растут</span></div></button>' +
+      '<button class="hd-mode" id="hd-m-short"><i>⚡</i><div><b>Шорт-стек</b><span>500 🎞 · блайнды 50/100 · быстрые решения</span></div></button>' +
+      '<button class="hd-mode" id="hd-m-chal"><i>📆</i><div><b>Челлендж дня' + (st.chal === today() ? ' · пройден' : ' · +150 🎞') + '</b><span>одна раздача, у всех сегодня одни карты</span></div></button>' +
+      '<button class="hd-mode" id="hd-m-video"><i>🎰</i><div><b>Видеопокер</b><span>быстрая игра против таблицы выплат</span></div></button>' +
+      '<button class="hd-mode" id="hd-m-friends"><i>👥</i><div><b>С друзьями</b><span>живой стол в чате, ведёт бот</span></div></button>' +
+      '<button class="hd-mode small" id="hd-m-wheel"><i>🎡</i><div><b>Колесо Капитана' + (st.wheel === today() ? '' : ' · подарок!') + '</b><span>одно вращение в день, до 500 🎞</span></div></button>' +
+      '<button class="hd-mode small" id="hd-m-invite"><i>👥</i><div><b>Позвать друга играть</b><span>отправь ссылку на покер в мини-аппке</span></div></button>' +
+      '<button class="hd-mode small" id="hd-m-rate"><i>📤</i><div><b>Отправить рейтинг боту</b><span>попасть в /pokertop в чате</span></div></button>' +
+      '<button class="hd-mode small" id="hd-m-cheat"><i>📖</i><div><b>Шпаргалка комбинаций</b><span>что старше чего — с примерами</span></div></button>' +
+      '<div class="hd-lvl"><b>🤖 Уровень ботов</b><div>' + [['Новичок', 0, '🟢'], ['Обычный', 1, '🟡'], ['Профи', 2, '🔴']].map(function (l) { return '<button class="hd-th' + ((st.diff === undefined ? 1 : st.diff) === l[1] ? ' on' : '') + '" data-df="' + l[1] + '"><i>' + l[2] + '</i>' + l[0] + '</button>'; }).join('') + '</div></div>' +
+      '<button class="hd-mode small" id="hd-m-hints"><i>💡</i><div><b>Подсказки шансов: ' + (st.hints === false ? 'выкл' : 'вкл') + '</b><span>шанс выиграть и выгодность колла за столом</span></div></button>' +
+      questsHtml(st) +
+      '<div class="hd-achs"><b>🏅 Достижения ' + Object.keys(st.ach || {}).length + '/' + ACH.length + '</b>' + ACH.map(function (a) { var ok = st.ach && st.ach[a.id]; return '<div class="hd-a' + (ok ? ' ok' : '') + '" title="' + a.d + '"><i>' + (ok ? a.e : '🔒') + '</i><span>' + a.n + '</span><small>' + a.d + '</small></div>'; }).join('') + '</div>' +
+      '<div class="hd-themes">' + THEMES.map(function (x) { var ok = (st.hands || 0) >= x.need; return '<button class="hd-th' + (themeId(st) === x.id ? ' on' : '') + (ok ? '' : ' lock') + '" data-th="' + x.id + '" data-need="' + x.need + '"><i>' + (ok ? x.e : '🔒') + '</i>' + x.n + (ok ? '' : '<small>' + x.need + ' раздач</small>') + '</button>'; }).join('') + '</div>' +
+      (st.hands ? '<div class="hd-stats"><div><b>' + st.hands + '</b><span>раздач</span></div><div><b>' + Math.round((st.wins || 0) / st.hands * 100) + '%</b><span>побед</span></div><div><b>' + (st.best || 0) + '</b><span>макс. банк</span></div><div><b>' + (st.bestStreak || 0) + '</b><span>серия</span></div></div>' : '') +
+      '<div class="pk-note">Виртуальные фишки для игры. Их нельзя купить или вывести, на ранг и очки они не влияют.' + (note ? '<br>' + note : '') + '</div>';
+    root.querySelector('#hd-x').onclick = close;
+    root.querySelector('#hd-m-table').onclick = openBuyIn;
+    root.querySelector('#hd-m-short').onclick = function () { if (loadSt().chips < 500) { buzz('light'); return; } startGame(500, [50, 100]); };
+    root.querySelector('#hd-m-chal').onclick = function () { if (loadSt().chal === today()) { buzz('light'); return; } startChallenge(); };
+    root.querySelector('#hd-m-tour').onclick = function () { if (loadSt().chips < TOUR.entry) { buzz('light'); return; } startTour(); };
+    root.querySelectorAll('[data-th]').forEach(function (b) { b.onclick = function () {
+      var q = loadSt(); if ((q.hands || 0) < +b.getAttribute('data-need')) { buzz('light'); return; }
+      q.theme = b.getAttribute('data-th'); saveSt(q); root.querySelectorAll('[data-th]').forEach(function (x) { x.classList.toggle('on', x === b); }); sfx('chip');
+    }; });
+    root.querySelector('#hd-m-video').onclick = function () { close(); if (window.openVideoPoker) window.openVideoPoker(); };
+    root.querySelector('#hd-m-cheat').onclick = showCheat;
+    root.querySelector('#hd-m-invite').onclick = function () {
+      var u = 'https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') + '&text=' + encodeURIComponent('🃏 Заходи в покер Капитана Кино: Холдем против ботов, видеопокер, турниры и колесо удачи. Открой бота и нажми «Киноафиша» → Покер. Фишки бесплатные!');
+      try { tg.openTelegramLink(u); } catch (e) { window.open(u, '_blank'); }
+    };
+    root.querySelector('#hd-m-rate').onclick = function () {
+      var q = loadSt(), b = function (n) { return Math.max(0, Math.floor(n || 0)).toString(36); };
+      var url = 'https://t.me/kapitan_kino_bot?start=pk_' + [b((q.chips || 0) + (q.table || 0)), b(q.hands), b(q.wins), b(q.best)].join('_');
+      try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+    };
+    root.querySelector('#hd-m-wheel').onclick = showWheel;
+    root.querySelectorAll('[data-df]').forEach(function (b) { b.onclick = function () { var q = loadSt(); q.diff = +b.getAttribute('data-df'); saveSt(q); root.querySelectorAll('[data-df]').forEach(function (x) { x.classList.toggle('on', x === b); }); sfx('chip'); }; });
+    root.querySelector('#hd-m-hints').onclick = function () { var q = loadSt(); q.hints = q.hints === false; saveSt(q); openMenu(); };
+    root.querySelectorAll('[data-claim]').forEach(function (b) { b.onclick = function () {
+      var q2 = loadSt(), qq = dayQuests(q2), id = b.getAttribute('data-claim'), d = QPOOL.filter(function (x) { return x.id === id; })[0];
+      if (!d || qq.c[id] || (qq.p[id] || 0) < d.n) return; qq.c[id] = 1; q2.chips += d.r; saveSt(q2); sfx('win'); buzz('ok'); openMenu();
+    }; });
+    root.querySelector('#hd-m-friends').onclick = function () { if (typeof openFriendsPoker === 'function') openFriendsPoker(); };
+  }
+  function openBuyIn() {
+    var st = loadSt(); mount();
+    var opts = [200, 500, 1000].filter(function (v) { return v <= st.chips; });
+    if (st.chips >= 100 && opts.indexOf(st.chips) < 0 && st.chips < 1000) opts.push(st.chips);
+    var btns = opts.length ? opts.map(function (v) { return '<button class="hd-buy" data-v="' + v + '">🎞 ' + v + '</button>'; }).join('') : '<p class="hd-empty">Мало фишек для стола (нужно от 100). Загляни завтра или сыграй в видеопокер.</p>';
+    root.innerHTML = '<div class="pk-top"><button class="pk-x" id="hd-x">✕</button><div class="pk-title">🎬 Стол Капитана</div><div class="pk-chips">🎞 ' + st.chips + '</div></div>' +
+      '<div class="hd-menu-hero"><span>Блайнды 10 / 20 · четверо за столом</span></div>' +
+      '<div class="hd-seats-preview">' + BOTS.map(function (b) { return '<div><i>' + b.emoji + '</i><b>' + b.name + '</b></div>'; }).join('') + '</div>' +
+      '<div class="hd-buyin-t">Сколько фишек берёшь за стол?</div><div class="hd-buys">' + btns + '</div>' +
+      '<button class="hd-back" id="hd-back">◀️ Назад</button>';
+    root.querySelector('#hd-x').onclick = close;
+    root.querySelector('#hd-back').onclick = openMenu;
+    root.querySelectorAll('.hd-buy').forEach(function (b) { b.onclick = function () { startGame(+b.dataset.v); }; });
+  }
+
+  // ---------- игра ----------
+  var TOUR = { entry: 300, stack: 1000, every: 5, prize: [750, 300, 150, 0], lv: [[10, 20], [20, 40], [40, 80], [80, 160], [150, 300], [300, 600], [500, 1000]] };
+  function startTour() {
+    var st = loadSt(); if (st.chips < TOUR.entry) return;
+    st.chips -= TOUR.entry; st.table = 0; saveSt(st);
+    var t = new HE.Table(TOUR.lv[0][0], TOUR.lv[0][1]);
+    var hero = t.seat('me', 'Ты', TOUR.stack, { emoji: '🙂' });
+    BOTS.forEach(function (b) { t.seat(b.id, b.name, TOUR.stack, { emoji: b.emoji, bot: true, aggr: b.aggr, tight: b.tight }); });
+    G = { t: t, hero: hero, buyin: TOUR.stack, notes: [], busy: false, cashed: true, shown: 0, lastMsg: 'Турнир начался!', acts: {}, street: 0, tour: { hands: 0, lvl: 0, outAt: {}, end: null } };
+    nextHand();
+  }
+  function podium(heroPlace) {
+    var T = G.tour, t = G.t, list = [{ e: '🙂', n: heroName(), alive: heroPlace === 1, chips: G.hero.chips, dead: heroPlace, me: 1 }];
+    BOTS.forEach(function (b) { var pl = t.get(b.id), ch = pl ? pl.chips : 0; list.push({ e: b.emoji, n: b.name, alive: ch > 0, chips: ch, dead: T.outAt[b.id] || 9 }); });
+    list.sort(function (a, b) { if (a.alive !== b.alive) return a.alive ? -1 : 1; return a.alive ? b.chips - a.chips : a.dead - b.dead; });
+    list.forEach(function (x, i) { x.p = i + 1; });
+    var top3 = [list[1], list[0], list[2]], hs = { 1: 74, 2: 54, 3: 40 };
+    return '<div class="hd-podium">' + top3.map(function (x) { return x ? '<div class="pd p' + x.p + (x.me ? ' me' : '') + '"><i>' + (x.p === 1 ? '👑' : '') + '</i><div class="av">' + x.e + '</div><b>' + esc(x.n) + '</b><div class="st" style="height:' + hs[x.p] + 'px">' + x.p + '</div></div>' : ''; }).join('') + '</div>';
+  }
+  function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  var CHAL_PRIZE = 150;
+  function startChallenge() {
+    var st = loadSt(); if (st.chal === today()) return;
+    st.chal = today(); st.table = 0; saveSt(st);
+    var seed = 0, d = today(); for (var i = 0; i < d.length; i++) seed = (seed * 131 + d.charCodeAt(i)) % 1000003;
+    var t = new HE.Table(10, 20, mulberry(seed + 7));
+    var hero = t.seat('me', 'Ты', 1000, { emoji: '🙂' });
+    BOTS.forEach(function (b) { t.seat(b.id, b.name, 1000, { emoji: b.emoji, bot: true, aggr: b.aggr, tight: b.tight }); });
+    G = { t: t, hero: hero, buyin: 1000, notes: [], busy: false, cashed: true, shown: 0, lastMsg: 'Челлендж дня: у всех игроков сегодня те же карты', acts: {}, street: 0, chal: { paid: false } };
+    nextHand();
+  }
+  function chalAfterHand() {
+    if (!G || !G.chal || G.chal.paid) return; G.chal.paid = true;
+    var won = G.t.result.some(function (r) { return r.id === 'me' && r.won > 0; });
+    G.chal.won = won; if (won) { var st = loadSt(); st.chips += CHAL_PRIZE; saveSt(st); }
+  }
+  function tourAfterHand() {
+    var T = G.tour, t = G.t; if (!T || T.end) return;
+    var alive = t.players.filter(function (p) { return p.chips > 0; });
+    t.players.forEach(function (p) { if (p.chips <= 0 && p.id !== 'me' && !T.outAt[p.id]) T.outAt[p.id] = alive.length + 1; });
+    var heroIn = G.hero.chips > 0;
+    if (!heroIn || alive.length === 1) {
+      var place = heroIn ? 1 : alive.length + 1, prize = TOUR.prize[place - 1] || 0, st = loadSt();
+      st.chips += prize; st.tours = (st.tours || 0) + 1; qProgress(st, { tour: 1 }); if (place === 1) { st.tourWins = (st.tourWins || 0) + 1; }
+      var A = st.ach = st.ach || {}; var fresh = null; if (place === 1 && !A.champ) { A.champ = 1; fresh = { e: '🏆', n: 'Чемпион турнира' }; }
+      saveSt(st); T.end = { place: place, prize: prize };
+      if (fresh) setTimeout(function () { achToast(fresh); sfx('win'); }, 1200);
+    }
+  }
+  function startGame(buyin, bl) {
+    var st = loadSt(); if (buyin > st.chips) return;
+    track('poker_start', buyin);
+    st.chips -= buyin; st.table = buyin; saveSt(st);
+    var t = new HE.Table(bl ? bl[0] : 10, bl ? bl[1] : 20);
+    var hero = t.seat('me', 'Ты', buyin, { emoji: '🙂' });
+    BOTS.forEach(function (b) { t.seat(b.id, b.name, buyin, { emoji: b.emoji, bot: true, aggr: b.aggr, tight: b.tight }); });
+    G = { t: t, hero: hero, buyin: buyin, notes: [], busy: false, cashed: false, shown: 0, lastMsg: 'Карты розданы', acts: {}, street: 0 };
+    nextHand();
+  }
+  function nextHand() {
+    track('poker_hand', G.tour ? 'tour' : 'cash');
+    var t = G.t; G.shareTxt = null; G.notes = []; G.shoves = (G.shoves || 0) * 0.8; G.hl = null; G.dec = []; G.talk = {};
+    if (G.tour) {
+      var T = G.tour; if (T.hands > 0 && T.hands % TOUR.every === 0 && T.lvl < TOUR.lv.length - 1 && !T.bumped) { T.lvl++; t.sb = TOUR.lv[T.lvl][0]; t.bb = TOUR.lv[T.lvl][1]; G.notes.push('⬆️ Блайнды ' + t.sb + '/' + t.bb); T.bumped = true; } else if (T.hands % TOUR.every !== 0) T.bumped = false;
+      T.hands++;
+    } else t.players.forEach(function (p) { if (p.bot && p.chips < t.bb * 2) { p.chips = G.buyin; G.notes.push(p.name + ' докупил фишки'); } });
+    if (G.hero.chips <= 0) { render(); return; }
+    t.startHand(); sfx('deal'); G.shown = 0; G.acts = {}; G.street = 0; G.lastMsg = G.notes.join(' · ') || 'Новая раздача'; buzz('light');
+    render(); step();
+  }
+  function logText(e) {
+    var p = G.t.get(e[0]), n = p ? p.name : '?', a = e[1];
+    return n + ': ' + (a === 'fold' ? 'фолд' : a === 'check' ? 'чек' : a === 'call' ? 'колл ' + e[2] : a === 'raise' ? 'рейз до ' + e[2] : 'ва-банк ' + e[2]);
+  }
+  var SAY = {
+    b1: { raise: ['Поднимаю!', 'Капитан на мостике 🧢', 'Держим курс'], allin: ['Всё на кон!', 'Идём ва-банк!'], fold: ['Пас, коллеги', 'Не мой кадр'], win: ['Отличный дубль!', 'Капитан знает толк'], call: ['Уравниваю', 'Посмотрим'] },
+    b2: { raise: ['Мотор! 🎬', 'Сцена накаляется', 'Ставка на крупный план'], allin: ['Финальная сцена!', 'Снимаем без дублей!'], fold: ['Стоп, снято', 'Режу эту сцену'], win: ['Это шедевр!', 'Оскар мой 🏆'], call: ['Принято', 'Продолжаем съёмку'] },
+    b3: { raise: ['Хм, дерзко…', 'Критика с ставкой'], allin: ['Рискну репутацией', 'Ва-банк. Удивите меня'], fold: ['Слабый сюжет', 'Не впечатлило'], win: ['Оценка: 10/10', 'Как и предсказывал'], call: ['Допустим', 'Проверим вас'] }
+  };
+  function say(id, k, force) {
+    var b = SAY[id]; if (!b || !b[k] || (!force && Math.random() > (k === 'call' ? 0.18 : 0.5))) return;
+    G.talk = {}; G.talk[id] = b[k][Math.floor(Math.random() * b[k].length)];
+  }
+  var EMO = [['🎬', 'Снято!'], ['👏', 'Браво'], ['😈', 'Ну-ну…'], ['🤔', 'Думаю'], ['😎', 'Легко'], ['💥', 'Держитесь!']];
+  var REACT = { b1: ['Принято, капитан', 'Хм, смело'], b2: ['Мотор! 🎬', 'Эффектно'], b3: ['Оценим…', 'Критика не боится'] };
+  function openEmoPop() {
+    if (root.querySelector('.hd-emopop')) return;
+    var pop = document.createElement('div'); pop.className = 'hd-emopop';
+    pop.innerHTML = EMO.map(function (e, i) { return '<button data-e="' + i + '"><i>' + e[0] + '</i><span>' + e[1] + '</span></button>'; }).join('');
+    root.appendChild(pop); pop.onclick = function (ev) { var b = ev.target.closest('[data-e]'); G.emoOpen = false; pop.remove(); if (b) emote(+b.getAttribute('data-e')); };
+  }
+  function emote(i) {
+    if (!G) return; G.emoMe = EMO[i][0] + ' ' + EMO[i][1]; sfx('chip'); G.talk = {};
+    var bs = BOTS.filter(function (b) { return G.t.get(b.id) && G.t.players.indexOf(G.t.get(b.id)) >= 0; });
+    if (bs.length && Math.random() < 0.7) { var b = bs[Math.floor(Math.random() * bs.length)]; G.talk[b.id] = REACT[b.id] ? REACT[b.id][Math.floor(Math.random() * REACT[b.id].length)] : EMO[i][0]; }
+    render(); clearTimeout(G.emoT); G.emoT = setTimeout(function () { if (G) { G.emoMe = ''; G.talk = {}; render(); } }, 2800);
+  }
+  function noteActs(before) {
+    G.talk = {};
+    G.t.log.slice(before).forEach(function (e) {
+      var a = e[1]; say(e[0], a === 'raise' ? 'raise' : a === 'allin' ? 'allin' : a === 'fold' ? 'fold' : a === 'call' ? 'call' : '_');
+      if (e[0] === 'me' && a === 'allin') G.shoves = (G.shoves || 0) + 1;
+      sfx(a === 'fold' ? 'fold' : a === 'check' ? 'check' : a === 'allin' ? 'allin' : 'chip');
+      G.acts[e[0]] = a === 'fold' ? 'Фолд' : a === 'check' ? 'Чек' : a === 'call' ? 'Колл ' + e[2] : a === 'raise' ? 'Рейз ' + e[2] : 'Ва-банк';
+    });
+  }
+  function step() {
+    var t = G.t;
+    if (t.stage === 'done') { onDone(); return; }
+    var cur = t.current();
+    if (!cur) return;
+    if (!cur.bot) sfx('turn');
+    render();
+    if (cur.bot) {
+      G.busy = true;
+      timer = setTimeout(function () {
+        if (!G) return;
+        var d = aiDecide(t, cur), before = t.log.length;
+        t.act(cur.id, d.a, d.to);
+        t.log.slice(before).forEach(function (e) { G.lastMsg = logText(e); }); noteActs(before);
+        G.busy = false; step();
+      }, loadSt().fast ? 220 + Math.random() * 220 : 800 + Math.random() * 700);
+    }
+  }
+  function onDone() {
+    var t = G.t, win = t.result.filter(function (r) { return r.won > 0; }).sort(function (a, b) { return b.won - a.won; });
+    var top = win[0], line = '';
+    if (top) line = '🏆 ' + (top.id === 'me' ? 'Ты' : top.name) + (top.hand ? ' — ' + top.hand : ' — все сфолдили') + ', +' + top.won;
+    G.lastMsg = line; G.win = win.map(function (r) { return r.id; });
+    var me = t.result.filter(function (r) { return r.id === 'me'; })[0];
+    G.hl = null; if (top && top.hand && t.community.length === 5) { var wp = t.get(top.id); if (wp) { G.hl = {}; best5(wp.hole.concat(t.community)).forEach(function (c) { G.hl[c] = 1; }); } }
+    G.talk = {}; (function () { var w = top && top.id !== 'me' ? top.id : null; if (w) say(w, 'win', true); })();
+    if (me && me.won > 0) { buzz('ok'); confetti(); sfx('win'); } else { buzz('light'); sfx(me && me.net < 0 ? 'lose' : 'deal'); }
+    var st = loadSt(); st.hands = (st.hands || 0) + 1; if (me && me.won > 0) st.wins = (st.wins || 0) + 1; if (me && me.won > (st.best || 0)) { st.best = me.won; st.bestHand = me.hand || st.bestHand || ''; }
+    var netMe = me ? me.net : 0; st.streak = netMe > 0 ? (st.streak || 0) + 1 : 0; if (st.streak > (st.bestStreak || 0)) st.bestStreak = st.streak;
+    st.hist = (st.hist || []); st.hist.unshift({ w: top ? (top.id === 'me' ? 'Ты' : top.name) : '', h: top ? (top.hand || 'все сфолдили') : '', p: top ? top.won : 0, n: netMe }); st.hist = st.hist.slice(0, 10);
+    var allin = G.t.log.some(function (e) { return e[0] === 'me' && e[1] === 'allin'; });
+    qProgress(st, { play: 1, won: me && me.won > 0, hand: me && me.hand, allin: allin, pot: me ? me.won : 0 });
+    var gotA = unlockAch(st, me, allin); gotA.forEach(function (a, i) { setTimeout(function () { achToast(a); sfx('win'); }, 900 + i * 2800); });
+    G.streak = st.streak; saveSt(st);
+    checkpoint(); tourAfterHand(); chalAfterHand(); render(); if (top) flyChips(top.id);
+  }
+  function confetti() {
+    if (!root) return; var box = document.createElement('div'), cols = ['#f5b942', '#3ddc84', '#ff5d73', '#7aa8ff', '#fff']; box.className = 'hd-conf';
+    for (var i = 0; i < 34; i++) { var s = document.createElement('i'); s.style.left = Math.random() * 100 + '%'; s.style.background = cols[i % 5]; s.style.animationDelay = (Math.random() * 0.5) + 's'; s.style.animationDuration = (1.6 + Math.random() * 1.2) + 's'; box.appendChild(s); }
+    root.appendChild(box); setTimeout(function () { if (box.parentNode) box.remove(); }, 3200);
+  }
+  // v200: шансы выиграть (Монте-Карло против живых соперников)
+  function equity(t, me, sims) {
+    var known = me.hole.concat(t.community), used = {}; known.forEach(function (c) { used[c] = 1; });
+    var rest = []; for (var c = 0; c < 52; c++) if (!used[c]) rest.push(c);
+    var opp = t.players.filter(function (p) { return p !== me && t.live(p); }).length; if (!opp) return 1;
+    var need = 5 - t.community.length, win = 0;
+    for (var k = 0; k < sims; k++) {
+      for (var i = 0; i < 2 * opp + need; i++) { var j = i + Math.floor(Math.random() * (rest.length - i)); var x = rest[i]; rest[i] = rest[j]; rest[j] = x; }
+      var comm = t.community.concat(rest.slice(2 * opp, 2 * opp + need)), mine = HE.best(me.hole.concat(comm)), res = 1;
+      for (var o = 0; o < opp; o++) { var cm = HE.cmp(HE.best(rest.slice(2 * o, 2 * o + 2).concat(comm)), mine); if (cm > 0) { res = 0; break; } if (cm === 0) res = Math.min(res, 0.5); }
+      win += res;
+    }
+    return win / sims;
+  }
+  function hintHtml(t, me) {
+    if (loadSt().hints === false) return '';
+    var key = me.hole.join() + '|' + t.community.join();
+    if (!G.eq || G.eq.key !== key) G.eq = { key: key, v: equity(t, me, 220) };
+    var e = Math.round(G.eq.v * 100), call = t.toCall(me), pot = t.pot(), need = call ? Math.round(call / (pot + call) * 100) : 0;
+    var tip = !call ? (e >= 60 ? 'Рука сильная — можно ставить' : e >= 35 ? 'Можно проверить' : 'Слабовато — лучше чек')
+      : (e >= need + 8 ? 'Колл выгоден' : e >= need - 3 ? 'На грани' : 'Колл невыгоден');
+    return '<div class="hd-hint"><div class="hd-eq"><i style="width:' + e + '%"></i></div><span>Шанс выиграть ~' + e + '%' + (call ? ' · для колла нужно ' + need + '%' : '') + ' · ' + tip + '</span></div>';
+  }
+  function hero(action, to) {
+    if (!G || G.busy) return; var t = G.t;
+    if (t.current() !== G.hero) return;
+    try {
+      var cl = t.toCall(G.hero), pt = t.pot(), key = G.hero.hole.join() + '|' + t.community.join();
+      if (cl > 0) { G.hr = G.hr || { f: 0, n: 0 }; G.hr.n++; if (action === 'fold') G.hr.f++; }   // v233: боты запоминают, как часто игрок сбрасывает
+      var eqv = G.eq && G.eq.key === key ? G.eq.v : equity(t, G.hero, 150);
+      (G.dec = G.dec || []).push({ s: ['Префлоп', '', '', 'Флоп', 'Тёрн', 'Ривер'][t.community.length] || 'Префлоп', a: action, to: to, call: cl, pot: pt, eq: eqv, need: cl ? cl / (pt + cl) : 0 });
+    } catch (e) {}
+    var before = t.log.length; var err = t.act('me', action, to);
+    if (err) { msg(err); return; }
+    buzz('light'); t.log.slice(before).forEach(function (e) { G.lastMsg = logText(e); }); noteActs(before);
+    step();
+  }
+
+  // ---------- ИИ ----------
+  function strength(t, p) {
+    var hole = p.hole, comm = t.community, rk = HE.rankOf, su = HE.suitOf;
+    if (!comm.length) {
+      var r = hole.map(rk).sort(function (a, b) { return b - a; }), suited = su(hole[0]) === su(hole[1]), s;
+      if (r[0] === r[1]) s = 0.5 + r[0] / 12 * 0.45;
+      else { s = (r[0] + r[1]) / 24 * 0.55; if (suited) s += 0.06; if (r[0] - r[1] <= 2) s += 0.05; if (r[0] >= 10) s += 0.06; }
+      return Math.min(s, 1);
+    }
+    var sc = HE.best(hole.concat(comm)), cat = sc[0], v;
+    if (cat >= 6) v = 0.97; else if (cat === 5) v = 0.92; else if (cat === 4) v = 0.88; else if (cat === 3) v = 0.82; else if (cat === 2) v = 0.72;
+    else if (cat === 1) v = hole.some(function (c) { return rk(c) === sc[1]; }) ? 0.45 + sc[1] / 12 * 0.2 : 0.3;
+    else v = 0.12 + sc[1] / 12 * 0.1;
+    if (comm.length < 5 && cat < 5) { var cnt = [0, 0, 0, 0]; hole.concat(comm).forEach(function (c) { cnt[su(c)]++; }); if (Math.max.apply(null, cnt) === 4) v += 0.18; }
+    return Math.min(v, 1);
+  }
+  function aiDecide(t, p) {
+    // v233: ИИ второго поколения — открывающие рейзы, ставки по equity, учёт рейза соперника и привычек игрока
+    var s = strength(t, p), call = t.toCall(p), pot = t.pot(), lg = t.legal(p), canR = lg.indexOf('raise') >= 0;
+    var r = Math.random(), odds = call / ((pot + call) || 1), pre = t.community.length === 0;
+    var df = loadSt().diff, DF = df === 0 ? { m: -0.10, up: 0.86, sims: 70, bl: 0, op: 0.50 } : df === 2 ? { m: 0.03, up: 0.66, sims: 220, bl: 0.03, op: 0.40 } : { m: 0, up: 0.74, sims: 120, bl: 0, op: 0.45 };
+    var hr = G.hr || { f: 0, n: 0 }, fr = hr.n >= 6 ? hr.f / hr.n : 0.4;               // как часто игрок сбрасывает на рейз
+    var bm = Math.max(0.5, Math.min(1.7, 1 + (fr - 0.4) * 1.6)) * (df === 0 ? 0.6 : 1);   // много фолдит -> больше блефов
+    var live = t.players.filter(function (q) { return q !== p && t.live(q); }).length;
+    function raiseTo(frac) {
+      var to = t.currentBet + Math.max(t.minRaise, Math.round(pot * frac / 10) * 10);
+      return to >= p.bet + p.chips ? { a: 'allin' } : { a: 'raise', to: to };
+    }
+    function pass() { return call ? { a: 'call' } : { a: 'check' }; }
+    function fold() { return call ? { a: 'fold' } : { a: 'check' }; }
+    var unopened = pre && t.currentBet <= t.bb;                            // никто ещё не поднимал
+    if (unopened && canR && call <= t.bb) {                                  // открывающий рейз
+      var e0 = equity(t, p, Math.max(50, DF.sims * 0.6));
+      var thr = DF.op + 0.05 * p.tight - 0.04 * p.aggr;
+      if (e0 > thr + 0.17 || (e0 > thr && r < 0.55 + 0.35 * p.aggr)) {
+        var to = t.currentBet + Math.round(t.bb * (1.6 + Math.random() * 1.2) / 10) * 10 + t.bb * Math.max(0, t.players.filter(function (q) { return q.bet === t.bb && q !== p; }).length - 1);
+        to = Math.max(to, t.currentBet + t.minRaise);
+        return to >= p.bet + p.chips ? { a: 'allin' } : { a: 'raise', to: to };
+      }
+    }
+    if (call > 0) {
+      var eq = equity(t, p, DF.sims);
+      var need = DF.m + odds + 0.05 + 0.08 * p.tight - 0.05 * p.aggr + (call >= p.chips ? 0.05 : 0) - Math.min(0.22, 0.07 * (G.shoves || 0) * (call > 0.4 * p.chips ? 1 : 0));
+      if (pre && call > t.bb * 1.5) need += 0.05;                              // рейз: у соперника рука сильнее случайной
+      if (!pre) need += 0.06 * Math.min(1, call / (pot - call || 1));          // ставка на столе говорит о силе
+      if (eq > DF.up && canR && r < 0.55) return raiseTo(0.6 + Math.random() * 0.5);
+      if (eq > need) {
+        var draw = !pre && t.community.length < 5 && s < 0.6;                  // полублеф с рисованием
+        if (draw && canR && eq > need + 0.1 && r < 0.12 * p.aggr * bm && call <= 0.2 * p.chips) return raiseTo(0.7);
+        return { a: 'call' };
+      }
+      if (canR && r < (0.03 + DF.bl + 0.04 * p.aggr) * bm && call <= 0.15 * p.chips && live <= 2) return raiseTo(0.6);   // редкий блеф
+      return fold();
+    }
+    if (!pre && live >= 1) {                                                 // ставка по equity, когда до нас чек
+      var e = equity(t, p, Math.max(50, DF.sims * 0.6));
+      if (e >= 0.78) return (canR && r < 0.8) ? raiseTo(0.65 + Math.random() * 0.3) : { a: 'check' };   // иногда прячем силу
+      if (e >= 0.58) return (canR && r < 0.5 + 0.3 * p.aggr) ? raiseTo(0.4 + Math.random() * 0.2) : { a: 'check' };
+      if (e >= 0.4) return (canR && r < 0.1 * p.aggr * bm) ? raiseTo(0.4) : { a: 'check' };
+      return (canR && live <= 2 && r < (0.05 + 0.1 * p.aggr) * bm) ? raiseTo(0.55) : { a: 'check' };
+    }
+    if (s >= 0.85) return (canR && r < 0.75) ? raiseTo(0.6 + Math.random() * 0.5) : pass();
+    return { a: 'check' };
+  }
+
+  // ---------- отрисовка ----------
+  var RANKS_DEMO = [
+    ['Роял-флеш', 'Т-К-Д-В-10 одной масти', [8, 9, 10, 11, 12]], ['Стрит-флеш', 'Пять подряд одной масти', [5, 6, 7, 8, 9]],
+    ['Каре', 'Четыре одинаковые', [12, 25, 38, 51, 0]], ['Фулл-хаус', 'Тройка + пара', [11, 24, 37, 7, 20]],
+    ['Флеш', 'Пять одной масти', [14, 17, 19, 22, 24]], ['Стрит', 'Пять подряд', [4, 18, 32, 46, 8]],
+    ['Тройка', 'Три одинаковые', [9, 22, 35, 41, 5]], ['Две пары', 'Две пары карт', [10, 23, 5, 18, 12]],
+    ['Пара', 'Две одинаковые', [8, 21, 0, 16, 29]], ['Старшая карта', 'Ничего из перечисленного', [12, 37, 20, 6, 3]]
+  ];
+  // ---- колесо Капитана (раз в день) ----
+  var WHEEL = [50, 100, 75, 150, 50, 300, 100, 500], WCOL = ['#5b8cff', '#3ddc84', '#ff5d73', '#f5b942', '#5b8cff', '#a66bff', '#3ddc84', '#ffd24a'];
+  function wheelPick() {
+    var w = [22, 20, 16, 10, 22, 4, 20, 1.5], sum = w.reduce(function (a, b) { return a + b; }, 0), r = Math.random() * sum, i = 0;
+    for (; i < w.length; i++) { r -= w[i]; if (r <= 0) break; } return Math.min(i, w.length - 1);
+  }
+  function showWheel() {
+    var st = loadSt(), used = st.wheel === today(), seg = 360 / WHEEL.length;
+    var grad = WHEEL.map(function (v, i) { return WCOL[i] + ' ' + i * seg + 'deg ' + (i + 1) * seg + 'deg'; }).join(',');
+    var labels = WHEEL.map(function (v, i) { return '<b style="transform:rotate(' + (i * seg + seg / 2) + 'deg) translateY(-92px)">' + v + '</b>'; }).join('');
+    var box = document.createElement('div'); box.className = 'hd-histbox';
+    box.innerHTML = '<div class="hd-histcard hd-wheelcard"><b>🎡 Колесо Капитана</b><p>' + (used ? 'Сегодня вы уже крутили. Возвращайтесь завтра!' : 'Одно вращение в день — фишки в подарок') + '</p>' +
+      '<div class="hd-wheelwrap"><i class="hd-ptr">▼</i><div class="hd-wheel" id="hd-wheel" style="background:conic-gradient(' + grad + ')">' + labels + '<span>🎬</span></div></div>' +
+      '<div class="hd-wres" id="hd-wres"></div><button class="hd-btn go" id="hd-wspin"' + (used ? ' disabled' : '') + '>' + (used ? 'Уже крутили' : '🎡 Крутить') + '</button><button class="hd-btn" id="hd-hclose">Закрыть</button></div>';
+    root.appendChild(box);
+    box.onclick = function (e) { if (e.target === box || e.target.id === 'hd-hclose') { box.remove(); openMenu(); } };
+    var spin = box.querySelector('#hd-wspin');
+    spin.onclick = function () {
+      var q = loadSt(); if (q.wheel === today()) return; q.wheel = today();
+      var idx = wheelPick(), prize = WHEEL[idx], target = 360 * 5 + (360 - (idx * seg + seg / 2));
+      q.chips += prize; saveSt(q); spin.disabled = true; spin.textContent = 'Крутится…';
+      var wl = box.querySelector('#hd-wheel'); wl.style.transition = 'transform 4s cubic-bezier(.12,.7,.15,1)'; wl.style.transform = 'rotate(' + target + 'deg)';
+      var tick = setInterval(function () { sfx('chip'); }, 260); setTimeout(function () { clearInterval(tick); }, 3600);
+      setTimeout(function () { box.querySelector('#hd-wres').innerHTML = '🎉 +' + prize + ' 🎞'; spin.textContent = 'Готово'; sfx('win'); buzz('ok'); if (prize >= 300) confetti(); }, 4100);
+    };
+  }
+  function verdict(d) {
+    var e = d.eq, pc = Math.round(e * 100), nd = Math.round(d.need * 100);
+    if (d.a === 'fold') return d.call && e > d.need + 0.12 ? ['bad', 'Фолд был лишним: шанс ~' + pc + '% при нужных ' + nd + '%'] : d.call ? ['ok', 'Верный фолд: шанс ~' + pc + '% ниже нужных ' + nd + '%'] : ['mid', 'Фолд без ставки: можно было проверить бесплатно'];
+    if (d.a === 'call') return e < d.need - 0.08 ? ['bad', 'Колл невыгоден: шанс ~' + pc + '% при нужных ' + nd + '%'] : ['ok', 'Колл по шансам: ~' + pc + '% (нужно ' + nd + '%)'];
+    if (d.a === 'check') return e > 0.65 ? ['mid', 'Рука сильная (~' + pc + '%), можно было ставить'] : ['ok', 'Чек: рука ~' + pc + '%'];
+    return e < 0.33 ? ['mid', 'Блеф: шанс всего ~' + pc + '%. Работает, если соперники пасуют'] : e > 0.6 ? ['ok', 'Ставка за ценность: ~' + pc + '%'] : ['ok', 'Агрессия при шансе ~' + pc + '%'];
+  }
+  function showReview() {
+    var dec = (G && G.dec) || [], t = G.t, me = G.hero;
+    var AN = { fold: 'Фолд', call: 'Колл', check: 'Чек', raise: 'Рейз', allin: 'Ва-банк' };
+    var box = document.createElement('div'); box.className = 'hd-histbox';
+    var cards = '<div class="hd-rvc">' + me.hole.map(function (c) { return cardHtml(c, 'mini'); }).join('') + '<span>·</span>' + t.community.map(function (c) { return cardHtml(c, 'mini'); }).join('') + '</div>';
+    box.innerHTML = '<div class="hd-histcard"><b>🔍 Разбор раздачи</b>' + cards + (dec.length ? dec.map(function (d) {
+      var v = verdict(d); return '<div class="hd-rv ' + v[0] + '"><div><b>' + d.s + ' · ' + AN[d.a] + (d.a === 'raise' && d.to ? ' до ' + d.to : '') + '</b><span>' + v[1] + '</span></div><i>' + (v[0] === 'ok' ? '✅' : v[0] === 'bad' ? '❌' : '⚠️') + '</i></div>';
+    }).join('') : '<p>В этой раздаче ты не принимал решений.</p>') + '<button class="hd-btn go" id="hd-hclose">Закрыть</button></div>';
+    root.appendChild(box); box.onclick = function (e) { if (e.target === box || e.target.id === 'hd-hclose') box.remove(); };
+  }
+  function showCheat() {
+    var box = document.createElement('div'); box.className = 'hd-histbox';
+    box.innerHTML = '<div class="hd-histcard"><b>📖 Комбинации от старшей к младшей</b>' + RANKS_DEMO.map(function (r, i) {
+      return '<div class="hd-chrow"><div class="hd-chn"><i>' + (i + 1) + '</i><div><b>' + r[0] + '</b><span>' + r[1] + '</span></div></div><div class="hd-chc">' + r[2].map(function (c) { return cardHtml(c, 'mini'); }).join('') + '</div></div>';
+    }).join('') + '<button class="hd-btn go" id="hd-hclose">Понятно</button></div>';
+    root.appendChild(box); box.onclick = function (e) { if (e.target === box || e.target.id === 'hd-hclose') box.remove(); };
+  }
+  function tgUser() { try { return (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) || null; } catch (e) { return null; } }
+  function heroName() { var u = tgUser(); return u && u.first_name ? String(u.first_name).slice(0, 12) : 'Ты'; }
+  function heroAv() { var u = tgUser(); return u && u.photo_url ? '<img class="hd-photo" src="' + esc(u.photo_url) + '" alt="" referrerpolicy="no-referrer" onerror="this.replaceWith(document.createTextNode(\'🙂\'))">' : '🙂'; }
+  function msgFast(on) { try { if (typeof popMsg === 'function') popMsg(on ? '⚡ Быстрая игра: боты ходят шустрее' : 'Обычный темп'); } catch (e) {} }
+  function frameCls(st) { var n = Object.keys(st.ach || {}).length; return n >= 8 ? 'fr4' : n >= 6 ? 'fr3' : n >= 4 ? 'fr2' : n >= 2 ? 'fr1' : ''; }
+  function labCls(l) {
+    if (!l) return ''; if (/Роял|Стрит-флеш|Каре/.test(l)) return 'l5'; if (/Фулл|Флеш|Стрит/.test(l)) return 'l4';
+    if (/Тройка/.test(l)) return 'l3'; if (/Две пары/.test(l)) return 'l2'; if (/Пара/.test(l)) return 'l1'; return 'l0';
+  }
+  function flyChips(pid) {
+    try {
+      var from = root.querySelector('.hd-pot'), to = pid === 'me' ? root.querySelector('.hd-me .hd-av') : root.querySelector('[data-pid="' + pid + '"] .hd-av');
+      if (!from || !to || !from.animate) return;
+      var a = from.getBoundingClientRect(), b = to.getBoundingClientRect(), n = 9;
+      for (var i = 0; i < n; i++) {
+        (function (i) {
+          var c = document.createElement('div'); c.className = 'hd-fly'; c.style.left = (a.left + a.width / 2 - 8) + 'px'; c.style.top = (a.top + 4) + 'px'; document.body.appendChild(c);
+          var dx = b.left + b.width / 2 - a.left - a.width / 2, dy = b.top + b.height / 2 - a.top - 4, sx = (Math.random() - .5) * 40;
+          var an = c.animate([{ transform: 'translate(' + sx + 'px,0) scale(.8)', opacity: 1 }, { transform: 'translate(' + (dx * .5 + sx) + 'px,' + (dy * .5 - 40) + 'px) scale(1.1)', opacity: 1, offset: .5 }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.6)', opacity: .2 }], { duration: 750 + i * 40, delay: 500 + i * 70, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' });
+          an.onfinish = function () { c.remove(); if (i === n - 1) sfx('chip'); };
+        })(i);
+      }
+    } catch (e) {}
+  }
+  function potChips(pot) {
+    if (pot <= 0) return '';
+    var den = [[200, 'c500'], [50, 'c100'], [20, 'c25'], [5, 'c5']], out = '', left = pot, cnt = 0;
+    den.forEach(function (d) { var n = Math.min(6, Math.floor(left / d[0])); if (n > 0) { left -= n * d[0]; cnt += n; out += '<div class="hd-stk ' + d[1] + '">' + new Array(n + 1).join('<i></i>') + '</div>'; } });
+    if (!out) out = '<div class="hd-stk c5"><i></i></div>';
+    return '<div class="hd-pile">' + out + '</div>';
+  }
+  function best5(cards) {
+    var bestS = null, bestC = null, n = cards.length;
+    for (var a = 0; a < n - 4; a++) for (var b = a + 1; b < n - 3; b++) for (var c = b + 1; c < n - 2; c++) for (var d = c + 1; d < n - 1; d++) for (var e = d + 1; e < n; e++) {
+      var sub = [cards[a], cards[b], cards[c], cards[d], cards[e]], sc = HE.best(sub);
+      if (!bestS || HE.cmp(sc, bestS) > 0) { bestS = sc; bestC = sub; }
+    }
+    return bestC || [];
+  }
+  function cardHtml(c, cls) {
+    if (G && G.hl && G.t.stage === 'done') cls = (cls || '') + (G.hl[c] ? ' hl' : ' dim');
+    var red = HE.suitOf(c) === 1 || HE.suitOf(c) === 2, s = HE.cardStr(c), r = s.slice(0, s.length - 1), su = s.slice(-1);
+    return '<div class="hd-c' + (red ? ' red' : '') + (cls ? ' ' + cls : '') + '"><b>' + r + '</b><span>' + su + '</span></div>';
+  }
+  function backHtml() { return '<div class="hd-c back mini"></div>'; }
+  function statePill(p, done) {
+    if (p.folded) return '<em class="fold">фолд</em>';
+    if (p.allin) return '<em class="allin">ва-банк</em>';
+    var a = !done && G.acts[p.id], b = p.bet ? '<em class="bet"><s></s>' + p.bet + '</em>' : '';
+    return (a ? '<em class="act">' + esc(a) + '</em>' : '') + b;
+  }
+  function seatHtml(p, i) {
+    var t = G.t, done = t.stage === 'done', cur = t.current() === p, show = done && t.result.some(function (r) { return r.id === p.id && r.shown; });
+    var state = statePill(p, done);
+    var cards = !p.hole.length ? '' : (show ? p.hole.map(function (c) { return cardHtml(c, 'mini flip'); }).join('') : (p.folded ? '' : backHtml() + backHtml()));
+    var win = G.win && G.win.indexOf(p.id) >= 0 && done;
+    var dealer = t.players.indexOf(p) === t.dealer ? '<u class="hd-dealer">D</u>' : '';
+    var res = done ? t.result.filter(function (r) { return r.id === p.id; })[0] : null;
+    var gain = res && res.won > 0 ? '<strong class="hd-gain">+' + res.won + '</strong>' : '';
+    return '<div data-pid="' + p.id + '" class="hd-seat ' + POS[i] + (cur ? ' turn' : '') + (win ? ' win' : '') + (p.folded ? ' out' : '') + '">' +
+      (G.talk && G.talk[p.id] ? '<div class="hd-say">' + esc(G.talk[p.id]) + '</div>' : '') +
+      '<div class="hd-av">' + p.emoji + dealer + '</div><div class="hd-nm">' + esc(p.name) + '</div><div class="hd-st">🎞 ' + p.chips + '</div>' +
+      '<div class="hd-mc">' + cards + '</div>' + (cur ? '<em class="think">думает…</em>' : state) + gain + '</div>';
+  }
+  function render() {
+    if (!root || !G) return;
+    var t = G.t, me = G.hero, done = t.stage === 'done', st = loadSt();
+    if (t.community.length !== G.street) { G.street = t.community.length; G.acts = {}; }
+    var board = '';
+    for (var i = 0; i < 5; i++) board += t.community[i] !== undefined ? cardHtml(t.community[i], i >= G.shown ? 'new' : '') : '<div class="hd-c slot"></div>';
+    if (t.community.length > G.shown) sfx('deal');
+    G.shown = t.community.length;
+    var seats = BOTS.map(function (b, i) { var p = t.get(b.id); return p && t.players.indexOf(p) >= 0 ? seatHtml(p, i) : '<div class="hd-seat ' + POS[i] + ' out gone"><div class="hd-av">' + b.emoji + '</div><div class="hd-nm">' + esc(b.name) + '</div><div class="hd-st">' + (G.tour && G.tour.outAt[b.id] ? 'вылетел · ' + G.tour.outAt[b.id] + ' место' : '') + '</div></div>'; }).join('');
+    var hkey = me.hole.join(); var freshDeal = hkey !== G.heroKey; G.heroKey = hkey;
+    var myCards = me.hole.length ? me.hole.map(function (c) { return cardHtml(c, 'big' + (freshDeal ? ' dealt' : '')); }).join('') : '';
+    var label = '';
+    if (me.hole.length && !me.folded) label = t.community.length >= 3 ? HE.handName(HE.best(me.hole.concat(t.community))) : (HE.rankOf(me.hole[0]) === HE.rankOf(me.hole[1]) ? 'Карманная пара' : '');
+    var turnMe = t.current() === me;
+    var meState = statePill(me, done);
+    var mine = '<div class="hd-me' + (turnMe ? ' turn' : '') + (G.win && G.win.indexOf('me') >= 0 && done ? ' win' : '') + '">' +
+      '<div class="hd-me-info">' + (G.emoMe ? '<div class="hd-say hd-say-me">' + esc(G.emoMe) + '</div>' : '') + '<div class="hd-av ' + frameCls(st) + '">' + heroAv() + (t.players.indexOf(me) === t.dealer ? '<u class="hd-dealer">D</u>' : '') + '</div><div class="hd-nm">' + esc(heroName()) + '</div><div class="hd-st">🎞 ' + me.chips + '</div>' + meState + '</div>' +
+      '<div class="hd-mycards">' + myCards + '</div><div class="hd-label ' + labCls(label) + '">' + esc(label) + '</div><button class="hd-emo" id="hd-emo">💬</button></div>';
+    var banner = '';
+    if (done && G.win && G.win.length) {
+      var wr = t.result.filter(function (r) { return r.won > 0; }).sort(function (a, b) { return b.won - a.won; })[0];
+      if (wr && wr.id === 'me' && wr.won >= 300) G.shareTxt = '🃏 Выиграл банк +' + wr.won + ' в покере Капитана Кино' + (wr.hand ? ' (' + wr.hand + ')' : '') + '! Сыграй со мной в мини-аппке 🎬';
+      if (wr) banner = '<div class="hd-banner"><b>🏆 ' + (wr.id === 'me' ? 'Ты' : esc(wr.name)) + ' +' + wr.won + '</b><span>' + esc(wr.hand || 'все сфолдили') + (wr.id === 'me' && G.streak > 1 ? ' · 🔥 серия ' + G.streak : '') + '</span></div>';
+    }
+    var actions = '';
+    if (G.tour && G.tour.end) {
+      var E = G.tour.end;
+      actions = podium(E.place) + '<div class="hd-over">' + (E.place === 1 ? '🏆 Ты выиграл турнир! +' + E.prize + ' 🎞' : 'Ты занял ' + E.place + ' место' + (E.prize ? ' · приз +' + E.prize + ' 🎞' : '')) + '</div><div class="hd-row">' + (st.chips >= TOUR.entry ? '<button class="hd-btn go" id="hd-again">🔁 Ещё турнир</button>' : '') + '<button class="hd-btn" id="hd-leave">🚪 В меню</button></div>';
+    } else if (G.chal && done) {
+      actions = '<div class="hd-over">' + (G.chal.won ? '🏆 Челлендж выигран! +' + CHAL_PRIZE + ' 🎞' : 'Челлендж не засчитан. Завтра будет новая раздача!') + '</div><div class="hd-row"><button class="hd-btn" id="hd-rev">🔍 Разбор</button><button class="hd-btn go" id="hd-leave">В меню</button></div>';
+    } else if (me.chips <= 0 && (done || !me.hole.length)) {
+      actions = '<div class="hd-over">Ты проиграл все фишки за столом</div><div class="hd-row"><button class="hd-btn" id="hd-rev">🔍 Разбор</button></div><div class="hd-row">' + (st.chips >= 100 ? '<button class="hd-btn go" id="hd-rebuy">Сесть заново</button>' : '') + '<button class="hd-btn" id="hd-leave">🚪 Выйти</button></div>';
+    } else if (done) {
+      actions = '<div class="hd-row"><button class="hd-btn go" id="hd-next">▶️ Следующая раздача</button><button class="hd-btn" id="hd-leave">🚪 Выйти со столом</button></div><div class="hd-row"><button class="hd-hist-btn" id="hd-rev">🔍 Разбор</button><button class="hd-hist-btn" id="hd-hist">📜 История</button>' + (G.shareTxt ? '<button class="hd-hist-btn" id="hd-share">📣 Похвастаться</button>' : '') + '</div>';
+    } else if (turnMe) {
+      var call = t.toCall(me), lg = t.legal(me), pot = t.pot();
+      var r1 = '<button class="hd-btn fold" data-a="fold">Фолд</button><button class="hd-btn go" data-a="' + (call ? 'call' : 'check') + '">' + (call ? 'Колл ' + call : 'Чек') + '</button>';
+      var r2 = '';
+      if (lg.indexOf('raise') >= 0) {
+        var mn = t.minRaiseTo(me), max = me.bet + me.chips, seen = {};
+        [['Мин', mn], ['½ банка', t.currentBet + Math.round(pot / 2 / 10) * 10], ['Банк', t.currentBet + pot]].forEach(function (o) {
+          var v = Math.max(mn, Math.min(o[1], max)); if (v >= max || seen[v]) return; seen[v] = 1;
+          r2 += '<button class="hd-btn sm" data-a="raise" data-to="' + v + '">' + o[0] + ' · ' + v + '</button>';
+        });
+        r2 += '<button class="hd-btn sm allin" data-a="allin">🔥 Ва-банк ' + max + '</button>';
+      }
+      var sl = '';
+      if (lg.indexOf('raise') >= 0 && me.bet + me.chips > t.minRaiseTo(me)) {
+        var lo = t.minRaiseTo(me), hi = me.bet + me.chips;
+        sl = '<div class="hd-slider"><input type="range" id="hd-rng" min="' + lo + '" max="' + hi + '" step="1" value="' + lo + '"><button class="hd-btn sm go" id="hd-rz">Рейз до <b id="hd-rv">' + lo + '</b></button></div>';
+      }
+      actions = hintHtml(t, me) + '<div class="hd-row">' + r1 + '</div>' + sl + (r2 ? '<div class="hd-row wrap">' + r2 + '</div>' : '');
+    } else {
+      actions = '<div class="hd-wait">' + (t.current() ? 'Ходит ' + esc(t.current().name) + '…' : '') + '</div>';
+    }
+    root.innerHTML = '<div class="pk-top"><button class="pk-x" id="hd-x">✕</button><div class="pk-title">🎬 Стол Капитана</div><div class="pk-chips">🎞 ' + st.chips + '</div><button class="hd-snd" id="hd-help">❓</button><button class="hd-snd' + (st.fast ? ' on' : '') + '" id="hd-fast" title="Быстрая игра">⚡</button><button class="hd-snd" id="hd-snd">' + (st.snd === false ? '🔇' : '🔊') + '</button></div>' +
+      '<div class="hd-table th-' + themeId(st) + '"><div class="hd-felt"><div class="hd-brand">КАПИТАН КИНО</div>' +
+      '<div class="hd-wm">🎬</div><div class="hd-board">' + board + '</div><div class="hd-pot">' + potChips(t.pot()) + '<span>Банк <b>' + t.pot() + '</b></span></div>' + banner + '</div>' + seats + '</div>' +
+      '<div class="hd-msg">' + esc(G.lastMsg || '') + '</div>' + mine + actions +
+      '<div class="pk-note">' + (G.tour ? '🏆 Турнир · уровень ' + (G.tour.lvl + 1) + ' · ' : '') + 'Блайнды ' + t.sb + '/' + t.bb + ' · виртуальные фишки · на ранг и очки не влияют</div>';
+    root.querySelector('#hd-x').onclick = function () { close(); };
+    root.querySelector('#hd-help').onclick = showCheat;
+    var eb = root.querySelector('#hd-emo'); if (eb) eb.onclick = function () { G.emoOpen = true; openEmoPop(); };
+    if (G.emoOpen) openEmoPop();
+    root.querySelector('#hd-fast').onclick = function () { var q = loadSt(); q.fast = !q.fast; saveSt(q); this.classList.toggle('on', !!q.fast); sfx('chip'); msgFast(q.fast); };
+    root.querySelector('#hd-snd').onclick = function () { var q = loadSt(); q.snd = q.snd === false; saveSt(q); this.textContent = q.snd === false ? '🔇' : '🔊'; if (q.snd !== false) sfx('chip'); };
+    root.querySelectorAll('[data-a]').forEach(function (b) { b.onclick = function () { hero(b.dataset.a, +b.dataset.to || 0); }; });
+    var rg = root.querySelector('#hd-rng');
+    if (rg) {
+      rg.oninput = function () { root.querySelector('#hd-rv').textContent = rg.value; };
+      root.querySelector('#hd-rz').onclick = function () { hero('raise', +rg.value); };
+    }
+    var rb = root.querySelector('#hd-rev'); if (rb) rb.onclick = showReview;
+    var hb = root.querySelector('#hd-hist'); if (hb) hb.onclick = function () {
+      var h = loadSt().hist || [], box = document.createElement('div'); box.className = 'hd-histbox';
+      box.innerHTML = '<div class="hd-histcard"><b>📜 Последние раздачи</b>' + (h.length ? h.map(function (x) { return '<div class="hd-hrow"><span>' + esc(x.w) + ' · ' + esc(x.h) + '</span><em class="' + (x.n > 0 ? 'up' : x.n < 0 ? 'dn' : '') + '">' + (x.n > 0 ? '+' : '') + x.n + '</em></div>'; }).join('') : '<p>Пока пусто</p>') + '<button class="hd-btn go" id="hd-hclose">Закрыть</button></div>';
+      root.appendChild(box); box.onclick = function (e) { if (e.target === box || e.target.id === 'hd-hclose') box.remove(); };
+    };
+    var ag = root.querySelector('#hd-again'); if (ag) ag.onclick = startTour;
+    var nx = root.querySelector('#hd-next'); if (nx) nx.onclick = nextHand;
+    var shb = root.querySelector('#hd-share'); if (shb) shb.onclick = function () { var u = 'https://t.me/share/url?url=' + encodeURIComponent('https://t.me/kapitan_kino_bot') + '&text=' + encodeURIComponent(G.shareTxt || ''); try { tg.openTelegramLink(u); } catch (e) { window.open(u, '_blank'); } };
+    var lv = root.querySelector('#hd-leave'); if (lv) lv.onclick = function () { close(); openMenu(); };
+    var rb = root.querySelector('#hd-rebuy'); if (rb) rb.onclick = function () { cashOut(); openBuyIn(); };
+  }
+
+  window.openVideoPoker = window.openVideoPoker || window.openPoker;
+  window.openPoker = openMenu;
+  window.__holdemAI = { strength: strength, aiDecide: aiDecide };
+})();
+// </ui>
+
+/* ===== HOLDEM:END ===== */
