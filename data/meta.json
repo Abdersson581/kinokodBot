@@ -1,99 +1,99 @@
 {
- "code_of_day": "445",
- "code_of_day_date": "2026-11-25",
- "updated_at": "2026-11-25",
+ "code_of_day": "428",
+ "code_of_day_date": "2026-11-26",
+ "updated_at": "2026-11-26",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 7,
-   "total": 105
+   "unlocks": 8,
+   "total": 106
   },
   {
    "rank": 2,
-   "unlocks": 2,
-   "total": 34
+   "unlocks": 3,
+   "total": 35
   },
   {
    "rank": 3,
-   "unlocks": 0,
-   "total": 140
+   "unlocks": 1,
+   "total": 3
   },
   {
    "rank": 4,
    "unlocks": 0,
-   "total": 19
+   "total": 140
   },
   {
    "rank": 5,
    "unlocks": 0,
-   "total": 16
+   "total": 19
   },
   {
    "rank": 6,
    "unlocks": 0,
-   "total": 14
+   "total": 16
   },
   {
    "rank": 7,
    "unlocks": 0,
-   "total": 12
+   "total": 14
   },
   {
    "rank": 8,
    "unlocks": 0,
-   "total": 10
+   "total": 12
   },
   {
    "rank": 9,
    "unlocks": 0,
-   "total": 8
+   "total": 10
   },
   {
    "rank": 10,
    "unlocks": 0,
-   "total": 7
+   "total": 8
   }
  ],
  "leaderboard_kind": "week",
  "emoji_riddles": [
   {
-   "emoji": "🌀🍰⏰🧠",
-   "code": "467",
-   "options": [
-    "Враг государства",
-    "Бесславные ублюдки",
-    "Константин: Повелитель тьмы",
-    "Начало"
-   ]
-  },
-  {
    "emoji": "🪨🔨🌧️🎵",
    "code": "461",
    "options": [
-    "Побег из Шоушенка",
+    "Бобро поржаловать!",
     "Волк с Уолл-стрит",
-    "Рожденный чемпионом",
-    "Слова"
+    "Побег из Шоушенка",
+    "На грани"
+   ]
+  },
+  {
+   "emoji": "🌀🍰⏰🧠",
+   "code": "467",
+   "options": [
+    "Начало",
+    "На грани",
+    "Давление",
+    "Ночная сова"
    ]
   },
   {
    "emoji": "🐕🚉⏳💔",
    "code": "462",
    "options": [
-    "Того",
-    "Бюро магических услуг",
+    "Средневековье",
+    "Дело Ричарда Джуэлла",
     "Хатико: Самый верный друг",
-    "Джанго освобожденный"
+    "Хозяин морей: На краю Земли"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Зеленая миля",
-    "Звук свободы",
-    "Скрытые фигуры",
-    "Костюм"
+    "Между нами горы",
+    "Снова в деле",
+    "На гребне волны",
+    "Зеленая миля"
    ]
   }
  ],
@@ -187,12 +187,6 @@
    "film_id": 5927239
   },
   {
-   "title": "Операция «Возмездие»",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5146946.jpg",
-   "ru_date": "2026-11-26",
-   "film_id": 5146946
-  },
-  {
    "title": "Александр I",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7410014.jpg",
    "ru_date": "2026-11-26",
@@ -251,6 +245,12 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5367673.jpg",
    "ru_date": "2026-12-03",
    "film_id": 5367673
+  },
+  {
+   "title": "Вершина",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9403071.jpg",
+   "ru_date": "2026-12-03",
+   "film_id": 9403071
   }
  ]
 }
