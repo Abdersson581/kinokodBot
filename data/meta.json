@@ -1,11 +1,11 @@
 {
- "code_of_day": "428",
- "code_of_day_date": "2026-11-26",
- "updated_at": "2026-11-26",
+ "code_of_day": "448",
+ "code_of_day_date": "2026-11-27",
+ "updated_at": "2026-11-27",
  "leaderboard": [
   {
    "rank": 1,
-   "unlocks": 8,
+   "unlocks": 6,
    "total": 106
   },
   {
@@ -60,40 +60,40 @@
    "emoji": "🌀🍰⏰🧠",
    "code": "467",
    "options": [
-    "Давление",
-    "Столкновение с бездной",
-    "Первый день моей жизни",
-    "Начало"
-   ]
-  },
-  {
-   "emoji": "🪨🔨🌧️🎵",
-   "code": "461",
-   "options": [
-    "За пивом",
-    "Побег из Шоушенка",
-    "Два ствола",
-    "Между нами горы"
-   ]
-  },
-  {
-   "emoji": "🐕🚉⏳💔",
-   "code": "462",
-   "options": [
-    "Джон Кью",
-    "Хатико: Самый верный друг",
-    "Хитмен. Последнее дело",
-    "Джентльмены"
+    "Дьявол носит Prada",
+    "Остров проклятых",
+    "Начало",
+    "Кунг-фу жеребец"
    ]
   },
   {
    "emoji": "🐁⚡🧑‍🦱💚",
    "code": "406",
    "options": [
-    "Рожденный чемпионом",
-    "Проклятый путь",
-    "Послезавтра",
+    "Меняющие реальность",
+    "Охота / Jagten",
+    "Хатико: Самый верный друг",
     "Зеленая миля"
+   ]
+  },
+  {
+   "emoji": "🪨🔨🌧️🎵",
+   "code": "461",
+   "options": [
+    "Король говорит!",
+    "Побег из Шоушенка",
+    "Кунг-фу жеребец",
+    "Уличный кот по кличке Боб"
+   ]
+  },
+  {
+   "emoji": "🐕🚉⏳💔",
+   "code": "462",
+   "options": [
+    "Отец-молодец",
+    "Освобождение",
+    "Хатико: Самый верный друг",
+    "Меч короля"
    ]
   }
  ],
@@ -181,42 +181,6 @@
  ],
  "premieres": [
   {
-   "title": "Голодные игры: Рассвет Жатвы",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5927239.jpg",
-   "ru_date": "2026-11-26",
-   "film_id": 5927239
-  },
-  {
-   "title": "Александр I",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7410014.jpg",
-   "ru_date": "2026-11-26",
-   "film_id": 7410014
-  },
-  {
-   "title": "Испытание аулом 2. Ход конём",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/6325388.jpg",
-   "ru_date": "2026-11-26",
-   "film_id": 6325388
-  },
-  {
-   "title": "Дворняшка",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13299871.jpg",
-   "ru_date": "2026-11-26",
-   "film_id": 13299871
-  },
-  {
-   "title": "Адский Голливуд",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9153208.jpg",
-   "ru_date": "2026-11-26",
-   "film_id": 9153208
-  },
-  {
-   "title": "Кибер-девушки",
-   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/14087322.jpg",
-   "ru_date": "2026-11-26",
-   "film_id": 14087322
-  },
-  {
    "title": "МУЛЬТ в кино. Выпуск №202. В поисках чуда",
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/15304811.jpg",
    "ru_date": "2026-11-28",
@@ -251,6 +215,42 @@
    "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/9403071.jpg",
    "ru_date": "2026-12-03",
    "film_id": 9403071
+  },
+  {
+   "title": "Очень сказочные дела",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/12082237.jpg",
+   "ru_date": "2026-12-03",
+   "film_id": 12082237
+  },
+  {
+   "title": "Сказочные выходные",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/5203758.jpg",
+   "ru_date": "2026-12-03",
+   "film_id": 5203758
+  },
+  {
+   "title": "Дива",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/8168841.jpg",
+   "ru_date": "2026-12-03",
+   "film_id": 8168841
+  },
+  {
+   "title": "Мазерати",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/13482500.jpg",
+   "ru_date": "2026-12-03",
+   "film_id": 13482500
+  },
+  {
+   "title": "Исчезновение",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/11930134.jpg",
+   "ru_date": "2026-12-03",
+   "film_id": 11930134
+  },
+  {
+   "title": "Женщина в черном. Восставшая",
+   "poster": "https://kinopoiskapiunofficial.tech/images/posters/kp_small/7790099.jpg",
+   "ru_date": "2026-12-03",
+   "film_id": 7790099
   }
  ]
 }
